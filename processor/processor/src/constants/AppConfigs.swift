@@ -10,7 +10,7 @@ import Foundation
 struct AppConfigs {
     
     struct Host {
-        
+        static let release = ""
     }
     
     /// 广告位配置

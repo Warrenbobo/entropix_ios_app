@@ -108,7 +108,10 @@ struct AppTheme {
             guard let window = window() else { return 0 }
             return window.safeAreaInsets.bottom
         }
-        
+        // 当前可用导航控制器
+        static var navigationController: UINavigationController? {
+            return visibleController()?.navigationController 
+        }
         
         /// 正在显示的顶层Window
         static func window() -> UIWindow? {

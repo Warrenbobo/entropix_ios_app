@@ -12,5 +12,6 @@ class LMMainRootPage: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        viewControllers = [LMNavigationWrapper(rootViewController: LMMinePage())]
     }
 }
