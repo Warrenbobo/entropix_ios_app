@@ -36,6 +36,15 @@
 		EAFBACA42E7E695100586EC7 /* LMMembershipCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACA32E7E695100586EC7 /* LMMembershipCardView.swift */; };
 		EAFBACA62E7E695100586EC7 /* LMGalleryMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACA12E7E695100586EC7 /* LMGalleryMenuView.swift */; };
 		EAFBACA92E7E6C1B00586EC7 /* LMFloatingCameraButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACA82E7E6C1B00586EC7 /* LMFloatingCameraButton.swift */; };
+		EAFBACAB2E7E72BC00586EC7 /* LMNewInstallerPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACAA2E7E72BC00586EC7 /* LMNewInstallerPage.swift */; };
+		EAFBACAF2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACAD2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift */; };
+		EAFBACB02E7E79C100586EC7 /* LMFeaturePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACAC2E7E79C100586EC7 /* LMFeaturePreviewView.swift */; };
+		EAFBACB22E7E7B0100586EC7 /* LMSignUpPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACB12E7E7B0100586EC7 /* LMSignUpPage.swift */; };
+		EAFBACB52E7E7C7100586EC7 /* LMValidatedInputField.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACB32E7E7C7100586EC7 /* LMValidatedInputField.swift */; };
+		EAFBACB72E7E7D1F00586EC7 /* LMCameraPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACB62E7E7D1F00586EC7 /* LMCameraPage.swift */; };
+		EAFBACBB2E7E7E7500586EC7 /* LMCameraControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACB92E7E7E7500586EC7 /* LMCameraControlsView.swift */; };
+		EAFBACBC2E7E7E7500586EC7 /* LMCameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACBA2E7E7E7500586EC7 /* LMCameraPreviewView.swift */; };
+		EAFBACBD2E7E7E7500586EC7 /* LMCameraBottomControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACB82E7E7E7500586EC7 /* LMCameraBottomControlsView.swift */; };
 		ED1A82AB7EA3BF2D0B7016C1 /* Pods_processor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */; };
 /* End PBXBuildFile section */
 
@@ -74,6 +83,15 @@
 		EAFBACA12E7E695100586EC7 /* LMGalleryMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGalleryMenuView.swift; sourceTree = "<group>"; };
 		EAFBACA32E7E695100586EC7 /* LMMembershipCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMMembershipCardView.swift; sourceTree = "<group>"; };
 		EAFBACA82E7E6C1B00586EC7 /* LMFloatingCameraButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFloatingCameraButton.swift; sourceTree = "<group>"; };
+		EAFBACAA2E7E72BC00586EC7 /* LMNewInstallerPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNewInstallerPage.swift; sourceTree = "<group>"; };
+		EAFBACAC2E7E79C100586EC7 /* LMFeaturePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFeaturePreviewView.swift; sourceTree = "<group>"; };
+		EAFBACAD2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMWelcomeAuthenticationView.swift; sourceTree = "<group>"; };
+		EAFBACB12E7E7B0100586EC7 /* LMSignUpPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSignUpPage.swift; sourceTree = "<group>"; };
+		EAFBACB32E7E7C7100586EC7 /* LMValidatedInputField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMValidatedInputField.swift; sourceTree = "<group>"; };
+		EAFBACB62E7E7D1F00586EC7 /* LMCameraPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraPage.swift; sourceTree = "<group>"; };
+		EAFBACB82E7E7E7500586EC7 /* LMCameraBottomControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraBottomControlsView.swift; sourceTree = "<group>"; };
+		EAFBACB92E7E7E7500586EC7 /* LMCameraControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraControlsView.swift; sourceTree = "<group>"; };
+		EAFBACBA2E7E7E7500586EC7 /* LMCameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraPreviewView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -175,6 +193,8 @@
 		EACA1CD62E7E49B600C80883 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				EAFBACBE2E7E8DB200586EC7 /* camera */,
+				EAFBACAE2E7E79C100586EC7 /* entrance */,
 				EAFBAC9D2E7E659E00586EC7 /* common */,
 				EAFBAC962E7E59F000586EC7 /* mine */,
 				EACA1CD52E7E49B600C80883 /* dialog */,
@@ -267,6 +287,7 @@
 			children = (
 				EACA1CD22E7E49B600C80883 /* LMMainRootPage.swift */,
 				EACA1D032E7E4B0A00C80883 /* LMLaunchSplashPage.swift */,
+				EAFBACAA2E7E72BC00586EC7 /* LMNewInstallerPage.swift */,
 			);
 			path = entrance;
 			sourceTree = "<group>";
@@ -281,6 +302,7 @@
 		EACA1D0E2E7E517400C80883 /* camera */ = {
 			isa = PBXGroup;
 			children = (
+				EAFBACB62E7E7D1F00586EC7 /* LMCameraPage.swift */,
 			);
 			path = camera;
 			sourceTree = "<group>";
@@ -297,6 +319,7 @@
 			isa = PBXGroup;
 			children = (
 				EAFBAC942E7E548A00586EC7 /* LMLoginPage.swift */,
+				EAFBACB12E7E7B0100586EC7 /* LMSignUpPage.swift */,
 			);
 			path = login;
 			sourceTree = "<group>";
@@ -316,8 +339,28 @@
 			children = (
 				EAFBACA82E7E6C1B00586EC7 /* LMFloatingCameraButton.swift */,
 				EAFBAC9E2E7E65B000586EC7 /* LMProcessorTopBar.swift */,
+				EAFBACB32E7E7C7100586EC7 /* LMValidatedInputField.swift */,
 			);
 			path = common;
+			sourceTree = "<group>";
+		};
+		EAFBACAE2E7E79C100586EC7 /* entrance */ = {
+			isa = PBXGroup;
+			children = (
+				EAFBACAC2E7E79C100586EC7 /* LMFeaturePreviewView.swift */,
+				EAFBACAD2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift */,
+			);
+			path = entrance;
+			sourceTree = "<group>";
+		};
+		EAFBACBE2E7E8DB200586EC7 /* camera */ = {
+			isa = PBXGroup;
+			children = (
+				EAFBACB82E7E7E7500586EC7 /* LMCameraBottomControlsView.swift */,
+				EAFBACB92E7E7E7500586EC7 /* LMCameraControlsView.swift */,
+				EAFBACBA2E7E7E7500586EC7 /* LMCameraPreviewView.swift */,
+			);
+			path = camera;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -437,6 +480,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */,
+				EAFBACAF2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift in Sources */,
+				EAFBACB02E7E79C100586EC7 /* LMFeaturePreviewView.swift in Sources */,
+				EAFBACBB2E7E7E7500586EC7 /* LMCameraControlsView.swift in Sources */,
+				EAFBACBC2E7E7E7500586EC7 /* LMCameraPreviewView.swift in Sources */,
+				EAFBACBD2E7E7E7500586EC7 /* LMCameraBottomControlsView.swift in Sources */,
 				EACA1CF22E7E49B600C80883 /* LMApiResponseModel.swift in Sources */,
 				EACA1CF32E7E49B600C80883 /* processor.xcdatamodeld in Sources */,
 				EACA1CF42E7E49B600C80883 /* anylibs.swift in Sources */,
@@ -445,14 +493,18 @@
 				EACA1D062E7E4C7C00C80883 /* LMPackageManager.swift in Sources */,
 				EACA1CF72E7E49B600C80883 /* SceneDelegate.swift in Sources */,
 				EACA1CF82E7E49B600C80883 /* LMDialogWrapper.swift in Sources */,
+				EAFBACAB2E7E72BC00586EC7 /* LMNewInstallerPage.swift in Sources */,
 				EACA1D112E7E519100C80883 /* LMMinePage.swift in Sources */,
 				EACA1CF92E7E49B600C80883 /* LMNavigationWrapper.swift in Sources */,
 				EACA1CFA2E7E49B600C80883 /* LMVersionUpdateDialog.swift in Sources */,
 				EACA1CFB2E7E49B600C80883 /* AppConfigs.swift in Sources */,
 				EAFBAC992E7E5A0800586EC7 /* LMMineUserInfoView.swift in Sources */,
+				EAFBACB52E7E7C7100586EC7 /* LMValidatedInputField.swift in Sources */,
+				EAFBACB72E7E7D1F00586EC7 /* LMCameraPage.swift in Sources */,
 				EACA1CFC2E7E49B600C80883 /* LMMainRootPage.swift in Sources */,
 				EAFBACA92E7E6C1B00586EC7 /* LMFloatingCameraButton.swift in Sources */,
 				EACA1CFD2E7E49B600C80883 /* LMApi.swift in Sources */,
+				EAFBACB22E7E7B0100586EC7 /* LMSignUpPage.swift in Sources */,
 				EACA1D0C2E7E504F00C80883 /* LMWebViewPage.swift in Sources */,
 				EACA1D082E7E4CBF00C80883 /* LMPackageModel.swift in Sources */,
 				EACA1CFE2E7E49B600C80883 /* LMApiClient.swift in Sources */,

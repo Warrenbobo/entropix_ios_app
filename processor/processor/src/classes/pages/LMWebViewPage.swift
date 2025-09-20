@@ -34,7 +34,7 @@ class LMWebViewPage: LMPageWrapper {
         if #available(iOS 16.4, *) {
             webview.isInspectable = true
         }
-        contentView.addSubview(webview)
+        view.addSubview(webview)
         let navigatorBackgroundView = UIView()
         navigatorBackgroundView.backgroundColor = .white
         view.addSubview(navigatorBackgroundView)

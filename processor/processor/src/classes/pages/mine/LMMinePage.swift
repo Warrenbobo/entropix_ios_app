@@ -48,7 +48,7 @@ class LMMinePage: LMPageWrapper {
     
     private func setupScrollView() {
         scrollView = UIScrollView()
-        contentView.addSubview(scrollView)
+        view.addSubview(scrollView)
         scrollView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
@@ -98,7 +98,7 @@ class LMMinePage: LMPageWrapper {
     private func createTheFloatingCameraEntranceView() {
         let floatingButton = LMFloatingCameraButton()
         floatingButton.setCameraButtonAction {
-            
+            self.cameraButtonTapped()
         }
         view.addSubview(floatingButton)
         floatingButton.snp.makeConstraints { make in
@@ -113,7 +113,10 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func avatarTapped() {
-        print("Avatar tapped")
+        let loginView = LMLoginPage()
+        let router = LMNavigationWrapper(rootViewController: loginView)
+        router.modalPresentationStyle = .fullScreen
+        present(router, animated: true)
     }
     
     private func watchAdsButtonTapped() {
@@ -137,6 +140,7 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func cameraButtonTapped() {
-        print("Camera button tapped")
+        let cameraView = LMCameraPage()
+        navigationController?.pushViewController(cameraView, animated: true)
     }
 }

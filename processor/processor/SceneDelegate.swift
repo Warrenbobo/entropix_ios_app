@@ -17,7 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window = UIWindow(windowScene: windowScene)
         window?.frame = UIScreen.main.bounds
         window?.backgroundColor = .white
-        window?.rootViewController = LMMainRootPage()
+        window?.rootViewController = LMNewInstallerPage()
         window?.makeKeyAndVisible()
     }
 
