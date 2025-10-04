@@ -48,7 +48,7 @@ class LMApiClient {
                                     useSecretHeader: Bool = false,
                                     completeHandler: @escaping ((LMApiResponseModel<T>) -> ())) {
         let resultEncoding: ParameterEncoding = encoding ?? (method == .get ? URLEncoding.default : JSONEncoding.default)
-        let resultURLString = AppConfigs.Host.release + url
+        let resultURLString = AppConfigs.Host.path() + url
         requestAndParser(resultURLString,
                          method: method,
                          params: addSecretSign(with: params ?? [:]),

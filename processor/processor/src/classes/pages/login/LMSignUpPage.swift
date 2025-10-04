@@ -10,37 +10,30 @@ import SnapKit
 
 class LMSignUpPage: LMPageWrapper {
     
-    // MARK: - UI Components
     private let scrollView = UIScrollView()
     private let contentStackView = UIStackView()
     
-    // 顶部品牌区域
     private let brandingSectionView = UIView()
     private let appIconImageView = UIImageView()
     private let createAccountTitleLabel = UILabel()
     private let createAccountSubtitleLabel = UILabel()
     
-    // 注册表单区域
     private let registrationFormSectionView = UIView()
     private let usernameInputField = LMValidatedInputField()
     private let emailInputField = LMValidatedInputField()
     private let passwordInputField = LMValidatedInputField()
     private let confirmPasswordInputField = LMValidatedInputField()
     
-    // 服务条款区域
     private let termsAgreementSectionView = UIView()
     private let termsAgreementCheckbox = UIButton()
     private let termsAgreementLabel = UILabel()
     
-    // 注册按钮区域
     private let signUpButtonSectionView = UIView()
     private let primarySignUpButton = UIButton()
     
-    // 登录提示区域
     private let loginPromptSectionView = UIView()
     private let loginPromptLabel = UILabel()
     
-    // MARK: - Properties
     private var isTermsAgreed = false
     
     override func viewDidLoad() {
@@ -57,7 +50,7 @@ class LMSignUpPage: LMPageWrapper {
         configureNavigationBarAppearance()
     }
 }
-// MARK: - User Interface Setup Methods
+
 extension LMSignUpPage {
     
     private func setupUserInterfaceComponents() {
@@ -239,7 +232,6 @@ extension LMSignUpPage {
     }
 }
 
-// MARK: - Layout Configuration Methods
 extension LMSignUpPage {
     
     private func configureLayoutConstraints() {
@@ -335,7 +327,6 @@ extension LMSignUpPage {
     }
 }
 
-// MARK: - Content Configuration Methods
 extension LMSignUpPage {
     
     private func configureDefaultContentAndStyles() {
@@ -381,7 +372,6 @@ extension LMSignUpPage {
     }
 }
 
-// MARK: - User Interaction Handler Methods
 extension LMSignUpPage {
     
     @objc private func handleNavigationBackButtonTapped() {
@@ -617,11 +607,15 @@ extension LMSignUpPage {
     }
     
     private func simulateRegistrationNetworkRequest(username: String, email: String, password: String) {
-        print("Registering user: \(username), email: \(email)")
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            // 模拟注册成功
-            self.handleSuccessfulRegistrationResponse()
+        LMApiClient.request(LMApi.User.register,
+                            method: .post,
+                            params: ["username": usernameInputField.text ?? "",
+                                     "password": passwordInputField.text ?? "",
+                                     "email": emailInputField.text ?? ""],
+                            type: LMUserSignInModel.self) { response in
+            let signInModel = response.value
+            print("-------------sigin user nickname is \(signInModel?.username ?? "")")
         }
     }
     
@@ -636,7 +630,6 @@ extension LMSignUpPage {
     }
 }
 
-// MARK: - Navigation and Presentation Methods
 extension LMSignUpPage {
     
     private func presentTermsAndConditionsViewController() {
@@ -668,7 +661,6 @@ extension LMSignUpPage {
     }
 }
 
-// MARK: - View Controller Factory Methods
 extension LMSignUpPage {
     
     private func createTermsAndConditionsViewController() -> UIViewController {
@@ -679,7 +671,6 @@ extension LMSignUpPage {
     }
 }
 
-// MARK: - Public Configuration Methods
 extension LMSignUpPage {
     
     func prefillRegistrationFormWithData(username: String? = nil, email: String? = nil) {

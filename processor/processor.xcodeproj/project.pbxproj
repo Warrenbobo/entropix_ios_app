@@ -45,6 +45,11 @@
 		EAFBACBB2E7E7E7500586EC7 /* LMCameraControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACB92E7E7E7500586EC7 /* LMCameraControlsView.swift */; };
 		EAFBACBC2E7E7E7500586EC7 /* LMCameraPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACBA2E7E7E7500586EC7 /* LMCameraPreviewView.swift */; };
 		EAFBACBD2E7E7E7500586EC7 /* LMCameraBottomControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACB82E7E7E7500586EC7 /* LMCameraBottomControlsView.swift */; };
+		EAFBACC12E87DE4E00586EC7 /* LMCameraGridOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACBF2E87DE4E00586EC7 /* LMCameraGridOverlayView.swift */; };
+		EAFBACC42E8F69BB00586EC7 /* LMAccountProfilePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACC22E8F69BB00586EC7 /* LMAccountProfilePage.swift */; };
+		EAFBACC62E8F69D100586EC7 /* LMUserProfileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACC52E8F69D100586EC7 /* LMUserProfileModel.swift */; };
+		EAFBACC82E8F6A2300586EC7 /* LMProfileInfoTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACC72E8F6A2300586EC7 /* LMProfileInfoTableViewCell.swift */; };
+		EAFBAD792E8FCB4E00586EC7 /* LMUserSignInModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAD782E8FCB4E00586EC7 /* LMUserSignInModel.swift */; };
 		ED1A82AB7EA3BF2D0B7016C1 /* Pods_processor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */; };
 /* End PBXBuildFile section */
 
@@ -92,6 +97,11 @@
 		EAFBACB82E7E7E7500586EC7 /* LMCameraBottomControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraBottomControlsView.swift; sourceTree = "<group>"; };
 		EAFBACB92E7E7E7500586EC7 /* LMCameraControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraControlsView.swift; sourceTree = "<group>"; };
 		EAFBACBA2E7E7E7500586EC7 /* LMCameraPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraPreviewView.swift; sourceTree = "<group>"; };
+		EAFBACBF2E87DE4E00586EC7 /* LMCameraGridOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraGridOverlayView.swift; sourceTree = "<group>"; };
+		EAFBACC22E8F69BB00586EC7 /* LMAccountProfilePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAccountProfilePage.swift; sourceTree = "<group>"; };
+		EAFBACC52E8F69D100586EC7 /* LMUserProfileModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserProfileModel.swift; sourceTree = "<group>"; };
+		EAFBACC72E8F6A2300586EC7 /* LMProfileInfoTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileInfoTableViewCell.swift; sourceTree = "<group>"; };
+		EAFBAD782E8FCB4E00586EC7 /* LMUserSignInModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserSignInModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -165,6 +175,8 @@
 			children = (
 				EACA1CD02E7E49B600C80883 /* LMApiResponseModel.swift */,
 				EACA1D072E7E4CBF00C80883 /* LMPackageModel.swift */,
+				EAFBACC52E8F69D100586EC7 /* LMUserProfileModel.swift */,
+				EAFBAD782E8FCB4E00586EC7 /* LMUserSignInModel.swift */,
 			);
 			path = models;
 			sourceTree = "<group>";
@@ -172,6 +184,7 @@
 		EACA1CD32E7E49B600C80883 /* pages */ = {
 			isa = PBXGroup;
 			children = (
+				EAFBACC32E8F69BB00586EC7 /* profile */,
 				EACA1D022E7E4ADD00C80883 /* entrance */,
 				EACA1D0D2E7E516400C80883 /* home */,
 				EACA1D0E2E7E517400C80883 /* camera */,
@@ -330,6 +343,7 @@
 				EAFBAC982E7E5A0800586EC7 /* LMMineUserInfoView.swift */,
 				EAFBACA32E7E695100586EC7 /* LMMembershipCardView.swift */,
 				EAFBACA12E7E695100586EC7 /* LMGalleryMenuView.swift */,
+				EAFBACC72E8F6A2300586EC7 /* LMProfileInfoTableViewCell.swift */,
 			);
 			path = mine;
 			sourceTree = "<group>";
@@ -359,8 +373,17 @@
 				EAFBACB82E7E7E7500586EC7 /* LMCameraBottomControlsView.swift */,
 				EAFBACB92E7E7E7500586EC7 /* LMCameraControlsView.swift */,
 				EAFBACBA2E7E7E7500586EC7 /* LMCameraPreviewView.swift */,
+				EAFBACBF2E87DE4E00586EC7 /* LMCameraGridOverlayView.swift */,
 			);
 			path = camera;
+			sourceTree = "<group>";
+		};
+		EAFBACC32E8F69BB00586EC7 /* profile */ = {
+			isa = PBXGroup;
+			children = (
+				EAFBACC22E8F69BB00586EC7 /* LMAccountProfilePage.swift */,
+			);
+			path = profile;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -479,6 +502,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EAFBACC82E8F6A2300586EC7 /* LMProfileInfoTableViewCell.swift in Sources */,
 				EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */,
 				EAFBACAF2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift in Sources */,
 				EAFBACB02E7E79C100586EC7 /* LMFeaturePreviewView.swift in Sources */,
@@ -490,13 +514,16 @@
 				EACA1CF42E7E49B600C80883 /* anylibs.swift in Sources */,
 				EAFBAC9F2E7E65B000586EC7 /* LMProcessorTopBar.swift in Sources */,
 				EACA1CF62E7E49B600C80883 /* AppDelegate.swift in Sources */,
+				EAFBACC42E8F69BB00586EC7 /* LMAccountProfilePage.swift in Sources */,
 				EACA1D062E7E4C7C00C80883 /* LMPackageManager.swift in Sources */,
 				EACA1CF72E7E49B600C80883 /* SceneDelegate.swift in Sources */,
 				EACA1CF82E7E49B600C80883 /* LMDialogWrapper.swift in Sources */,
 				EAFBACAB2E7E72BC00586EC7 /* LMNewInstallerPage.swift in Sources */,
 				EACA1D112E7E519100C80883 /* LMMinePage.swift in Sources */,
+				EAFBAD792E8FCB4E00586EC7 /* LMUserSignInModel.swift in Sources */,
 				EACA1CF92E7E49B600C80883 /* LMNavigationWrapper.swift in Sources */,
 				EACA1CFA2E7E49B600C80883 /* LMVersionUpdateDialog.swift in Sources */,
+				EAFBACC12E87DE4E00586EC7 /* LMCameraGridOverlayView.swift in Sources */,
 				EACA1CFB2E7E49B600C80883 /* AppConfigs.swift in Sources */,
 				EAFBAC992E7E5A0800586EC7 /* LMMineUserInfoView.swift in Sources */,
 				EAFBACB52E7E7C7100586EC7 /* LMValidatedInputField.swift in Sources */,
@@ -511,6 +538,7 @@
 				EACA1CFF2E7E49B600C80883 /* AppTheme.swift in Sources */,
 				EACA1D002E7E49B600C80883 /* LMPageWrapper.swift in Sources */,
 				EAFBACA42E7E695100586EC7 /* LMMembershipCardView.swift in Sources */,
+				EAFBACC62E8F69D100586EC7 /* LMUserProfileModel.swift in Sources */,
 				EAFBACA62E7E695100586EC7 /* LMGalleryMenuView.swift in Sources */,
 				EAFBAC952E7E548A00586EC7 /* LMLoginPage.swift in Sources */,
 				EACA1D042E7E4B0A00C80883 /* LMLaunchSplashPage.swift in Sources */,

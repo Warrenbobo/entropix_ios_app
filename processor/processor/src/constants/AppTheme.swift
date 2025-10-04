@@ -13,7 +13,7 @@ struct AppTheme {
     struct ThemeColor {
         
         // 背景色
-        static let background = UIColor.hexColor("#F1F7FD")
+        static let background = UIColor.white
         
         // 文本颜色
         static let text = UIColor.hexColor("#09244F")

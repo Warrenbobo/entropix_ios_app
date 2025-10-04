@@ -10,7 +10,6 @@ import SnapKit
 
 class LMLoginPage: LMPageWrapper {
     
-    // MARK: - UI Components
     private let scrollView = UIScrollView()
     private let contentStackView = UIStackView()
     
@@ -44,6 +43,7 @@ class LMLoginPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationItem.title = "Sign In"
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
@@ -53,10 +53,10 @@ class LMLoginPage: LMPageWrapper {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
-        configureNavigationBarAppearance()
     }
 }
-// MARK: - User Interface Setup Methods
+
+
 extension LMLoginPage {
     
     private func setupUserInterfaceComponents() {
@@ -220,7 +220,6 @@ extension LMLoginPage {
     }
 }
 
-// MARK: - Layout Configuration Methods
 extension LMLoginPage {
     
     private func configureLayoutConstraints() {
@@ -310,7 +309,7 @@ extension LMLoginPage {
         }
     }
 }
-// MARK: - Content Configuration Methods
+
 extension LMLoginPage {
     
     private func configureDefaultContentAndStyles() {
@@ -356,7 +355,6 @@ extension LMLoginPage {
     }
 }
 
-// MARK: - User Interaction Handler Methods
 extension LMLoginPage {
     
     @objc private func handleNavigationBackButtonTapped() {
@@ -404,7 +402,6 @@ extension LMLoginPage {
 
 }
 
-// MARK: - Validated Input Field Delegate Methods
 extension LMLoginPage: LMValidatedInputFieldDelegate {
     
     func validatedInputFieldDidChangeText(_ inputField: LMValidatedInputField, text: String) {
@@ -435,7 +432,6 @@ extension LMLoginPage: LMValidatedInputFieldDelegate {
     }
 }
 
-// MARK: - Form Validation Methods
 extension LMLoginPage {
     
     private func validateFormInputsAndUpdateSignInButtonState() {

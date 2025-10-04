@@ -10,6 +10,16 @@ import Foundation
 struct AppConfigs {
     
     struct Host {
+        
+        static func path() -> String {
+#if DEBUG
+            return mvpTest
+#else
+            return release
+#endif
+        }
+        static let mvpTest = "http://47.111.152.147:8888/v1"
+        
         static let release = ""
     }
     

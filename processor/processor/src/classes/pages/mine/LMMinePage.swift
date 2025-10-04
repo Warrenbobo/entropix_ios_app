@@ -11,7 +11,7 @@ import SnapKit
 class LMMinePage: LMPageWrapper {
     
     private let topBar = LMProcessorTopBar()
-    private var scrollView: UIScrollView!
+    private var scrollView = UIScrollView()
     private var stackView: UIStackView!
     // 用户信息
     private let profileView = LMMineUserInfoView()
@@ -22,11 +22,12 @@ class LMMinePage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupCustomNavigationBar()
         setupScrollView()
         setupMineContentComponents()
         setupStackView()
+        setupCustomNavigationBar()
         createTheFloatingCameraEntranceView()
+        viewAdapter(scrollView)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -47,7 +48,10 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func setupScrollView() {
-        scrollView = UIScrollView()
+        scrollView.contentInset = UIEdgeInsets(top: AppTheme.Screen.safeAreaTop + 44,
+                                               left: 0,
+                                               bottom: 0,
+                                               right: 0)
         view.addSubview(scrollView)
         scrollView.snp.makeConstraints { make in
             make.edges.equalToSuperview()

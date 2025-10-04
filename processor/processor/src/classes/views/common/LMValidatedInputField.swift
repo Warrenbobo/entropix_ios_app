@@ -56,7 +56,6 @@ class LMValidatedInputField: UIView {
     private var errorMessageHeightConstraint: Constraint?
     private var textFieldTopConstraint: Constraint?
     
-    // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUserInterfaceComponents()
@@ -68,14 +67,12 @@ class LMValidatedInputField: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: - Public Configuration Methods
     func configureInputFieldProperties(title: String, placeholder: String, isSecure: Bool = false, keyboardType: UIKeyboardType = .default) {
         titleLabel.text = title
         self.placeholder = placeholder
         self.isSecureTextEntry = isSecure
         self.keyboardType = keyboardType
         
-        // 根据title是否为空来显示/隐藏标题标签并调整布局
         updateTitleLabelVisibilityAndLayout(title: title)
     }
     
@@ -105,7 +102,6 @@ class LMValidatedInputField: UIView {
     }
 }
 
-// MARK: - User Interface Setup Methods
 extension LMValidatedInputField {
     
     private func setupUserInterfaceComponents() {
@@ -129,7 +125,7 @@ extension LMValidatedInputField {
     private func setupTextFieldConfiguration() {
         textField.font = UIFont.systemFont(ofSize: 16)
         textField.textColor = UIColor.label
-        textField.backgroundColor = UIColor.systemGray6
+        textField.backgroundColor = .white
         textField.layer.cornerRadius = 12
         textField.layer.borderWidth = 1
         textField.layer.borderColor = UIColor.systemGray5.cgColor
@@ -168,7 +164,6 @@ extension LMValidatedInputField {
     }
 }
 
-// MARK: - Layout Configuration Methods
 extension LMValidatedInputField {
     
     private func configureLayoutConstraints() {
@@ -198,7 +193,6 @@ extension LMValidatedInputField {
     }
 }
 
-// MARK: - Content Configuration Methods
 extension LMValidatedInputField {
     
     private func configureDefaultContentAndStyles() {
@@ -271,7 +265,6 @@ extension LMValidatedInputField {
     }
 }
 
-// MARK: - User Interaction Handler Methods
 extension LMValidatedInputField {
     
     @objc private func handleTextFieldEditingChanged() {
@@ -297,7 +290,6 @@ extension LMValidatedInputField {
     }
 }
 
-// MARK: - Text Field Delegate Methods
 extension LMValidatedInputField: UITextFieldDelegate {
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -312,7 +304,7 @@ extension LMValidatedInputField: UITextFieldDelegate {
         return newLength <= maxLength
     }
 }
-// MARK: - Additional Public Configuration Methods
+
 extension LMValidatedInputField {
     
     func updateTitleText(_ title: String) {

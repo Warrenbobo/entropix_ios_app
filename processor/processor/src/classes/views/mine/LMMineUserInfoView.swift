@@ -53,7 +53,7 @@ class LMMineUserInfoView: UIView {
         
         // 头像设置
         avatarImageView.backgroundColor = UIColor.systemGray4
-        avatarImageView.layer.cornerRadius = 30
+        avatarImageView.layer.cornerRadius = 40
         avatarImageView.clipsToBounds = true
         avatarImageView.contentMode = .scaleAspectFill
         avatarImageView.isUserInteractionEnabled = true
@@ -73,10 +73,10 @@ class LMMineUserInfoView: UIView {
     
     private func setupUserViewConstraints() {
         avatarImageView.snp.makeConstraints { make in
-            make.top.equalTo(20)
+            make.top.equalTo(10)
             make.leading.equalToSuperview()
             make.size.equalTo(80)
-            make.bottom.equalTo(-20)
+            make.bottom.equalTo(-10)
         }
         
         nameLabel.snp.makeConstraints { make in

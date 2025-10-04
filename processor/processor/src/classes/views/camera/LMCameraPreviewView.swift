@@ -16,13 +16,14 @@ protocol LMCameraPreviewViewDelegate: AnyObject {
 
 class LMCameraPreviewView: UIView {
     
+    // MARK: - UI Components
     private let previewLayer = AVCaptureVideoPreviewLayer()
     private let focusIndicatorView = UIView()
-    private let gridOverlayView = UIView()
+    private let gridOverlayView = LMCameraGridOverlayView()
     
+    // MARK: - Properties
     weak var delegate: LMCameraPreviewViewDelegate?
     private var captureSession: AVCaptureSession?
-    private var isGridVisible = false
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -40,12 +41,7 @@ class LMCameraPreviewView: UIView {
         previewLayer.frame = bounds
     }
     
-    override func layoutSublayers(of layer: CALayer) {
-        super.layoutSublayers(of: layer)
-        if layer == gridOverlayView.layer {
-            updateGridLinesLayout()
-        }
-    }
+
 }
 
 extension LMCameraPreviewView {
@@ -82,58 +78,12 @@ extension LMCameraPreviewView {
     private func setupGridOverlayView() {
         addSubview(gridOverlayView)
         
-        gridOverlayView.backgroundColor = UIColor.clear
-        gridOverlayView.alpha = 0
-        gridOverlayView.isUserInteractionEnabled = false
-        
         gridOverlayView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
         
-        drawGridLinesInOverlayView()
-    }
-    
-    private func drawGridLinesInOverlayView() {
-        gridOverlayView.layer.sublayers?.removeAll()
-        
-        // 创建网格线
-        let gridLineColor = UIColor.white.withAlphaComponent(0.5)
-        let lineWidth: CGFloat = 1
-        
-        // 垂直线
-        for i in 1...2 {
-            let verticalLine = CALayer()
-            verticalLine.backgroundColor = gridLineColor.cgColor
-            gridOverlayView.layer.addSublayer(verticalLine)
-        }
-        
-        // 水平线
-        for i in 1...2 {
-            let horizontalLine = CALayer()
-            horizontalLine.backgroundColor = gridLineColor.cgColor
-            gridOverlayView.layer.addSublayer(horizontalLine)
-        }
-    }
-    
-    private func updateGridLinesLayout() {
-        guard let sublayers = gridOverlayView.layer.sublayers else { return }
-        
-        let bounds = gridOverlayView.bounds
-        let lineWidth: CGFloat = 1
-        
-        // 更新垂直线位置
-        for i in 0..<2 {
-            let line = sublayers[i]
-            let x = bounds.width / 3 * CGFloat(i + 1)
-            line.frame = CGRect(x: x, y: 0, width: lineWidth, height: bounds.height)
-        }
-        
-        // 更新水平线位置
-        for i in 2..<4 {
-            let line = sublayers[i]
-            let y = bounds.height / 3 * CGFloat(i - 1)
-            line.frame = CGRect(x: 0, y: y, width: bounds.width, height: lineWidth)
-        }
+        // 配置默认的三分法网格
+        gridOverlayView.configureForPhotographyRuleOfThirds()
     }
     
     private func setupGestureRecognizers() {
@@ -191,18 +141,14 @@ extension LMCameraPreviewView {
     }
     
     func toggleGridVisibility() {
-        isGridVisible.toggle()
-        
-        UIView.animate(withDuration: 0.3) {
-            self.gridOverlayView.alpha = self.isGridVisible ? 1.0 : 0.0
-        }
+        gridOverlayView.toggleGrid(animated: true)
     }
     
     func setGridVisibility(_ visible: Bool) {
-        isGridVisible = visible
-        
-        UIView.animate(withDuration: 0.3) {
-            self.gridOverlayView.alpha = visible ? 1.0 : 0.0
+        if visible {
+            gridOverlayView.showGrid(animated: true)
+        } else {
+            gridOverlayView.hideGrid(animated: true)
         }
     }
     
@@ -212,5 +158,95 @@ extension LMCameraPreviewView {
     
     func updatePreviewOrientation(_ orientation: AVCaptureVideoOrientation) {
         previewLayer.connection?.videoOrientation = orientation
+    }
+}
+// MARK: - Grid Configuration Methods
+extension LMCameraPreviewView {
+    
+    /// 设置网格类型
+    func setGridType(_ type: LMCameraGridType) {
+        gridOverlayView.setGridType(type)
+    }
+    
+    /// 设置网格样式
+    func setGridStyle(_ style: LMCameraGridStyle) {
+        gridOverlayView.setGridStyle(style)
+    }
+    
+    /// 获取当前网格显示状态
+    func isGridCurrentlyVisible() -> Bool {
+        return gridOverlayView.isGridCurrentlyVisible()
+    }
+    
+    /// 获取当前网格类型
+    func getCurrentGridType() -> LMCameraGridType {
+        return gridOverlayView.getCurrentGridType()
+    }
+    
+    /// 配置为摄影三分法网格
+    func configureForPhotographyRuleOfThirds() {
+        gridOverlayView.configureForPhotographyRuleOfThirds()
+    }
+    
+    /// 配置为专业摄影黄金比例网格
+    func configureForProfessionalPhotography() {
+        gridOverlayView.configureForProfessionalPhotography()
+    }
+    
+    /// 配置为建筑摄影网格
+    func configureForArchitecturalPhotography() {
+        gridOverlayView.configureForArchitecturalPhotography()
+    }
+    
+    /// 配置为艺术摄影网格
+    func configureForArtisticPhotography() {
+        gridOverlayView.configureForArtisticPhotography()
+    }
+    
+    /// 配置为简单中心对齐网格
+    func configureForCenterAlignment() {
+        gridOverlayView.configureForCenterAlignment()
+    }
+    
+    /// 循环切换网格类型
+    func cycleGridType() {
+        let currentType = getCurrentGridType()
+        let nextType: LMCameraGridType
+        
+        switch currentType {
+        case .ruleOfThirds:
+            nextType = .golden
+        case .golden:
+            nextType = .square
+        case .square:
+            nextType = .diagonal
+        case .diagonal:
+            nextType = .center
+        case .center:
+            nextType = .fibonacci
+        case .fibonacci:
+            nextType = .ruleOfThirds
+        }
+        
+        setGridType(nextType)
+    }
+    
+    /// 循环切换网格样式
+    func cycleGridStyle() {
+        let currentStyle = gridOverlayView.getCurrentGridStyle()
+        let nextStyle: LMCameraGridStyle
+        
+        // 简单的样式循环
+        if currentStyle.lineWidth == 1.0 && currentStyle.opacity == 0.6 {
+            nextStyle = .subtle
+        } else if currentStyle.lineWidth == 0.5 {
+            nextStyle = .bold
+        } else if currentStyle.lineWidth == 2.0 {
+            nextStyle = .dashed
+        } else {
+            nextStyle = .default
+        }
+        
+        setGridStyle(nextStyle)
     }
 }

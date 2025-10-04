@@ -7,3 +7,12 @@
 
 import Foundation
 
+struct LMApi {
+    
+    struct User {
+        
+        // 用户注册
+        static let register = "/users"
+        
+    }
+}
