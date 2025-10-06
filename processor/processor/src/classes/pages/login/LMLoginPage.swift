@@ -43,7 +43,7 @@ class LMLoginPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        navigationItem.title = "Sign In"
+        barTitle = "Sign In"
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
@@ -329,21 +329,6 @@ extension LMLoginPage {
         scrollView.contentInsetAdjustmentBehavior = .automatic
     }
     
-    private func configureNavigationBarAppearance() {
-        navigationItem.title = "Sign In"
-        navigationController?.navigationBar.prefersLargeTitles = false
-        
-        // 设置返回按钮
-        let backButton = UIBarButtonItem(
-            image: UIImage(systemName: "arrow.left"),
-            style: .plain,
-            target: self,
-            action: #selector(handleNavigationBackButtonTapped)
-        )
-        backButton.tintColor = UIColor.systemBlue
-        navigationItem.leftBarButtonItem = backButton
-    }
-    
     private func configureKeyboardDismissalBehavior() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleViewTappedToDismissKeyboard))
         view.addGestureRecognizer(tapGesture)
@@ -356,10 +341,6 @@ extension LMLoginPage {
 }
 
 extension LMLoginPage {
-    
-    @objc private func handleNavigationBackButtonTapped() {
-        navigationController?.popViewController(animated: true)
-    }
     
     @objc private func handlePrimarySignInButtonTapped() {
         print("Primary sign in button tapped")
@@ -536,7 +517,6 @@ extension LMLoginPage {
     }
 }
 
-// MARK: - Navigation and Presentation Methods
 extension LMLoginPage {
     
     private func presentForgotPasswordViewController() {
@@ -545,8 +525,9 @@ extension LMLoginPage {
     }
     
     private func navigateToSignUpViewController() {
-        let signUpVC = createSignUpViewController()
-        navigationController?.pushViewController(signUpVC, animated: true)
+        let signUpVC = LMSignUpPage()
+        navigationController?.pushViewController(signUpVC,
+                                                 animated: true)
     }
     
     private func navigateToMainApplicationInterface() {
@@ -569,7 +550,6 @@ extension LMLoginPage {
     }
 }
 
-// MARK: - View Controller Factory Methods
 extension LMLoginPage {
     
     private func createForgotPasswordViewController() -> UIViewController {
@@ -579,12 +559,6 @@ extension LMLoginPage {
         return forgotPasswordVC
     }
     
-    private func createSignUpViewController() -> UIViewController {
-        let signUpVC = LMSignUpPage()
-        signUpVC.view.backgroundColor = UIColor.systemBackground
-        signUpVC.title = "Sign Up"
-        return signUpVC
-    }
 }
 
 // MARK: - Public Configuration Methods

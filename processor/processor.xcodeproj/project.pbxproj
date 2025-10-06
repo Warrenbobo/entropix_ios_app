@@ -50,6 +50,7 @@
 		EAFBACC62E8F69D100586EC7 /* LMUserProfileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACC52E8F69D100586EC7 /* LMUserProfileModel.swift */; };
 		EAFBACC82E8F6A2300586EC7 /* LMProfileInfoTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBACC72E8F6A2300586EC7 /* LMProfileInfoTableViewCell.swift */; };
 		EAFBAD792E8FCB4E00586EC7 /* LMUserSignInModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAD782E8FCB4E00586EC7 /* LMUserSignInModel.swift */; };
+		EAFBAD7B2E936ABD00586EC7 /* LMNavigationTitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAD7A2E936ABD00586EC7 /* LMNavigationTitleView.swift */; };
 		ED1A82AB7EA3BF2D0B7016C1 /* Pods_processor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */; };
 /* End PBXBuildFile section */
 
@@ -102,6 +103,7 @@
 		EAFBACC52E8F69D100586EC7 /* LMUserProfileModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserProfileModel.swift; sourceTree = "<group>"; };
 		EAFBACC72E8F6A2300586EC7 /* LMProfileInfoTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileInfoTableViewCell.swift; sourceTree = "<group>"; };
 		EAFBAD782E8FCB4E00586EC7 /* LMUserSignInModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserSignInModel.swift; sourceTree = "<group>"; };
+		EAFBAD7A2E936ABD00586EC7 /* LMNavigationTitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNavigationTitleView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -354,6 +356,7 @@
 				EAFBACA82E7E6C1B00586EC7 /* LMFloatingCameraButton.swift */,
 				EAFBAC9E2E7E65B000586EC7 /* LMProcessorTopBar.swift */,
 				EAFBACB32E7E7C7100586EC7 /* LMValidatedInputField.swift */,
+				EAFBAD7A2E936ABD00586EC7 /* LMNavigationTitleView.swift */,
 			);
 			path = common;
 			sourceTree = "<group>";
@@ -532,6 +535,7 @@
 				EAFBACA92E7E6C1B00586EC7 /* LMFloatingCameraButton.swift in Sources */,
 				EACA1CFD2E7E49B600C80883 /* LMApi.swift in Sources */,
 				EAFBACB22E7E7B0100586EC7 /* LMSignUpPage.swift in Sources */,
+				EAFBAD7B2E936ABD00586EC7 /* LMNavigationTitleView.swift in Sources */,
 				EACA1D0C2E7E504F00C80883 /* LMWebViewPage.swift in Sources */,
 				EACA1D082E7E4CBF00C80883 /* LMPackageModel.swift in Sources */,
 				EACA1CFE2E7E49B600C80883 /* LMApiClient.swift in Sources */,

@@ -38,6 +38,7 @@ class LMSignUpPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        barTitle = "Create Account"
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
@@ -47,7 +48,6 @@ class LMSignUpPage: LMPageWrapper {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
-        configureNavigationBarAppearance()
     }
 }
 
@@ -346,21 +346,6 @@ extension LMSignUpPage {
         scrollView.contentInsetAdjustmentBehavior = .automatic
     }
     
-    private func configureNavigationBarAppearance() {
-        navigationItem.title = "Create Account"
-        navigationController?.navigationBar.prefersLargeTitles = false
-        
-        // 设置返回按钮
-        let backButton = UIBarButtonItem(
-            image: UIImage(systemName: "arrow.left"),
-            style: .plain,
-            target: self,
-            action: #selector(handleNavigationBackButtonTapped)
-        )
-        backButton.tintColor = UIColor.systemBlue
-        navigationItem.leftBarButtonItem = backButton
-    }
-    
     private func configureKeyboardDismissalBehavior() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleViewTappedToDismissKeyboard))
         view.addGestureRecognizer(tapGesture)
@@ -373,10 +358,6 @@ extension LMSignUpPage {
 }
 
 extension LMSignUpPage {
-    
-    @objc private func handleNavigationBackButtonTapped() {
-        navigationController?.popViewController(animated: true)
-    }
     
     @objc private func handlePrimarySignUpButtonTapped() {
         print("Primary sign up button tapped")
@@ -435,7 +416,6 @@ extension LMSignUpPage {
     }
 }
 
-// MARK: - Validated Input Field Delegate Methods
 extension LMSignUpPage: LMValidatedInputFieldDelegate {
     
     func validatedInputFieldDidChangeText(_ inputField: LMValidatedInputField, text: String) {
@@ -473,7 +453,6 @@ extension LMSignUpPage: LMValidatedInputFieldDelegate {
     }
 }
 
-// MARK: - Form Validation Methods
 extension LMSignUpPage {
     
     private func validateFormInputsAndUpdateSignUpButtonState() {
@@ -556,7 +535,6 @@ extension LMSignUpPage {
     }
 }
 
-// MARK: - Registration Service Methods
 extension LMSignUpPage {
     
     private func performUserRegistrationWithFormData() {

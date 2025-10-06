@@ -36,15 +36,25 @@ class LMPageWrapper: UIViewController {
         appearance.shadowImage = UIImage()
         appearance.shadowColor = nil
         appearance.titleTextAttributes = [.font: UIFont.systemFont(ofSize: 18, weight: .medium),
-                                         .foregroundColor: UIColor.white]
+                                          .foregroundColor: UIColor.white]
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
     }
+    
+    /// 设置导航栏标题
+    public var barTitle: String = "" {
+        didSet {
+            titleLabel.text = barTitle
+        }
+    }
+    
+    private let titleLabel = UILabel()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
         backButtonCreated()
+        setupCustomNavigationBarTitleView()
         navigationController?.interactivePopGestureRecognizer?.delegate = self
     }
     
@@ -57,11 +67,30 @@ class LMPageWrapper: UIViewController {
         guard navigationController != nil else {
             return
         }
-        let backButtonItem = UIBarButtonItem(image: UIImage(named: "back_arrow")?.withRenderingMode(.alwaysOriginal),
-                                             style: .done,
-                                             target: self,
-                                             action: #selector(backButtonItemOnTap))
-        navigationItem.leftBarButtonItem = backButtonItem
+        let barButton = UIButton(type: .custom)
+        barButton.frame = CGRect(origin: .zero,
+                                 size: CGSize(width: 44,
+                                              height: 44))
+        barButton.setImage(UIImage(named: "back_item")?.withRenderingMode(.alwaysOriginal),
+                           for: .normal)
+        barButton.addTarget(self,
+                            action: #selector(backButtonItemOnTap),
+                            for: .touchUpInside)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: barButton)
+    }
+    
+    /// 创建自定义的导航栏标题
+    private func setupCustomNavigationBarTitleView() {
+        titleLabel.font = .systemFont(ofSize: 24, weight: .bold)
+        titleLabel.textColor = .black
+        let titleView = LMNavigationTitleView(frame: CGRect(origin: .zero,
+                                                            size: CGSize(width: AppTheme.Screen.width,
+                                                                         height: 44)))
+        titleView.addSubview(titleLabel)
+        titleLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        navigationItem.titleView = titleView
     }
 }
 
