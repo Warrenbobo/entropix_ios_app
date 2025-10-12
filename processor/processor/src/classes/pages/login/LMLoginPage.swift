@@ -94,7 +94,7 @@ extension LMLoginPage {
         
         // 应用图标设置
         appIconImageView.backgroundColor = UIColor.systemPurple
-        appIconImageView.layer.cornerRadius = 25
+        appIconImageView.layer.cornerRadius = 20
         appIconImageView.clipsToBounds = true
         appIconImageView.contentMode = .center
         appIconImageView.image = UIImage(systemName: "camera.fill")
@@ -102,7 +102,7 @@ extension LMLoginPage {
         
         // 应用名称设置
         appNameLabel.text = "InspireCam"
-        appNameLabel.font = UIFont.systemFont(ofSize: 32, weight: .bold)
+        appNameLabel.font = UIFont.systemFont(ofSize: 30, weight: .bold)
         appNameLabel.textColor = UIColor.label
         appNameLabel.textAlignment = .center
         appNameLabel.numberOfLines = 0
@@ -110,7 +110,7 @@ extension LMLoginPage {
         // 应用标语设置
         appTaglineLabel.text = "Unlock your creative potential"
         appTaglineLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        appTaglineLabel.textColor = UIColor.secondaryLabel
+        appTaglineLabel.textColor = UIColor.systemGray
         appTaglineLabel.textAlignment = .center
         appTaglineLabel.numberOfLines = 0
     }
@@ -142,8 +142,8 @@ extension LMLoginPage {
         
         // 忘记密码按钮设置
         forgotPasswordButton.setTitle("Forgot password?", for: .normal)
-        forgotPasswordButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        forgotPasswordButton.setTitleColor(UIColor.secondaryLabel, for: .normal)
+        forgotPasswordButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        forgotPasswordButton.setTitleColor(UIColor.label, for: .normal)
         forgotPasswordButton.contentHorizontalAlignment = .trailing
         forgotPasswordButton.addTarget(self, action: #selector(handleForgotPasswordButtonTapped), for: .touchUpInside)
     }
@@ -156,7 +156,7 @@ extension LMLoginPage {
         primarySignInButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         primarySignInButton.setTitleColor(UIColor.white, for: .normal)
         primarySignInButton.backgroundColor = UIColor.systemOrange
-        primarySignInButton.layer.cornerRadius = 25
+        primarySignInButton.layer.cornerRadius = 12
         primarySignInButton.addTarget(self, action: #selector(handlePrimarySignInButtonTapped), for: .touchUpInside)
         
         // 添加按钮触摸反馈效果
@@ -168,7 +168,7 @@ extension LMLoginPage {
         
         separatorLabel.text = "or"
         separatorLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
-        separatorLabel.textColor = UIColor.secondaryLabel
+        separatorLabel.textColor = UIColor.systemGray2
         separatorLabel.textAlignment = .center
     }
     
@@ -177,12 +177,12 @@ extension LMLoginPage {
         
         // Apple登录按钮设置
         appleSignInButton.setTitle("🍎 Apple", for: .normal)
-        appleSignInButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        appleSignInButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         appleSignInButton.setTitleColor(UIColor.label, for: .normal)
-        appleSignInButton.backgroundColor = UIColor.clear
-        appleSignInButton.layer.cornerRadius = 25
-        appleSignInButton.layer.borderWidth = 1
-        appleSignInButton.layer.borderColor = UIColor.systemGray4.cgColor
+        appleSignInButton.backgroundColor = UIColor.systemBackground
+        appleSignInButton.layer.cornerRadius = 12
+        appleSignInButton.layer.borderWidth = 2
+        appleSignInButton.layer.borderColor = UIColor.systemGray5.cgColor
         appleSignInButton.addTarget(self, action: #selector(handleAppleSignInButtonTapped), for: .touchUpInside)
         
         // 添加按钮触摸反馈效果
@@ -246,13 +246,13 @@ extension LMLoginPage {
     private func configureBrandingSectionConstraints() {
         appIconImageView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalToSuperview().offset(40)
+            make.top.equalToSuperview().offset(48)
             make.size.equalTo(80)
         }
         
         appNameLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalTo(appIconImageView.snp.bottom).offset(24)
+            make.top.equalTo(appIconImageView.snp.bottom).offset(16)
             make.leading.trailing.equalToSuperview()
         }
         
@@ -260,7 +260,7 @@ extension LMLoginPage {
             make.centerX.equalToSuperview()
             make.top.equalTo(appNameLabel.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-20)
+            make.bottom.equalToSuperview().offset(-24)
         }
     }
     
@@ -299,7 +299,7 @@ extension LMLoginPage {
     private func configureAppleSignInSectionConstraints() {
         appleSignInButton.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-            make.height.equalTo(50)
+            make.height.equalTo(48)
         }
     }
     
@@ -337,6 +337,18 @@ extension LMLoginPage {
     private func setupUserInteractionHandlers() {
         // 所有的交互处理器已在UI设置方法中配置
         print("User interaction handlers configured successfully")
+    }
+    
+    private func updateGradientLayerFrames() {
+        // 更新应用图标渐变层frame
+        if let gradientLayer = appIconImageView.layer.sublayers?.first as? CAGradientLayer {
+            gradientLayer.frame = appIconImageView.bounds
+        }
+        
+        // 更新登录按钮渐变层frame
+        if let gradientLayer = primarySignInButton.layer.sublayers?.first as? CAGradientLayer {
+            gradientLayer.frame = primarySignInButton.bounds
+        }
     }
 }
 
@@ -520,8 +532,8 @@ extension LMLoginPage {
 extension LMLoginPage {
     
     private func presentForgotPasswordViewController() {
-        let forgotPasswordVC = createForgotPasswordViewController()
-        present(forgotPasswordVC, animated: true)
+        let forgotPasswordVC = LMForgotPasswordPage()
+        navigationController?.pushViewController(forgotPasswordVC, animated: true)
     }
     
     private func navigateToSignUpViewController() {
@@ -550,18 +562,6 @@ extension LMLoginPage {
     }
 }
 
-extension LMLoginPage {
-    
-    private func createForgotPasswordViewController() -> UIViewController {
-        let forgotPasswordVC = UIViewController()
-        forgotPasswordVC.view.backgroundColor = UIColor.systemBackground
-        forgotPasswordVC.title = "Forgot Password"
-        return forgotPasswordVC
-    }
-    
-}
-
-// MARK: - Public Configuration Methods
 extension LMLoginPage {
     
     func prefillUsernameFieldWithValue(_ username: String) {

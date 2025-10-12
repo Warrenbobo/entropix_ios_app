@@ -23,7 +23,12 @@ class LMPageWrapper: UIViewController {
     /// 返回按钮点击事件
     @objc public func backButtonItemOnTap() {
         if navigationController?.presentingViewController != nil {
-            dismiss(animated: true)
+            let routeCount = navigationController?.children.count ?? 0
+            if routeCount <= 1 {
+                dismiss(animated: true)
+            } else {
+                navigationController?.popViewController(animated: true)
+            }
         } else {
             navigationController?.popViewController(animated: true)
         }

@@ -18,7 +18,7 @@ class LMMinePage: LMPageWrapper {
     // 会员及广告奖励
     private var membershipCardView = LMMembershipCardView()
     // 产品菜单
-    private var galleryMenuView = LMGalleryMenuView()
+    private var galleryMenuView = LMGalleryView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -69,15 +69,6 @@ class LMMinePage: LMPageWrapper {
         membershipCardView.setWatchAdsButtonAction { [weak self] in
             self?.watchAdsButtonTapped()
         }
-        
-        // 标签页组件
-        galleryMenuView = LMGalleryMenuView()
-        galleryMenuView.setGalleryButtonAction { [weak self] in
-            self?.galleryTabTapped()
-        }
-        galleryMenuView.setSavedIdeasButtonAction { [weak self] in
-            self?.savedIdeasTabTapped()
-        }
     }
     
     private func setupStackView() {
@@ -113,7 +104,8 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func moreButtonTapped() {
-        print("More button tapped")
+        let moreSetting = LMSettingPage()
+        navigationController?.pushViewController(moreSetting, animated: true)
     }
     
     private func avatarTapped() {
