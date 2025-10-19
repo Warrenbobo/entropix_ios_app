@@ -248,7 +248,9 @@ extension LMSettingPage {
     
     private func handleNotificationTapped() {
         // 导航到通知设置页面
-        showComingSoonAlert(for: "Notification Settings")
+        let notifications = LMNotificationsPage()
+        navigationController?.pushViewController(notifications,
+                                                 animated: true)
     }
     
     private func handleLanguageTapped() {
@@ -265,13 +267,16 @@ extension LMSettingPage {
     
     private func handleFrequentQuestionsTapped() {
         // 导航到常见问题页面
-        showComingSoonAlert(for: "Frequent Questions")
+        let faq = LMFAQPage()
+        navigationController?.pushViewController(faq,
+                                                 animated: true)
     }
     
     private func handleAboutTapped() {
         // 导航到关于页面
         let aboutPage = LMAboutPage()
-        navigationController?.pushViewController(aboutPage, animated: true)
+        navigationController?.pushViewController(aboutPage,
+                                                 animated: true)
     }
 }
 
@@ -337,7 +342,7 @@ extension LMSettingPage {
     
     private func navigateToLoginPage() {
         // 导航到登录页面
-        let loginPage = LMLoginPage()
+        let loginPage = LMSignInPage()
         let navController = LMNavigationWrapper(rootViewController: loginPage)
         
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,

@@ -10,6 +10,8 @@ import SnapKit
 
 class LMLaunchSplashPage: UIViewController {
     
+    public weak var window: UIWindow?
+    
     /// 创建开屏界面
     public static func createLaunchContentViews() -> UIView {
         let splashView = UIView(frame: UIScreen.main.bounds)
@@ -36,28 +38,36 @@ class LMLaunchSplashPage: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: animated)
+        navigationController?.setNavigationBarHidden(true,
+                                                     animated: animated)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        navigationController?.setNavigationBarHidden(false,
+                                                     animated: animated)
     }
     
     /// 进入APP时的基础配置
     private func loadAppDataAndCheckVersion() {
-        
+        LMPackageManager.setup()
+        checkPrivacyPermissionState()
     }
     
     /// 检查用户是否已经同意隐私授权
     private func checkPrivacyPermissionState() {
         // 检查是否显示过隐私协议
-        
+        loadPackageDataAndEnterHomePage()
     }
     
     /// 加载配置信息并进入首页
     private func loadPackageDataAndEnterHomePage() {
-        
+        LMUserManager.loadCachedUserModelData()
+        var rootController: UIViewController = LMNewInstallerPage()
+        if LMUserManager.isSignIn {
+            rootController = LMMinePage()
+        }
+        window?.rootViewController = LMNavigationWrapper(rootViewController: rootController)
     }
     
     /// 添加界面

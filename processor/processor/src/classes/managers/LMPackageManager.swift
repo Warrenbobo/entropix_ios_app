@@ -35,7 +35,6 @@ struct LMPackageManager {
     public static func setup() {
         loadAppPackageData()
         queryDeviceUUID()
-        
     }
     
     

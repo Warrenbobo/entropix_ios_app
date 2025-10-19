@@ -18,7 +18,7 @@ class LMMinePage: LMPageWrapper {
     // 会员及广告奖励
     private var membershipCardView = LMMembershipCardView()
     // 产品菜单
-    private var galleryMenuView = LMGalleryView()
+    private var photoCollectionView = LMPhotoCollectionView()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -52,6 +52,10 @@ class LMMinePage: LMPageWrapper {
                                                left: 0,
                                                bottom: 0,
                                                right: 0)
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.alwaysBounceVertical = true
+        
         view.addSubview(scrollView)
         scrollView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -69,6 +73,11 @@ class LMMinePage: LMPageWrapper {
         membershipCardView.setWatchAdsButtonAction { [weak self] in
             self?.watchAdsButtonTapped()
         }
+        
+        // 照片集合视图
+        photoCollectionView.onHeightChanged = { [weak self] newHeight in
+            self?.updatePhotoCollectionViewHeight(newHeight)
+        }
     }
     
     private func setupStackView() {
@@ -80,7 +89,7 @@ class LMMinePage: LMPageWrapper {
         
         stackView.addArrangedSubview(profileView)
         stackView.addArrangedSubview(membershipCardView)
-        stackView.addArrangedSubview(galleryMenuView)
+        stackView.addArrangedSubview(photoCollectionView)
         stackView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(20)
             make.leading.trailing.equalToSuperview().inset(20)
@@ -109,7 +118,7 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func avatarTapped() {
-        let loginView = LMLoginPage()
+        let loginView = LMSignInPage()
         let router = LMNavigationWrapper(rootViewController: loginView)
         router.modalPresentationStyle = .fullScreen
         present(router, animated: true)
@@ -138,5 +147,12 @@ class LMMinePage: LMPageWrapper {
     private func cameraButtonTapped() {
         let cameraView = LMCameraPage()
         navigationController?.pushViewController(cameraView, animated: true)
+    }
+    
+    private func updatePhotoCollectionViewHeight(_ newHeight: CGFloat) {
+        // 当照片集合视图高度变化时，更新布局
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
+        }
     }
 }

@@ -1,5 +1,5 @@
 //
-//  LMLoginPage.swift
+//  LMSignInPage.swift
 //  processor
 //
 //  Created by muz on 2025/9/20.
@@ -8,7 +8,7 @@
 import UIKit
 import SnapKit
 
-class LMLoginPage: LMPageWrapper {
+class LMSignInPage: LMPageWrapper {
     
     private let scrollView = UIScrollView()
     private let contentStackView = UIStackView()
@@ -57,7 +57,7 @@ class LMLoginPage: LMPageWrapper {
 }
 
 
-extension LMLoginPage {
+extension LMSignInPage {
     
     private func setupUserInterfaceComponents() {
         setupScrollViewAndContentStack()
@@ -220,7 +220,7 @@ extension LMLoginPage {
     }
 }
 
-extension LMLoginPage {
+extension LMSignInPage {
     
     private func configureLayoutConstraints() {
         configureScrollViewConstraints()
@@ -310,7 +310,7 @@ extension LMLoginPage {
     }
 }
 
-extension LMLoginPage {
+extension LMSignInPage {
     
     private func configureDefaultContentAndStyles() {
         configureViewBackgroundAndAppearance()
@@ -352,7 +352,7 @@ extension LMLoginPage {
     }
 }
 
-extension LMLoginPage {
+extension LMSignInPage {
     
     @objc private func handlePrimarySignInButtonTapped() {
         print("Primary sign in button tapped")
@@ -395,7 +395,7 @@ extension LMLoginPage {
 
 }
 
-extension LMLoginPage: LMValidatedInputFieldDelegate {
+extension LMSignInPage: LMValidatedInputFieldDelegate {
     
     func validatedInputFieldDidChangeText(_ inputField: LMValidatedInputField, text: String) {
         // 清除之前的错误信息
@@ -425,7 +425,7 @@ extension LMLoginPage: LMValidatedInputFieldDelegate {
     }
 }
 
-extension LMLoginPage {
+extension LMSignInPage {
     
     private func validateFormInputsAndUpdateSignInButtonState() {
         let isUsernameValid = validateUsernameInputField()
@@ -472,7 +472,7 @@ extension LMLoginPage {
 }
 
 // MARK: - Authentication Service Methods
-extension LMLoginPage {
+extension LMSignInPage {
     
     private func performUserAuthenticationWithCredentials() {
         // 验证表单输入
@@ -529,7 +529,7 @@ extension LMLoginPage {
     }
 }
 
-extension LMLoginPage {
+extension LMSignInPage {
     
     private func presentForgotPasswordViewController() {
         let forgotPasswordVC = LMForgotPasswordPage()
@@ -562,7 +562,7 @@ extension LMLoginPage {
     }
 }
 
-extension LMLoginPage {
+extension LMSignInPage {
     
     func prefillUsernameFieldWithValue(_ username: String) {
         usernameInputField.text = username

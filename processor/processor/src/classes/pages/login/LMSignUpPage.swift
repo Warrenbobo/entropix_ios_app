@@ -591,7 +591,7 @@ extension LMSignUpPage {
                             params: ["username": usernameInputField.text ?? "",
                                      "password": passwordInputField.text ?? "",
                                      "email": emailInputField.text ?? ""],
-                            type: LMUserSignInModel.self) { response in
+                            type: LMUserModel.self) { response in
             let signInModel = response.value
             print("-------------sigin user nickname is \(signInModel?.username ?? "")")
         }
