@@ -538,9 +538,14 @@ extension LMSignInPage {
     }
     
     private func navigateToMainApplicationInterface() {
-        if let mainRootPage = AppTheme.Screen.mainPage {
-            AppTheme.Screen.window()?.rootViewController = mainRootPage
-        }
+        let userModel = LMUserModel(userId: "1314125",
+                                    username: "HHHHaaa",
+                                    email: "leonardwork@163.com",
+                                    membership: "0")
+        LMUserManager.userModel = userModel
+        LMUserManager.cachedUserModelData()
+        let mainPage = LMNavigationWrapper(rootViewController: LMMinePage())
+        AppTheme.Screen.window()?.rootViewController = mainPage
     }
     
     private func presentInvalidCredentialsAlert() {

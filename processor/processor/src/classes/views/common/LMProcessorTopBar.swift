@@ -45,8 +45,7 @@ class LMProcessorTopBar: UIView {
         titleLabel.textAlignment = .left
         
         contentView.addSubview(moreButton)
-        moreButton.setImage(UIImage(systemName: "line.horizontal.3"), for: .normal)
-        moreButton.tintColor = UIColor.label
+        moreButton.setImage(UIImage(named: "more_option"), for: .normal)
         moreButton.addTarget(self, action: #selector(moreButtonTapped), for: .touchUpInside)
     }
     

@@ -19,7 +19,7 @@ struct LMUserManager {
     static var userModel: LMUserModel?
     
     
-    private static func cachedUserModelData() {
+    static func cachedUserModelData() {
         guard let model = userModel else { return }
         if let modelData = try? JSONEncoder().encode(model) {
             UserDefaults.standard.set(modelData, forKey: cachedUserModelKey)

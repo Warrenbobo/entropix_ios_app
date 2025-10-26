@@ -40,6 +40,8 @@ class LMPhotoCollectionView: UIView {
     
     // 回调，用于通知父视图高度变化
     var onHeightChanged: ((CGFloat) -> Void)?
+    // 回调，用于通知父视图tab变化
+    var onTabChanged: ((TabType) -> Void)?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -191,7 +193,7 @@ extension LMPhotoCollectionView {
         switchToTab(.savedIdeas)
     }
     
-    private func switchToTab(_ tab: TabType) {
+    func switchToTab(_ tab: TabType) {
         guard currentTab != tab else { return }
         
         currentTab = tab
@@ -226,6 +228,13 @@ extension LMPhotoCollectionView {
         
         // 更新高度
         updateContentHeight()
+        
+        // 通知父视图tab变化
+        onTabChanged?(tab)
+    }
+    
+    func getCurrentTab() -> TabType {
+        return currentTab
     }
     
     private func updateContentHeight() {
@@ -285,6 +294,9 @@ extension LMPhotoCollectionView: UIScrollViewDelegate {
                 }
                 self.layoutIfNeeded()
             }
+            
+            // 通知父视图tab变化
+            onTabChanged?(newTab)
         }
     }
 }

@@ -20,12 +20,18 @@ class LMMinePage: LMPageWrapper {
     // 产品菜单
     private var photoCollectionView = LMPhotoCollectionView()
     
+    // 悬浮菜单相关
+    private var floatingMenuContainer: UIView = UIView()
+    private var photoCollectionViewOriginalFrame: CGRect = .zero
+    private var isFloatingMenuVisible = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupScrollView()
         setupMineContentComponents()
         setupStackView()
         setupCustomNavigationBar()
+        setupFloatingMenu()
         createTheFloatingCameraEntranceView()
         viewAdapter(scrollView)
     }
@@ -55,6 +61,7 @@ class LMMinePage: LMPageWrapper {
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.alwaysBounceVertical = true
+        scrollView.delegate = self
         
         view.addSubview(scrollView)
         scrollView.snp.makeConstraints { make in
@@ -73,10 +80,17 @@ class LMMinePage: LMPageWrapper {
         membershipCardView.setWatchAdsButtonAction { [weak self] in
             self?.watchAdsButtonTapped()
         }
+        membershipCardView.setUpgradeButtonAction { [weak self] in
+            self?.upgradeButtonTapped()
+        }
         
         // 照片集合视图
         photoCollectionView.onHeightChanged = { [weak self] newHeight in
             self?.updatePhotoCollectionViewHeight(newHeight)
+        }
+        
+        photoCollectionView.onTabChanged = { [weak self] tab in
+            self?.updateFloatingMenuState(tab)
         }
     }
     
@@ -128,20 +142,8 @@ class LMMinePage: LMPageWrapper {
         print("Watch ads button tapped")
     }
     
-    private func galleryTabTapped() {
-        print("Gallery tab tapped")
-    }
-    
-    private func savedIdeasTabTapped() {
-        print("Saved ideas tab tapped")
-    }
-    
-    private func imageView1Tapped() {
-        print("Image view 1 tapped")
-    }
-    
-    private func imageView2Tapped() {
-        print("Image view 2 tapped")
+    private func upgradeButtonTapped() {
+        print("Upgrade button tapped")
     }
     
     private func cameraButtonTapped() {
@@ -149,10 +151,170 @@ class LMMinePage: LMPageWrapper {
         navigationController?.pushViewController(cameraView, animated: true)
     }
     
+    private func setupFloatingMenu() {
+        // 创建悬浮菜单容器
+        floatingMenuContainer.backgroundColor = UIColor.systemBackground
+        floatingMenuContainer.isHidden = true
+        
+        view.addSubview(floatingMenuContainer)
+        floatingMenuContainer.snp.makeConstraints { make in
+            make.top.equalTo(topBar.snp.bottom)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(60)
+        }
+        
+        // 获取photoCollectionView的菜单按钮引用并复制到悬浮容器中
+        setupFloatingMenuButtons()
+    }
+    
+    private func setupFloatingMenuButtons() {
+        // 创建悬浮菜单按钮
+        let floatingGalleryButton = UIButton()
+        let floatingSavedIdeasButton = UIButton()
+        let floatingTabIndicator = UIView()
+        
+        // 设置按钮样式
+        floatingGalleryButton.setTitle("Gallery", for: .normal)
+        floatingGalleryButton.setTitleColor(UIColor.systemBlue, for: .selected)
+        floatingGalleryButton.setTitleColor(UIColor.systemGray, for: .normal)
+        floatingGalleryButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        floatingGalleryButton.isSelected = true
+        floatingGalleryButton.addTarget(self, action: #selector(floatingGalleryTabTapped), for: .touchUpInside)
+        
+        floatingSavedIdeasButton.setTitle("Saved Ideas", for: .normal)
+        floatingSavedIdeasButton.setTitleColor(UIColor.systemBlue, for: .selected)
+        floatingSavedIdeasButton.setTitleColor(UIColor.systemGray, for: .normal)
+        floatingSavedIdeasButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        floatingSavedIdeasButton.addTarget(self, action: #selector(floatingSavedIdeasTabTapped), for: .touchUpInside)
+        
+        floatingTabIndicator.backgroundColor = UIColor.systemBlue
+        floatingTabIndicator.layer.cornerRadius = 2
+        
+        floatingMenuContainer.addSubview(floatingGalleryButton)
+        floatingMenuContainer.addSubview(floatingSavedIdeasButton)
+        floatingMenuContainer.addSubview(floatingTabIndicator)
+        
+        // 设置约束
+        floatingGalleryButton.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(44)
+            make.centerY.equalToSuperview()
+            make.width.equalTo(80)
+        }
+        
+        floatingSavedIdeasButton.snp.makeConstraints { make in
+            make.leading.equalTo(floatingGalleryButton.snp.trailing).offset(40)
+            make.centerY.equalToSuperview()
+            make.width.equalTo(120)
+        }
+        
+        floatingTabIndicator.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().offset(-8)
+            make.centerX.equalTo(floatingGalleryButton)
+            make.width.equalTo(50)
+            make.height.equalTo(4)
+        }
+        
+        // 保存引用以便后续更新
+        floatingMenuContainer.tag = 999 // 用于标识
+    }
+    
+    @objc private func floatingGalleryTabTapped() {
+        photoCollectionView.switchToTab(.gallery)
+        updateFloatingMenuState(.gallery)
+    }
+    
+    @objc private func floatingSavedIdeasTabTapped() {
+        photoCollectionView.switchToTab(.savedIdeas)
+        updateFloatingMenuState(.savedIdeas)
+    }
+    
+    private func updateFloatingMenuState(_ tab: TabType) {
+        let galleryButton = floatingMenuContainer.subviews.first { $0 is UIButton && ($0 as! UIButton).titleLabel?.text == "Gallery" } as? UIButton
+        let savedIdeasButton = floatingMenuContainer.subviews.first { $0 is UIButton && ($0 as! UIButton).titleLabel?.text == "Saved Ideas" } as? UIButton
+        let indicator = floatingMenuContainer.subviews.first { !($0 is UIButton) }
+        
+        galleryButton?.isSelected = (tab == .gallery)
+        savedIdeasButton?.isSelected = (tab == .savedIdeas)
+        
+        // 动画移动指示器
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseInOut) {
+            if tab == .gallery {
+                indicator?.snp.remakeConstraints { make in
+                    make.bottom.equalToSuperview().offset(-8)
+                    make.centerX.equalTo(galleryButton!)
+                    make.width.equalTo(50)
+                    make.height.equalTo(4)
+                }
+            } else {
+                indicator?.snp.remakeConstraints { make in
+                    make.bottom.equalToSuperview().offset(-8)
+                    make.centerX.equalTo(savedIdeasButton!)
+                    make.width.equalTo(50)
+                    make.height.equalTo(4)
+                }
+            }
+            self.floatingMenuContainer.layoutIfNeeded()
+        }
+    }
+    
     private func updatePhotoCollectionViewHeight(_ newHeight: CGFloat) {
         // 当照片集合视图高度变化时，更新布局
         UIView.animate(withDuration: 0.3) {
             self.view.layoutIfNeeded()
+        }
+    }
+}
+
+// MARK: - UIScrollViewDelegate
+extension LMMinePage: UIScrollViewDelegate {
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard scrollView.contentOffset.y > 100 else {
+            return
+        }
+        // 计算photoCollectionView在scrollView中的位置
+        let photoCollectionViewFrame = photoCollectionView.convert(photoCollectionView.bounds,
+                                                                   to: scrollView)
+        let scrollOffset = scrollView.contentOffset.y
+        let topBarHeight = AppTheme.Screen.safeAreaTop + 44
+        
+        // 计算photoCollectionView的菜单栏位置
+        let menuTabsPosition = photoCollectionViewFrame.minY - scrollOffset
+        let shouldShowFloatingMenu = menuTabsPosition <= topBarHeight
+        
+        // 显示或隐藏悬浮菜单
+        if shouldShowFloatingMenu && !isFloatingMenuVisible {
+            showFloatingMenu()
+        } else if !shouldShowFloatingMenu && isFloatingMenuVisible {
+            hideFloatingMenu()
+        }
+    }
+    
+    private func showFloatingMenu() {
+        guard !isFloatingMenuVisible else { return }
+        
+        isFloatingMenuVisible = true
+        floatingMenuContainer.isHidden = false
+        floatingMenuContainer.alpha = 0
+        
+        // 同步当前tab状态
+        let currentTab = photoCollectionView.getCurrentTab()
+        updateFloatingMenuState(currentTab)
+        
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
+            self.floatingMenuContainer.alpha = 1
+        }
+    }
+    
+    private func hideFloatingMenu() {
+        guard isFloatingMenuVisible else { return }
+        
+        isFloatingMenuVisible = false
+        
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
+            self.floatingMenuContainer.alpha = 0
+        } completion: { _ in
+            self.floatingMenuContainer.isHidden = true
         }
     }
 }
