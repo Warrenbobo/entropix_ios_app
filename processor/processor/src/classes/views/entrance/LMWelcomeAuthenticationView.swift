@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import AuthenticationServices
 
 protocol LMWelcomeAuthenticationViewDelegate: AnyObject {
     // 点击邮箱登录
@@ -32,7 +33,8 @@ class LMWelcomeAuthenticationView: UIView {
     
     private let authenticationSectionView = UIView()
     private let signInWithEmailButton = UIButton()
-    private let continueWithAppleButton = UIButton()
+    private let continueWithAppleButton = ASAuthorizationAppleIDButton(type: .default,
+                                                                       style: .black)
     
     private let termsOfServiceSectionView = UIView()
     private let termsOfServiceLabel = UILabel()
@@ -91,7 +93,6 @@ extension LMWelcomeAuthenticationView {
         welcomeSectionView.addSubview(welcomeSubtitleLabel)
         
         // 用户头像设置
-        userAvatarImageView.backgroundColor = UIColor.systemGray5
         userAvatarImageView.layer.cornerRadius = 50
         userAvatarImageView.clipsToBounds = true
         userAvatarImageView.contentMode = .scaleAspectFill
@@ -100,17 +101,15 @@ extension LMWelcomeAuthenticationView {
         
         // 欢迎标题设置
         welcomeTitleLabel.text = "Welcome to InspireCam"
-        welcomeTitleLabel.font = UIFont.systemFont(ofSize: 28, weight: .bold)
+        welcomeTitleLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
         welcomeTitleLabel.textColor = UIColor.label
         welcomeTitleLabel.textAlignment = .center
-        welcomeTitleLabel.numberOfLines = 0
         
         // 欢迎副标题设置
         welcomeSubtitleLabel.text = "Sign in to discover full features"
-        welcomeSubtitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        welcomeSubtitleLabel.font = UIFont.systemFont(ofSize: 18, weight: .regular)
         welcomeSubtitleLabel.textColor = UIColor.secondaryLabel
         welcomeSubtitleLabel.textAlignment = .center
-        welcomeSubtitleLabel.numberOfLines = 0
     }
     
     private func setupAuthenticationSectionComponents() {
@@ -118,24 +117,26 @@ extension LMWelcomeAuthenticationView {
         authenticationSectionView.addSubview(continueWithAppleButton)
         
         // 邮箱登录按钮设置
-        signInWithEmailButton.setTitle("📧 Sign in with Email", for: .normal)
-        signInWithEmailButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        signInWithEmailButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         signInWithEmailButton.setTitleColor(UIColor.white, for: .normal)
         signInWithEmailButton.backgroundColor = UIColor.systemBlue
         signInWithEmailButton.layer.cornerRadius = 8
+        signInWithEmailButton.adjust(image: UIImage(named: "email_item"),
+                                     title: "Sign in with Email",
+                                     titlePosition: .right,
+                                     additionalSpacing: 5,
+                                     state: .normal)
         signInWithEmailButton.addTarget(self, action: #selector(handleSignInWithEmailButtonTapped), for: .touchUpInside)
         
         // Apple登录按钮设置
-        continueWithAppleButton.setTitle("🍎 Continue with Apple", for: .normal)
-        continueWithAppleButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        continueWithAppleButton.setTitleColor(UIColor.white, for: .normal)
-        continueWithAppleButton.backgroundColor = UIColor.black
-        continueWithAppleButton.layer.cornerRadius = 8
-        continueWithAppleButton.addTarget(self, action: #selector(handleContinueWithAppleButtonTapped), for: .touchUpInside)
+        continueWithAppleButton.addTarget(
+            self,
+            action: #selector(handleContinueWithAppleButtonTapped),
+            for: .touchUpInside
+        )
         
         // 添加按钮触摸反馈效果
         addTouchFeedbackEffectToButton(signInWithEmailButton)
-        addTouchFeedbackEffectToButton(continueWithAppleButton)
     }
     
     private func setupTermsOfServiceSectionComponents() {

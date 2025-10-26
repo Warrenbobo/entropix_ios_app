@@ -117,7 +117,7 @@ extension LMValidatedInputField {
     }
     
     private func setupTitleLabelConfiguration() {
-        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        titleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         titleLabel.textColor = UIColor.label
         titleLabel.numberOfLines = 1
     }
@@ -157,7 +157,7 @@ extension LMValidatedInputField {
     }
     
     private func setupPasswordVisibilityButtonConfiguration() {
-        passwordVisibilityButton.setImage(UIImage(systemName: "eye.slash"), for: .normal)
+        passwordVisibilityButton.setImage(UIImage(named: "eye_slash"), for: .normal)
         passwordVisibilityButton.tintColor = UIColor.systemGray2
         passwordVisibilityButton.isHidden = true
         passwordVisibilityButton.addTarget(self, action: #selector(handlePasswordVisibilityButtonTapped), for: .touchUpInside)
@@ -181,7 +181,7 @@ extension LMValidatedInputField {
         passwordVisibilityButton.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-12)
             make.centerY.equalToSuperview()
-            make.size.equalTo(24)
+            make.size.equalTo(20)
         }
         
         errorMessageLabel.snp.makeConstraints { make in
@@ -285,8 +285,8 @@ extension LMValidatedInputField {
         isPasswordVisible.toggle()
         textField.isSecureTextEntry = !isPasswordVisible
         
-        let imageName = isPasswordVisible ? "eye" : "eye.slash"
-        passwordVisibilityButton.setImage(UIImage(systemName: imageName), for: .normal)
+        let imageName = isPasswordVisible ? "eye_solid" : "eye_slash"
+        passwordVisibilityButton.setImage(UIImage(named: imageName), for: .normal)
     }
 }
 

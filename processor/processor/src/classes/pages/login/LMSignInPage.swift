@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import AuthenticationServices
 
 class LMSignInPage: LMPageWrapper {
     
@@ -35,7 +36,8 @@ class LMSignInPage: LMPageWrapper {
     
     // Apple登录区域
     private let appleSignInSectionView = UIView()
-    private let appleSignInButton = UIButton()
+    private let appleSignInButton = ASAuthorizationAppleIDButton(type: .default,
+                                                                 style: .black)
     
     // 注册提示区域
     private let signUpPromptSectionView = UIView()
@@ -93,12 +95,7 @@ extension LMSignInPage {
         brandingSectionView.addSubview(appTaglineLabel)
         
         // 应用图标设置
-        appIconImageView.backgroundColor = UIColor.systemPurple
-        appIconImageView.layer.cornerRadius = 20
-        appIconImageView.clipsToBounds = true
-        appIconImageView.contentMode = .center
-        appIconImageView.image = UIImage(systemName: "camera.fill")
-        appIconImageView.tintColor = UIColor.white
+        appIconImageView.image = UIImage(named: "app_logo_transparent_bg")
         
         // 应用名称设置
         appNameLabel.text = "InspireCam"
@@ -153,7 +150,7 @@ extension LMSignInPage {
         
         // 主要登录按钮设置
         primarySignInButton.setTitle("Sign In", for: .normal)
-        primarySignInButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        primarySignInButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         primarySignInButton.setTitleColor(UIColor.white, for: .normal)
         primarySignInButton.backgroundColor = UIColor.systemOrange
         primarySignInButton.layer.cornerRadius = 12
@@ -164,8 +161,10 @@ extension LMSignInPage {
     }
     
     private func setupSeparatorSectionComponents() {
+        separatorSectionView.backgroundColor = .hexColor("#EEEEEE")
         separatorSectionView.addSubview(separatorLabel)
         
+        separatorLabel.backgroundColor = .white
         separatorLabel.text = "or"
         separatorLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         separatorLabel.textColor = UIColor.systemGray2
@@ -174,19 +173,8 @@ extension LMSignInPage {
     
     private func setupAppleSignInSectionComponents() {
         appleSignInSectionView.addSubview(appleSignInButton)
-        
         // Apple登录按钮设置
-        appleSignInButton.setTitle("🍎 Apple", for: .normal)
-        appleSignInButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        appleSignInButton.setTitleColor(UIColor.label, for: .normal)
-        appleSignInButton.backgroundColor = UIColor.systemBackground
-        appleSignInButton.layer.cornerRadius = 12
-        appleSignInButton.layer.borderWidth = 2
-        appleSignInButton.layer.borderColor = UIColor.systemGray5.cgColor
         appleSignInButton.addTarget(self, action: #selector(handleAppleSignInButtonTapped), for: .touchUpInside)
-        
-        // 添加按钮触摸反馈效果
-        addTouchFeedbackEffectToButton(appleSignInButton)
     }
     
     private func setupSignUpPromptSectionComponents() {
@@ -246,19 +234,20 @@ extension LMSignInPage {
     private func configureBrandingSectionConstraints() {
         appIconImageView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalToSuperview().offset(48)
-            make.size.equalTo(80)
+            make.top.equalToSuperview().offset(20)
+            make.width.equalTo(100)
+            make.height.equalTo(82)
         }
         
         appNameLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalTo(appIconImageView.snp.bottom).offset(16)
+            make.top.equalTo(appIconImageView.snp.bottom).offset(26)
             make.leading.trailing.equalToSuperview()
         }
         
         appTaglineLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalTo(appNameLabel.snp.bottom).offset(8)
+            make.top.equalTo(appNameLabel.snp.bottom).offset(12)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview().offset(-24)
         }
@@ -291,8 +280,14 @@ extension LMSignInPage {
     }
     
     private func configureSeparatorSectionConstraints() {
+        separatorSectionView.snp.makeConstraints { make in
+            make.height.equalTo(1)
+            make.leading.equalToSuperview()
+            make.trailing.equalToSuperview()
+        }
         separatorLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.center.equalToSuperview()
+            make.width.equalTo(80)
         }
     }
     

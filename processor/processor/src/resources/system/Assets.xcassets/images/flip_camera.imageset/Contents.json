@@ -5,12 +5,11 @@
       "scale" : "1x"
     },
     {
-      "filename" : "back_item@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "back_item@3x.png",
+      "filename" : "flip_camera.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

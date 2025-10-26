@@ -85,12 +85,7 @@ extension LMSignUpPage {
         brandingSectionView.addSubview(createAccountSubtitleLabel)
         
         // 应用图标设置
-        appIconImageView.backgroundColor = UIColor.systemPurple
-        appIconImageView.layer.cornerRadius = 25
-        appIconImageView.clipsToBounds = true
-        appIconImageView.contentMode = .center
-        appIconImageView.image = UIImage(systemName: "camera.fill")
-        appIconImageView.tintColor = UIColor.white
+        appIconImageView.image = UIImage(named: "app_logo_transparent_bg")
         
         // 创建账户标题设置
         createAccountTitleLabel.text = "Create Account"
@@ -100,7 +95,7 @@ extension LMSignUpPage {
         createAccountTitleLabel.numberOfLines = 0
         
         // 创建账户副标题设置
-        createAccountSubtitleLabel.text = "Join our community and experience seamless finding your relationship"
+        createAccountSubtitleLabel.text = "Join us to discover your creativity"
         createAccountSubtitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         createAccountSubtitleLabel.textColor = UIColor.secondaryLabel
         createAccountSubtitleLabel.textAlignment = .center
@@ -192,8 +187,8 @@ extension LMSignUpPage {
         primarySignUpButton.setTitle("Continue", for: .normal)
         primarySignUpButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         primarySignUpButton.setTitleColor(UIColor.secondaryLabel, for: .normal)
-        primarySignUpButton.backgroundColor = UIColor.systemGray5
-        primarySignUpButton.layer.cornerRadius = 25
+        primarySignUpButton.backgroundColor = .clear
+        primarySignUpButton.layer.cornerRadius = 8
         primarySignUpButton.layer.borderWidth = 1
         primarySignUpButton.layer.borderColor = UIColor.systemGray4.cgColor
         primarySignUpButton.isEnabled = false
@@ -258,12 +253,13 @@ extension LMSignUpPage {
         appIconImageView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.top.equalToSuperview().offset(20)
-            make.size.equalTo(80)
+            make.width.equalTo(60)
+            make.height.equalTo(50)
         }
         
         createAccountTitleLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalTo(appIconImageView.snp.bottom).offset(24)
+            make.top.equalTo(appIconImageView.snp.bottom).offset(34)
             make.leading.trailing.equalToSuperview()
         }
         

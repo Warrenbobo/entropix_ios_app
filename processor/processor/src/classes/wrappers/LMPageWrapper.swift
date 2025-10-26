@@ -76,8 +76,10 @@ class LMPageWrapper: UIViewController {
         barButton.frame = CGRect(origin: .zero,
                                  size: CGSize(width: 44,
                                               height: 44))
-        barButton.setImage(UIImage(named: "back_item")?.withRenderingMode(.alwaysOriginal),
+        barButton.setImage(UIImage(named: "left_arrow_dark")?.withRenderingMode(.alwaysOriginal),
                            for: .normal)
+        barButton.imageView?.contentMode = .scaleAspectFill
+        barButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
         barButton.addTarget(self,
                             action: #selector(backButtonItemOnTap),
                             for: .touchUpInside)
@@ -93,7 +95,8 @@ class LMPageWrapper: UIViewController {
                                                                          height: 44)))
         titleView.addSubview(titleLabel)
         titleLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.leading.equalTo(-10)
+            make.top.bottom.trailing.equalToSuperview()
         }
         navigationItem.titleView = titleView
     }
