@@ -11,7 +11,6 @@ import SnapKit
 class LMLanguagePage: LMPageWrapper {
     
     // MARK: - UI Components
-    private let scrollView = UIScrollView()
     private let contentView = UIView()
     
     // Select Language Section
@@ -48,8 +47,7 @@ class LMLanguagePage: LMPageWrapper {
 extension LMLanguagePage {
     
     private func setupUserInterfaceComponents() {
-        view.addSubview(scrollView)
-        scrollView.addSubview(contentView)
+        view.addSubview(contentView)
         
         contentView.addSubview(selectLanguageTitleLabel)
         contentView.addSubview(languageSelectionContainer)
@@ -106,18 +104,15 @@ extension LMLanguagePage {
 extension LMLanguagePage {
     
     private func configureLayoutConstraints() {
-        scrollView.snp.makeConstraints { make in
-            make.edges.equalTo(view.safeAreaLayoutGuide)
-        }
         
         contentView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-            make.width.equalToSuperview()
+            make.top.equalTo(AppTheme.Screen.navigatorHeight)
+            make.leading.trailing.equalToSuperview()
         }
         
         // Select Language Title
         selectLanguageTitleLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(32)
+            make.top.equalToSuperview().offset(16)
             make.leading.trailing.equalToSuperview().inset(24)
         }
         
@@ -154,10 +149,9 @@ extension LMLanguagePage {
 extension LMLanguagePage {
     
     private func configureDefaultContentAndStyles() {
-        view.backgroundColor = UIColor.systemGroupedBackground
-        scrollView.backgroundColor = UIColor.clear
-        scrollView.showsVerticalScrollIndicator = false
-        contentView.backgroundColor = UIColor.clear
+        contentView.backgroundColor = UIColor.white
+        contentView.layer.cornerRadius = 12
+        contentView.layer.masksToBounds = true
     }
 }
 

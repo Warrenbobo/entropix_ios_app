@@ -22,7 +22,7 @@ class LMSettingPage: LMPageWrapper {
     private let aboutItem = LMSettingItemView()
     
     // Logout Button
-    private let logoutButton = UIButton()
+    private let logoutButton = UIButton(type: .custom)
     
     private var isUserLoggedIn: Bool {
         return true
@@ -67,8 +67,8 @@ extension LMSettingPage {
     private func setupSettingItems() {
         // Account Profile
         accountProfileItem.configure(
-            icon: UIImage(systemName: "person.fill"),
-            iconBackgroundColor: UIColor.systemBlue,
+            icon: UIImage(named: "user_solid_blue"),
+            iconBackgroundColor: .hexColor("#DBE9FE"),
             title: "Account Profile",
             subtitle: "Manage your account settings",
             showArrow: true
@@ -79,8 +79,8 @@ extension LMSettingPage {
         
         // Notification
         notificationItem.configure(
-            icon: UIImage(systemName: "bell.fill"),
-            iconBackgroundColor: UIColor.systemOrange,
+            icon: UIImage(named: "bullhorn_yellow"),
+            iconBackgroundColor: .hexColor("#FEF9C2"),
             title: "Notification",
             subtitle: "Receive system notifications from us",
             showArrow: true
@@ -91,8 +91,8 @@ extension LMSettingPage {
         
         // Language
         languageItem.configure(
-            icon: UIImage(systemName: "globe"),
-            iconBackgroundColor: UIColor.systemPurple,
+            icon: UIImage(named: "globe_purple"),
+            iconBackgroundColor: .hexColor("F3E8FF"),
             title: "Language",
             subtitle: "Change In-App Language",
             showArrow: true
@@ -103,8 +103,8 @@ extension LMSettingPage {
         
         // Contact Us
         contactUsItem.configure(
-            icon: UIImage(systemName: "envelope.fill"),
-            iconBackgroundColor: UIColor.systemOrange,
+            icon: UIImage(named: "envelope_orange"),
+            iconBackgroundColor: .hexColor("#FFECD5"),
             title: "Contact Us",
             subtitle: "Get help and support",
             showArrow: true
@@ -115,8 +115,8 @@ extension LMSettingPage {
         
         // Frequent Questions
         frequentQuestionsItem.configure(
-            icon: UIImage(systemName: "questionmark.circle.fill"),
-            iconBackgroundColor: UIColor.systemBlue,
+            icon: UIImage(named: "question_circle_indigo"),
+            iconBackgroundColor: .hexColor("#E0E7FF"),
             title: "Frequent Questions",
             subtitle: "Find answers to common questions",
             showArrow: true
@@ -127,8 +127,8 @@ extension LMSettingPage {
         
         // About
         aboutItem.configure(
-            icon: UIImage(systemName: "info.circle.fill"),
-            iconBackgroundColor: UIColor.systemGreen,
+            icon: UIImage(named: "info_circle_green"),
+            iconBackgroundColor: .hexColor("#DCFCE8"),
             title: "About",
             subtitle: "App information and support",
             showArrow: true
@@ -139,18 +139,16 @@ extension LMSettingPage {
     }
     
     private func setupLogoutButton() {
-        logoutButton.setTitle("Log Out", for: .normal)
         logoutButton.setTitleColor(.white, for: .normal)
         logoutButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         logoutButton.backgroundColor = UIColor.systemRed
         logoutButton.layer.cornerRadius = 12
         logoutButton.addTarget(self, action: #selector(handleLogoutButtonTapped), for: .touchUpInside)
-        
-        // 添加图标
-        let logoutIcon = UIImage(systemName: "rectangle.portrait.and.arrow.right")
-        logoutButton.setImage(logoutIcon, for: .normal)
-        logoutButton.tintColor = .white
-        logoutButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 8)
+        logoutButton.adjust(image: UIImage(named: "sign_out_white"),
+                            title: "Log Out",
+                            titlePosition: .right,
+                            additionalSpacing: 5,
+                            state: .normal)
     }
 }
 

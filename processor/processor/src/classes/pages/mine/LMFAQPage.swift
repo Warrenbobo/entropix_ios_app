@@ -142,7 +142,7 @@ extension LMFAQPage {
         }
         
         faqStackView.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(24)
+            make.top.equalTo(titleLabel.snp.bottom)
             make.leading.trailing.equalToSuperview().inset(24)
         }
         
@@ -204,7 +204,7 @@ extension LMFAQPage {
         containerView.addSubview(answerLabel)
         
         questionLabel.snp.makeConstraints { make in
-            make.top.equalToSuperview()
+            make.top.equalTo(16)
             make.leading.trailing.equalToSuperview()
         }
         
@@ -239,14 +239,7 @@ extension LMFAQPage {
         contactSupportView.layer.cornerRadius = 12
         
         let iconImageView = UIImageView()
-        iconImageView.image = UIImage(systemName: "questionmark.circle")
-        iconImageView.tintColor = UIColor.systemGray
-        iconImageView.contentMode = .scaleAspectFit
-        
-        let contentStackView = UIStackView()
-        contentStackView.axis = .vertical
-        contentStackView.spacing = 4
-        contentStackView.alignment = .leading
+        iconImageView.image = UIImage(named: "question_circle_gray")
         
         let titleLabel = UILabel()
         titleLabel.text = "Still have questions?"
@@ -265,32 +258,33 @@ extension LMFAQPage {
         contactButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         contactButton.addTarget(self, action: #selector(handleContactUsButtonTapped), for: .touchUpInside)
         
-        contentStackView.addArrangedSubview(titleLabel)
-        contentStackView.addArrangedSubview(subtitleLabel)
         
         contactSupportView.addSubview(iconImageView)
-        contactSupportView.addSubview(contentStackView)
+        contactSupportView.addSubview(titleLabel)
+        contactSupportView.addSubview(subtitleLabel)
         contactSupportView.addSubview(contactButton)
         
         iconImageView.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(16)
-            make.centerY.equalToSuperview()
+            make.top.equalTo(16)
             make.size.equalTo(24)
         }
         
-        contentStackView.snp.makeConstraints { make in
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalTo(iconImageView)
             make.leading.equalTo(iconImageView.snp.trailing).offset(12)
-            make.centerY.equalToSuperview()
-            make.trailing.lessThanOrEqualTo(contactButton.snp.leading).offset(-16)
+            make.trailing.equalTo(-16)
+        }
+        
+        subtitleLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(8)
+            make.leading.trailing.equalTo(titleLabel)
         }
         
         contactButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-16)
-            make.centerY.equalToSuperview()
-        }
-        
-        contactSupportView.snp.makeConstraints { make in
-            make.height.greaterThanOrEqualTo(80)
+            make.top.equalTo(subtitleLabel.snp.bottom).offset(8)
+            make.leading.equalTo(subtitleLabel)
+            make.bottom.equalTo(-16)
         }
     }
 }

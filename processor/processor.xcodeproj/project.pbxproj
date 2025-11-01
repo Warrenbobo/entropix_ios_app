@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EA8629A32EB5A13F00F2B00E /* EVA02.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */; };
+		EA8629A52EB5A15800F2B00E /* ImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A42EB5A15800F2B00E /* ImageProcessor.swift */; };
+		EA8629A72EB5B16300F2B00E /* LMProfileDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */; };
+		EA8629A92EB5B18B00F2B00E /* LMProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A82EB5B18B00F2B00E /* LMProfileEditView.swift */; };
+		EA8629AB2EB5B70300F2B00E /* LMNotificationTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629AA2EB5B70300F2B00E /* LMNotificationTableViewCell.swift */; };
 		EACA1CEF2E7E49B600C80883 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */; };
 		EACA1CF02E7E49B600C80883 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE62E7E49B600C80883 /* Assets.xcassets */; };
 		EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CDE2E7E49B600C80883 /* ObjectExtensions.swift */; };
@@ -68,6 +73,11 @@
 		4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_processor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8769BF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.debug.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.debug.xcconfig"; sourceTree = "<group>"; };
 		E918F2844F67229435DD4374 /* Pods-processor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.release.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.release.xcconfig"; sourceTree = "<group>"; };
+		EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = EVA02.mlpackage; sourceTree = "<group>"; };
+		EA8629A42EB5A15800F2B00E /* ImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessor.swift; sourceTree = "<group>"; };
+		EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileDisplayView.swift; sourceTree = "<group>"; };
+		EA8629A82EB5B18B00F2B00E /* LMProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileEditView.swift; sourceTree = "<group>"; };
+		EA8629AA2EB5B70300F2B00E /* LMNotificationTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationTableViewCell.swift; sourceTree = "<group>"; };
 		EACA1CCC2E7E49B600C80883 /* LMApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApi.swift; sourceTree = "<group>"; };
 		EACA1CCD2E7E49B600C80883 /* LMApiClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiClient.swift; sourceTree = "<group>"; };
 		EACA1CD02E7E49B600C80883 /* LMApiResponseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiResponseModel.swift; sourceTree = "<group>"; };
@@ -186,6 +196,7 @@
 			isa = PBXGroup;
 			children = (
 				EACA1CCE2E7E49B600C80883 /* apiClient */,
+				EA8629A42EB5A15800F2B00E /* ImageProcessor.swift */,
 				EACA1D052E7E4C7C00C80883 /* LMPackageManager.swift */,
 				EACA1D092E7E4EE900C80883 /* LMLogger.swift */,
 				EAFBAD892E9B8A4800586EC7 /* LMUserManager.swift */,
@@ -280,7 +291,10 @@
 		EACA1CE32E7E49B600C80883 /* resources */ = {
 			isa = PBXGroup;
 			children = (
-				EACA1D012E7E49D600C80883 /* system */,
+				EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */,
+				EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */,
+				EACA1CE62E7E49B600C80883 /* Assets.xcassets */,
+				EACA1CEA2E7E49B600C80883 /* processor.xcdatamodeld */,
 			);
 			path = resources;
 			sourceTree = "<group>";
@@ -305,16 +319,6 @@
 				EACA1CE72E7E49B600C80883 /* Info.plist */,
 			);
 			path = processor;
-			sourceTree = "<group>";
-		};
-		EACA1D012E7E49D600C80883 /* system */ = {
-			isa = PBXGroup;
-			children = (
-				EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */,
-				EACA1CE62E7E49B600C80883 /* Assets.xcassets */,
-				EACA1CEA2E7E49B600C80883 /* processor.xcdatamodeld */,
-			);
-			path = system;
 			sourceTree = "<group>";
 		};
 		EACA1D022E7E4ADD00C80883 /* entrance */ = {
@@ -376,6 +380,9 @@
 				EAFBADC32EA36E5900586EC7 /* LMIdeasPageView.swift */,
 				EAFBAC982E7E5A0800586EC7 /* LMMineUserInfoView.swift */,
 				EAFBACA32E7E695100586EC7 /* LMMembershipCardView.swift */,
+				EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */,
+				EA8629A82EB5B18B00F2B00E /* LMProfileEditView.swift */,
+				EA8629AA2EB5B70300F2B00E /* LMNotificationTableViewCell.swift */,
 			);
 			path = mine;
 			sourceTree = "<group>";
@@ -532,6 +539,7 @@
 				EAFBADC42EA36E5900586EC7 /* LMIdeasPageView.swift in Sources */,
 				EAFBAD7D2E93790E00586EC7 /* LMForgotPasswordPage.swift in Sources */,
 				EAFBACB02E7E79C100586EC7 /* LMFeaturePreviewView.swift in Sources */,
+				EA8629A32EB5A13F00F2B00E /* EVA02.mlpackage in Sources */,
 				EAFBACBB2E7E7E7500586EC7 /* LMCameraControlsView.swift in Sources */,
 				EAFBAD8A2E9B8A4800586EC7 /* LMUserManager.swift in Sources */,
 				EAFBACBC2E7E7E7500586EC7 /* LMCameraPreviewView.swift in Sources */,
@@ -539,9 +547,11 @@
 				EACA1CF22E7E49B600C80883 /* LMApiResponseModel.swift in Sources */,
 				EACA1CF32E7E49B600C80883 /* processor.xcdatamodeld in Sources */,
 				EAFBADC82EA4C90E00586EC7 /* LMNotificationsPage.swift in Sources */,
+				EA8629A92EB5B18B00F2B00E /* LMProfileEditView.swift in Sources */,
 				EACA1CF42E7E49B600C80883 /* anylibs.swift in Sources */,
 				EAFBAC9F2E7E65B000586EC7 /* LMProcessorTopBar.swift in Sources */,
 				EAFBAD812E938BEF00586EC7 /* LMSettingPage.swift in Sources */,
+				EA8629A72EB5B16300F2B00E /* LMProfileDisplayView.swift in Sources */,
 				EACA1CF62E7E49B600C80883 /* AppDelegate.swift in Sources */,
 				EAFBACC42E8F69BB00586EC7 /* LMAccountProfilePage.swift in Sources */,
 				EACA1D062E7E4C7C00C80883 /* LMPackageManager.swift in Sources */,
@@ -554,6 +564,7 @@
 				EAFBAD792E8FCB4E00586EC7 /* LMUserModel.swift in Sources */,
 				EAFBADC22EA36E4500586EC7 /* LMGalleryPageView.swift in Sources */,
 				EAFBADCA2EA4C92900586EC7 /* LMMessageDetailPage.swift in Sources */,
+				EA8629A52EB5A15800F2B00E /* ImageProcessor.swift in Sources */,
 				EACA1CF92E7E49B600C80883 /* LMNavigationWrapper.swift in Sources */,
 				EAFBAD7F2E93804000586EC7 /* LMAboutPage.swift in Sources */,
 				EACA1CFA2E7E49B600C80883 /* LMVersionUpdateDialog.swift in Sources */,
@@ -567,6 +578,7 @@
 				EACA1CFD2E7E49B600C80883 /* LMApi.swift in Sources */,
 				EAFBACB22E7E7B0100586EC7 /* LMSignUpPage.swift in Sources */,
 				EAFBAD7B2E936ABD00586EC7 /* LMNavigationTitleView.swift in Sources */,
+				EA8629AB2EB5B70300F2B00E /* LMNotificationTableViewCell.swift in Sources */,
 				EACA1D0C2E7E504F00C80883 /* LMWebViewPage.swift in Sources */,
 				EAFBAD882E93B94B00586EC7 /* LMPhotoCollectionView.swift in Sources */,
 				EACA1D082E7E4CBF00C80883 /* LMPackageModel.swift in Sources */,

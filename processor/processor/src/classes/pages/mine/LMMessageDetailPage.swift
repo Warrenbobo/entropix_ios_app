@@ -75,9 +75,9 @@ extension LMMessageDetailPage {
         
         // Icon container
         iconContainerView.layer.cornerRadius = 12
-        
-        // Icon image
-        iconImageView.contentMode = .scaleAspectFit
+        iconContainerView.backgroundColor = .hexColor("#FEF9C2")
+        iconImageView.image = UIImage(named: "bullhorn_yellow")
+        iconImageView.contentMode = .center
         
         // Title label
         titleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
@@ -191,11 +191,6 @@ extension LMMessageDetailPage {
 extension LMMessageDetailPage {
     
     private func updateContentWithNotification() {
-        // Update icon
-        iconContainerView.backgroundColor = notification.iconType.backgroundColor
-        iconImageView.image = UIImage(systemName: notification.iconType.iconName)
-        iconImageView.tintColor = notification.iconType.iconColor
-        
         // Update title and time
         titleLabel.text = notification.title
         timeLabel.text = notification.timeAgo

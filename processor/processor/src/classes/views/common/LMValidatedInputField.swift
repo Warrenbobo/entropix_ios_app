@@ -158,7 +158,10 @@ extension LMValidatedInputField {
     
     private func setupPasswordVisibilityButtonConfiguration() {
         passwordVisibilityButton.setImage(UIImage(named: "eye_slash"), for: .normal)
-        passwordVisibilityButton.tintColor = UIColor.systemGray2
+        passwordVisibilityButton.imageEdgeInsets = UIEdgeInsets(top: 2,
+                                                                left: 4,
+                                                                bottom: 2,
+                                                                right: 0)
         passwordVisibilityButton.isHidden = true
         passwordVisibilityButton.addTarget(self, action: #selector(handlePasswordVisibilityButtonTapped), for: .touchUpInside)
     }
