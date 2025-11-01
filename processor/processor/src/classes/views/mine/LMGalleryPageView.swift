@@ -145,17 +145,6 @@ extension LMGalleryPageView: UICollectionViewDelegateFlowLayout {
 // MARK: - Helper Methods
 extension LMGalleryPageView {
     
-    private func findViewController() -> UIViewController? {
-        var responder: UIResponder? = self
-        while responder != nil {
-            if let viewController = responder as? UIViewController {
-                return viewController
-            }
-            responder = responder?.next
-        }
-        return nil
-    }
-    
     // 禁用垂直滚动
     func disableVerticalScrolling() {
         collectionView.isScrollEnabled = false

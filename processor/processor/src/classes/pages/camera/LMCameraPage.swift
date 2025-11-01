@@ -12,7 +12,7 @@ import SnapKit
 class LMCameraPage: LMPageWrapper {
     
     private let topStatusBarView = UIView()
-    private let userProfileButton = UIButton()
+    private let backButton = UIButton()
     
     private var cameraPreviewView: LMCameraPreviewView!
     private var cameraControlsView: LMCameraControlsView!
@@ -54,15 +54,14 @@ extension LMCameraPage {
     
     private func setupTopStatusBarComponents() {
         view.addSubview(topStatusBarView)
-        topStatusBarView.addSubview(userProfileButton)
+        topStatusBarView.addSubview(backButton)
         
-        topStatusBarView.backgroundColor = UIColor.clear
-        
-        userProfileButton.setImage(UIImage(systemName: "person.circle"), for: .normal)
-        userProfileButton.tintColor = UIColor.white
-        userProfileButton.backgroundColor = UIColor.black.withAlphaComponent(0.3)
-        userProfileButton.layer.cornerRadius = 20
-        userProfileButton.addTarget(self, action: #selector(handleUserProfileButtonTapped), for: .touchUpInside)
+        backButton.setImage(UIImage(named: "left_arrow_white"), for: .normal)
+        backButton.imageEdgeInsets = UIEdgeInsets(top: 0,
+                                                  left: 0,
+                                                  bottom: 0,
+                                                  right: 10)
+        backButton.addTarget(self, action: #selector(handleUserProfileButtonTapped), for: .touchUpInside)
     }
     
     private func setupCameraPreviewComponent() {
@@ -89,14 +88,15 @@ extension LMCameraPage {
     private func configureLayoutConstraints() {
         // 顶部状态栏
         topStatusBarView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
-            make.height.equalTo(AppTheme.Screen.safeAreaTop + 60)
+            make.top.equalTo(AppTheme.Screen.safeAreaTop)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(44)
         }
         
-        userProfileButton.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(20)
-            make.bottom.equalToSuperview().offset(-10)
-            make.size.equalTo(40)
+        backButton.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(12)
+            make.top.bottom.equalToSuperview()
+            make.width.equalTo(44)
         }
         
         // 相机预览
@@ -253,17 +253,32 @@ extension LMCameraPage {
         
         let photoSettings = AVCapturePhotoSettings()
         
-        // 设置闪光灯模式
-        if cameraControlsView.getCurrentFlashModeStatus() {
+        // 根据当前闪光灯模式设置
+        let currentFlashMode = cameraControlsView.getCurrentFlashMode()
+        switch currentFlashMode {
+        case .auto:
+            photoSettings.flashMode = .auto
+        case .on:
             photoSettings.flashMode = .on
-        } else {
+        case .off:
             photoSettings.flashMode = .off
+        }
+        
+        // 设置Live Photos
+        if cameraControlsView.getCurrentLivePhotoStatus() && photoOutput.isLivePhotoCaptureSupported {
+            photoSettings.livePhotoMovieFileURL = createLivePhotoMovieURL()
         }
         
         photoOutput.capturePhoto(with: photoSettings, delegate: self)
         
         // 显示拍照动画
         cameraBottomControlsView.showCaptureAnimation()
+    }
+    
+    private func createLivePhotoMovieURL() -> URL {
+        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let fileName = "LivePhoto_\(Date().timeIntervalSince1970).mov"
+        return documentsDirectory.appendingPathComponent(fileName)
     }
     
     private func handleInspireMeFeature() {
@@ -337,58 +352,179 @@ extension LMCameraPage: LMCameraPreviewViewDelegate {
 // MARK: - Camera Controls View Delegate Methods
 extension LMCameraPage: LMCameraControlsViewDelegate {
     
-    func cameraControlsViewDidTapFlashButton() {
-        print("Flash button tapped")
-        // 闪光灯状态已在控件内部管理
+    func cameraControlsView(_ view: LMCameraControlsView, didChangeFlashMode mode: LMFlashMode) {
+        print("Flash mode changed to: \(mode.displayName)")
+        configureFlashMode(mode)
     }
     
-    func cameraControlsViewDidTapRatioButton() {
-        print("Ratio button tapped - Current ratio: \(cameraControlsView.getCurrentAspectRatioSetting())")
-        // 这里可以实现宽高比切换逻辑
-        updateCameraPreviewAspectRatio()
+    func cameraControlsView(_ view: LMCameraControlsView, didChangeAspectRatio ratio: LMAspectRatio) {
+        print("Aspect ratio changed to: \(ratio.displayName)")
+        updateCameraPreviewAspectRatio(ratio)
     }
     
-    func cameraControlsViewDidTapTimerButton() {
-        print("Timer button tapped - Duration: \(cameraControlsView.getCurrentTimerDurationSetting())s")
-        // 定时器功能已在控件内部管理
+    func cameraControlsView(_ view: LMCameraControlsView, didChangeTimer duration: LMTimerDuration) {
+        print("Timer duration changed to: \(duration.displayName)")
+        configureTimerDuration(duration)
     }
     
-    func cameraControlsViewDidTapLiveButton() {
-        print("Live button tapped - Enabled: \(cameraControlsView.getCurrentLiveModeStatus())")
-        // Live Photos功能
-        configureLivePhotosMode()
+    func cameraControlsView(_ view: LMCameraControlsView, didToggleLivePhoto enabled: Bool) {
+        print("Live Photo toggled: \(enabled)")
+        configureLivePhotosMode(enabled)
     }
     
-    func cameraControlsViewDidTapGridButton() {
-        print("Grid button tapped - Enabled: \(cameraControlsView.getCurrentGridModeStatus())")
-        // 切换网格显示
-        cameraPreviewView.setGridVisibility(cameraControlsView.getCurrentGridModeStatus())
+    func cameraControlsView(_ view: LMCameraControlsView, didToggleGrid enabled: Bool) {
+        print("Grid toggled: \(enabled)")
+        configureGridDisplay(enabled)
     }
     
-    private func updateCameraPreviewAspectRatio() {
-        // 根据选择的比例更新预览视图
-        let currentRatio = cameraControlsView.getCurrentAspectRatioSetting()
-        print("Updating camera preview to ratio: \(currentRatio)")
-        // 这里可以实现具体的比例切换逻辑
+    // MARK: - Private Configuration Methods
+    
+    private func configureFlashMode(_ mode: LMFlashMode) {
+        guard let device = currentCameraDevice else { return }
+        
+        do {
+            try device.lockForConfiguration()
+            
+            switch mode {
+            case .auto:
+                if device.hasFlash {
+                    // 设置自动闪光灯模式
+                    print("Flash set to auto mode")
+                }
+            case .on:
+                if device.hasFlash {
+                    // 设置强制开启闪光灯
+                    print("Flash set to on")
+                }
+            case .off:
+                // 关闭闪光灯
+                print("Flash set to off")
+            }
+            
+            device.unlockForConfiguration()
+        } catch {
+            print("Error configuring flash mode: \(error)")
+        }
     }
     
-    private func configureLivePhotosMode() {
+    private func updateCameraPreviewAspectRatio(_ ratio: LMAspectRatio) {
+        // 根据选择的比例更新预览视图和相机会话
+        guard let captureSession = captureSession else { return }
+        
+        captureSession.beginConfiguration()
+        
+        switch ratio {
+        case .ratio3_4:
+            // 设置 3:4 比例
+            if captureSession.canSetSessionPreset(.photo) {
+                captureSession.sessionPreset = .photo
+            }
+            print("Camera set to 3:4 ratio")
+            
+        case .ratio1_1:
+            // 设置 1:1 比例 (正方形)
+            if captureSession.canSetSessionPreset(.photo) {
+                captureSession.sessionPreset = .photo
+            }
+            print("Camera set to 1:1 ratio")
+            
+        case .ratio9_16:
+            // 设置 9:16 比例 (竖屏视频比例)
+            if captureSession.canSetSessionPreset(.hd1920x1080) {
+                captureSession.sessionPreset = .hd1920x1080
+            }
+            print("Camera set to 9:16 ratio")
+        }
+        
+        captureSession.commitConfiguration()
+        
+        // 更新预览视图的显示比例
+        updatePreviewViewAspectRatio(ratio)
+    }
+    
+    private func updatePreviewViewAspectRatio(_ ratio: LMAspectRatio) {
+        // 这里可以添加预览视图的比例调整逻辑
+        // 例如：添加遮罩层来显示不同的宽高比
+        print("Updating preview view for ratio: \(ratio.displayName)")
+    }
+    
+    private func configureTimerDuration(_ duration: LMTimerDuration) {
+        // 定时器配置已在控件内部管理，这里可以添加额外的逻辑
+        print("Timer configured for \(duration.seconds) seconds")
+    }
+    
+    private func configureLivePhotosMode(_ enabled: Bool) {
         guard let photoOutput = photoOutput else { return }
         
-        if cameraControlsView.getCurrentLiveModeStatus() {
+        if enabled {
             if photoOutput.isLivePhotoCaptureSupported {
                 photoOutput.isLivePhotoCaptureEnabled = true
                 print("Live Photos enabled")
+            } else {
+                print("Live Photos not supported on this device")
+                // 可以显示提示信息给用户
+                showLivePhotosNotSupportedAlert()
             }
         } else {
             photoOutput.isLivePhotoCaptureEnabled = false
             print("Live Photos disabled")
         }
     }
+    
+    private func configureGridDisplay(_ enabled: Bool) {
+        // 切换网格显示
+        cameraPreviewView.setGridVisibility(enabled)
+        print("Grid display \(enabled ? "enabled" : "disabled")")
+    }
+    
+    private func showLivePhotosNotSupportedAlert() {
+        let alertController = UIAlertController(
+            title: "Live Photos",
+            message: "Live Photos is not supported on this device.",
+            preferredStyle: .alert
+        )
+        
+        let okAction = UIAlertAction(title: "OK", style: .default) { _ in
+            // 重置Live Photo状态
+            self.cameraControlsView.updateLivePhotoStatus(false)
+        }
+        alertController.addAction(okAction)
+        
+        present(alertController, animated: true)
+    }
 }
 
 // MARK: - Camera Bottom Controls View Delegate Methods
 extension LMCameraPage: LMCameraBottomControlsViewDelegate {
+    func cameraBottomControlsViewDidTapARGuidanceButton() {
+        print("AR Guidance button tapped")
+        let isEnabled = cameraBottomControlsView.getCurrentARGuidanceStatus()
+        configureARGuidanceFeatures(isEnabled)
+    }
+    
+    private func configureARGuidanceFeatures(_ enabled: Bool) {
+        if enabled {
+            print("AR Guidance features enabled")
+            // 启用AR引导功能：人物检测、构图建议等
+            startARGuidanceSession()
+        } else {
+            print("AR Guidance features disabled")
+            // 禁用AR引导功能
+            stopARGuidanceSession()
+        }
+    }
+    
+    private func startARGuidanceSession() {
+        // 这里可以启动AR引导相关的功能
+        // 例如：人脸检测、构图分析等
+        print("Starting AR guidance session...")
+    }
+    
+    private func stopARGuidanceSession() {
+        // 停止AR引导功能
+        print("Stopping AR guidance session...")
+    }
+    
     
     func cameraBottomControlsViewDidTapInspireButton() {
         print("Inspire button tapped")
@@ -398,7 +534,7 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     func cameraBottomControlsViewDidTapCaptureButton() {
         print("Capture button tapped")
         
-        let timerDuration = cameraControlsView.getCurrentTimerDurationSetting()
+        let timerDuration = cameraControlsView.getCurrentTimerDuration().seconds
         
         if timerDuration > 0 {
             startTimerCapture(duration: timerDuration)
@@ -412,10 +548,11 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
         switchCameraPosition()
     }
     
-    func cameraBottomControlsViewDidTogglePremiumMode(_ enabled: Bool) {
-        print("Premium mode toggled: \(enabled)")
-        configurePremiumModeFeatures(enabled)
-    }
+    // 注意：这个方法已经被移除，因为底部控件现在使用AR Guidance而不是Premium Mode
+    // func cameraBottomControlsViewDidTogglePremiumMode(_ enabled: Bool) {
+    //     print("Premium mode toggled: \(enabled)")
+    //     configurePremiumModeFeatures(enabled)
+    // }
     
     private func startTimerCapture(duration: Int) {
         print("Starting timer capture with \(duration) seconds")
@@ -466,15 +603,8 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
         }
     }
     
-    private func configurePremiumModeFeatures(_ enabled: Bool) {
-        if enabled {
-            print("Premium mode features enabled")
-            // 启用高级功能：更高分辨率、专业模式等
-        } else {
-            print("Premium mode features disabled")
-            // 禁用高级功能
-        }
-    }
+    // 移除了Premium Mode相关的方法，因为现在使用AR Guidance
+    // private func configurePremiumModeFeatures(_ enabled: Bool) { ... }
 }
 
 // MARK: - AVCapturePhotoCaptureDelegate Methods
@@ -558,7 +688,24 @@ extension LMCameraPage {
         cameraBottomControlsView.updateInspirePointsCount(points)
     }
     
-    func setPremiumModeConfiguration(_ enabled: Bool) {
-        cameraBottomControlsView.setPremiumModeEnabled(enabled)
+    func setARGuidanceConfiguration(_ enabled: Bool) {
+        cameraBottomControlsView.setARGuidanceEnabled(enabled)
+    }
+    
+    func syncCameraControlsWithState() {
+        // 同步相机控件状态，例如在切换不同相机模式时
+        let currentFlashMode: LMFlashMode = .auto
+        let currentRatio: LMAspectRatio = .ratio3_4
+        let currentTimer: LMTimerDuration = .off
+        let livePhotoEnabled = false
+        let gridEnabled = true
+        
+        cameraControlsView.syncWithCameraState(
+            aspectRatio: currentRatio,
+            flashMode: currentFlashMode,
+            timerDuration: currentTimer,
+            livePhotoEnabled: livePhotoEnabled,
+            gridEnabled: gridEnabled
+        )
     }
 }

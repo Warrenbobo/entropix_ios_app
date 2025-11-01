@@ -25,9 +25,6 @@ class LMLanguagePage: LMPageWrapper {
         ("en", "English"),
         ("zh-Hans", "中文-简"),
         ("zh-Hant", "中文-繁"),
-        ("ja", "日本語"),
-        ("ko", "한국어"),
-        ("es", "Español"),
     ]
     
     private var selectedLanguageCode: String = "zh-Hans"

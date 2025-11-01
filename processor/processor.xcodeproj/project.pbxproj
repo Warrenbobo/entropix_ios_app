@@ -12,6 +12,12 @@
 		EA8629A72EB5B16300F2B00E /* LMProfileDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */; };
 		EA8629A92EB5B18B00F2B00E /* LMProfileEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A82EB5B18B00F2B00E /* LMProfileEditView.swift */; };
 		EA8629AB2EB5B70300F2B00E /* LMNotificationTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629AA2EB5B70300F2B00E /* LMNotificationTableViewCell.swift */; };
+		EA8629B22EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629AC2EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift */; };
+		EA8629B42EB5EEF700F2B00E /* LMSuggestionCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629AF2EB5EEF700F2B00E /* LMSuggestionCardView.swift */; };
+		EA8629B52EB5EEF700F2B00E /* LMCameraPreviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629AE2EB5EEF700F2B00E /* LMCameraPreviewManager.swift */; };
+		EA8629B62EB5EEF700F2B00E /* LMSuggestionsCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629B02EB5EEF700F2B00E /* LMSuggestionsCarouselView.swift */; };
+		EA8629B92EB5F7C000F2B00E /* LMLaunageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629B82EB5F7C000F2B00E /* LMLaunageManager.swift */; };
+		EA8629BB2EB5F85700F2B00E /* LMLaunageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629BA2EB5F85700F2B00E /* LMLaunageModel.swift */; };
 		EACA1CEF2E7E49B600C80883 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */; };
 		EACA1CF02E7E49B600C80883 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE62E7E49B600C80883 /* Assets.xcassets */; };
 		EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CDE2E7E49B600C80883 /* ObjectExtensions.swift */; };
@@ -78,6 +84,12 @@
 		EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileDisplayView.swift; sourceTree = "<group>"; };
 		EA8629A82EB5B18B00F2B00E /* LMProfileEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileEditView.swift; sourceTree = "<group>"; };
 		EA8629AA2EB5B70300F2B00E /* LMNotificationTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationTableViewCell.swift; sourceTree = "<group>"; };
+		EA8629AC2EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraGuidanceOverlayView.swift; sourceTree = "<group>"; };
+		EA8629AE2EB5EEF700F2B00E /* LMCameraPreviewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraPreviewManager.swift; sourceTree = "<group>"; };
+		EA8629AF2EB5EEF700F2B00E /* LMSuggestionCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSuggestionCardView.swift; sourceTree = "<group>"; };
+		EA8629B02EB5EEF700F2B00E /* LMSuggestionsCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSuggestionsCarouselView.swift; sourceTree = "<group>"; };
+		EA8629B82EB5F7C000F2B00E /* LMLaunageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLaunageManager.swift; sourceTree = "<group>"; };
+		EA8629BA2EB5F85700F2B00E /* LMLaunageModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLaunageModel.swift; sourceTree = "<group>"; };
 		EACA1CCC2E7E49B600C80883 /* LMApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApi.swift; sourceTree = "<group>"; };
 		EACA1CCD2E7E49B600C80883 /* LMApiClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiClient.swift; sourceTree = "<group>"; };
 		EACA1CD02E7E49B600C80883 /* LMApiResponseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiResponseModel.swift; sourceTree = "<group>"; };
@@ -200,6 +212,7 @@
 				EACA1D052E7E4C7C00C80883 /* LMPackageManager.swift */,
 				EACA1D092E7E4EE900C80883 /* LMLogger.swift */,
 				EAFBAD892E9B8A4800586EC7 /* LMUserManager.swift */,
+				EA8629B82EB5F7C000F2B00E /* LMLaunageManager.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -211,6 +224,7 @@
 				EACA1D072E7E4CBF00C80883 /* LMPackageModel.swift */,
 				EAFBACC52E8F69D100586EC7 /* LMUserProfileModel.swift */,
 				EAFBAD782E8FCB4E00586EC7 /* LMUserModel.swift */,
+				EA8629BA2EB5F85700F2B00E /* LMLaunageModel.swift */,
 			);
 			path = models;
 			sourceTree = "<group>";
@@ -410,6 +424,10 @@
 		EAFBACBE2E7E8DB200586EC7 /* camera */ = {
 			isa = PBXGroup;
 			children = (
+				EA8629AC2EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift */,
+				EA8629AE2EB5EEF700F2B00E /* LMCameraPreviewManager.swift */,
+				EA8629AF2EB5EEF700F2B00E /* LMSuggestionCardView.swift */,
+				EA8629B02EB5EEF700F2B00E /* LMSuggestionsCarouselView.swift */,
 				EAFBACB82E7E7E7500586EC7 /* LMCameraBottomControlsView.swift */,
 				EAFBACB92E7E7E7500586EC7 /* LMCameraControlsView.swift */,
 				EAFBACBA2E7E7E7500586EC7 /* LMCameraPreviewView.swift */,
@@ -546,8 +564,10 @@
 				EAFBACBD2E7E7E7500586EC7 /* LMCameraBottomControlsView.swift in Sources */,
 				EACA1CF22E7E49B600C80883 /* LMApiResponseModel.swift in Sources */,
 				EACA1CF32E7E49B600C80883 /* processor.xcdatamodeld in Sources */,
+				EA8629B92EB5F7C000F2B00E /* LMLaunageManager.swift in Sources */,
 				EAFBADC82EA4C90E00586EC7 /* LMNotificationsPage.swift in Sources */,
 				EA8629A92EB5B18B00F2B00E /* LMProfileEditView.swift in Sources */,
+				EA8629BB2EB5F85700F2B00E /* LMLaunageModel.swift in Sources */,
 				EACA1CF42E7E49B600C80883 /* anylibs.swift in Sources */,
 				EAFBAC9F2E7E65B000586EC7 /* LMProcessorTopBar.swift in Sources */,
 				EAFBAD812E938BEF00586EC7 /* LMSettingPage.swift in Sources */,
@@ -578,6 +598,10 @@
 				EACA1CFD2E7E49B600C80883 /* LMApi.swift in Sources */,
 				EAFBACB22E7E7B0100586EC7 /* LMSignUpPage.swift in Sources */,
 				EAFBAD7B2E936ABD00586EC7 /* LMNavigationTitleView.swift in Sources */,
+				EA8629B22EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift in Sources */,
+				EA8629B42EB5EEF700F2B00E /* LMSuggestionCardView.swift in Sources */,
+				EA8629B52EB5EEF700F2B00E /* LMCameraPreviewManager.swift in Sources */,
+				EA8629B62EB5EEF700F2B00E /* LMSuggestionsCarouselView.swift in Sources */,
 				EA8629AB2EB5B70300F2B00E /* LMNotificationTableViewCell.swift in Sources */,
 				EACA1D0C2E7E504F00C80883 /* LMWebViewPage.swift in Sources */,
 				EAFBAD882E93B94B00586EC7 /* LMPhotoCollectionView.swift in Sources */,
