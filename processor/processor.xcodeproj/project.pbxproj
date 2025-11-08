@@ -7,6 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EA0A473C2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A473B2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift */; };
+		EA0A473D2EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47352EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift */; };
+		EA0A473E2EBF8F19002CBB80 /* LMSubscriptionDialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47372EBF8F19002CBB80 /* LMSubscriptionDialogView.swift */; };
+		EA0A473F2EBF8F19002CBB80 /* LMSubscriptionCountdownView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47362EBF8F19002CBB80 /* LMSubscriptionCountdownView.swift */; };
+		EA0A47402EBF8F19002CBB80 /* LMSubscriptionFooterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47382EBF8F19002CBB80 /* LMSubscriptionFooterView.swift */; };
+		EA0A47412EBF8F19002CBB80 /* LMSubscriptionPlanCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A473A2EBF8F19002CBB80 /* LMSubscriptionPlanCardView.swift */; };
+		EA0A47422EBF8F19002CBB80 /* LMSubscriptionHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47392EBF8F19002CBB80 /* LMSubscriptionHeroView.swift */; };
+		EA0A47442EBF8F3C002CBB80 /* SubscriptionPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47432EBF8F3C002CBB80 /* SubscriptionPlan.swift */; };
+		EA0A47462EBF995C002CBB80 /* LMStoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47452EBF995C002CBB80 /* LMStoreManager.swift */; };
+		EA54E1DB2EBEED04000DB5EE /* LMSubscriptionPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA54E1DA2EBEED04000DB5EE /* LMSubscriptionPage.swift */; };
 		EA8629A32EB5A13F00F2B00E /* EVA02.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */; };
 		EA8629A52EB5A15800F2B00E /* ImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A42EB5A15800F2B00E /* ImageProcessor.swift */; };
 		EA8629A72EB5B16300F2B00E /* LMProfileDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */; };
@@ -79,6 +89,17 @@
 		4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_processor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8769BF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.debug.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.debug.xcconfig"; sourceTree = "<group>"; };
 		E918F2844F67229435DD4374 /* Pods-processor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.release.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.release.xcconfig"; sourceTree = "<group>"; };
+		EA0A47352EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionAdRewardsView.swift; sourceTree = "<group>"; };
+		EA0A47362EBF8F19002CBB80 /* LMSubscriptionCountdownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionCountdownView.swift; sourceTree = "<group>"; };
+		EA0A47372EBF8F19002CBB80 /* LMSubscriptionDialogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionDialogView.swift; sourceTree = "<group>"; };
+		EA0A47382EBF8F19002CBB80 /* LMSubscriptionFooterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionFooterView.swift; sourceTree = "<group>"; };
+		EA0A47392EBF8F19002CBB80 /* LMSubscriptionHeroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionHeroView.swift; sourceTree = "<group>"; };
+		EA0A473A2EBF8F19002CBB80 /* LMSubscriptionPlanCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionPlanCardView.swift; sourceTree = "<group>"; };
+		EA0A473B2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionProgressView.swift; sourceTree = "<group>"; };
+		EA0A47432EBF8F3C002CBB80 /* SubscriptionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionPlan.swift; sourceTree = "<group>"; };
+		EA0A47452EBF995C002CBB80 /* LMStoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMStoreManager.swift; sourceTree = "<group>"; };
+		EA54E1DA2EBEED04000DB5EE /* LMSubscriptionPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionPage.swift; sourceTree = "<group>"; };
+		EA54E1DC2EBF19F5000DB5EE /* processor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = processor.entitlements; sourceTree = "<group>"; };
 		EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = EVA02.mlpackage; sourceTree = "<group>"; };
 		EA8629A42EB5A15800F2B00E /* ImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageProcessor.swift; sourceTree = "<group>"; };
 		EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileDisplayView.swift; sourceTree = "<group>"; };
@@ -177,6 +198,20 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
+		EA0A47342EBF8F03002CBB80 /* subscription */ = {
+			isa = PBXGroup;
+			children = (
+				EA0A47352EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift */,
+				EA0A47362EBF8F19002CBB80 /* LMSubscriptionCountdownView.swift */,
+				EA0A47372EBF8F19002CBB80 /* LMSubscriptionDialogView.swift */,
+				EA0A47382EBF8F19002CBB80 /* LMSubscriptionFooterView.swift */,
+				EA0A47392EBF8F19002CBB80 /* LMSubscriptionHeroView.swift */,
+				EA0A473A2EBF8F19002CBB80 /* LMSubscriptionPlanCardView.swift */,
+				EA0A473B2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift */,
+			);
+			path = subscription;
+			sourceTree = "<group>";
+		};
 		EACA1BE82E7E408900C80883 = {
 			isa = PBXGroup;
 			children = (
@@ -213,6 +248,7 @@
 				EACA1D092E7E4EE900C80883 /* LMLogger.swift */,
 				EAFBAD892E9B8A4800586EC7 /* LMUserManager.swift */,
 				EA8629B82EB5F7C000F2B00E /* LMLaunageManager.swift */,
+				EA0A47452EBF995C002CBB80 /* LMStoreManager.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -220,6 +256,7 @@
 		EACA1CD12E7E49B600C80883 /* models */ = {
 			isa = PBXGroup;
 			children = (
+				EA0A47432EBF8F3C002CBB80 /* SubscriptionPlan.swift */,
 				EACA1CD02E7E49B600C80883 /* LMApiResponseModel.swift */,
 				EACA1D072E7E4CBF00C80883 /* LMPackageModel.swift */,
 				EAFBACC52E8F69D100586EC7 /* LMUserProfileModel.swift */,
@@ -253,6 +290,7 @@
 		EACA1CD62E7E49B600C80883 /* views */ = {
 			isa = PBXGroup;
 			children = (
+				EA0A47342EBF8F03002CBB80 /* subscription */,
 				EAFBACBE2E7E8DB200586EC7 /* camera */,
 				EAFBACAE2E7E79C100586EC7 /* entrance */,
 				EAFBAC9D2E7E659E00586EC7 /* common */,
@@ -327,6 +365,7 @@
 		EACA1CEC2E7E49B600C80883 /* processor */ = {
 			isa = PBXGroup;
 			children = (
+				EA54E1DC2EBF19F5000DB5EE /* processor.entitlements */,
 				EACA1CE52E7E49B600C80883 /* AppDelegate.swift */,
 				EACA1CEB2E7E49B600C80883 /* SceneDelegate.swift */,
 				EACA1CE42E7E49B600C80883 /* src */,
@@ -371,6 +410,7 @@
 				EAFBAD842E9393E400586EC7 /* LMLanguagePage.swift */,
 				EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */,
 				EAFBADC92EA4C92900586EC7 /* LMMessageDetailPage.swift */,
+				EA54E1DA2EBEED04000DB5EE /* LMSubscriptionPage.swift */,
 				EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */,
 			);
 			path = mine;
@@ -566,8 +606,10 @@
 				EACA1CF32E7E49B600C80883 /* processor.xcdatamodeld in Sources */,
 				EA8629B92EB5F7C000F2B00E /* LMLaunageManager.swift in Sources */,
 				EAFBADC82EA4C90E00586EC7 /* LMNotificationsPage.swift in Sources */,
+				EA54E1DB2EBEED04000DB5EE /* LMSubscriptionPage.swift in Sources */,
 				EA8629A92EB5B18B00F2B00E /* LMProfileEditView.swift in Sources */,
 				EA8629BB2EB5F85700F2B00E /* LMLaunageModel.swift in Sources */,
+				EA0A47462EBF995C002CBB80 /* LMStoreManager.swift in Sources */,
 				EACA1CF42E7E49B600C80883 /* anylibs.swift in Sources */,
 				EAFBAC9F2E7E65B000586EC7 /* LMProcessorTopBar.swift in Sources */,
 				EAFBAD812E938BEF00586EC7 /* LMSettingPage.swift in Sources */,
@@ -597,6 +639,13 @@
 				EAFBACA92E7E6C1B00586EC7 /* LMFloatingCameraButton.swift in Sources */,
 				EACA1CFD2E7E49B600C80883 /* LMApi.swift in Sources */,
 				EAFBACB22E7E7B0100586EC7 /* LMSignUpPage.swift in Sources */,
+				EA0A473C2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift in Sources */,
+				EA0A473D2EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift in Sources */,
+				EA0A473E2EBF8F19002CBB80 /* LMSubscriptionDialogView.swift in Sources */,
+				EA0A473F2EBF8F19002CBB80 /* LMSubscriptionCountdownView.swift in Sources */,
+				EA0A47402EBF8F19002CBB80 /* LMSubscriptionFooterView.swift in Sources */,
+				EA0A47412EBF8F19002CBB80 /* LMSubscriptionPlanCardView.swift in Sources */,
+				EA0A47422EBF8F19002CBB80 /* LMSubscriptionHeroView.swift in Sources */,
 				EAFBAD7B2E936ABD00586EC7 /* LMNavigationTitleView.swift in Sources */,
 				EA8629B22EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift in Sources */,
 				EA8629B42EB5EEF700F2B00E /* LMSuggestionCardView.swift in Sources */,
@@ -609,6 +658,7 @@
 				EACA1CFE2E7E49B600C80883 /* LMApiClient.swift in Sources */,
 				EACA1CFF2E7E49B600C80883 /* AppTheme.swift in Sources */,
 				EACA1D002E7E49B600C80883 /* LMPageWrapper.swift in Sources */,
+				EA0A47442EBF8F3C002CBB80 /* SubscriptionPlan.swift in Sources */,
 				EAFBACA42E7E695100586EC7 /* LMMembershipCardView.swift in Sources */,
 				EAFBACC62E8F69D100586EC7 /* LMUserProfileModel.swift in Sources */,
 				EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */,
@@ -638,11 +688,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = processor/processor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WL97SW2V2L;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = processor/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Entropix;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -653,7 +706,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.anycompany.processor;
+				PRODUCT_BUNDLE_IDENTIFIER = com.entropix.inspirecam;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -671,11 +724,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = processor/processor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = WL97SW2V2L;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = processor/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Entropix;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -686,7 +742,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.anycompany.processor;
+				PRODUCT_BUNDLE_IDENTIFIER = com.entropix.inspirecam;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;

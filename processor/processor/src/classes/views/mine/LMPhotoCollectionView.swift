@@ -224,7 +224,7 @@ extension LMPhotoCollectionView {
         
         // 滑动到对应页面
         let targetOffsetX: CGFloat = (tab == .gallery) ? 0 : scrollView.frame.width
-        scrollView.setContentOffset(CGPoint(x: targetOffsetX, y: 0), animated: true)
+        scrollView.setContentOffset(CGPoint(x: targetOffsetX, y: 0), animated: false)
         
         // 更新高度
         updateContentHeight()

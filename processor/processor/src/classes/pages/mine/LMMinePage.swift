@@ -140,10 +140,13 @@ class LMMinePage: LMPageWrapper {
     
     private func watchAdsButtonTapped() {
         print("Watch ads button tapped")
+        upgradeButtonTapped()
     }
     
     private func upgradeButtonTapped() {
-        print("Upgrade button tapped")
+        let subscription = LMSubscriptionPage()
+        navigationController?.pushViewController(subscription,
+                                                 animated: true)
     }
     
     private func cameraButtonTapped() {

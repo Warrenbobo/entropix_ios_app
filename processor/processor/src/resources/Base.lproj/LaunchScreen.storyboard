@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
+        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -15,9 +16,21 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="photo processor" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qHg-Le-rUC">
-                                <rect key="frame" x="95.333333333333329" y="421.66666666666669" width="202.66666666666669" height="33.666666666666686"/>
-                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="28"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Unleash Your Creativity in Photography" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7Yc-cG-YFL">
+                                <rect key="frame" x="30" y="758.66666666666663" width="333" height="19.333333333333371"/>
+                                <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
+                                <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="app_logo_transparent_bg" translatesAutoresizingMaskIntoConstraints="NO" id="e4M-Bb-AXw">
+                                <rect key="frame" x="62" y="239" width="269" height="219"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="e4M-Bb-AXw" secondAttribute="height" multiplier="465:379" id="bk7-ea-JnZ"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Entropix" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qHg-Le-rUC">
+                                <rect key="frame" x="134.33333333333334" y="696.33333333333337" width="124.66666666666666" height="38.333333333333371"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="32"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
@@ -25,8 +38,15 @@
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
-                            <constraint firstItem="qHg-Le-rUC" firstAttribute="centerY" secondItem="6Tk-OE-BBY" secondAttribute="centerY" id="Kbi-jk-ViE"/>
+                            <constraint firstItem="7Yc-cG-YFL" firstAttribute="top" secondItem="qHg-Le-rUC" secondAttribute="bottom" constant="24" id="1O7-DO-rLi"/>
+                            <constraint firstItem="e4M-Bb-AXw" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="62" id="ARJ-cu-Saa"/>
+                            <constraint firstItem="7Yc-cG-YFL" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="IRY-bA-TsZ"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="7Yc-cG-YFL" secondAttribute="bottom" constant="40" id="Pcv-en-6hd"/>
+                            <constraint firstItem="7Yc-cG-YFL" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="30" id="iGu-68-pZJ"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="e4M-Bb-AXw" secondAttribute="trailing" constant="62" id="otA-LQ-XQc"/>
                             <constraint firstItem="qHg-Le-rUC" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="vrT-wa-F78"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="7Yc-cG-YFL" secondAttribute="trailing" constant="30" id="xV1-OP-70T"/>
+                            <constraint firstItem="e4M-Bb-AXw" firstAttribute="centerY" secondItem="6Tk-OE-BBY" secondAttribute="centerY" constant="-90" id="xpH-i9-Pnt"/>
                         </constraints>
                     </view>
                 </viewController>
@@ -35,4 +55,7 @@
             <point key="canvasLocation" x="225" y="102"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="app_logo_transparent_bg" width="155" height="126.33333587646484"/>
+    </resources>
 </document>
