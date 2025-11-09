@@ -104,7 +104,7 @@ extension LMCameraPage {
         LMLogger.log("🔍 Analyzing scene with EVA02...")
         
         do {
-            let imageProcessor = ImageProcessor.forEVA02()
+            let imageProcessor = LMImageProcessor.forEVA02()
             let multiArray = try imageProcessor.processImage(image)
             
             LMLogger.log("✅ Image processed: shape=\(multiArray.shape), count=\(multiArray.count)")

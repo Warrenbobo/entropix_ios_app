@@ -24,10 +24,16 @@ struct LMPackageManager {
     static var newInstaller: Bool = false
     // 应用启动时携带的参数
     static var launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    // 应用初始化窗口
+    static weak var window: UIWindow?
     
     // APP包信息
     static var package: LMPackageModel = LMPackageModel.defaultModel()
     
+    /// 切换当前窗口的根视图
+    public static func switchWindowSceneContent(_ controller: UIViewController) {
+        window?.rootViewController = controller
+    }
     
     
     /// 初始化App的包信息

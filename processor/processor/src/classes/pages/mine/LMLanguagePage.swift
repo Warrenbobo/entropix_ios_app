@@ -263,10 +263,9 @@ extension LMLanguagePage {
             message: LMText.settings.languageChangedSuccess,
             preferredStyle: .alert
         )
-        
         alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default) { _ in
             let rootController = LMMinePage()
-            LMLaunchSplashPage.window?.rootViewController = LMNavigationWrapper(rootViewController: rootController)
+            LMPackageManager.switchWindowSceneContent(LMNavigationWrapper(rootViewController: rootController))
         })
         
         present(alert, animated: true)

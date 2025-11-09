@@ -10,29 +10,18 @@ import SnapKit
 
 class LMLaunchSplashPage: UIViewController {
     
-    public static weak var window: UIWindow?
+    // MARK: - UI Components
+    private let logoImageView = UIImageView()
+    private let appNameLabel = UILabel()
+    private let taglineLabel = UILabel()
     
-    /// 创建开屏界面
-    public static func createLaunchContentViews() -> UIView {
-        let splashView = UIView(frame: UIScreen.main.bounds)
-        splashView.backgroundColor = AppTheme.ThemeColor.background
-        // 图标
-        let iconView = UIImageView()
-        iconView.image = UIImage(named: "")
-        splashView.addSubview(iconView)
-        
-        // 文本
-        let bottomTextView = UIImageView()
-        bottomTextView.image = UIImage(named: "")
-        splashView.addSubview(bottomTextView)
-        return splashView
-    }
-    
+    // MARK: - Properties
     private var showPrivacy: Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        addSplashViews()
+        setupUI()
+        setupConstraints()
         loadAppDataAndCheckVersion()
     }
     
@@ -67,12 +56,60 @@ class LMLaunchSplashPage: UIViewController {
         if LMUserManager.isSignIn {
             rootController = LMMinePage()
         }
-        LMLaunchSplashPage.window?.rootViewController = LMNavigationWrapper(rootViewController: rootController)
+        LMPackageManager.switchWindowSceneContent(LMNavigationWrapper(rootViewController: rootController))
     }
     
-    /// 添加界面
-    private func addSplashViews() {
+    // MARK: - UI Setup
+    
+    private func setupUI() {
+        // 背景色
+        view.backgroundColor = .white
         
+        // Logo 图片
+        logoImageView.image = UIImage(named: "app_logo_transparent_bg")
+        logoImageView.contentMode = .scaleAspectFit
+        logoImageView.clipsToBounds = true
+        view.addSubview(logoImageView)
+        
+        // 应用名称
+        appNameLabel.text = "Entropix"
+        appNameLabel.font = UIFont.boldSystemFont(ofSize: 32)
+        appNameLabel.textColor = .label
+        appNameLabel.textAlignment = .center
+        view.addSubview(appNameLabel)
+        
+        // 标语
+        taglineLabel.text = "Unleash Your Creativity in Photography"
+        taglineLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        taglineLabel.textColor = UIColor(white: 0.67, alpha: 1.0)
+        taglineLabel.textAlignment = .center
+        taglineLabel.numberOfLines = 1
+        taglineLabel.adjustsFontSizeToFitWidth = true
+        view.addSubview(taglineLabel)
+    }
+    
+    private func setupConstraints() {
+        // Logo 约束
+        logoImageView.snp.makeConstraints { make in
+            make.leading.equalTo(view.safeAreaLayoutGuide).offset(62)
+            make.trailing.equalTo(view.safeAreaLayoutGuide).offset(-62)
+            make.centerY.equalTo(view.safeAreaLayoutGuide).offset(-90)
+            make.width.equalTo(logoImageView.snp.height).multipliedBy(465.0 / 379.0)
+        }
+        
+        // 应用名称约束
+        appNameLabel.snp.makeConstraints { make in
+            make.centerX.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(taglineLabel.snp.top).offset(-16)
+        }
+        
+        // 标语约束
+        taglineLabel.snp.makeConstraints { make in
+            make.leading.equalTo(view.safeAreaLayoutGuide).offset(30)
+            make.trailing.equalTo(view.safeAreaLayoutGuide).offset(-30)
+            make.centerX.equalTo(view.safeAreaLayoutGuide)
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-40)
+        }
     }
     
     /// 点击隐私协议的取消按钮

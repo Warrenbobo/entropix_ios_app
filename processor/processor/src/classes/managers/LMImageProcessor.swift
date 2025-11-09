@@ -1,5 +1,5 @@
 //
-//  ImageProcessor.swift
+//  LMImageProcessor.swift
 //  cam
 //
 //  Created by Ziyang Ye on 29/10/2025.
@@ -34,7 +34,7 @@ enum ImageProcessingError: Error, LocalizedError {
 }
 
 
-class ImageProcessor {
+class LMImageProcessor {
     
     
     struct ProcessingConfig {
@@ -67,9 +67,6 @@ class ImageProcessor {
     init(config: ProcessingConfig = .eva02Default) {
         self.config = config
     }
-    
-    
-    
     
     func processImage(_ image: UIImage) throws -> MLMultiArray {
         
@@ -219,16 +216,16 @@ class ImageProcessor {
 }
 
 
-extension ImageProcessor {
+extension LMImageProcessor {
     
     
-    static func forEVA02() -> ImageProcessor {
-        return ImageProcessor(config: .eva02Default)
+    static func forEVA02() -> LMImageProcessor {
+        return LMImageProcessor(config: .eva02Default)
     }
     
     
-    static func basic(targetSize: CGSize = CGSize(width: 448, height: 448)) -> ImageProcessor {
-        return ImageProcessor(config: ProcessingConfig(
+    static func basic(targetSize: CGSize = CGSize(width: 448, height: 448)) -> LMImageProcessor {
+        return LMImageProcessor(config: ProcessingConfig(
             targetSize: targetSize,
             normalizeValues: false,
             meanValues: [],
@@ -242,8 +239,8 @@ extension ImageProcessor {
         normalizeValues: Bool = true,
         meanValues: [Float] = [0.485, 0.456, 0.406],
         standardDeviationValues: [Float] = [0.229, 0.224, 0.225]
-    ) -> ImageProcessor {
-        return ImageProcessor(config: ProcessingConfig(
+    ) -> LMImageProcessor {
+        return LMImageProcessor(config: ProcessingConfig(
             targetSize: targetSize,
             normalizeValues: normalizeValues,
             meanValues: meanValues,

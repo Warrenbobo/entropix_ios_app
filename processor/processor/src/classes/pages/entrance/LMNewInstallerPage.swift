@@ -106,7 +106,7 @@ extension LMNewInstallerPage: LMWelcomeAuthenticationViewDelegate {
     }
     
     func welcomeAuthenticationViewDidTapContinueWithApple() {
-        
+        performAppleSignInAuthentication()
     }
     
     func welcomeAuthenticationViewDidTapTermsOfService() {
