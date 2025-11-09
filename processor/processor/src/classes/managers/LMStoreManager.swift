@@ -263,7 +263,7 @@ class LMStoreManager {
             productId: transaction.productID,
             purchaseDate: purchaseDate,
             receiptData: receiptData,
-            userId: nil // TODO: Get from user manager
+            userId: LMUserManager.shared.currentUser?.userId
         )
         
         // Convert to dictionary for API call
@@ -320,9 +320,20 @@ class LMStoreManager {
     
     /// Update user subscription in user model
     private func updateUserSubscription(type: String, expirationDate: String?) {
-        // TODO: Update LMUserModel with subscription info
-        // This will be implemented when integrating with user manager
         LMLogger.log("📝 Updating user subscription: \(type)")
+        
+        // Update current user info with new subscription
+        if var currentUser = LMUserManager.shared.currentUser {
+            // Create updated user info with new subscription
+            let updatedUser = LMUserInfo(
+                userId: currentUser.userId,
+                username: currentUser.username,
+                email: currentUser.email,
+                subscription: type
+            )
+            LMUserManager.shared.updateUserInfo(updatedUser)
+            LMLogger.log("✅ User subscription updated in local storage")
+        }
     }
     
     /// Verify transaction

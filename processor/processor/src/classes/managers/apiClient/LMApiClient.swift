@@ -11,9 +11,10 @@ import CocoaSecurity
 
 /// 请求的方式
 enum MethodType {
-    
     case get
     case post
+    case put
+    case delete
     
     var value: HTTPMethod {
         switch self {
@@ -21,6 +22,10 @@ enum MethodType {
             return HTTPMethod.get
         case .post:
             return HTTPMethod.post
+        case .put:
+            return HTTPMethod.put
+        case .delete:
+            return HTTPMethod.delete
         }
     }
     
@@ -30,6 +35,10 @@ enum MethodType {
             return "GET"
         case .post:
             return "POST"
+        case .put:
+            return "PUT"
+        case .delete:
+            return "DELETE"
         }
     }
 }
@@ -119,16 +128,6 @@ class LMApiClient {
                 }
             })
         }
-    }
-    
-    /// 默认的全局请求Header参数
-    private static func defaultHTTPHeaders() -> HTTPHeaders {
-        return ["Content-Type": "application/json",
-                "platform": "iOS",
-                "channel": "appstore",
-                "Version": LMPackageManager.package.version,
-                "model": LMPackageManager.package.model,
-                "PackageName": LMPackageManager.package.bundleName]
     }
     
     /// 格式化输出网络请求的日志

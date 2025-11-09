@@ -28,7 +28,7 @@ class LMSuggestionCardView: UIView {
     
     // MARK: - Properties
     weak var delegate: LMSuggestionCardViewDelegate?
-    private var suggestion: LMSuggestion?
+    private var suggestion: SuggestionDisplayModel?
     private var isSelected: Bool = false
     private var adjacentMargins: Set<AdjacentMarginSide> = []
     
@@ -140,7 +140,7 @@ class LMSuggestionCardView: UIView {
     }
     
     // MARK: - Public Methods
-    func configure(with suggestion: LMSuggestion) {
+    func configure(with suggestion: SuggestionDisplayModel) {
         self.suggestion = suggestion
         
         if suggestion.isGenerating {

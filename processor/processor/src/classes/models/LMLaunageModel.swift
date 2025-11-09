@@ -21,5 +21,5 @@ struct LMAppLaunageConfig: Codable {
 
 struct LMAppTextConfig: Codable {
     
-    
+    var welcome = "Welcome to use"
 }

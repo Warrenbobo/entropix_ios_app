@@ -64,15 +64,15 @@ class LMCameraBottomControlsView: UIView {
         // 移除现有的渐变层
         inspireButton.layer.sublayers?.removeAll { $0 is CAGradientLayer }
         
-        // 添加新的渐变背景
+        // 添加新的渐变背景 - 紫色渐变
         let gradientLayer = CAGradientLayer()
         gradientLayer.colors = [
-            UIColor(red: 102/255, green: 126/255, blue: 234/255, alpha: 1).cgColor,
-            UIColor(red: 118/255, green: 75/255, blue: 162/255, alpha: 1).cgColor
+            UIColor(red: 120/255, green: 140/255, blue: 230/255, alpha: 1).cgColor,
+            UIColor(red: 110/255, green: 100/255, blue: 200/255, alpha: 1).cgColor
         ]
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
         gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        gradientLayer.cornerRadius = 20
+        gradientLayer.cornerRadius = 25
         gradientLayer.frame = inspireButton.bounds
         inspireButton.layer.insertSublayer(gradientLayer, at: 0)
     }
@@ -97,37 +97,28 @@ extension LMCameraBottomControlsView {
         inspireButtonContainer.addSubview(inspirePointsContainer)
         
         // Inspire按钮设置 - 渐变背景
-        inspireButton.setTitle("Inspire Me", for: .normal)
-        inspireButton.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        inspireButton.setTitle("Inspire Me  ⓘ", for: .normal)
+        inspireButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         inspireButton.setTitleColor(UIColor.white, for: .normal)
-        inspireButton.layer.cornerRadius = 20
-        inspireButton.clipsToBounds = true
+        inspireButton.layer.cornerRadius = 25
+        inspireButton.clipsToBounds = false
         inspireButton.addTarget(self, action: #selector(handleInspireButtonTapped), for: .touchUpInside)
         
-        // 添加阴影效果
-        inspireButton.layer.shadowColor = UIColor(red: 102/255, green: 126/255, blue: 234/255, alpha: 0.4).cgColor
-        inspireButton.layer.shadowOffset = CGSize(width: 0, height: 4)
-        inspireButton.layer.shadowRadius = 15
+        // 添加发光阴影效果
+        inspireButton.layer.shadowColor = UIColor(red: 102/255, green: 126/255, blue: 234/255, alpha: 0.6).cgColor
+        inspireButton.layer.shadowOffset = CGSize(width: 0, height: 8)
+        inspireButton.layer.shadowRadius = 20
         inspireButton.layer.shadowOpacity = 1.0
         
         // 点数容器设置
-        inspirePointsContainer.addSubview(starImageView)
+        inspirePointsContainer.backgroundColor = UIColor.clear
         inspirePointsContainer.addSubview(inspirePointsLabel)
-        inspirePointsContainer.addSubview(questionButton)
         
-        // 星星图标
-        starImageView.image = UIImage(systemName: "star.fill")
-        starImageView.tintColor = UIColor.systemYellow
-        
-        // 点数标签
-        inspirePointsLabel.text = " -\(inspirePoints) "
-        inspirePointsLabel.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-        inspirePointsLabel.textColor = UIColor.white
+        // 点数标签 - 显示 "Inspire Point -1"
+        inspirePointsLabel.text = "Inspire Point -\(inspirePoints)"
+        inspirePointsLabel.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        inspirePointsLabel.textColor = UIColor.white.withAlphaComponent(0.9)
         inspirePointsLabel.textAlignment = .center
-        
-        // 问号按钮
-        questionButton.setImage(UIImage(systemName: "questionmark.circle"), for: .normal)
-        questionButton.tintColor = UIColor.white
     }
     
     private func setupCaptureButtonComponents() {
@@ -196,44 +187,28 @@ extension LMCameraBottomControlsView {
         // Inspire按钮容器 - 在上方
         inspireButtonContainer.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-120) // 调整位置到上方
-            make.width.equalTo(140)
-            make.height.equalTo(60)
+            make.bottom.equalToSuperview().offset(-120)
+            make.width.equalTo(220)
+            make.height.equalTo(80)
         }
         
-        // Inspire按钮
+        // Inspire按钮 - 更大的胶囊形状
         inspireButton.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.leading.trailing.equalToSuperview()
-            make.height.equalTo(40)
+            make.height.equalTo(50)
         }
         
         // 点数容器
         inspirePointsContainer.snp.makeConstraints { make in
-            make.top.equalTo(inspireButton.snp.bottom).offset(4)
+            make.top.equalTo(inspireButton.snp.bottom).offset(8)
             make.centerX.equalToSuperview()
-            make.height.equalTo(16)
-        }
-        
-        // 星星图标
-        starImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview()
-            make.centerY.equalToSuperview()
-            make.size.equalTo(12)
+            make.height.equalTo(20)
         }
         
         // 点数标签
         inspirePointsLabel.snp.makeConstraints { make in
-            make.leading.equalTo(starImageView.snp.trailing)
-            make.centerY.equalToSuperview()
-        }
-        
-        // 问号按钮
-        questionButton.snp.makeConstraints { make in
-            make.leading.equalTo(inspirePointsLabel.snp.trailing)
-            make.trailing.equalToSuperview()
-            make.centerY.equalToSuperview()
-            make.size.equalTo(12)
+            make.edges.equalToSuperview()
         }
         
         // 拍照按钮 - 在 Inspire Me 按钮下方
@@ -297,12 +272,13 @@ extension LMCameraBottomControlsView {
     }
     
     private func updateInspireButtonAppearance() {
-        inspirePointsLabel.text = " -\(inspirePoints) "
+        inspirePointsLabel.text = "Inspire Point -\(inspirePoints)"
         
         // 根据点数更新按钮状态
         let hasPoints = inspirePoints > 0
         inspireButton.isEnabled = hasPoints
         inspireButton.alpha = hasPoints ? 1.0 : 0.6
+        inspirePointsContainer.alpha = hasPoints ? 1.0 : 0.6
     }
     
     private func updateARGuidanceAppearance() {

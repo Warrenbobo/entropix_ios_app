@@ -56,7 +56,12 @@ class LMCameraPage: LMPageWrapper {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
-        startCameraSession()
+        
+        // 只有在已授权的情况下才启动相机会话
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        if status == .authorized {
+            startCameraSession()
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -142,41 +147,67 @@ class LMCameraPage: LMPageWrapper {
     }
     
     // MARK: - Permissions
+    
+    /// 检查相机权限并设置
     private func checkCameraPermissionAndSetup() {
         let cameraAuthStatus = AVCaptureDevice.authorizationStatus(for: .video)
         
         switch cameraAuthStatus {
         case .authorized:
+            // 已授权，直接设置相机
             setupCameraSession()
             setDefaultCameraParameters()
+            startCameraSession()
             LMLogger.log("✅ Camera permission already granted")
             
         case .notDetermined:
+            // 首次请求权限
             LMLogger.log("📱 Requesting camera permission...")
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 DispatchQueue.main.async {
                     if granted {
-                        LMLogger.log("✅ Camera permission granted")
+                        LMLogger.log("✅ Camera permission granted by user")
+                        // 用户同意授权，设置并启动相机避免黑屏
                         self?.setupCameraSession()
                         self?.setDefaultCameraParameters()
+                        self?.startCameraSession()
                     } else {
                         LMLogger.log("❌ Camera permission denied by user")
-                        self?.showCameraPermissionDeniedAlert()
+                        // 用户拒绝授权，返回上一页
+                        self?.handlePermissionDenied()
                     }
                 }
             }
             
         case .denied, .restricted:
+            // 权限被拒绝或受限，提示用户前往设置
             LMLogger.log("❌ Camera permission denied or restricted")
-            showCameraPermissionDeniedAlert()
+            showPermissionSettingsAlert()
             
         @unknown default:
             LMLogger.log("⚠️ Unknown camera permission status")
-            showCameraPermissionDeniedAlert()
+            showPermissionSettingsAlert()
         }
     }
     
-    private func showCameraPermissionDeniedAlert() {
+    /// 处理权限被拒绝的情况
+    private func handlePermissionDenied() {
+        let alert = UIAlertController(
+            title: "Camera Access Denied",
+            message: "Camera access is required to use this feature.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+            // 返回上一页
+            self?.navigationController?.popViewController(animated: true)
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    /// 显示前往设置的提示
+    func showPermissionSettingsAlert() {
         let alert = UIAlertController(
             title: "Camera Access Required",
             message: "FramAist needs camera access to take photos. Please enable camera access in Settings.",
@@ -190,48 +221,37 @@ class LMCameraPage: LMPageWrapper {
         })
         
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
+            // 返回上一页
             self?.navigationController?.popViewController(animated: true)
         })
         
         present(alert, animated: true)
     }
     
-    func handleCameraPermissionDenied(status: AVAuthorizationStatus) {
-        var message: String
-        var showSettings = false
+    /// 公开方法：检查相机权限状态（供外部调用）
+    static func checkCameraPermission(completion: @escaping (Bool) -> Void) {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
         
         switch status {
-        case .notDetermined:
-            message = "Camera permission not requested yet. Please restart the app."
-        case .restricted:
-            message = "Camera access is restricted. This may be due to parental controls or device management."
-        case .denied:
-            message = "Camera permission denied. Please enable camera access in Settings to take photos."
-            showSettings = true
         case .authorized:
-            message = "Camera permission granted but capture failed."
-        @unknown default:
-            message = "Unknown camera permission status."
-        }
-        
-        let alert = UIAlertController(
-            title: "Camera Access Required",
-            message: message,
-            preferredStyle: .alert
-        )
-        
-        if showSettings {
-            alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
-                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(settingsURL)
+            completion(true)
+            
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    completion(granted)
                 }
-            })
+            }
+            
+        case .denied, .restricted:
+            completion(false)
+            
+        @unknown default:
+            completion(false)
         }
-        
-        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-        
-        present(alert, animated: true)
     }
+    
+
     
     // MARK: - Actions
     @objc func handleUserProfileButtonTapped() {

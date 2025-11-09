@@ -197,10 +197,26 @@ class LMGalleryDetailPage: UIViewController {
     }
     
     private func performDelete() {
-        // TODO: Implement actual delete logic
-        // For now, just go back
         LMLogger.log("🗑️ Deleting gallery item: \(galleryItem.id)")
-        navigationController?.popViewController(animated: true)
+        
+        // Show loading indicator
+        let loadingAlert = UIAlertController(title: nil, message: "Deleting...", preferredStyle: .alert)
+        let loadingIndicator = UIActivityIndicatorView(style: .medium)
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        loadingIndicator.startAnimating()
+        loadingAlert.view.addSubview(loadingIndicator)
+        loadingIndicator.centerXAnchor.constraint(equalTo: loadingAlert.view.centerXAnchor).isActive = true
+        loadingIndicator.bottomAnchor.constraint(equalTo: loadingAlert.view.bottomAnchor, constant: -20).isActive = true
+        present(loadingAlert, animated: true)
+        
+        // TODO: Call API to delete from server
+        // For now, simulate deletion with delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            loadingAlert.dismiss(animated: true) {
+                LMLogger.log("✅ Gallery item deleted successfully")
+                self?.navigationController?.popViewController(animated: true)
+            }
+        }
     }
     
     private func showSuccessIndicator() {

@@ -2,12 +2,213 @@
 //  LMUserManager.swift
 //  processor
 //
-//  Created by muz on 2025/10/12.
+//  User authentication and session management
 //
 
 import Foundation
 
-struct LMUserManager {
+class LMUserManager {
+    
+    // MARK: - Singleton
+    static let shared = LMUserManager()
+    private init() {}
+    
+    // MARK: - Properties
+    private let accessTokenKey = "lm_access_token"
+    private let refreshTokenKey = "lm_refresh_token"
+    private let userInfoKey = "lm_user_info"
+    
+    var accessToken: String? {
+        get {
+            return UserDefaults.standard.string(forKey: accessTokenKey)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: accessTokenKey)
+        }
+    }
+    
+    var refreshToken: String? {
+        get {
+            return UserDefaults.standard.string(forKey: refreshTokenKey)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: refreshTokenKey)
+        }
+    }
+    
+    var currentUser: LMUserInfo? {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: userInfoKey),
+                  let user = try? JSONDecoder().decode(LMUserInfo.self, from: data) else {
+                return nil
+            }
+            return user
+        }
+        set {
+            if let user = newValue,
+               let data = try? JSONEncoder().encode(user) {
+                UserDefaults.standard.set(data, forKey: userInfoKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: userInfoKey)
+            }
+        }
+    }
+    
+    var isLoggedIn: Bool {
+        return accessToken != nil && currentUser != nil
+    }
+    
+    // MARK: - Authentication Methods
+    
+    /// 保存登录信息
+    func saveLoginInfo(accessToken: String, refreshToken: String, user: LMUserInfo) {
+        self.accessToken = accessToken
+        self.refreshToken = refreshToken
+        self.currentUser = user
+        
+        LMLogger.log("✅ User logged in: \(user.username)")
+    }
+    
+    /// 清除登录信息
+    func clearLoginInfo() {
+        accessToken = nil
+        refreshToken = nil
+        currentUser = nil
+        
+        LMLogger.log("✅ User logged out")
+    }
+    
+    /// 更新用户信息
+    func updateUserInfo(_ user: LMUserInfo) {
+        currentUser = user
+        LMLogger.log("✅ User info updated")
+    }
+    
+    /// 更新 Token
+    func updateTokens(accessToken: String, refreshToken: String) {
+        self.accessToken = accessToken
+        self.refreshToken = refreshToken
+        LMLogger.log("✅ Tokens refreshed")
+    }
+    
+    // MARK: - API Wrapper Methods
+    
+    /// 登录
+    func login(identifier: String, password: String, completion: @escaping (Result<LMUserInfo, Error>) -> Void) {
+        LMApiService.shared.login(identifier: identifier, password: password) { [weak self] response in
+            if response.requestSuccess, let data = response.value {
+                self?.saveLoginInfo(
+                    accessToken: data.accessToken,
+                    refreshToken: data.refreshToken,
+                    user: data.user
+                )
+                completion(.success(data.user))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Login failed"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// 注册
+    func register(identifier: String, password: String, completion: @escaping (Result<LMUserInfo, Error>) -> Void) {
+        LMApiService.shared.register(identifier: identifier, password: password) { response in
+            if response.requestSuccess, let data = response.value {
+                completion(.success(data))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Registration failed"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// 登出
+    func logout(completion: @escaping (Result<Void, Error>) -> Void) {
+        LMApiService.shared.logout { [weak self] response in
+            if response.requestSuccess {
+                self?.clearLoginInfo()
+                completion(.success(()))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Logout failed"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// 刷新 Token
+    func refreshAccessToken(completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let refreshToken = refreshToken else {
+            let error = NSError(
+                domain: "UserManager",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "No refresh token available"]
+            )
+            completion(.failure(error))
+            return
+        }
+        
+        LMApiService.shared.refreshToken(refreshToken: refreshToken) { [weak self] response in
+            if response.requestSuccess, let data = response.value {
+                self?.updateTokens(
+                    accessToken: data.accessToken,
+                    refreshToken: data.refreshToken
+                )
+                completion(.success(()))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Token refresh failed"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// 获取用户信息
+    func fetchUserInfo(completion: @escaping (Result<LMUserInfo, Error>) -> Void) {
+        LMApiService.shared.getUserInfo { [weak self] response in
+            if response.requestSuccess, let data = response.value {
+                self?.updateUserInfo(data)
+                completion(.success(data))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Failed to fetch user info"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// 修改密码
+    func changePassword(oldPassword: String, newPassword: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        LMApiService.shared.changePassword(oldPassword: oldPassword, newPassword: newPassword) { response in
+            if response.requestSuccess {
+                completion(.success(()))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Password change failed"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
     
     /// 当前是否为已登陆用户
     static var isSignIn: Bool {

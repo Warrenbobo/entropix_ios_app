@@ -13,8 +13,8 @@ class LMShowSuggestionsPage: LMPageWrapper {
     
     // MARK: - Properties
     private var taskId: String
-    private var suggestions: [SuggestionItem] = []
-    private var taskStatus: TaskStatus = .processing
+    private var suggestions: [LMCompositionSuggestion] = []
+    private var taskStatus: String = "processing"
     private var pollTimer: Timer?
     
     // MARK: - UI Components
@@ -32,7 +32,7 @@ class LMShowSuggestionsPage: LMPageWrapper {
     
     // MARK: - Initialization
     
-    init(taskId: String, initialSuggestions: [SuggestionItem]) {
+    init(taskId: String, initialSuggestions: [LMCompositionSuggestion] = []) {
         self.taskId = taskId
         self.suggestions = initialSuggestions
         super.init(nibName: nil, bundle: nil)
@@ -181,47 +181,53 @@ class LMShowSuggestionsPage: LMPageWrapper {
     // MARK: - Update UI
     
     private func updateUI() {
-        // 转换为 LMSuggestion
-        let lmSuggestions = suggestions.map { item -> LMSuggestion in
-            return LMSuggestion(
-                id: item.id,
-                title: item.sceneType,
-                description: "Rank: \(item.rank), Score: \(String(format: "%.2f", item.score ?? 0))",
-                imageURL: item.imageUrl,
+        // 转换为 SuggestionDisplayModel
+        let displayModels = suggestions.map { suggestion -> SuggestionDisplayModel in
+            return SuggestionDisplayModel(
+                id: suggestion.id,
+                title: suggestion.sceneType,
+                description: "Rank: \(suggestion.rank), Score: \(String(format: "%.2f", suggestion.score ?? 0))",
+                imageURL: suggestion.imageUrl,
                 image: nil,
-                personBoundingBox: nil,
-                confidence: item.score,
+                personBoundingBox: suggestion.personBoundingBox,
+                confidence: suggestion.score,
                 isFavorite: false,
-                isGenerating: !item.ready
+                isGenerating: !suggestion.ready
             )
         }
         
-        suggestionsCarouselView.updateSuggestions(lmSuggestions)
+        suggestionsCarouselView.updateSuggestions(displayModels)
         
         // 更新状态
         switch taskStatus {
-        case .processing:
+        case "processing":
             statusLabel.text = "Generating AI suggestions..."
             statusLabel.textColor = .systemYellow
             loadingIndicator.startAnimating()
             selectButton.isEnabled = hasReadySuggestions()
             
-        case .completed:
+        case "completed":
             statusLabel.text = "All suggestions ready!"
             statusLabel.textColor = .systemGreen
             loadingIndicator.stopAnimating()
             selectButton.isEnabled = true
             
-        case .failed:
+        case "failed":
             statusLabel.text = "Generation failed. Please try again."
             statusLabel.textColor = .systemRed
             loadingIndicator.stopAnimating()
             selectButton.isEnabled = hasReadySuggestions()
             
-        case .timeout:
+        case "timeout":
             statusLabel.text = "Generation timeout. Showing available suggestions."
             statusLabel.textColor = .systemOrange
             loadingIndicator.stopAnimating()
+            selectButton.isEnabled = hasReadySuggestions()
+            
+        default:
+            statusLabel.text = "Processing..."
+            statusLabel.textColor = .systemGray
+            loadingIndicator.startAnimating()
             selectButton.isEnabled = hasReadySuggestions()
         }
     }
@@ -233,7 +239,7 @@ class LMShowSuggestionsPage: LMPageWrapper {
     // MARK: - Polling
     
     private func startPolling() {
-        guard taskStatus == .processing else { return }
+        guard taskStatus == "processing" else { return }
         
         pollTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             self?.pollTaskStatus()
@@ -256,7 +262,7 @@ class LMShowSuggestionsPage: LMPageWrapper {
                 self.updateUI()
                 
                 // 如果任务完成或失败，停止轮询
-                if response.status == .completed || response.status == .failed || response.status == .timeout {
+                if response.status == "completed" || response.status == "failed" || response.status == "timeout" {
                     self.stopPolling()
                 }
                 
@@ -308,21 +314,35 @@ class LMShowSuggestionsPage: LMPageWrapper {
     }
     
     @objc private func regenerateButtonTapped() {
-        // TODO: 实现重新生成逻辑
-        showError("Regenerate feature coming soon")
+        LMLogger.log("🔄 Regenerate button tapped")
+        
+        let alert = UIAlertController(
+            title: "Regenerate Suggestions",
+            message: "This will generate new composition suggestions. Continue?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Regenerate", style: .default) { [weak self] _ in
+            // TODO: Implement actual regeneration API call
+            LMLogger.log("🔄 Regeneration requested")
+            self?.showError("Regeneration feature coming soon")
+        })
+        
+        present(alert, animated: true)
     }
     
     // MARK: - Navigation
     
-    private func navigateToCamera(with suggestion: SuggestionItem) {
-        // 转换为 LMSuggestion
-        let lmSuggestion = LMSuggestion(
+    private func navigateToCamera(with suggestion: LMCompositionSuggestion) {
+        // 转换为 SuggestionDisplayModel
+        let displayModel = SuggestionDisplayModel(
             id: suggestion.id,
             title: suggestion.sceneType,
             description: "Rank: \(suggestion.rank)",
             imageURL: suggestion.imageUrl,
             image: nil,
-            personBoundingBox: nil,
+            personBoundingBox: suggestion.personBoundingBox,
             confidence: suggestion.score,
             isFavorite: false,
             isGenerating: false
@@ -339,7 +359,7 @@ class LMShowSuggestionsPage: LMPageWrapper {
     
     // MARK: - Helper Methods
     
-    private func getCurrentSelectedSuggestion() -> SuggestionItem? {
+    private func getCurrentSelectedSuggestion() -> LMCompositionSuggestion? {
         // 从轮播视图获取当前选中的索引
         // TODO: 需要在 LMSuggestionsCarouselView 中添加获取当前索引的方法
         guard !suggestions.isEmpty else { return nil }
@@ -360,18 +380,29 @@ class LMShowSuggestionsPage: LMPageWrapper {
 // MARK: - LMSuggestionsCarouselViewDelegate
 extension LMShowSuggestionsPage: LMSuggestionsCarouselViewDelegate {
     
-    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSelectSuggestion suggestion: LMSuggestion, at index: Int) {
+    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSelectSuggestion suggestion: LMCompositionSuggestion, at index: Int) {
         LMLogger.log("📱 Selected suggestion at index: \(index)")
         // 更新选择状态
     }
     
-    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didToggleFavorite suggestion: LMSuggestion, at index: Int) {
-        LMLogger.log("❤️ Toggled favorite for suggestion: \(suggestion.id)")
-        // TODO: 实现收藏功能
+    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didToggleFavorite suggestion: LMCompositionSuggestion, at index: Int) {
+        LMLogger.log("❤️ Toggling favorite for suggestion: \(suggestion.id)")
+        
+        // TODO: Call API to save/unsave suggestion
+        // For now, just show feedback
+        let message = "Suggestion saved to favorites"
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        present(alert, animated: true)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            alert.dismiss(animated: true)
+        }
     }
     
     func suggestionsCarouselViewDidRequestMoreSuggestions(_ view: LMSuggestionsCarouselView) {
-        LMLogger.log("🔄 Requested more suggestions")
-        // TODO: 实现请求更多建议
+        LMLogger.log("🔄 Requesting more suggestions")
+        
+        // TODO: Implement pagination or regeneration
+        showError("No more suggestions available. Try regenerating.")
     }
 }

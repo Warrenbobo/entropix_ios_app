@@ -43,7 +43,7 @@ extension LMCameraPage {
         let cameraAuthStatus = AVCaptureDevice.authorizationStatus(for: .video)
         guard cameraAuthStatus == .authorized else {
             LMLogger.log("❌ Camera permission not granted: \(cameraAuthStatus.rawValue)")
-            handleCameraPermissionDenied(status: cameraAuthStatus)
+            showPermissionSettingsAlert()
             return false
         }
         

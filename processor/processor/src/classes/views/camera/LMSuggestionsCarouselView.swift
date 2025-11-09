@@ -9,12 +9,13 @@ import UIKit
 import SnapKit
 
 protocol LMSuggestionsCarouselViewDelegate: AnyObject {
-    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSelectSuggestion suggestion: LMSuggestion, at index: Int)
-    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didToggleFavorite suggestion: LMSuggestion, at index: Int)
+    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSelectSuggestion suggestion: LMCompositionSuggestion, at index: Int)
+    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didToggleFavorite suggestion: LMCompositionSuggestion, at index: Int)
     func suggestionsCarouselViewDidRequestMoreSuggestions(_ view: LMSuggestionsCarouselView)
 }
 
-struct LMSuggestion {
+// MARK: - Suggestion Display Model
+struct SuggestionDisplayModel {
     let id: String
     let title: String?
     let description: String?
@@ -45,31 +46,17 @@ struct LMSuggestion {
         self.isGenerating = isGenerating
     }
     
-    /// 从 SuggestionItem 创建（新的 API 模型）
-    init(from item: SuggestionItem) {
-        self.init(
-            id: item.id,
-            title: item.sceneType,
-            description: "Rank: \(item.rank), Score: \(String(format: "%.2f", item.score ?? 0))",
-            imageURL: item.imageUrl,
-            personBoundingBox: nil, // SuggestionItem 不包含 personBoundingBox
-            confidence: item.score,
-            isFavorite: false,
-            isGenerating: !item.ready
-        )
-    }
-    
-    /// 从 CompositionSuggestion 创建（旧的 API 模型，保留兼容性）
-    init(from suggestion: CompositionSuggestion) {
+    /// 从 LMCompositionSuggestion 创建
+    init(from suggestion: LMCompositionSuggestion) {
         self.init(
             id: suggestion.id,
-            title: suggestion.title,
-            description: suggestion.description,
-            imageURL: suggestion.referenceImageUrl,
+            title: suggestion.sceneType,
+            description: "Rank: \(suggestion.rank), Score: \(String(format: "%.2f", suggestion.score ?? 0))",
+            imageURL: suggestion.imageUrl,
             personBoundingBox: suggestion.personBoundingBox,
-            confidence: suggestion.confidence,
+            confidence: suggestion.score,
             isFavorite: false,
-            isGenerating: false
+            isGenerating: !suggestion.ready
         )
     }
 }
@@ -83,7 +70,7 @@ class LMSuggestionsCarouselView: UIView {
     
     // MARK: - Properties
     weak var delegate: LMSuggestionsCarouselViewDelegate?
-    private var suggestions: [LMSuggestion] = []
+    private var suggestions: [SuggestionDisplayModel] = []
     private var selectedIndex: Int = 0
     
     // MARK: - Initialization
@@ -136,7 +123,7 @@ class LMSuggestionsCarouselView: UIView {
     }
     
     // MARK: - Public Methods
-    func updateSuggestions(_ suggestions: [LMSuggestion]) {
+    func updateSuggestions(_ suggestions: [SuggestionDisplayModel]) {
         self.suggestions = suggestions
         rebuildSuggestionCards()
         updateSelectedCard()
@@ -150,7 +137,7 @@ class LMSuggestionsCarouselView: UIView {
     }
     
     func addGeneratingCard() {
-        let generatingSuggestion = LMSuggestion(
+        let generatingSuggestion = SuggestionDisplayModel(
             id: UUID().uuidString,
             isGenerating: true
         )
@@ -175,7 +162,7 @@ class LMSuggestionsCarouselView: UIView {
         }
     }
     
-    private func createSuggestionCard(for suggestion: LMSuggestion, at index: Int) -> LMSuggestionCardView {
+    private func createSuggestionCard(for suggestion: SuggestionDisplayModel, at index: Int) -> LMSuggestionCardView {
         let cardView = LMSuggestionCardView()
         cardView.configure(with: suggestion)
         cardView.tag = index
@@ -241,10 +228,11 @@ class LMSuggestionsCarouselView: UIView {
             scrollToSelectedCard()
             
             let suggestion = suggestions[index]
-            delegate?.suggestionsCarouselView(self, didSelectSuggestion: suggestion, at: index)
+            let compositionSuggestion = convertToCompositionSuggestion(suggestion)
+            delegate?.suggestionsCarouselView(self, didSelectSuggestion: compositionSuggestion, at: index)
         }
     }
-    
+
     @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
         // 处理拖拽手势以实现平滑滚动
         switch gesture.state {
@@ -275,10 +263,29 @@ class LMSuggestionsCarouselView: UIView {
             updateSelectedCard()
             
             let suggestion = suggestions[selectedIndex]
-            delegate?.suggestionsCarouselView(self, didSelectSuggestion: suggestion, at: selectedIndex)
+            let compositionSuggestion = convertToCompositionSuggestion(suggestion)
+            delegate?.suggestionsCarouselView(self, didSelectSuggestion: compositionSuggestion, at: selectedIndex)
         }
         
         scrollToSelectedCard()
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// 将 SuggestionDisplayModel 转换为 LMCompositionSuggestion
+    private func convertToCompositionSuggestion(_ displayModel: SuggestionDisplayModel) -> LMCompositionSuggestion {
+        return LMCompositionSuggestion(
+            id: displayModel.id,
+            sceneType: displayModel.title ?? "",
+            source: "",
+            ready: !displayModel.isGenerating,
+            imageUrl: displayModel.imageURL,
+            similarImageUrl: nil,
+            rank: 0,
+            score: displayModel.confidence,
+            modelVersion: "",
+            personBoundingBox: displayModel.personBoundingBox
+        )
     }
 }
 
@@ -302,7 +309,7 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
         guard index < suggestions.count else { return }
         
         var suggestion = suggestions[index]
-        suggestion = LMSuggestion(
+        suggestion = SuggestionDisplayModel(
             id: suggestion.id,
             title: suggestion.title,
             description: suggestion.description,
@@ -315,6 +322,8 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
         )
         suggestions[index] = suggestion
         
-        delegate?.suggestionsCarouselView(self, didToggleFavorite: suggestion, at: index)
+        // 转换为 LMCompositionSuggestion 用于 delegate 回调
+        let compositionSuggestion = convertToCompositionSuggestion(suggestion)
+        delegate?.suggestionsCarouselView(self, didToggleFavorite: compositionSuggestion, at: index)
     }
 }

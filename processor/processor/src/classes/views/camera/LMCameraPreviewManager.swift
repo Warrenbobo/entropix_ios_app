@@ -9,8 +9,8 @@ import UIKit
 import SnapKit
 
 protocol LMCameraPreviewManagerDelegate: AnyObject {
-    func cameraPreviewManager(_ manager: LMCameraPreviewManager, didSelectSuggestion suggestion: LMSuggestion)
-    func cameraPreviewManager(_ manager: LMCameraPreviewManager, didToggleFavorite suggestion: LMSuggestion)
+    func cameraPreviewManager(_ manager: LMCameraPreviewManager, didSelectSuggestion suggestion: LMCompositionSuggestion)
+    func cameraPreviewManager(_ manager: LMCameraPreviewManager, didToggleFavorite suggestion: LMCompositionSuggestion)
     func cameraPreviewManagerDidRequestBack(_ manager: LMCameraPreviewManager)
     func cameraPreviewManager(_ manager: LMCameraPreviewManager, didUpdateARGuidanceState isActive: Bool)
 }
@@ -32,8 +32,8 @@ class LMCameraPreviewManager: NSObject {
     // MARK: - Properties
     weak var delegate: LMCameraPreviewManagerDelegate?
     private var currentState: LMCameraPreviewState = .camera
-    private var suggestions: [LMSuggestion] = []
-    private var selectedSuggestion: LMSuggestion?
+    private var suggestions: [LMCompositionSuggestion] = []
+    private var selectedSuggestion: LMCompositionSuggestion?
     
     // MARK: - Initialization
     init(containerView: UIView) {
@@ -111,11 +111,13 @@ class LMCameraPreviewManager: NSObject {
     // MARK: - Public Methods
     
     /// 显示建议列表
-    func showSuggestions(_ suggestions: [LMSuggestion]) {
+    func showSuggestions(_ suggestions: [LMCompositionSuggestion]) {
         self.suggestions = suggestions
         currentState = .suggestions
         
-        suggestionsCarousel.updateSuggestions(suggestions)
+        // 转换为 SuggestionDisplayModel
+        let displayModels = suggestions.map { SuggestionDisplayModel(from: $0) }
+        suggestionsCarousel.updateSuggestions(displayModels)
         updateViewVisibility()
     }
     
@@ -127,14 +129,16 @@ class LMCameraPreviewManager: NSObject {
     }
     
     /// 选择一个建议进入构图模式
-    func selectSuggestion(_ suggestion: LMSuggestion) {
+    func selectSuggestion(_ suggestion: LMCompositionSuggestion) {
         selectedSuggestion = suggestion
         currentState = .composition
         
         // 显示参考图片
-        if let image = suggestion.image {
-            let isLandscape = image.size.width > image.size.height
-            guidanceOverlay.showReferenceImage(image, isLandscape: isLandscape)
+        // 注意：LMCompositionSuggestion 没有 image 属性，需要从 imageUrl 加载
+        if let imageUrl = suggestion.imageUrl {
+            // TODO: 从 URL 加载图片
+            // 暂时跳过图片显示
+            LMLogger.log("📷 Should load reference image from: \(imageUrl)")
         }
         
         updateViewVisibility()
@@ -168,7 +172,7 @@ class LMCameraPreviewManager: NSObject {
     }
     
     /// 获取选中的建议
-    func getSelectedSuggestion() -> LMSuggestion? {
+    func getSelectedSuggestion() -> LMCompositionSuggestion? {
         return selectedSuggestion
     }
     
@@ -233,12 +237,12 @@ class LMCameraPreviewManager: NSObject {
 
 // MARK: - LMSuggestionsCarouselViewDelegate
 extension LMCameraPreviewManager: LMSuggestionsCarouselViewDelegate {
-    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSelectSuggestion suggestion: LMSuggestion, at index: Int) {
+    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSelectSuggestion suggestion: LMCompositionSuggestion, at index: Int) {
         selectSuggestion(suggestion)
         delegate?.cameraPreviewManager(self, didSelectSuggestion: suggestion)
     }
     
-    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didToggleFavorite suggestion: LMSuggestion, at index: Int) {
+    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didToggleFavorite suggestion: LMCompositionSuggestion, at index: Int) {
         delegate?.cameraPreviewManager(self, didToggleFavorite: suggestion)
     }
     
