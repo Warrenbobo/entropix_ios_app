@@ -40,18 +40,18 @@ class LMSubscriptionFooterView: UIView {
         addSubview(footerLabel)
         addSubview(footerLinksStackView)
         
-        footerLabel.text = "Auto-renewing subscriptions automatically renew unless canceled at least 24 hours before the end of the current period."
+        footerLabel.text = LMText.subscription.autoRenewNotice
         footerLabel.font = UIFont.systemFont(ofSize: 12)
         footerLabel.textColor = UIColor.hexColor("#6b7280")
         footerLabel.textAlignment = .center
         footerLabel.numberOfLines = 0
         
-        termsButton.setTitle("Terms of Service", for: .normal)
+        termsButton.setTitle(LMText.subscription.termsOfService, for: .normal)
         termsButton.setTitleColor(UIColor.hexColor("#2563eb"), for: .normal)
         termsButton.titleLabel?.font = UIFont.systemFont(ofSize: 14)
         termsButton.addTarget(self, action: #selector(handleTerms), for: .touchUpInside)
         
-        privacyButton.setTitle("Privacy Policy", for: .normal)
+        privacyButton.setTitle(LMText.subscription.privacyPolicy, for: .normal)
         privacyButton.setTitleColor(UIColor.hexColor("#2563eb"), for: .normal)
         privacyButton.titleLabel?.font = UIFont.systemFont(ofSize: 14)
         privacyButton.addTarget(self, action: #selector(handlePrivacy), for: .touchUpInside)

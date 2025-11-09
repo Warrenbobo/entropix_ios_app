@@ -98,14 +98,14 @@ extension LMSignInPage {
         appIconImageView.image = UIImage(named: "app_logo_transparent_bg")
         
         // 应用名称设置
-        appNameLabel.text = "InspireCam"
+        appNameLabel.text = LMText.auth.appName
         appNameLabel.font = UIFont.systemFont(ofSize: 30, weight: .bold)
         appNameLabel.textColor = UIColor.label
         appNameLabel.textAlignment = .center
         appNameLabel.numberOfLines = 0
         
         // 应用标语设置
-        appTaglineLabel.text = "Unlock your creative potential"
+        appTaglineLabel.text = LMText.auth.appTagline
         appTaglineLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         appTaglineLabel.textColor = UIColor.systemGray
         appTaglineLabel.textAlignment = .center
@@ -138,7 +138,7 @@ extension LMSignInPage {
         passwordInputField.delegate = self
         
         // 忘记密码按钮设置
-        forgotPasswordButton.setTitle("Forgot password?", for: .normal)
+        forgotPasswordButton.setTitle(LMText.auth.forgotPassword, for: .normal)
         forgotPasswordButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         forgotPasswordButton.setTitleColor(UIColor.label, for: .normal)
         forgotPasswordButton.contentHorizontalAlignment = .trailing
@@ -149,7 +149,7 @@ extension LMSignInPage {
         signInButtonSectionView.addSubview(primarySignInButton)
         
         // 主要登录按钮设置
-        primarySignInButton.setTitle("Sign In", for: .normal)
+        primarySignInButton.setTitle(LMText.auth.signIn, for: .normal)
         primarySignInButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         primarySignInButton.setTitleColor(UIColor.white, for: .normal)
         primarySignInButton.backgroundColor = UIColor.systemOrange
@@ -165,7 +165,7 @@ extension LMSignInPage {
         separatorSectionView.addSubview(separatorLabel)
         
         separatorLabel.backgroundColor = .white
-        separatorLabel.text = "or"
+        separatorLabel.text = LMText.auth.or
         separatorLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         separatorLabel.textColor = UIColor.systemGray2
         separatorLabel.textAlignment = .center

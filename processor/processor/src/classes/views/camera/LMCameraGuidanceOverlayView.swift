@@ -77,7 +77,7 @@ class LMCameraGuidanceOverlayView: UIView {
     }
     
     private func setupGuidanceNoticeLabel() {
-        guidanceNoticeLabel.text = "Please get inspiration before use of AI guidance"
+        guidanceNoticeLabel.text = LMText.camera.guidanceNotice
         guidanceNoticeLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         guidanceNoticeLabel.textColor = UIColor.white
         guidanceNoticeLabel.backgroundColor = UIColor.systemGray.withAlphaComponent(0.9)
@@ -423,7 +423,7 @@ class LMGuidanceFrameView: UIView {
         createCornerBorders()
         
         // 添加加号标识
-        plusLabel.text = "+"
+        plusLabel.text = "+"  // Keep as symbol
         plusLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         plusLabel.textAlignment = .center
         addSubview(plusLabel)

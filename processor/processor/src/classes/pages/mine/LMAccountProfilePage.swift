@@ -58,7 +58,7 @@ class LMAccountProfilePage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "Account Profile"
+        barTitle = LMText.profile.accountProfile
         setupCustomNavigationBar()
         setupUserInterfaceComponents()
         configureLayoutConstraints()
@@ -66,6 +66,14 @@ class LMAccountProfilePage: LMPageWrapper {
         setupDelegates()
         updateViewsWithData()
         showDisplayView()
+        
+        // 监听语言变化
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(languageDidChange),
+            name: LMLaunageManager.languageDidChangeNotification,
+            object: nil
+        )
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -94,6 +102,21 @@ class LMAccountProfilePage: LMPageWrapper {
         // 移除键盘通知监听
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    // MARK: - Localization
+    
+    @objc private func languageDidChange() {
+        updateTexts()
+    }
+    
+    private func updateTexts() {
+        barTitle = LMText.profile.accountProfile
+        actionButton.setTitle(LMText.common.save, for: .normal)
     }
     
     @objc private func keyboardWillShow(_ notification: Notification) {
@@ -128,7 +151,7 @@ class LMAccountProfilePage: LMPageWrapper {
 extension LMAccountProfilePage {
     
     private func setupCustomNavigationBar() {
-        actionButton.setTitle("Save", for: .normal)
+        actionButton.setTitle(LMText.common.save, for: .normal)
         actionButton.contentMode = .right
         actionButton.frame = CGRect(origin: .zero,
                                     size: CGSize(width: 50,
@@ -247,12 +270,12 @@ extension LMAccountProfilePage {
     
     private func showSaveSuccessAlert() {
         let alert = UIAlertController(
-            title: "Profile Updated",
-            message: "Your profile has been updated successfully.",
+            title: LMText.profile.profileUpdated,
+            message: LMText.profile.profileUpdatedMessage,
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
         present(alert, animated: true)
     }
 }
@@ -266,13 +289,13 @@ extension LMAccountProfilePage: ProfileDisplayViewDelegate {
     
     private func showCancelSubscriptionAlert() {
         let alert = UIAlertController(
-            title: "Cancel Subscription",
-            message: "Are you sure you want to cancel your subscription? You will lose access to premium features.",
+            title: LMText.profile.cancelSubscriptionTitle,
+            message: LMText.profile.cancelSubscriptionMessage,
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "Keep Subscription", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Cancel Subscription", style: .destructive) { _ in
+        alert.addAction(UIAlertAction(title: LMText.profile.keepSubscription, style: .cancel))
+        alert.addAction(UIAlertAction(title: LMText.profile.cancelSubscription, style: .destructive) { _ in
             self.performSubscriptionCancellation()
         })
         
@@ -281,7 +304,7 @@ extension LMAccountProfilePage: ProfileDisplayViewDelegate {
     
     private func performSubscriptionCancellation() {
         // 更新数据
-        userProfileData.subscriptionType = "Free Plan"
+        userProfileData.subscriptionType = LMText.profile.freePlan
         userProfileData.inspirePoints = "3"
         
         // 更新视图
@@ -289,12 +312,12 @@ extension LMAccountProfilePage: ProfileDisplayViewDelegate {
         
         // 显示确认
         let alert = UIAlertController(
-            title: "Subscription Cancelled",
-            message: "Your subscription has been cancelled successfully.",
+            title: LMText.profile.subscriptionCancelled,
+            message: LMText.profile.subscriptionCancelledMessage,
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
         present(alert, animated: true)
     }
     
@@ -316,17 +339,17 @@ extension LMAccountProfilePage: ProfileEditViewDelegate {
     }
     
     private func showImagePicker() {
-        let alert = UIAlertController(title: "Change Photo", message: "Choose a photo source", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: LMText.profile.changePhoto, message: "Choose a photo source", preferredStyle: .actionSheet)
         
-        alert.addAction(UIAlertAction(title: "Camera", style: .default) { _ in
+        alert.addAction(UIAlertAction(title: LMText.profile.camera, style: .default) { _ in
             // 实现相机功能
         })
         
-        alert.addAction(UIAlertAction(title: "Photo Library", style: .default) { _ in
+        alert.addAction(UIAlertAction(title: LMText.profile.photoLibrary, style: .default) { _ in
             // 实现相册功能
         })
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: LMText.common.cancel, style: .cancel))
         
         // iPad支持
         if let popover = alert.popoverPresentationController {

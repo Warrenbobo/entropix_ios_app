@@ -42,13 +42,13 @@ class LMSubscriptionHeroView: UIView {
         heroIcon.image = UIImage(named: "crown_solid_white")
         heroIcon.contentMode = .scaleAspectFill
         
-        heroTitleLabel.text = "Unlock Your Creative Potential"
+        heroTitleLabel.text = LMText.settings.unlockCreativePotential
         heroTitleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         heroTitleLabel.textColor = .white
         heroTitleLabel.textAlignment = .center
         heroTitleLabel.numberOfLines = 0
         
-        heroDescLabel.text = "Get unlimited AI suggestions, advanced features, and priority support"
+        heroDescLabel.text = LMText.subscription.unlimitedAISuggestions
         heroDescLabel.font = UIFont.systemFont(ofSize: 14)
         heroDescLabel.textColor = UIColor.white.withAlphaComponent(0.9)
         heroDescLabel.textAlignment = .center

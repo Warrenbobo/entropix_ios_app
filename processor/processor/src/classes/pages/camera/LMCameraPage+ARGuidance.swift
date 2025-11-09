@@ -69,7 +69,7 @@ extension LMCameraPage {
         cameraPreviewView.addSubview(guidanceFrame)
         
         let hintLabel = UILabel()
-        hintLabel.text = "Align the person with the green frame"
+        hintLabel.text = LMText.camera.alignPersonFrame
         hintLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         hintLabel.textColor = .white
         hintLabel.backgroundColor = UIColor.black.withAlphaComponent(0.6)

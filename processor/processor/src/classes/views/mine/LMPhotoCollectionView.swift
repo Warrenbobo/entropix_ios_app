@@ -75,7 +75,7 @@ extension LMPhotoCollectionView {
         menuTabsContainer.backgroundColor = UIColor.clear
         
         // Gallery Tab Button
-        galleryTabButton.setTitle("Gallery", for: .normal)
+        galleryTabButton.setTitle(LMText.profile.gallery, for: .normal)
         galleryTabButton.setTitleColor(UIColor.systemBlue, for: .selected)
         galleryTabButton.setTitleColor(UIColor.systemGray, for: .normal)
         galleryTabButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
@@ -83,7 +83,7 @@ extension LMPhotoCollectionView {
         galleryTabButton.addTarget(self, action: #selector(galleryTabButtonTapped), for: .touchUpInside)
         
         // Saved Ideas Tab Button
-        savedIdeasTabButton.setTitle("Saved Ideas", for: .normal)
+        savedIdeasTabButton.setTitle(LMText.profile.savedIdeas, for: .normal)
         savedIdeasTabButton.setTitleColor(UIColor.systemBlue, for: .selected)
         savedIdeasTabButton.setTitleColor(UIColor.systemGray, for: .normal)
         savedIdeasTabButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)

@@ -54,7 +54,7 @@ class LMSubscriptionCountdownView: UIView {
         containerView.layer.cornerRadius = 12
         containerView.layer.masksToBounds = true
         
-        titleLabel.text = "Limited Time Offer Ends In:"
+        titleLabel.text = LMText.subscription.limitedTimeOffer
         titleLabel.font = UIFont.systemFont(ofSize: 14)
         titleLabel.textColor = textColor.withAlphaComponent(0.9)
         titleLabel.textAlignment = .center
@@ -88,10 +88,10 @@ class LMSubscriptionCountdownView: UIView {
         timerStackView.addArrangedSubview(secondsContainer)
         
         // Setup labels
-        dayLabel.text = "Days"
-        hourLabel.text = "Hours"
-        minuteLabel.text = "Minutes"
-        secondLabel.text = "Seconds"
+        dayLabel.text = LMText.subscription.days
+        hourLabel.text = LMText.subscription.hours
+        minuteLabel.text = LMText.subscription.minutes
+        secondLabel.text = LMText.subscription.seconds
         
         [dayLabel, hourLabel, minuteLabel, secondLabel].forEach { label in
             label.font = UIFont.systemFont(ofSize: 12)
@@ -161,9 +161,9 @@ class LMSubscriptionCountdownView: UIView {
         minutesLabel.text = String(format: "%02d", minutes)
         secondsLabel.text = String(format: "%02d", seconds)
         
-        dayLabel.text = days == 1 ? "Day" : "Days"
-        hourLabel.text = hours == 1 ? "Hour" : "Hours"
-        minuteLabel.text = minutes == 1 ? "Minute" : "Minutes"
-        secondLabel.text = seconds == 1 ? "Second" : "Seconds"
+        dayLabel.text = days == 1 ? LMText.subscription.day : LMText.subscription.days
+        hourLabel.text = hours == 1 ? LMText.subscription.hour : LMText.subscription.hours
+        minuteLabel.text = minutes == 1 ? LMText.subscription.minute : LMText.subscription.minutes
+        secondLabel.text = seconds == 1 ? LMText.subscription.second : LMText.subscription.seconds
     }
 }

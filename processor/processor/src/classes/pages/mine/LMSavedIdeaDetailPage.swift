@@ -61,7 +61,7 @@ class LMSavedIdeaDetailPage: UIViewController {
         let backConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
         let backImage = UIImage(systemName: "chevron.left", withConfiguration: backConfig)
         backButton.setImage(backImage, for: .normal)
-        backButton.setTitle(" Back", for: .normal)
+        backButton.setTitle(LMText.settings.back, for: .normal)
         backButton.setTitleColor(.white, for: .normal)
         backButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         backButton.tintColor = .white
@@ -84,7 +84,7 @@ class LMSavedIdeaDetailPage: UIViewController {
         goShotButton.layer.borderWidth = 1
         goShotButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         
-        goShotButton.setTitle("Go Shot", for: .normal)
+        goShotButton.setTitle(LMText.settings.goShot, for: .normal)
         goShotButton.setTitleColor(.white, for: .normal)
         goShotButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         

@@ -69,7 +69,7 @@ extension LMFeaturePreviewView {
     }
     
     private func setupFeaturePreviewTitleComponents() {
-        featurePreviewTitleLabel.text = "Available Without Account"
+        featurePreviewTitleLabel.text = LMText.auth.availableWithoutAccount
         featurePreviewTitleLabel.font = UIFont.systemFont(ofSize: 22, weight: .bold)
         featurePreviewTitleLabel.textColor = UIColor.label
         featurePreviewTitleLabel.textAlignment = .left
@@ -100,13 +100,13 @@ extension LMFeaturePreviewView {
         basicCameraIconImageView.contentMode = .center
         
         // 标题设置
-        basicCameraTitleLabel.text = "Basic Camera"
+        basicCameraTitleLabel.text = LMText.subscription.basicCamera
         basicCameraTitleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         basicCameraTitleLabel.textColor = UIColor.label
         basicCameraTitleLabel.numberOfLines = 0
         
         // 描述设置
-        basicCameraDescriptionLabel.text = "Take photos with standard features"
+        basicCameraDescriptionLabel.text = LMText.settings.takePhotosStandard
         basicCameraDescriptionLabel.font = UIFont.systemFont(ofSize: 14)
         basicCameraDescriptionLabel.textColor = UIColor.secondaryLabel
         basicCameraDescriptionLabel.numberOfLines = 0
@@ -134,13 +134,13 @@ extension LMFeaturePreviewView {
         aiInspiringIconImageView.contentMode = .center
         
         // 标题设置
-        aiInspiringTitleLabel.text = "AI Inspiring"
+        aiInspiringTitleLabel.text = LMText.subscription.aiInspiring
         aiInspiringTitleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         aiInspiringTitleLabel.textColor = UIColor.label
         aiInspiringTitleLabel.numberOfLines = 0
         
         // 描述设置
-        aiInspiringDescriptionLabel.text = "3 free Inspire points for new downloads"
+        aiInspiringDescriptionLabel.text = LMText.subscription.freeInspirePoints
         aiInspiringDescriptionLabel.font = UIFont.systemFont(ofSize: 14)
         aiInspiringDescriptionLabel.textColor = UIColor.secondaryLabel
         aiInspiringDescriptionLabel.numberOfLines = 0
@@ -250,7 +250,7 @@ extension LMFeaturePreviewView {
     }
     
     private func updateAiInspiringStatusBadgeDisplay() {
-        aiInspiringStatusBadgeLabel.text = "\(remainingInspiringPoints) left"
+        aiInspiringStatusBadgeLabel.text = String(format: LMText.settings.leftFormat, remainingInspiringPoints)
         aiInspiringStatusBadgeLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         aiInspiringStatusBadgeLabel.textColor = UIColor.systemBlue
         aiInspiringStatusBadgeLabel.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.1)

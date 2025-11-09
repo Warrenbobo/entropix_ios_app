@@ -88,14 +88,14 @@ extension LMSignUpPage {
         appIconImageView.image = UIImage(named: "app_logo_transparent_bg")
         
         // 创建账户标题设置
-        createAccountTitleLabel.text = "Create Account"
+        createAccountTitleLabel.text = LMText.auth.createAccountTitle
         createAccountTitleLabel.font = UIFont.systemFont(ofSize: 28, weight: .bold)
         createAccountTitleLabel.textColor = UIColor.label
         createAccountTitleLabel.textAlignment = .center
         createAccountTitleLabel.numberOfLines = 0
         
         // 创建账户副标题设置
-        createAccountSubtitleLabel.text = "Join us to discover your creativity"
+        createAccountSubtitleLabel.text = LMText.auth.createAccountSubtitle
         createAccountSubtitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         createAccountSubtitleLabel.textColor = UIColor.secondaryLabel
         createAccountSubtitleLabel.textAlignment = .center
@@ -184,7 +184,7 @@ extension LMSignUpPage {
         signUpButtonSectionView.addSubview(primarySignUpButton)
         
         // 主要注册按钮设置
-        primarySignUpButton.setTitle("Continue", for: .normal)
+        primarySignUpButton.setTitle(LMText.subscription.kContinue, for: .normal)
         primarySignUpButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         primarySignUpButton.setTitleColor(UIColor.secondaryLabel, for: .normal)
         primarySignUpButton.backgroundColor = .clear

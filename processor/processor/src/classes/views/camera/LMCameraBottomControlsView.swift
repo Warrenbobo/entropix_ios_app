@@ -97,7 +97,7 @@ extension LMCameraBottomControlsView {
         inspireButtonContainer.addSubview(inspirePointsContainer)
         
         // Inspire按钮设置 - 渐变背景
-        inspireButton.setTitle("Inspire Me  ⓘ", for: .normal)
+        inspireButton.setTitle(LMText.camera.inspireMeButton, for: .normal)
         inspireButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         inspireButton.setTitleColor(UIColor.white, for: .normal)
         inspireButton.layer.cornerRadius = 25
@@ -115,7 +115,7 @@ extension LMCameraBottomControlsView {
         inspirePointsContainer.addSubview(inspirePointsLabel)
         
         // 点数标签 - 显示 "Inspire Point -1"
-        inspirePointsLabel.text = "Inspire Point -\(inspirePoints)"
+        inspirePointsLabel.text = String(format: LMText.camera.inspirePointsFormat, inspirePoints)
         inspirePointsLabel.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         inspirePointsLabel.textColor = UIColor.white.withAlphaComponent(0.9)
         inspirePointsLabel.textAlignment = .center
@@ -146,7 +146,7 @@ extension LMCameraBottomControlsView {
         flipCameraButton.addTarget(self, action: #selector(handleFlipCameraButtonTapped), for: .touchUpInside)
         
         // 翻转相机标签
-        flipCameraLabel.text = "Flip Camera"
+        flipCameraLabel.text = LMText.camera.flipCamera
         flipCameraLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         flipCameraLabel.textColor = UIColor.white
         flipCameraLabel.textAlignment = .center
@@ -165,7 +165,7 @@ extension LMCameraBottomControlsView {
         arGuidanceButton.addTarget(self, action: #selector(handleARGuidanceButtonTapped), for: .touchUpInside)
         
         // AR Guidance 标签
-        arGuidanceLabel.text = "AR Guidance"
+        arGuidanceLabel.text = LMText.camera.arGuidance
         arGuidanceLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         arGuidanceLabel.textColor = UIColor.lightGray
         arGuidanceLabel.textAlignment = .center
@@ -272,7 +272,7 @@ extension LMCameraBottomControlsView {
     }
     
     private func updateInspireButtonAppearance() {
-        inspirePointsLabel.text = "Inspire Point -\(inspirePoints)"
+        inspirePointsLabel.text = String(format: LMText.camera.inspirePointsFormat, inspirePoints)
         
         // 根据点数更新按钮状态
         let hasPoints = inspirePoints > 0

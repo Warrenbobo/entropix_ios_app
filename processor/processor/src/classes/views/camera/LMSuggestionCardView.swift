@@ -80,7 +80,7 @@ class LMSuggestionCardView: UIView {
         loadingSpinner.color = UIColor.white
         loadingSpinner.hidesWhenStopped = true
         
-        loadingLabel.text = "Generating..."
+        loadingLabel.text = LMText.camera.generating
         loadingLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         loadingLabel.textColor = UIColor.white
         loadingLabel.textAlignment = .center

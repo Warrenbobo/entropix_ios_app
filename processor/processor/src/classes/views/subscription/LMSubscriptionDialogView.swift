@@ -54,25 +54,25 @@ class LMSubscriptionDialogView: UIView {
         dialogContainer.backgroundColor = .white
         dialogContainer.layer.cornerRadius = 16
         
-        dialogTitleLabel.text = "Give up Free Trial?"
+        dialogTitleLabel.text = LMText.subscription.giveUpFreeTrial
         dialogTitleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
         dialogTitleLabel.textColor = UIColor.hexColor("#333333")
         dialogTitleLabel.textAlignment = .center
         
-        dialogMessageLabel.text = "When you switch to free plan, you give up this free trial opportunity. You will not be able to get free trial again until a new offer is provided."
+        dialogMessageLabel.text = LMText.settings.giveUpFreeTrialMessage
         dialogMessageLabel.font = UIFont.systemFont(ofSize: 14)
         dialogMessageLabel.textColor = UIColor.hexColor("#666666")
         dialogMessageLabel.textAlignment = .center
         dialogMessageLabel.numberOfLines = 0
         
-        dialogCancelButton.setTitle("Cancel", for: .normal)
+        dialogCancelButton.setTitle(LMText.common.cancel, for: .normal)
         dialogCancelButton.setTitleColor(UIColor.hexColor("#333333"), for: .normal)
         dialogCancelButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         dialogCancelButton.backgroundColor = UIColor.hexColor("#f0f0f0")
         dialogCancelButton.layer.cornerRadius = 12
         dialogCancelButton.addTarget(self, action: #selector(handleCancel), for: .touchUpInside)
         
-        dialogConfirmButton.setTitle("Give up", for: .normal)
+        dialogConfirmButton.setTitle(LMText.subscription.giveUp, for: .normal)
         dialogConfirmButton.setTitleColor(.white, for: .normal)
         dialogConfirmButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         dialogConfirmButton.backgroundColor = UIColor.hexColor("#ef4444")

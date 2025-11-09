@@ -30,7 +30,7 @@ class LMSettingPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "Setting"
+        barTitle = LMText.settings.settings
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
@@ -69,8 +69,8 @@ extension LMSettingPage {
         accountProfileItem.configure(
             icon: UIImage(named: "user_solid_blue"),
             iconBackgroundColor: .hexColor("#DBE9FE"),
-            title: "Account Profile",
-            subtitle: "Manage your account settings",
+            title: LMText.settings.accountProfile,
+            subtitle: LMText.settings.accountProfileSubtitle,
             showArrow: true
         )
         accountProfileItem.onTap = { [weak self] in
@@ -81,8 +81,8 @@ extension LMSettingPage {
         notificationItem.configure(
             icon: UIImage(named: "bullhorn_yellow"),
             iconBackgroundColor: .hexColor("#FEF9C2"),
-            title: "Notification",
-            subtitle: "Receive system notifications from us",
+            title: LMText.settings.notifications,
+            subtitle: LMText.settings.notificationSubtitle,
             showArrow: true
         )
         notificationItem.onTap = { [weak self] in
@@ -93,8 +93,8 @@ extension LMSettingPage {
         languageItem.configure(
             icon: UIImage(named: "globe_purple"),
             iconBackgroundColor: .hexColor("F3E8FF"),
-            title: "Language",
-            subtitle: "Change In-App Language",
+            title: LMText.settings.language,
+            subtitle: LMText.settings.languageSubtitle,
             showArrow: true
         )
         languageItem.onTap = { [weak self] in
@@ -105,8 +105,8 @@ extension LMSettingPage {
         contactUsItem.configure(
             icon: UIImage(named: "envelope_orange"),
             iconBackgroundColor: .hexColor("#FFECD5"),
-            title: "Contact Us",
-            subtitle: "Get help and support",
+            title: LMText.settings.contactUs,
+            subtitle: LMText.settings.contactUsSubtitle,
             showArrow: true
         )
         contactUsItem.onTap = { [weak self] in
@@ -117,8 +117,8 @@ extension LMSettingPage {
         frequentQuestionsItem.configure(
             icon: UIImage(named: "question_circle_indigo"),
             iconBackgroundColor: .hexColor("#E0E7FF"),
-            title: "Frequent Questions",
-            subtitle: "Find answers to common questions",
+            title: LMText.settings.frequentQuestions,
+            subtitle: LMText.settings.frequentQuestionsSubtitle,
             showArrow: true
         )
         frequentQuestionsItem.onTap = { [weak self] in
@@ -129,8 +129,8 @@ extension LMSettingPage {
         aboutItem.configure(
             icon: UIImage(named: "info_circle_green"),
             iconBackgroundColor: .hexColor("#DCFCE8"),
-            title: "About",
-            subtitle: "App information and support",
+            title: LMText.settings.about,
+            subtitle: LMText.settings.aboutSubtitle,
             showArrow: true
         )
         aboutItem.onTap = { [weak self] in
@@ -145,7 +145,7 @@ extension LMSettingPage {
         logoutButton.layer.cornerRadius = 12
         logoutButton.addTarget(self, action: #selector(handleLogoutButtonTapped), for: .touchUpInside)
         logoutButton.adjust(image: UIImage(named: "sign_out_white"),
-                            title: "Log Out",
+                            title: LMText.auth.logOut,
                             titlePosition: .right,
                             additionalSpacing: 5,
                             state: .normal)
@@ -283,13 +283,13 @@ extension LMSettingPage {
     
     private func showLogoutConfirmation() {
         let alert = UIAlertController(
-            title: "Log Out",
-            message: "Are you sure you want to log out?",
+            title: LMText.auth.logOut,
+            message: LMText.settings.areYouSureLogout,
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Log Out", style: .destructive) { _ in
+        alert.addAction(UIAlertAction(title: LMText.common.cancel, style: .cancel))
+        alert.addAction(UIAlertAction(title: LMText.auth.logOut, style: .destructive) { _ in
             self.performLogout()
         })
         
@@ -314,7 +314,7 @@ extension LMSettingPage {
     
     private func showLogoutLoadingState() {
         logoutButton.isEnabled = false
-        logoutButton.setTitle("Logging Out...", for: .normal)
+        logoutButton.setTitle(LMText.auth.loggingOut, for: .normal)
         
         let activityIndicator = UIActivityIndicatorView(style: .medium)
         activityIndicator.color = .white
@@ -331,7 +331,7 @@ extension LMSettingPage {
     
     private func hideLogoutLoadingState() {
         logoutButton.isEnabled = true
-        logoutButton.setTitle("Log Out", for: .normal)
+        logoutButton.setTitle(LMText.auth.logOut, for: .normal)
         
         if let activityIndicator = logoutButton.viewWithTag(999) {
             activityIndicator.removeFromSuperview()
@@ -352,12 +352,12 @@ extension LMSettingPage {
     
     private func showComingSoonAlert(for feature: String) {
         let alert = UIAlertController(
-            title: "Coming Soon",
-            message: "\(feature) will be available in a future update.",
+            title: LMText.settings.comingSoon,
+            message: String(format: LMText.settings.comingSoonMessage, feature),
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
         present(alert, animated: true)
     }
 }

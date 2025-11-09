@@ -10,7 +10,7 @@ import SnapKit
 
 class LMLaunchSplashPage: UIViewController {
     
-    public weak var window: UIWindow?
+    public static weak var window: UIWindow?
     
     /// 创建开屏界面
     public static func createLaunchContentViews() -> UIView {
@@ -67,7 +67,7 @@ class LMLaunchSplashPage: UIViewController {
         if LMUserManager.isSignIn {
             rootController = LMMinePage()
         }
-        window?.rootViewController = LMNavigationWrapper(rootViewController: rootController)
+        LMLaunchSplashPage.window?.rootViewController = LMNavigationWrapper(rootViewController: rootController)
     }
     
     /// 添加界面

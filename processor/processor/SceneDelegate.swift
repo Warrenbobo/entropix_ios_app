@@ -17,7 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.frame = UIScreen.main.bounds
         window?.backgroundColor = .white
         let launchSplash = LMLaunchSplashPage()
-        launchSplash.window = window
+        LMLaunchSplashPage.window = window
         window?.rootViewController = launchSplash
         window?.makeKeyAndVisible()
     }

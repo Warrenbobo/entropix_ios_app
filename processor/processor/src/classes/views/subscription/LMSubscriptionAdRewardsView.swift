@@ -51,16 +51,16 @@ class LMSubscriptionAdRewardsView: UIView {
         adRewardsIcon.image = UIImage(named: "gift_solid_white")
         adRewardsIcon.contentMode = .scaleAspectFit
         
-        adRewardsTitleLabel.text = "Earn Free Uses"
+        adRewardsTitleLabel.text = LMText.settings.earnFreeUses
         adRewardsTitleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
         adRewardsTitleLabel.textColor = .white
         
-        adRewardsDescLabel.text = "Watch ads to get 5 free AI suggestions"
+        adRewardsDescLabel.text = LMText.subscription.watchAdsToGetFree
         adRewardsDescLabel.font = UIFont.systemFont(ofSize: 14)
         adRewardsDescLabel.textColor = UIColor.white.withAlphaComponent(0.95)
         adRewardsDescLabel.numberOfLines = 0
         
-        watchAdButton.setTitle("Watch Ad", for: .normal)
+        watchAdButton.setTitle(LMText.subscription.watchAd, for: .normal)
         watchAdButton.setImage(UIImage(named: "play_solid_green"), for: .normal)
         watchAdButton.imageView?.contentMode = .scaleAspectFit
         watchAdButton.titleLabel?.adjustsFontSizeToFitWidth = true

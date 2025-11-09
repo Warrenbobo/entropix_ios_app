@@ -74,7 +74,7 @@ class LMProfileEditView: UIView {
         avatarImageView.layer.borderWidth = 2
         avatarImageView.layer.borderColor = UIColor.systemGray5.cgColor
         
-        changePhotoButton.setTitle("Change Photo", for: .normal)
+        changePhotoButton.setTitle(LMText.profile.changePhoto, for: .normal)
         changePhotoButton.setTitleColor(UIColor.systemBlue, for: .normal)
         changePhotoButton.titleLabel?.font = UIFont.systemFont(ofSize: 16)
         changePhotoButton.addTarget(self, action: #selector(changePhotoButtonTapped), for: .touchUpInside)

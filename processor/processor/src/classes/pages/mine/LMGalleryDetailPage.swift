@@ -61,7 +61,7 @@ class LMGalleryDetailPage: UIViewController {
         let backConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
         let backImage = UIImage(systemName: "chevron.left", withConfiguration: backConfig)
         backButton.setImage(backImage, for: .normal)
-        backButton.setTitle(" Back", for: .normal)
+        backButton.setTitle(LMText.settings.back, for: .normal)
         backButton.setTitleColor(.white, for: .normal)
         backButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         backButton.tintColor = .white
@@ -105,7 +105,7 @@ class LMGalleryDetailPage: UIViewController {
         checkmarkImageView.tintColor = UIColor.hexColor("#10b981")
         
         let messageLabel = UILabel()
-        messageLabel.text = "Downloaded"
+        messageLabel.text = LMText.settings.downloaded
         messageLabel.textColor = .white
         messageLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         
@@ -200,7 +200,7 @@ class LMGalleryDetailPage: UIViewController {
         LMLogger.log("🗑️ Deleting gallery item: \(galleryItem.id)")
         
         // Show loading indicator
-        let loadingAlert = UIAlertController(title: nil, message: "Deleting...", preferredStyle: .alert)
+        let loadingAlert = UIAlertController(title: nil, message: LMText.settings.deleting, preferredStyle: .alert)
         let loadingIndicator = UIActivityIndicatorView(style: .medium)
         loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
         loadingIndicator.startAnimating()
@@ -238,7 +238,7 @@ class LMGalleryDetailPage: UIViewController {
     }
     
     private func showError(message: String) {
-        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        let alert = UIAlertController(title: LMText.common.error, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }

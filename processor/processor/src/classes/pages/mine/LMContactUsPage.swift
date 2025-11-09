@@ -97,7 +97,7 @@ extension LMContactUsPage {
     }
     
     private func setupGetInTouchSection() {
-        getInTouchTitleLabel.text = "Get in Touch"
+        getInTouchTitleLabel.text = LMText.settings.getInTouch
         getInTouchTitleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         getInTouchTitleLabel.textColor = UIColor.label
         getInTouchTitleLabel.textAlignment = .left
@@ -121,15 +121,15 @@ extension LMContactUsPage {
         discordIconImageView.contentMode = .scaleAspectFit
         
         // Labels setup
-        discordTitleLabel.text = "Join Our Discord Channel"
+        discordTitleLabel.text = LMText.settings.joinDiscord
         discordTitleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         discordTitleLabel.textColor = UIColor.label
         
-        discordSubtitleLabel.text = "Connect with our community"
+        discordSubtitleLabel.text = LMText.settings.connectCommunity
         discordSubtitleLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         discordSubtitleLabel.textColor = UIColor.systemGray
         
-        discordInviteLinkLabel.text = "Invite Link:"
+        discordInviteLinkLabel.text = LMText.settings.inviteLink
         discordInviteLinkLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         discordInviteLinkLabel.textColor = UIColor.systemGray
         
@@ -167,15 +167,15 @@ extension LMContactUsPage {
         emailIconImageView.contentMode = .scaleAspectFit
         
         // Labels setup
-        emailTitleLabel.text = "Email"
+        emailTitleLabel.text = LMText.auth.email
         emailTitleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         emailTitleLabel.textColor = UIColor.label
         
-        emailSubtitleLabel.text = "Send us a message directly"
+        emailSubtitleLabel.text = LMText.settings.sendMessage
         emailSubtitleLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         emailSubtitleLabel.textColor = UIColor.systemGray
         
-        emailAddressLabel.text = "Email Address:"
+        emailAddressLabel.text = LMText.profile.emailAddress + ":"
         emailAddressLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         emailAddressLabel.textColor = UIColor.systemGray
         
@@ -209,11 +209,11 @@ extension LMContactUsPage {
         needHelpIconImageView.contentMode = .scaleAspectFit
         
         // Labels setup
-        needHelpTitleLabel.text = "Need Help?"
+        needHelpTitleLabel.text = LMText.settings.needHelp
         needHelpTitleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         needHelpTitleLabel.textColor = UIColor.systemBlue
         
-        needHelpDescriptionLabel.text = "We typically respond within 24 hours."
+        needHelpDescriptionLabel.text = LMText.settings.respondWithin24Hours
         needHelpDescriptionLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         needHelpDescriptionLabel.textColor = UIColor.systemBlue
         needHelpDescriptionLabel.numberOfLines = 0
@@ -430,7 +430,7 @@ extension LMContactUsPage {
         UIPasteboard.general.string = text
         
         // Show success feedback
-        let alert = UIAlertController(title: "Copied!", message: message, preferredStyle: .alert)
+        let alert = UIAlertController(title: LMText.settings.copied, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
     }

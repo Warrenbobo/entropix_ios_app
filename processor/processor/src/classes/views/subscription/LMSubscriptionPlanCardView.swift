@@ -299,9 +299,9 @@ class LMSubscriptionPlanCardView: UIView {
         let subtitleLabel = UILabel()
         switch plan.planType {
         case .plus:
-            subtitleLabel.text = "Auto-renews monthly, cancel anytime"
+            subtitleLabel.text = LMText.subscription.autoRenewsMonthly
         case .lifelong:
-            subtitleLabel.text = "One-time payment, yours forever"
+            subtitleLabel.text = LMText.subscription.oneTimePayment
         case .free:
             break
         }

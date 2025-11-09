@@ -100,13 +100,13 @@ extension LMWelcomeAuthenticationView {
         userAvatarImageView.tintColor = UIColor.systemGray3
         
         // 欢迎标题设置
-        welcomeTitleLabel.text = "Welcome to InspireCam"
+        welcomeTitleLabel.text = LMText.settings.welcomeToApp
         welcomeTitleLabel.font = UIFont.systemFont(ofSize: 26, weight: .bold)
         welcomeTitleLabel.textColor = UIColor.label
         welcomeTitleLabel.textAlignment = .center
         
         // 欢迎副标题设置
-        welcomeSubtitleLabel.text = "Sign in to discover full features"
+        welcomeSubtitleLabel.text = LMText.settings.signInToDiscover
         welcomeSubtitleLabel.font = UIFont.systemFont(ofSize: 18, weight: .regular)
         welcomeSubtitleLabel.textColor = UIColor.secondaryLabel
         welcomeSubtitleLabel.textAlignment = .center

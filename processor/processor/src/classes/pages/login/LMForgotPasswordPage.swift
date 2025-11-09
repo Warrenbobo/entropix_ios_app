@@ -94,7 +94,7 @@ extension LMForgotPasswordPage {
     }
     
     private func setupPasswordRequirementLabelConfiguration() {
-        passwordRequirementLabel.text = "Password must be at least 8 characters with\nat least one number and one letter."
+        passwordRequirementLabel.text = LMText.auth.passwordRequirement
         passwordRequirementLabel.font = UIFont.systemFont(ofSize: 14)
         passwordRequirementLabel.textColor = UIColor.systemGray
         passwordRequirementLabel.numberOfLines = 0
@@ -102,7 +102,7 @@ extension LMForgotPasswordPage {
     }
     
     private func setupChangePasswordButtonConfiguration() {
-        changePasswordButton.setTitle("Change Password", for: .normal)
+        changePasswordButton.setTitle(LMText.profile.changePassword, for: .normal)
         changePasswordButton.setTitleColor(.white, for: .normal)
         changePasswordButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         changePasswordButton.backgroundColor = UIColor.systemBlue
@@ -273,7 +273,7 @@ extension LMForgotPasswordPage {
     
     private func showLoadingState() {
         changePasswordButton.isEnabled = false
-        changePasswordButton.setTitle("Changing...", for: .normal)
+        changePasswordButton.setTitle(LMText.auth.changing, for: .normal)
         
         // 添加加载指示器
         let activityIndicator = UIActivityIndicatorView(style: .medium)
@@ -291,7 +291,7 @@ extension LMForgotPasswordPage {
     
     private func hideLoadingState() {
         changePasswordButton.isEnabled = true
-        changePasswordButton.setTitle("Change Password", for: .normal)
+        changePasswordButton.setTitle(LMText.profile.changePassword, for: .normal)
         
         // 移除加载指示器
         if let activityIndicator = changePasswordButton.viewWithTag(999) {

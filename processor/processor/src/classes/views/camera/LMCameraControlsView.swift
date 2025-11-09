@@ -179,7 +179,7 @@ extension LMCameraControlsView {
         flashIconView.contentMode = .scaleAspectFit
         
         // 配置标签
-        flashLabel.text = "Flash"
+        flashLabel.text = LMText.camera.flash
         configureControlLabel(flashLabel)
         
         configureControlItemLayout(container: flashContainer, button: flashControlButton, 
@@ -200,7 +200,7 @@ extension LMCameraControlsView {
         ratioIconView.contentMode = .scaleAspectFit
         
         // 配置标签
-        ratioLabel.text = "Ratio"
+        ratioLabel.text = LMText.camera.ratio
         configureControlLabel(ratioLabel)
         
         configureControlItemLayout(container: ratioContainer, button: ratioControlButton, 
@@ -221,7 +221,7 @@ extension LMCameraControlsView {
         timerIconView.contentMode = .scaleAspectFit
         
         // 配置标签
-        timerLabel.text = "Timer"
+        timerLabel.text = LMText.camera.timer
         configureControlLabel(timerLabel)
         
         configureControlItemLayout(container: timerContainer, button: timerControlButton, 
@@ -242,7 +242,7 @@ extension LMCameraControlsView {
         liveIconView.contentMode = .scaleAspectFit
         
         // 配置标签
-        liveLabel.text = "Live"
+        liveLabel.text = LMText.camera.live
         configureControlLabel(liveLabel)
         
         configureControlItemLayout(container: liveContainer, button: liveControlButton, 
@@ -265,7 +265,7 @@ extension LMCameraControlsView {
         gridIconView.contentMode = .scaleAspectFit
         
         // 配置标签
-        gridLabel.text = "Grid"
+        gridLabel.text = LMText.camera.grid
         configureControlLabel(gridLabel)
         
         configureControlItemLayout(container: gridContainer, button: gridControlButton, 

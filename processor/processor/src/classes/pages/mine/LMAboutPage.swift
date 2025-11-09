@@ -108,12 +108,12 @@ extension LMAboutPage {
     private func setupAppDeveloperSection() {
         appDeveloperContainer.backgroundColor = UIColor.clear
         
-        appDeveloperTitleLabel.text = "App Developer"
+        appDeveloperTitleLabel.text = LMText.settings.appDeveloper
         appDeveloperTitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         appDeveloperTitleLabel.textColor = UIColor.systemGray
         appDeveloperTitleLabel.textAlignment = .left
         
-        appDeveloperValueLabel.text = "FramAIst Team"
+        appDeveloperValueLabel.text = LMText.settings.framAIstTeam
         appDeveloperValueLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         appDeveloperValueLabel.textColor = UIColor.label
         appDeveloperValueLabel.textAlignment = .right
@@ -122,7 +122,7 @@ extension LMAboutPage {
     private func setupAppVersionSection() {
         appVersionContainer.backgroundColor = UIColor.clear
         
-        appVersionTitleLabel.text = "App Version"
+        appVersionTitleLabel.text = LMText.settings.appVersion
         appVersionTitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         appVersionTitleLabel.textColor = UIColor.systemGray
         appVersionTitleLabel.textAlignment = .left
@@ -138,12 +138,12 @@ extension LMAboutPage {
     private func setupPrivacyPolicySection() {
         privacyPolicyContainer.backgroundColor = UIColor.clear
         
-        privacyPolicyTitleLabel.text = "Privacy Policy"
+        privacyPolicyTitleLabel.text = LMText.settings.privacyPolicy
         privacyPolicyTitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         privacyPolicyTitleLabel.textColor = UIColor.systemGray
         privacyPolicyTitleLabel.textAlignment = .left
         
-        privacyPolicyButton.setTitle("View", for: .normal)
+        privacyPolicyButton.setTitle(LMText.settings.view, for: .normal)
         privacyPolicyButton.setTitleColor(UIColor.systemBlue, for: .normal)
         privacyPolicyButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         privacyPolicyButton.backgroundColor = UIColor.clear
@@ -159,12 +159,12 @@ extension LMAboutPage {
     private func setupTermsOfServiceSection() {
         termsOfServiceContainer.backgroundColor = UIColor.clear
         
-        termsOfServiceTitleLabel.text = "Terms of Service"
+        termsOfServiceTitleLabel.text = LMText.settings.termsOfService
         termsOfServiceTitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         termsOfServiceTitleLabel.textColor = UIColor.systemGray
         termsOfServiceTitleLabel.textAlignment = .left
         
-        termsOfServiceButton.setTitle("View", for: .normal)
+        termsOfServiceButton.setTitle(LMText.settings.view, for: .normal)
         termsOfServiceButton.setTitleColor(UIColor.systemBlue, for: .normal)
         termsOfServiceButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         termsOfServiceButton.backgroundColor = UIColor.clear

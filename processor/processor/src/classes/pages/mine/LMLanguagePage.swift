@@ -21,22 +21,23 @@ class LMLanguagePage: LMPageWrapper {
     private let dropdownArrowImageView = UIImageView()
     
     // MARK: - Properties
-    private let availableLanguages = [
-        ("en", "English"),
-        ("zh-Hans", "中文-简"),
-        ("zh-Hant", "中文-繁"),
-    ]
-    
-    private var selectedLanguageCode: String = "zh-Hans"
-    private var selectedLanguageName: String = "中文-简"
+    private let availableLanguages: [LMLanguageType] = [.english, .chinese]
+    private var currentLanguage: LMLanguageType {
+        return LMLaunageManager.shared.currentLanguage
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "Language"
+        barTitle = LMText.settings.language
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
-        loadCurrentLanguage()
+        updateLanguageDisplay()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        updateLanguageDisplay()
     }
 }
 
@@ -58,7 +59,7 @@ extension LMLanguagePage {
     }
     
     private func setupSelectLanguageSection() {
-        selectLanguageTitleLabel.text = "Select Language"
+        selectLanguageTitleLabel.text = LMText.settings.selectLanguage
         selectLanguageTitleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         selectLanguageTitleLabel.textColor = UIColor.label
         selectLanguageTitleLabel.textAlignment = .left
@@ -76,7 +77,6 @@ extension LMLanguagePage {
         languageSelectionContainer.layer.shadowOpacity = 0.1
         
         // Language label setup
-        languageLabel.text = selectedLanguageName
         languageLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         languageLabel.textColor = UIColor.label
         languageLabel.textAlignment = .left
@@ -167,50 +167,33 @@ extension LMLanguagePage {
 // MARK: - Language Selection Methods
 extension LMLanguagePage {
     
-    private func loadCurrentLanguage() {
-        // 获取当前设置的语言
-        if let currentLanguages = UserDefaults.standard.object(forKey: "AppleLanguages") as? [String],
-           let currentLanguage = currentLanguages.first {
-            
-            // 查找匹配的语言
-            for (code, name) in availableLanguages {
-                if currentLanguage.hasPrefix(code) {
-                    selectedLanguageCode = code
-                    selectedLanguageName = name
-                    languageLabel.text = selectedLanguageName
-                    return
-                }
-            }
-        }
-        
-        // 默认语言
-        selectedLanguageCode = "zh-Hans"
-        selectedLanguageName = "中文-简"
-        languageLabel.text = selectedLanguageName
+    private func updateLanguageDisplay() {
+        // 更新显示当前语言
+        languageLabel.text = currentLanguage.displayName
     }
     
     private func showLanguageSelectionActionSheet() {
         let alert = UIAlertController(
-            title: "Select Language",
-            message: "Choose your preferred language",
+            title: LMText.settings.selectLanguage,
+            message: nil,
             preferredStyle: .actionSheet
         )
         
         // 添加所有可用语言选项
-        for (code, name) in availableLanguages {
-            let action = UIAlertAction(title: name, style: .default) { [weak self] _ in
-                self?.selectLanguage(code: code, name: name)
+        for language in availableLanguages {
+            let action = UIAlertAction(title: language.displayName, style: .default) { [weak self] _ in
+                self?.selectLanguage(language)
             }
             
             // 标记当前选中的语言
-            if code == selectedLanguageCode {
+            if language == currentLanguage {
                 action.setValue(UIImage(systemName: "checkmark"), forKey: "image")
             }
             
             alert.addAction(action)
         }
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: LMText.common.cancel, style: .cancel))
         
         // iPad支持
         if let popover = alert.popoverPresentationController {
@@ -221,20 +204,46 @@ extension LMLanguagePage {
         present(alert, animated: true)
     }
     
-    private func selectLanguage(code: String, name: String) {
-        // 更新UI
-        selectedLanguageCode = code
-        selectedLanguageName = name
-        languageLabel.text = selectedLanguageName
+    private func selectLanguage(_ language: LMLanguageType) {
+        // 如果选择的是当前语言，不做任何操作
+        guard language != currentLanguage else {
+            return
+        }
         
+        // 显示确认对话框
+        showLanguageChangeConfirmation(for: language)
+    }
+    
+    private func showLanguageChangeConfirmation(for language: LMLanguageType) {
+        let alert = UIAlertController(
+            title: LMText.settings.language,
+            message: String(format: LMText.settings.switchToFormat, language.displayName),
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: LMText.common.cancel, style: .cancel))
+        alert.addAction(UIAlertAction(title: LMText.common.confirm, style: .default) { [weak self] _ in
+            self?.performLanguageSwitch(to: language)
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    private func performLanguageSwitch(to language: LMLanguageType) {
         // 添加选择动画
         animateLanguageSelection()
         
-        // 保存语言设置
-        saveLanguagePreference(code: code)
+        // 切换语言
+        LMLaunageManager.shared.switchLanguage(to: language)
         
-        // 显示重启提示
-        showRestartAlert()
+        // 更新显示
+        updateLanguageDisplay()
+        
+        // 更新页面标题
+        barTitle = LMText.settings.language
+        
+        // 显示成功提示
+        showLanguageChangedAlert()
     }
     
     private func animateLanguageSelection() {
@@ -248,36 +257,18 @@ extension LMLanguagePage {
         }
     }
     
-    private func saveLanguagePreference(code: String) {
-        UserDefaults.standard.set([code], forKey: "AppleLanguages")
-        UserDefaults.standard.synchronize()
-    }
-    
-    private func showRestartAlert() {
+    private func showLanguageChangedAlert() {
         let alert = UIAlertController(
-            title: "Language Changed",
-            message: "Please restart the app to apply the language change.",
+            title: LMText.common.success,
+            message: LMText.settings.languageChangedSuccess,
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default) { _ in
+            let rootController = LMMinePage()
+            LMLaunchSplashPage.window?.rootViewController = LMNavigationWrapper(rootViewController: rootController)
+        })
+        
         present(alert, animated: true)
-    }
-}
-
-// MARK: - Utility Methods
-extension LMLanguagePage {
-    
-    private func getLanguageDisplayName(for code: String) -> String {
-        for (langCode, name) in availableLanguages {
-            if langCode == code {
-                return name
-            }
-        }
-        return "English" // 默认返回英语
-    }
-    
-    private func getCurrentSystemLanguage() -> String {
-        return Locale.current.languageCode ?? "en"
     }
 }

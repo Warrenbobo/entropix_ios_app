@@ -103,7 +103,7 @@ extension LMFAQPage {
     }
     
     private func setupTitleLabel() {
-        titleLabel.text = "Common Questions & Answers"
+        titleLabel.text = LMText.settings.faq
         titleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         titleLabel.textColor = UIColor.label
         titleLabel.textAlignment = .left
@@ -242,18 +242,18 @@ extension LMFAQPage {
         iconImageView.image = UIImage(named: "question_circle_gray")
         
         let titleLabel = UILabel()
-        titleLabel.text = "Still have questions?"
+        titleLabel.text = LMText.settings.stillHaveQuestions
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         titleLabel.textColor = UIColor.label
         
         let subtitleLabel = UILabel()
-        subtitleLabel.text = "Contact our support team for personalized help."
+        subtitleLabel.text = LMText.settings.contactSupport
         subtitleLabel.font = UIFont.systemFont(ofSize: 14)
         subtitleLabel.textColor = UIColor.systemGray
         subtitleLabel.numberOfLines = 0
         
         let contactButton = UIButton()
-        contactButton.setTitle("Contact Us", for: .normal)
+        contactButton.setTitle(LMText.settings.contactUs, for: .normal)
         contactButton.setTitleColor(UIColor.systemBlue, for: .normal)
         contactButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         contactButton.addTarget(self, action: #selector(handleContactUsButtonTapped), for: .touchUpInside)

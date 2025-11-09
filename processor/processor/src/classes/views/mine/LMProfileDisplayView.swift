@@ -96,7 +96,7 @@ class LMProfileDisplayView: UIView {
     
     private func setupCancelSubscriptionButton() {
         // Matching HTML styling: border border-red-300 text-red-600 rounded-lg
-        cancelSubscriptionButton.setTitle("Cancel Subscription", for: .normal)
+        cancelSubscriptionButton.setTitle(LMText.profile.cancelSubscription, for: .normal)
         cancelSubscriptionButton.setTitleColor(UIColor.systemRed, for: .normal)
         cancelSubscriptionButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         cancelSubscriptionButton.backgroundColor = UIColor.clear

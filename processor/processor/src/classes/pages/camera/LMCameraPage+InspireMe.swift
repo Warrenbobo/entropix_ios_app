@@ -101,7 +101,7 @@ extension LMCameraPage {
         spinner.startAnimating()
         
         let label = UILabel()
-        label.text = "Analyzing scene..."
+        label.text = LMText.camera.analyzingScene
         label.textColor = .white
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center

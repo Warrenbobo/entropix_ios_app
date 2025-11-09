@@ -53,7 +53,7 @@ class LMSubscriptionProgressView: UIView {
         containerView.layer.cornerRadius = 12
         containerView.layer.masksToBounds = true
         
-        titleLabel.text = "Limited Spots Available:"
+        titleLabel.text = LMText.subscription.limitedSpotsAvailable
         titleLabel.font = UIFont.systemFont(ofSize: 14)
         titleLabel.textColor = textColor.withAlphaComponent(0.9)
         titleLabel.textAlignment = .center
@@ -78,7 +78,7 @@ class LMSubscriptionProgressView: UIView {
         progressBar.layer.masksToBounds = true
         
         let spotsLeft = 100 - Int(progress * 100)
-        progressTextLabel.text = "Only \(spotsLeft) spots left!"
+        progressTextLabel.text = String(format: LMText.subscription.spotsLeftFormat, spotsLeft)
         progressTextLabel.font = UIFont.systemFont(ofSize: 12)
         progressTextLabel.textColor = textColor.withAlphaComponent(0.9)
         progressTextLabel.textAlignment = .center

@@ -20,19 +20,19 @@ class LMMembershipCardView: UIView {
         
         if isPlusUser {
             setupPlusUserStyle()
-            titleLabel.text = "Plus Plan"
-            subtitleLabel.text = "Unlimited Inspires"
-            mainLabel.text = "Unlimited"
-            descLabel.text = "Inspire Points"
-            watchAdsButton.setTitle("▶ Watch Ads", for: .normal)
+            titleLabel.text = LMText.profile.plusPlan
+            subtitleLabel.text = LMText.profile.unlimitedInspires
+            mainLabel.text = LMText.profile.unlimited
+            descLabel.text = LMText.profile.inspirePoints
+            watchAdsButton.setTitle(LMText.profile.watchAdsWithIcon, for: .normal)
             upgradeButton.isHidden = true
         } else {
             setupFreeUserStyle()
-            titleLabel.text = "Free Plan"
-            subtitleLabel.text = "Limited Usage"
+            titleLabel.text = LMText.profile.freePlan
+            subtitleLabel.text = LMText.profile.limitedUsage
             mainLabel.text = "\(inspirePoints ?? 0)"
-            descLabel.text = "Inspire Points"
-            watchAdsButton.setTitle("Watch Ads", for: .normal)
+            descLabel.text = LMText.profile.inspirePoints
+            watchAdsButton.setTitle(LMText.profile.watchAds, for: .normal)
             upgradeButton.isHidden = false
         }
     }
@@ -186,11 +186,11 @@ class LMMembershipCardView: UIView {
     }
     
     private func configureDefaultContent() {
-        titleLabel.text = "Plus Plan"
-        subtitleLabel.text = "Unlimited Inspires"
+        titleLabel.text = LMText.profile.plusPlan
+        subtitleLabel.text = LMText.profile.unlimitedInspires
         mainLabel.text = "0"
-        descLabel.text = "Inspire Points"
-        watchAdsButton.setTitle("▶ Watch Ads", for: .normal)
+        descLabel.text = LMText.profile.inspirePoints
+        watchAdsButton.setTitle(LMText.profile.watchAdsWithIcon, for: .normal)
         setupPlusUserStyle()
     }
     
@@ -251,7 +251,7 @@ class LMMembershipCardView: UIView {
         // Upgrade button styling
         upgradeButton.backgroundColor = UIColor(red: 0.23, green: 0.51, blue: 0.96, alpha: 1.0)  // #3b82f6
         upgradeButton.setTitleColor(.white, for: .normal)
-        upgradeButton.setTitle("Upgrade", for: .normal)
+        upgradeButton.setTitle(LMText.profile.upgrade, for: .normal)
         upgradeButton.layer.shadowColor = UIColor(red: 0.23, green: 0.51, blue: 0.96, alpha: 0.3).cgColor
         upgradeButton.layer.shadowOffset = CGSize(width: 0, height: 2)
         upgradeButton.layer.shadowRadius = 8
@@ -280,7 +280,7 @@ class LMMembershipCardView: UIView {
         
         let indicator = UILabel()
         indicator.tag = 999
-        indicator.text = "+5"
+        indicator.text = LMText.profile.plusIndicator
         indicator.font = UIFont.systemFont(ofSize: 10, weight: .bold)
         indicator.textColor = .white
         indicator.backgroundColor = UIColor(red: 0.06, green: 0.73, blue: 0.51, alpha: 1.0)  // #10b981

@@ -25,6 +25,10 @@ class LMMinePage: LMPageWrapper {
     private var photoCollectionViewOriginalFrame: CGRect = .zero
     private var isFloatingMenuVisible = false
     
+    // 悬浮菜单按钮引用（用于更新文本）
+    private var floatingGalleryButton: UIButton!
+    private var floatingSavedIdeasButton: UIButton!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupScrollView()
@@ -34,6 +38,14 @@ class LMMinePage: LMPageWrapper {
         setupFloatingMenu()
         createTheFloatingCameraEntranceView()
         viewAdapter(scrollView)
+        
+        // 监听语言变化
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(languageDidChange),
+            name: LMLaunageManager.languageDidChangeNotification,
+            object: nil
+        )
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -41,8 +53,24 @@ class LMMinePage: LMPageWrapper {
         navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    // MARK: - Localization
+    
+    @objc private func languageDidChange() {
+        updateTexts()
+    }
+    
+    private func updateTexts() {
+        topBar.setTitle(LMText.profile.profile)
+        floatingGalleryButton?.setTitle(LMText.profile.gallery, for: .normal)
+        floatingSavedIdeasButton?.setTitle(LMText.profile.savedIdeas, for: .normal)
+    }
+    
     private func setupCustomNavigationBar() {
-        topBar.setTitle("Profile")
+        topBar.setTitle(LMText.profile.profile)
         topBar.setMoreButtonAction { [weak self] in
             self?.moreButtonTapped()
         }
@@ -172,19 +200,19 @@ class LMMinePage: LMPageWrapper {
     
     private func setupFloatingMenuButtons() {
         // 创建悬浮菜单按钮
-        let floatingGalleryButton = UIButton()
-        let floatingSavedIdeasButton = UIButton()
+        floatingGalleryButton = UIButton()
+        floatingSavedIdeasButton = UIButton()
         let floatingTabIndicator = UIView()
         
         // 设置按钮样式
-        floatingGalleryButton.setTitle("Gallery", for: .normal)
+        floatingGalleryButton.setTitle(LMText.profile.gallery, for: .normal)
         floatingGalleryButton.setTitleColor(UIColor.systemBlue, for: .selected)
         floatingGalleryButton.setTitleColor(UIColor.systemGray, for: .normal)
         floatingGalleryButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         floatingGalleryButton.isSelected = true
         floatingGalleryButton.addTarget(self, action: #selector(floatingGalleryTabTapped), for: .touchUpInside)
         
-        floatingSavedIdeasButton.setTitle("Saved Ideas", for: .normal)
+        floatingSavedIdeasButton.setTitle(LMText.profile.savedIdeas, for: .normal)
         floatingSavedIdeasButton.setTitleColor(UIColor.systemBlue, for: .selected)
         floatingSavedIdeasButton.setTitleColor(UIColor.systemGray, for: .normal)
         floatingSavedIdeasButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
@@ -232,26 +260,24 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func updateFloatingMenuState(_ tab: TabType) {
-        let galleryButton = floatingMenuContainer.subviews.first { $0 is UIButton && ($0 as! UIButton).titleLabel?.text == "Gallery" } as? UIButton
-        let savedIdeasButton = floatingMenuContainer.subviews.first { $0 is UIButton && ($0 as! UIButton).titleLabel?.text == "Saved Ideas" } as? UIButton
         let indicator = floatingMenuContainer.subviews.first { !($0 is UIButton) }
         
-        galleryButton?.isSelected = (tab == .gallery)
-        savedIdeasButton?.isSelected = (tab == .savedIdeas)
+        floatingGalleryButton?.isSelected = (tab == .gallery)
+        floatingSavedIdeasButton?.isSelected = (tab == .savedIdeas)
         
         // 动画移动指示器
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseInOut) {
             if tab == .gallery {
                 indicator?.snp.remakeConstraints { make in
                     make.bottom.equalToSuperview().offset(-8)
-                    make.centerX.equalTo(galleryButton!)
+                    make.centerX.equalTo(self.floatingGalleryButton!)
                     make.width.equalTo(50)
                     make.height.equalTo(4)
                 }
             } else {
                 indicator?.snp.remakeConstraints { make in
                     make.bottom.equalToSuperview().offset(-8)
-                    make.centerX.equalTo(savedIdeasButton!)
+                    make.centerX.equalTo(self.floatingSavedIdeasButton!)
                     make.width.equalTo(50)
                     make.height.equalTo(4)
                 }

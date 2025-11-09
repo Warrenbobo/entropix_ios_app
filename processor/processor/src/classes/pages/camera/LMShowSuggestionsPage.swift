@@ -73,7 +73,7 @@ class LMShowSuggestionsPage: LMPageWrapper {
         backButton.tintColor = .white
         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         
-        titleLabel.text = "Composition Suggestions"
+        titleLabel.text = LMText.camera.compositionSuggestions
         titleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         titleLabel.textColor = .white
         titleLabel.textAlignment = .center
@@ -94,7 +94,7 @@ class LMShowSuggestionsPage: LMPageWrapper {
         // Bottom Bar
         bottomBar.backgroundColor = UIColor.black.withAlphaComponent(0.8)
         
-        selectButton.setTitle("Select & Continue", for: .normal)
+        selectButton.setTitle(LMText.subscription.selectAndContinue, for: .normal)
         selectButton.setTitleColor(.white, for: .normal)
         selectButton.setTitleColor(.systemGray, for: .disabled)
         selectButton.backgroundColor = .systemBlue
@@ -102,7 +102,7 @@ class LMShowSuggestionsPage: LMPageWrapper {
         selectButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         selectButton.addTarget(self, action: #selector(selectButtonTapped), for: .touchUpInside)
         
-        regenerateButton.setTitle("Regenerate", for: .normal)
+        regenerateButton.setTitle(LMText.subscription.regenerate, for: .normal)
         regenerateButton.setTitleColor(.systemBlue, for: .normal)
         regenerateButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         regenerateButton.addTarget(self, action: #selector(regenerateButtonTapped), for: .touchUpInside)
@@ -201,31 +201,31 @@ class LMShowSuggestionsPage: LMPageWrapper {
         // 更新状态
         switch taskStatus {
         case "processing":
-            statusLabel.text = "Generating AI suggestions..."
+            statusLabel.text = LMText.camera.generatingAISuggestions
             statusLabel.textColor = .systemYellow
             loadingIndicator.startAnimating()
             selectButton.isEnabled = hasReadySuggestions()
             
         case "completed":
-            statusLabel.text = "All suggestions ready!"
+            statusLabel.text = LMText.camera.allSuggestionsReady
             statusLabel.textColor = .systemGreen
             loadingIndicator.stopAnimating()
             selectButton.isEnabled = true
             
         case "failed":
-            statusLabel.text = "Generation failed. Please try again."
+            statusLabel.text = LMText.camera.generationFailed
             statusLabel.textColor = .systemRed
             loadingIndicator.stopAnimating()
             selectButton.isEnabled = hasReadySuggestions()
             
         case "timeout":
-            statusLabel.text = "Generation timeout. Showing available suggestions."
+            statusLabel.text = LMText.camera.generationTimeout
             statusLabel.textColor = .systemOrange
             loadingIndicator.stopAnimating()
             selectButton.isEnabled = hasReadySuggestions()
             
         default:
-            statusLabel.text = "Processing..."
+            statusLabel.text = LMText.common.loading
             statusLabel.textColor = .systemGray
             loadingIndicator.startAnimating()
             selectButton.isEnabled = hasReadySuggestions()
