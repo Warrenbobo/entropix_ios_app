@@ -425,4 +425,27 @@ extension LMCameraBottomControlsView {
             }
         }
     }
+    
+    /// 设置 Inspire Me 按钮的启用/禁用状态
+    /// - Parameter enabled: true 启用，false 禁用
+    func setInspireMeButtonEnabled(_ enabled: Bool) {
+        inspireButton.isEnabled = enabled
+        inspireButton.alpha = enabled ? 1.0 : 0.5
+        
+        // 更新容器的交互状态
+        inspireButtonContainer.isUserInteractionEnabled = enabled
+        
+        // 如果禁用，显示灰色样式
+        if !enabled {
+            inspireButton.backgroundColor = UIColor.gray.withAlphaComponent(0.5)
+        } else {
+            // 恢复渐变背景
+            setupInspireButtonGradient()
+        }
+    }
+    
+    /// 获取当前 Inspire Points 数量
+    func getCurrentInspirePoints() -> Int {
+        return inspirePoints
+    }
 }

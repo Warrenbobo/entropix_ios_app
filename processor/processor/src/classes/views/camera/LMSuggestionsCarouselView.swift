@@ -16,17 +16,61 @@ protocol LMSuggestionsCarouselViewDelegate: AnyObject {
 
 struct LMSuggestion {
     let id: String
+    let title: String?
+    let description: String?
     let imageURL: String?
     let image: UIImage?
+    let personBoundingBox: BoundingBox?
+    let confidence: Double?
     let isFavorite: Bool
     let isGenerating: Bool
     
-    init(id: String, imageURL: String? = nil, image: UIImage? = nil, isFavorite: Bool = false, isGenerating: Bool = false) {
+    init(id: String, 
+         title: String? = nil,
+         description: String? = nil,
+         imageURL: String? = nil, 
+         image: UIImage? = nil,
+         personBoundingBox: BoundingBox? = nil,
+         confidence: Double? = nil,
+         isFavorite: Bool = false, 
+         isGenerating: Bool = false) {
         self.id = id
+        self.title = title
+        self.description = description
         self.imageURL = imageURL
         self.image = image
+        self.personBoundingBox = personBoundingBox
+        self.confidence = confidence
         self.isFavorite = isFavorite
         self.isGenerating = isGenerating
+    }
+    
+    /// 从 SuggestionItem 创建（新的 API 模型）
+    init(from item: SuggestionItem) {
+        self.init(
+            id: item.id,
+            title: item.sceneType,
+            description: "Rank: \(item.rank), Score: \(String(format: "%.2f", item.score ?? 0))",
+            imageURL: item.imageUrl,
+            personBoundingBox: nil, // SuggestionItem 不包含 personBoundingBox
+            confidence: item.score,
+            isFavorite: false,
+            isGenerating: !item.ready
+        )
+    }
+    
+    /// 从 CompositionSuggestion 创建（旧的 API 模型，保留兼容性）
+    init(from suggestion: CompositionSuggestion) {
+        self.init(
+            id: suggestion.id,
+            title: suggestion.title,
+            description: suggestion.description,
+            imageURL: suggestion.referenceImageUrl,
+            personBoundingBox: suggestion.personBoundingBox,
+            confidence: suggestion.confidence,
+            isFavorite: false,
+            isGenerating: false
+        )
     }
 }
 
@@ -260,8 +304,12 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
         var suggestion = suggestions[index]
         suggestion = LMSuggestion(
             id: suggestion.id,
+            title: suggestion.title,
+            description: suggestion.description,
             imageURL: suggestion.imageURL,
             image: suggestion.image,
+            personBoundingBox: suggestion.personBoundingBox,
+            confidence: suggestion.confidence,
             isFavorite: isFavorite,
             isGenerating: suggestion.isGenerating
         )

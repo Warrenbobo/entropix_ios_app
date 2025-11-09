@@ -59,24 +59,22 @@ class LMSubscriptionProgressView: UIView {
         titleLabel.textAlignment = .center
         
         spotsLabel.text = progressText
-        spotsLabel.font = UIFont.systemFont(ofSize: 13, weight: .bold)
-        spotsLabel.textColor = .white  // White text as per image
+        spotsLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        spotsLabel.textColor = .white
         spotsLabel.textAlignment = .center
         
-        // Spots container - light grey background with white text for contrast
-        // Using a medium grey that provides good contrast for white text
-        spotsContainer.backgroundColor = UIColor.hexColor("#9ca3af").withAlphaComponent(0.9)  // Medium grey
+        spotsContainer.backgroundColor = UIColor.white.withAlphaComponent(0.6)
         spotsContainer.layer.cornerRadius = 6
         spotsContainer.layer.masksToBounds = true
         
         // Progress bar container - light grey background
         progressBarContainer.backgroundColor = UIColor.hexColor("#e5e7eb")  // Light grey
-        progressBarContainer.layer.cornerRadius = 8
+        progressBarContainer.layer.cornerRadius = 6
         progressBarContainer.layer.masksToBounds = true
         
         // Progress bar - red fill
         progressBar.backgroundColor = UIColor.hexColor("#ef4444")  // Red
-        progressBar.layer.cornerRadius = 8
+        progressBar.layer.cornerRadius = 6
         progressBar.layer.masksToBounds = true
         
         let spotsLeft = 100 - Int(progress * 100)
@@ -96,28 +94,27 @@ class LMSubscriptionProgressView: UIView {
             make.leading.trailing.equalToSuperview().inset(12)
         }
         
+        spotsContainer.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(12)
+            make.centerX.equalToSuperview()
+            make.height.equalTo(30)
+        }
+        
+        spotsLabel.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8))
+        }
+        
         // Progress bar container
         progressBarContainer.snp.makeConstraints { make in
-            make.top.equalTo(titleLabel.snp.bottom).offset(12)
+            make.top.equalTo(spotsContainer.snp.bottom).offset(12)
             make.leading.trailing.equalToSuperview().inset(12)
-            make.height.equalTo(16)
+            make.height.equalTo(12)
         }
         
         // Progress bar fill
         progressBar.snp.makeConstraints { make in
             make.leading.top.bottom.equalToSuperview()
             make.width.equalToSuperview().multipliedBy(progress)
-        }
-        
-        // Spots badge positioned on top of progress bar, centered
-        spotsContainer.snp.makeConstraints { make in
-            make.centerX.equalTo(progressBarContainer)
-            make.centerY.equalTo(progressBarContainer)
-            make.height.equalTo(20)
-        }
-        
-        spotsLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8))
         }
         
         progressTextLabel.snp.makeConstraints { make in

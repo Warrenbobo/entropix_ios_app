@@ -29,7 +29,7 @@
                                 </constraints>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Entropix" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qHg-Le-rUC">
-                                <rect key="frame" x="134.33333333333334" y="696.33333333333337" width="124.66666666666666" height="38.333333333333371"/>
+                                <rect key="frame" x="134.33333333333334" y="704.33333333333337" width="124.66666666666666" height="38.333333333333371"/>
                                 <fontDescription key="fontDescription" type="boldSystem" pointSize="32"/>
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
@@ -38,7 +38,7 @@
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <constraints>
-                            <constraint firstItem="7Yc-cG-YFL" firstAttribute="top" secondItem="qHg-Le-rUC" secondAttribute="bottom" constant="24" id="1O7-DO-rLi"/>
+                            <constraint firstItem="7Yc-cG-YFL" firstAttribute="top" secondItem="qHg-Le-rUC" secondAttribute="bottom" constant="16" id="1O7-DO-rLi"/>
                             <constraint firstItem="e4M-Bb-AXw" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="62" id="ARJ-cu-Saa"/>
                             <constraint firstItem="7Yc-cG-YFL" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="IRY-bA-TsZ"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="7Yc-cG-YFL" secondAttribute="bottom" constant="40" id="Pcv-en-6hd"/>
@@ -56,6 +56,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="app_logo_transparent_bg" width="155" height="126.33333587646484"/>
+        <image name="app_logo_transparent_bg" width="283.66665649414062" height="229.66667175292969"/>
     </resources>
 </document>

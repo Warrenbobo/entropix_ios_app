@@ -127,17 +127,10 @@ extension LMGalleryPageView: UICollectionViewDelegateFlowLayout {
     }
     
     private func showItemDetail(item: GalleryItem) {
-        let alert = UIAlertController(
-            title: item.title ?? "Gallery Item",
-            message: "Item ID: \(item.id)\nType: Gallery",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        
-        // 由于这是UIView，需要通过父视图控制器来present
+        // 导航到Gallery详情页
         if let parentViewController = findViewController() {
-            parentViewController.present(alert, animated: true)
+            let detailPage = LMGalleryDetailPage(item: item)
+            parentViewController.navigationController?.pushViewController(detailPage, animated: true)
         }
     }
 }

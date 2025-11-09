@@ -35,6 +35,10 @@ class LMSubscriptionPage: LMPageWrapper {
     private var countdownTimer: Timer?
     private var promotionEndDate: Date?
     
+    // Purchase Processing
+    private var isProcessingPurchase = false
+    private var loadingOverlay: UIView?
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,6 +55,7 @@ class LMSubscriptionPage: LMPageWrapper {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false,
                                                      animated: animated)
+        updateUIForSubscriptionStatus()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -69,7 +74,7 @@ class LMSubscriptionPage: LMPageWrapper {
         view.addSubview(dialogView)
         
         // Configure scroll view
-        scrollView.showsVerticalScrollIndicator = true
+        scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.alwaysBounceVertical = true
         
@@ -194,8 +199,7 @@ class LMSubscriptionPage: LMPageWrapper {
     // MARK: - Layout Setup
     private func setupLayout() {
         scrollView.snp.makeConstraints { make in
-            make.top.equalTo(AppTheme.Screen.navigatorHeight)
-            make.leading.trailing.bottom.equalToSuperview()
+            make.edges.equalToSuperview()
         }
         
         contentView.snp.makeConstraints { make in
@@ -204,7 +208,8 @@ class LMSubscriptionPage: LMPageWrapper {
         }
         
         heroView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
+            make.top.equalToSuperview().offset(AppTheme.Screen.navigatorHeight)
+            make.leading.trailing.equalToSuperview()
         }
         
         plansStackView.snp.makeConstraints { make in
@@ -295,9 +300,9 @@ extension LMSubscriptionPage: LMSubscriptionFooterViewDelegate {
 // MARK: - LMSubscriptionPlanCardViewDelegate
 extension LMSubscriptionPage: LMSubscriptionPlanCardViewDelegate {
     func planCardView(_ view: LMSubscriptionPlanCardView, didTapButton plan: SubscriptionPlan) {
-        let planType = plan.title
-        print("Subscribe to \(planType)")
-        // Handle subscription
+        Task {
+            await handlePurchase(for: plan)
+        }
     }
     
     func planCardView(_ view: LMSubscriptionPlanCardView, didSwitchToFreePlan plan: SubscriptionPlan) {
@@ -315,6 +320,155 @@ extension LMSubscriptionPage: LMSubscriptionDialogViewDelegate {
         dialogView.hide()
         // Handle switch to free plan
         print("Switched to free plan")
+    }
+
+    // MARK: - Purchase Handling
+    private func handlePurchase(for plan: SubscriptionPlan) async {
+        // Prevent duplicate purchases
+        guard !isProcessingPurchase else { return }
+        
+        // Get product identifier
+        guard let productIdentifier = plan.planType.productIdentifier else {
+            LMLogger.log("⚠️ No product identifier for plan: \(plan.title)")
+            return
+        }
+        
+        // Get product from store manager
+        guard let product = LMStoreManager.shared.getProduct(for: productIdentifier) else {
+            await MainActor.run {
+                showPurchaseError(StoreError.productNotFound)
+            }
+            return
+        }
+        
+        isProcessingPurchase = true
+        await MainActor.run {
+            showLoadingOverlay(message: "Processing purchase...")
+        }
+        
+        do {
+            // Initiate purchase
+            let transaction = try await LMStoreManager.shared.purchase(product)
+            
+            // Purchase successful
+            await MainActor.run {
+                hideLoadingOverlay()
+                showPurchaseSuccess(plan: plan)
+                updateUIForSubscriptionStatus()
+            }
+            
+            LMLogger.log("✅ Purchase completed: \(transaction.id)")
+        } catch StoreError.purchaseCancelled {
+            // User cancelled - no error message needed
+            await MainActor.run {
+                hideLoadingOverlay()
+            }
+            LMLogger.log("⚠️ Purchase cancelled by user")
+        } catch {
+            // Show error
+            await MainActor.run {
+                hideLoadingOverlay()
+                showPurchaseError(error)
+            }
+            LMLogger.log("❌ Purchase failed: \(error.localizedDescription)")
+        }
+        
+        isProcessingPurchase = false
+    }
+    
+    private func showLoadingOverlay(message: String) {
+        // Remove existing overlay if any
+        hideLoadingOverlay()
+        
+        // Create overlay
+        let overlay = UIView()
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        
+        // Create container
+        let container = UIView()
+        container.backgroundColor = .white
+        container.layer.cornerRadius = 16
+        
+        // Create activity indicator
+        let activityIndicator = UIActivityIndicatorView(style: .large)
+        activityIndicator.color = UIColor.hexColor("#667eea")
+        activityIndicator.startAnimating()
+        
+        // Create message label
+        let messageLabel = UILabel()
+        messageLabel.text = message
+        messageLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        messageLabel.textColor = UIColor.hexColor("#374151")
+        messageLabel.textAlignment = .center
+        messageLabel.numberOfLines = 0
+        
+        // Add subviews
+        container.addSubview(activityIndicator)
+        container.addSubview(messageLabel)
+        overlay.addSubview(container)
+        view.addSubview(overlay)
+        
+        // Layout
+        overlay.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        container.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.equalTo(280)
+        }
+        
+        activityIndicator.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(32)
+            make.centerX.equalToSuperview()
+        }
+        
+        messageLabel.snp.makeConstraints { make in
+            make.top.equalTo(activityIndicator.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview().inset(24)
+            make.bottom.equalToSuperview().offset(-32)
+        }
+        
+        loadingOverlay = overlay
+    }
+    
+    private func hideLoadingOverlay() {
+        loadingOverlay?.removeFromSuperview()
+        loadingOverlay = nil
+    }
+    
+    private func showPurchaseSuccess(plan: SubscriptionPlan) {
+        let alert = UIAlertController(
+            title: "🎉 Success!",
+            message: "You've successfully subscribed to \(plan.title). Enjoy all premium features!",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    private func showPurchaseError(_ error: Error) {
+        let errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+        
+        let alert = UIAlertController(
+            title: "Purchase Failed",
+            message: errorMessage,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+    
+    private func updateUIForSubscriptionStatus() {
+        let status = LMStoreManager.shared.currentSubscriptionStatus
+        
+        // Update plan cards based on subscription status
+        for (index, cardView) in planCardViews.enumerated() {
+            // This is a simplified version - in production, you'd need to update
+            // the card view's button state and title based on the current subscription
+            // For now, we just log the status
+            LMLogger.log("📊 Current subscription status: \(status.rawValue)")
+        }
     }
 }
 

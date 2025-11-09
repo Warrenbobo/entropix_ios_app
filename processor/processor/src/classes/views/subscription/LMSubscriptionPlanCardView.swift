@@ -46,10 +46,7 @@ class LMSubscriptionPlanCardView: UIView {
     // MARK: - Setup Methods
     private func setupUI() {
         layer.cornerRadius = 16
-        // Only mask to bounds for gradient cards, not for Free Plan which needs shadow
-        if plan.gradientColors.count > 1 {
-            layer.masksToBounds = true
-        }
+        layer.masksToBounds = true
         
         addSubview(contentStack)
         contentStack.axis = .vertical
@@ -61,10 +58,8 @@ class LMSubscriptionPlanCardView: UIView {
             let badge = createPopularBadge(text: badgeText)
             addSubview(badge)
             badge.snp.makeConstraints { make in
-                make.top.equalToSuperview().offset(-8)
+                make.top.equalToSuperview()
                 make.trailing.equalToSuperview().offset(-16)
-                make.height.equalTo(28)
-                make.width.greaterThanOrEqualTo(80)
             }
         }
         
@@ -125,15 +120,10 @@ class LMSubscriptionPlanCardView: UIView {
         }
     }
     
-    private func createPopularBadge(text: String) -> UILabel {
-        let badge = UILabel()
-        badge.text = text
-        badge.font = UIFont.systemFont(ofSize: 14, weight: .bold)
-        badge.textColor = .white
+    private func createPopularBadge(text: String) -> LMPopularTagView {
+        let badge = LMPopularTagView()
+        badge.tagText.text = text
         badge.backgroundColor = UIColor.hexColor("#ff6b6b")
-        badge.textAlignment = .center
-        badge.layer.cornerRadius = 12
-        badge.layer.masksToBounds = true
         return badge
     }
     
@@ -142,6 +132,7 @@ class LMSubscriptionPlanCardView: UIView {
         let titleLabel = UILabel()
         titleLabel.text = plan.title
         titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .bold)
+        titleLabel.adjustsFontSizeToFitWidth = true
         titleLabel.textColor = plan.textColor
         
         let priceContainer = UIView()
@@ -165,31 +156,22 @@ class LMSubscriptionPlanCardView: UIView {
         priceLabel.text = plan.price
         priceLabel.font = UIFont.systemFont(ofSize: 28, weight: .bold)
         priceLabel.textColor = plan.textColor
+        priceLabel.adjustsFontSizeToFitWidth = true
         priceStack.addArrangedSubview(priceLabel)
         
         if let discount = plan.discount {
-            let discountBadge = UILabel()
-            discountBadge.text = discount
-            discountBadge.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-            // Plus Plan uses dark text on yellow background for better visibility
-            // Life-long Plan uses white text on light red/pink background
+            let discountBadge = LMDiscountBadgeView()
+            discountBadge.tagText.text = discount
             switch plan.planType {
             case .plus:
-                discountBadge.textColor = UIColor.hexColor("#854d0e")  // Dark text on yellow background
+                discountBadge.tagText.textColor = UIColor.hexColor("#854d0e")
                 discountBadge.backgroundColor = UIColor.hexColor("#fef08a")
             case .lifelong:
-                discountBadge.textColor = .white  // White text on light red background
+                discountBadge.tagText.textColor = .white
                 discountBadge.backgroundColor = UIColor.hexColor("#fca5a5")
             case .free:
-                discountBadge.textColor = UIColor.hexColor("#854d0e")
+                discountBadge.tagText.textColor = UIColor.hexColor("#171109")
                 discountBadge.backgroundColor = UIColor.hexColor("#fef08a")
-            }
-            discountBadge.textAlignment = .center
-            discountBadge.layer.cornerRadius = 6
-            discountBadge.layer.masksToBounds = true
-            discountBadge.snp.makeConstraints { make in
-                make.height.equalTo(20)
-                make.width.greaterThanOrEqualTo(60)
             }
             priceStack.addArrangedSubview(discountBadge)
         }
@@ -208,15 +190,15 @@ class LMSubscriptionPlanCardView: UIView {
         
         periodLabel.snp.makeConstraints { make in
             make.top.equalTo(priceStack.snp.bottom).offset(4)
-            make.leading.trailing.bottom.equalToSuperview()
-            make.centerX.equalTo(priceStack)
+            make.trailing.bottom.equalToSuperview()
         }
         
         titlePriceRow.addSubview(titleLabel)
         titlePriceRow.addSubview(priceContainer)
         
         titleLabel.snp.makeConstraints { make in
-            make.leading.top.equalToSuperview()
+            make.top.equalTo(5)
+            make.leading.equalToSuperview()
             make.bottom.lessThanOrEqualToSuperview()
         }
         
@@ -337,32 +319,17 @@ class LMSubscriptionPlanCardView: UIView {
     }
     
     private func setupStyles() {
-        // Add gradient background
-        if plan.gradientColors.count > 1 {
-            let gradient = CAGradientLayer()
-            gradient.colors = plan.gradientColors.map { $0.cgColor }
-            gradient.startPoint = CGPoint(x: 0, y: 0)
-            gradient.endPoint = CGPoint(x: 1, y: 1)
-            gradient.frame = bounds
-            gradient.cornerRadius = 16
-            layer.insertSublayer(gradient, at: 0)
-            gradientLayer = gradient
-        } else {
-            backgroundColor = plan.gradientColors.first
-            if plan.planType == .free {
-                layer.borderWidth = 1
-                layer.borderColor = UIColor.hexColor("#e5e7eb").cgColor
-                // Add shadow for Free Plan
-                layer.shadowColor = UIColor.black.cgColor
-                layer.shadowOffset = CGSize(width: 0, height: 2)
-                layer.shadowRadius = 4
-                layer.shadowOpacity = 0.1
-            }
-        }
-        
-        // Remove border for Plus Plan (it has gradient background)
-        if plan.planType == .plus {
-            layer.borderWidth = 0
+        let gradient = CAGradientLayer()
+        gradient.colors = plan.gradientColors.map { $0.cgColor }
+        gradient.startPoint = CGPoint(x: 0, y: 0)
+        gradient.endPoint = CGPoint(x: 1, y: 1)
+        gradient.frame = bounds
+        gradient.cornerRadius = 16
+        layer.insertSublayer(gradient, at: 0)
+        gradientLayer = gradient
+        if plan.planType == .free {
+            layer.borderWidth = 2
+            layer.borderColor = UIColor.hexColor("#e5e7eb").cgColor
         }
     }
     

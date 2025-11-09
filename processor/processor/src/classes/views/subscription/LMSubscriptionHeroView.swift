@@ -40,7 +40,7 @@ class LMSubscriptionHeroView: UIView {
         addSubview(heroDescLabel)
         
         heroIcon.image = UIImage(named: "crown_solid_white")
-        heroIcon.contentMode = .scaleAspectFit
+        heroIcon.contentMode = .scaleAspectFill
         
         heroTitleLabel.text = "Unlock Your Creative Potential"
         heroTitleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)

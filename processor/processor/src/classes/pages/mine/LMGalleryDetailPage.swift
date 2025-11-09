@@ -1,0 +1,229 @@
+//
+//  LMGalleryDetailPage.swift
+//  processor
+//
+//  Created by Kiro on 2025/11/9.
+//
+
+import UIKit
+import SnapKit
+
+class LMGalleryDetailPage: UIViewController {
+    
+    // MARK: - Properties
+    private let galleryItem: GalleryItem
+    
+    // MARK: - UI Components
+    private let photoImageView = UIImageView()
+    private let backButton = UIButton(type: .system)
+    private let downloadButton = UIButton(type: .system)
+    private let deleteButton = UIButton(type: .system)
+    private let successIndicator = UIView()
+    
+    // MARK: - Initialization
+    init(item: GalleryItem) {
+        self.galleryItem = item
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Lifecycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        setupLayout()
+        setupActions()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    // MARK: - Setup Methods
+    private func setupUI() {
+        view.backgroundColor = .black
+        
+        // Photo Image View
+        photoImageView.image = galleryItem.image
+        photoImageView.contentMode = .scaleAspectFit
+        view.addSubview(photoImageView)
+        
+        // Back Button
+        backButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        backButton.layer.cornerRadius = 20
+        backButton.layer.borderWidth = 1
+        backButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        
+        let backConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        let backImage = UIImage(systemName: "chevron.left", withConfiguration: backConfig)
+        backButton.setImage(backImage, for: .normal)
+        backButton.setTitle(" Back", for: .normal)
+        backButton.setTitleColor(.white, for: .normal)
+        backButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        backButton.tintColor = .white
+        
+        view.addSubview(backButton)
+        
+        // Download Button
+        downloadButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        downloadButton.layer.cornerRadius = 20
+        downloadButton.layer.borderWidth = 1
+        downloadButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        
+        let downloadConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        let downloadImage = UIImage(systemName: "arrow.down.circle", withConfiguration: downloadConfig)
+        downloadButton.setImage(downloadImage, for: .normal)
+        downloadButton.tintColor = .white
+        
+        view.addSubview(downloadButton)
+        
+        // Delete Button
+        deleteButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        deleteButton.layer.cornerRadius = 20
+        deleteButton.layer.borderWidth = 1
+        deleteButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        
+        let deleteConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        let deleteImage = UIImage(systemName: "trash", withConfiguration: deleteConfig)
+        deleteButton.setImage(deleteImage, for: .normal)
+        deleteButton.tintColor = .white
+        
+        view.addSubview(deleteButton)
+        
+        // Success Indicator
+        successIndicator.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        successIndicator.layer.cornerRadius = 20
+        successIndicator.isHidden = true
+        
+        let checkmarkImageView = UIImageView()
+        let checkConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold)
+        checkmarkImageView.image = UIImage(systemName: "checkmark.circle.fill", withConfiguration: checkConfig)
+        checkmarkImageView.tintColor = UIColor.hexColor("#10b981")
+        
+        let messageLabel = UILabel()
+        messageLabel.text = "Downloaded"
+        messageLabel.textColor = .white
+        messageLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        
+        successIndicator.addSubview(checkmarkImageView)
+        successIndicator.addSubview(messageLabel)
+        view.addSubview(successIndicator)
+        
+        checkmarkImageView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(16)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(24)
+        }
+        
+        messageLabel.snp.makeConstraints { make in
+            make.leading.equalTo(checkmarkImageView.snp.trailing).offset(12)
+            make.trailing.equalToSuperview().offset(-16)
+            make.centerY.equalToSuperview()
+        }
+    }
+    
+    private func setupLayout() {
+        photoImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        backButton.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
+            make.leading.equalToSuperview().offset(20)
+            make.height.equalTo(40)
+        }
+        
+        deleteButton.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
+            make.trailing.equalToSuperview().offset(-20)
+            make.size.equalTo(40)
+        }
+        
+        downloadButton.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
+            make.trailing.equalTo(deleteButton.snp.leading).offset(-12)
+            make.size.equalTo(40)
+        }
+        
+        successIndicator.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.height.equalTo(56)
+        }
+    }
+    
+    private func setupActions() {
+        backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
+        downloadButton.addTarget(self, action: #selector(downloadButtonTapped), for: .touchUpInside)
+        deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+    }
+    
+    // MARK: - Actions
+    @objc private func backButtonTapped() {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    @objc private func downloadButtonTapped() {
+        guard let image = galleryItem.image else { return }
+        
+        // Save to photo library
+        UIImageWriteToSavedPhotosAlbum(image, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
+    }
+    
+    @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+        if let error = error {
+            showError(message: "Failed to save: \(error.localizedDescription)")
+        } else {
+            showSuccessIndicator()
+        }
+    }
+    
+    @objc private func deleteButtonTapped() {
+        let alert = UIAlertController(
+            title: "Are you sure to delete this photo from gallery?",
+            message: "This action cannot be undone.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            self?.performDelete()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    private func performDelete() {
+        // TODO: Implement actual delete logic
+        // For now, just go back
+        LMLogger.log("🗑️ Deleting gallery item: \(galleryItem.id)")
+        navigationController?.popViewController(animated: true)
+    }
+    
+    private func showSuccessIndicator() {
+        successIndicator.isHidden = false
+        successIndicator.alpha = 0
+        successIndicator.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+            self.successIndicator.alpha = 1
+            self.successIndicator.transform = .identity
+        } completion: { _ in
+            UIView.animate(withDuration: 0.3, delay: 1.5, options: .curveEaseIn) {
+                self.successIndicator.alpha = 0
+                self.successIndicator.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+            } completion: { _ in
+                self.successIndicator.isHidden = true
+            }
+        }
+    }
+    
+    private func showError(message: String) {
+        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
+    }
+}

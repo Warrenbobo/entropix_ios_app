@@ -62,13 +62,15 @@ class LMSubscriptionAdRewardsView: UIView {
         
         watchAdButton.setTitle("Watch Ad", for: .normal)
         watchAdButton.setImage(UIImage(named: "play_solid_green"), for: .normal)
+        watchAdButton.imageView?.contentMode = .scaleAspectFit
+        watchAdButton.titleLabel?.adjustsFontSizeToFitWidth = true
         watchAdButton.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
         watchAdButton.backgroundColor = .white
         watchAdButton.setTitleColor(UIColor.hexColor("#10b981"), for: .normal)
         watchAdButton.layer.cornerRadius = 10
         watchAdButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
-        watchAdButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: -8, bottom: 0, right: 8)
-        watchAdButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
+        watchAdButton.imageEdgeInsets = UIEdgeInsets(top: 14, left: -8, bottom: 14, right: 8)
+        watchAdButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         watchAdButton.semanticContentAttribute = .forceLeftToRight
         watchAdButton.addTarget(self, action: #selector(handleWatchAd), for: .touchUpInside)
     }
@@ -91,13 +93,12 @@ class LMSubscriptionAdRewardsView: UIView {
             make.leading.equalToSuperview().offset(20)
             make.bottom.equalToSuperview().offset(-20)
             make.height.equalTo(40)
-            make.width.greaterThanOrEqualTo(120)
         }
         
         adRewardsIcon.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-20)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(64)
+            make.width.height.equalTo(34)
         }
     }
     

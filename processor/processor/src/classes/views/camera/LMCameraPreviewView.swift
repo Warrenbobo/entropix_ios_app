@@ -163,90 +163,13 @@ extension LMCameraPreviewView {
 // MARK: - Grid Configuration Methods
 extension LMCameraPreviewView {
     
-    /// 设置网格类型
-    func setGridType(_ type: LMCameraGridType) {
-        gridOverlayView.setGridType(type)
-    }
-    
-    /// 设置网格样式
-    func setGridStyle(_ style: LMCameraGridStyle) {
-        gridOverlayView.setGridStyle(style)
-    }
-    
     /// 获取当前网格显示状态
     func isGridCurrentlyVisible() -> Bool {
         return gridOverlayView.isGridCurrentlyVisible()
     }
     
-    /// 获取当前网格类型
-    func getCurrentGridType() -> LMCameraGridType {
-        return gridOverlayView.getCurrentGridType()
-    }
-    
     /// 配置为摄影三分法网格
     func configureForPhotographyRuleOfThirds() {
         gridOverlayView.configureForPhotographyRuleOfThirds()
-    }
-    
-    /// 配置为专业摄影黄金比例网格
-    func configureForProfessionalPhotography() {
-        gridOverlayView.configureForProfessionalPhotography()
-    }
-    
-    /// 配置为建筑摄影网格
-    func configureForArchitecturalPhotography() {
-        gridOverlayView.configureForArchitecturalPhotography()
-    }
-    
-    /// 配置为艺术摄影网格
-    func configureForArtisticPhotography() {
-        gridOverlayView.configureForArtisticPhotography()
-    }
-    
-    /// 配置为简单中心对齐网格
-    func configureForCenterAlignment() {
-        gridOverlayView.configureForCenterAlignment()
-    }
-    
-    /// 循环切换网格类型
-    func cycleGridType() {
-        let currentType = getCurrentGridType()
-        let nextType: LMCameraGridType
-        
-        switch currentType {
-        case .ruleOfThirds:
-            nextType = .golden
-        case .golden:
-            nextType = .square
-        case .square:
-            nextType = .diagonal
-        case .diagonal:
-            nextType = .center
-        case .center:
-            nextType = .fibonacci
-        case .fibonacci:
-            nextType = .ruleOfThirds
-        }
-        
-        setGridType(nextType)
-    }
-    
-    /// 循环切换网格样式
-    func cycleGridStyle() {
-        let currentStyle = gridOverlayView.getCurrentGridStyle()
-        let nextStyle: LMCameraGridStyle
-        
-        // 简单的样式循环
-        if currentStyle.lineWidth == 1.0 && currentStyle.opacity == 0.6 {
-            nextStyle = .subtle
-        } else if currentStyle.lineWidth == 0.5 {
-            nextStyle = .bold
-        } else if currentStyle.lineWidth == 2.0 {
-            nextStyle = .dashed
-        } else {
-            nextStyle = .default
-        }
-        
-        setGridStyle(nextStyle)
     }
 }

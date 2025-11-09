@@ -66,7 +66,7 @@ class LMSubscriptionCountdownView: UIView {
         
         labelsStackView.axis = .horizontal
         labelsStackView.spacing = 4
-        labelsStackView.distribution = .fillEqually
+        labelsStackView.distribution = .equalSpacing
         labelsStackView.alignment = .center
         
         // Setup timer containers
@@ -149,7 +149,7 @@ class LMSubscriptionCountdownView: UIView {
         
         labelsStackView.snp.makeConstraints { make in
             make.top.equalTo(timerStackView.snp.bottom).offset(4)
-            make.leading.trailing.equalToSuperview().inset(12)
+            make.centerX.equalToSuperview()
             make.bottom.equalToSuperview().offset(-12)
         }
     }
