@@ -61,7 +61,8 @@ extension LMCameraPage: LMCameraControlsViewDelegate {
     
     func cameraControlsView(_ view: LMCameraControlsView, didChangeAspectRatio ratio: LMAspectRatio) {
         LMLogger.log("📐 Aspect ratio: \(ratio.displayName)")
-        updateCameraPreviewAspectRatio(ratio)
+        // 更新预览画布的尺寸，而不是改变相机的输出尺寸
+        updatePreviewCanvasAspectRatio(ratio)
     }
     
     func cameraControlsView(_ view: LMCameraControlsView, didChangeTimer duration: LMTimerDuration) {
@@ -79,19 +80,7 @@ extension LMCameraPage: LMCameraControlsViewDelegate {
     }
     
     // MARK: - Configuration Methods
-    
-    func updateCameraPreviewAspectRatio(_ ratio: LMAspectRatio) {
-        guard let captureSession = captureSession else { return }
-        
-        captureSession.beginConfiguration()
-        
-        let preset: AVCaptureSession.Preset = (ratio == .ratio9_16) ? .hd1920x1080 : .photo
-        if captureSession.canSetSessionPreset(preset) {
-            captureSession.sessionPreset = preset
-        }
-        
-        captureSession.commitConfiguration()
-    }
+    // 注意：相机始终以原始比例捕获，宽高比的改变只影响预览画布的显示尺寸
     
     func configureLivePhotosMode(_ enabled: Bool) {
         guard let photoOutput = photoOutput else { return }

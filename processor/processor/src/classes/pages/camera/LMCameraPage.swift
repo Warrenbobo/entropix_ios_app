@@ -28,6 +28,10 @@ class LMCameraPage: LMPageWrapper {
     var videoDataOutput: AVCaptureVideoDataOutput?
     var isUsingFrontCamera = false
     
+    // MARK: - Preview Canvas Properties
+    var currentAspectRatio: LMAspectRatio = .ratio3_4
+    var previewCanvasView: UIView!
+    
     // MARK: - Feature Flags
     var isInspireMeCapture = false
     var isARGuidanceActive = false
@@ -56,8 +60,6 @@ class LMCameraPage: LMPageWrapper {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
-        
-        // 只有在已授权的情况下才启动相机会话
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         if status == .authorized {
             startCameraSession()
@@ -87,9 +89,17 @@ class LMCameraPage: LMPageWrapper {
     }
     
     private func setupCameraPreviewComponent() {
+        // 创建预览画布容器
+        previewCanvasView = UIView()
+        previewCanvasView.backgroundColor = .black
+        previewCanvasView.clipsToBounds = true
+        
+        view.addSubview(previewCanvasView)
+        
+        // 创建相机预览视图（填充整个画布）
         cameraPreviewView = LMCameraPreviewView()
         cameraPreviewView.delegate = self
-        view.addSubview(cameraPreviewView)
+        previewCanvasView.addSubview(cameraPreviewView)
     }
     
     private func setupCameraControlsComponent() {
@@ -118,29 +128,110 @@ class LMCameraPage: LMPageWrapper {
             make.width.equalTo(44)
         }
         
-        cameraPreviewView.snp.makeConstraints { make in
-            make.top.equalTo(topStatusBarView.snp.bottom)
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalTo(cameraBottomControlsView.snp.top)
-        }
-        
-        cameraControlsView.snp.makeConstraints { make in
-            make.trailing.equalToSuperview()
-            make.centerY.equalTo(cameraPreviewView)
-            make.width.equalTo(80)
-        }
-        
         cameraBottomControlsView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide)
             make.height.equalTo(120)
         }
+        
+        // 初始化预览画布为3:4比例（无动画）
+        setupInitialPreviewCanvasLayout()
+        
+        // 相机预览视图填充整个画布
+        cameraPreviewView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        cameraControlsView.snp.makeConstraints { make in
+            make.trailing.equalToSuperview()
+            make.centerY.equalTo(previewCanvasView)
+            make.width.equalTo(80)
+        }
+    }
+    
+    /// 初始化预览画布布局（无动画，避免首次进入时抖动）
+    private func setupInitialPreviewCanvasLayout() {
+        let topOffset = AppTheme.Screen.safeAreaTop + 44
+        let bottomOffset: CGFloat = 120
+        let availableHeight = AppTheme.Screen.height - topOffset - bottomOffset - AppTheme.Screen.safeAreaBottom
+        let screenWidth = AppTheme.Screen.width
+        
+        // 默认3:4比例
+        let canvasWidth = screenWidth
+        var canvasHeight = canvasWidth * 4.0 / 3.0
+        
+        if canvasHeight > availableHeight {
+            canvasHeight = availableHeight
+        }
+        
+        previewCanvasView.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.centerY.equalTo(topStatusBarView.snp.bottom).offset(availableHeight / 2)
+            make.height.equalTo(canvasHeight)
+        }
+        
+        LMLogger.log("📐 Initial canvas setup - Size: \(canvasWidth)x\(canvasHeight)")
+    }
+    
+    // MARK: - Preview Canvas Management
+    
+    /// 更新预览画布的宽高比（带动画）
+    /// 以屏幕宽度为参照，只调整画布高度
+    func updatePreviewCanvasAspectRatio(_ ratio: LMAspectRatio, animated: Bool = true) {
+        // 如果比例没有变化，不需要更新
+        guard ratio != currentAspectRatio else {
+            LMLogger.log("📐 Aspect ratio unchanged, skipping update")
+            return
+        }
+        
+        currentAspectRatio = ratio
+        
+        // 移除旧的宽高比约束
+        previewCanvasView.snp.removeConstraints()
+        
+        // 计算可用空间
+        let topOffset = AppTheme.Screen.safeAreaTop + 44 // StatusBar高度
+        let bottomOffset: CGFloat = 120 // bottomBarView高度
+        let availableHeight = AppTheme.Screen.height - topOffset - bottomOffset - AppTheme.Screen.safeAreaBottom
+        let screenWidth = AppTheme.Screen.width
+        
+        LMLogger.log("📐 Available space - Width: \(screenWidth), Height: \(availableHeight)")
+        
+        let canvasWidth = screenWidth
+        var canvasHeight: CGFloat
+        switch ratio {
+        case .ratio3_4:
+            canvasHeight = canvasWidth * 4.0 / 3.0
+        case .ratio1_1:
+            canvasHeight = canvasWidth
+        case .ratio9_16:
+            canvasHeight = canvasWidth * 16.0 / 9.0
+        }
+        if canvasHeight > availableHeight {
+            canvasHeight = availableHeight
+            LMLogger.log("⚠️ Canvas height capped to available height: \(availableHeight)")
+        }
+        previewCanvasView.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.centerY.equalTo(topStatusBarView.snp.bottom).offset(availableHeight / 2)
+            make.height.equalTo(canvasHeight)
+        }
+        
+        // 根据参数决定是否使用动画
+        if animated {
+            UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
+                self.view.layoutIfNeeded()
+            }
+        } else {
+            view.layoutIfNeeded()
+        }
+        
+        LMLogger.log("📐 Updated preview canvas to \(ratio.displayName) - Canvas size: \(canvasWidth)x\(canvasHeight)")
     }
     
     // MARK: - Styling
     private func configureDefaultContentAndStyles() {
         view.backgroundColor = UIColor.black
-        
         if #available(iOS 13.0, *) {
             overrideUserInterfaceStyle = .dark
         }
@@ -154,33 +245,28 @@ class LMCameraPage: LMPageWrapper {
         
         switch cameraAuthStatus {
         case .authorized:
-            // 已授权，直接设置相机
             setupCameraSession()
             setDefaultCameraParameters()
             startCameraSession()
             LMLogger.log("✅ Camera permission already granted")
             
         case .notDetermined:
-            // 首次请求权限
             LMLogger.log("📱 Requesting camera permission...")
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 DispatchQueue.main.async {
                     if granted {
                         LMLogger.log("✅ Camera permission granted by user")
-                        // 用户同意授权，设置并启动相机避免黑屏
                         self?.setupCameraSession()
                         self?.setDefaultCameraParameters()
                         self?.startCameraSession()
                     } else {
                         LMLogger.log("❌ Camera permission denied by user")
-                        // 用户拒绝授权，返回上一页
                         self?.handlePermissionDenied()
                     }
                 }
             }
             
         case .denied, .restricted:
-            // 权限被拒绝或受限，提示用户前往设置
             LMLogger.log("❌ Camera permission denied or restricted")
             showPermissionSettingsAlert()
             

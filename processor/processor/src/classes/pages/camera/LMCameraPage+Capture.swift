@@ -139,13 +139,74 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
             return
         }
         
+        // 根据当前选择的宽高比裁剪照片
+        let croppedImage = cropImageToAspectRatio(capturedImage, ratio: currentAspectRatio)
+        
         if isInspireMeCapture {
             isInspireMeCapture = false
-            processInspireMeImage(capturedImage)
+            processInspireMeImage(croppedImage)
         } else {
-            UIImageWriteToSavedPhotosAlbum(capturedImage, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
+            UIImageWriteToSavedPhotosAlbum(croppedImage, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
             LMLogger.log("✅ Photo captured successfully")
         }
+    }
+    
+    /// 根据宽高比裁剪图片
+    private func cropImageToAspectRatio(_ image: UIImage, ratio: LMAspectRatio) -> UIImage {
+        guard let cgImage = image.cgImage else { return image }
+        
+        let imageWidth = CGFloat(cgImage.width)
+        let imageHeight = CGFloat(cgImage.height)
+        
+        var targetWidth: CGFloat
+        var targetHeight: CGFloat
+        
+        switch ratio {
+        case .ratio3_4:
+            // 3:4 比例
+            if imageWidth / imageHeight > 3.0 / 4.0 {
+                // 图片太宽，裁剪宽度
+                targetHeight = imageHeight
+                targetWidth = targetHeight * 3.0 / 4.0
+            } else {
+                // 图片太高，裁剪高度
+                targetWidth = imageWidth
+                targetHeight = targetWidth * 4.0 / 3.0
+            }
+            
+        case .ratio1_1:
+            // 1:1 比例（正方形）
+            let size = min(imageWidth, imageHeight)
+            targetWidth = size
+            targetHeight = size
+            
+        case .ratio9_16:
+            // 9:16 比例
+            if imageWidth / imageHeight > 9.0 / 16.0 {
+                // 图片太宽，裁剪宽度
+                targetHeight = imageHeight
+                targetWidth = targetHeight * 9.0 / 16.0
+            } else {
+                // 图片太高，裁剪高度
+                targetWidth = imageWidth
+                targetHeight = targetWidth * 16.0 / 9.0
+            }
+        }
+        
+        // 计算裁剪区域（居中裁剪）
+        let x = (imageWidth - targetWidth) / 2.0
+        let y = (imageHeight - targetHeight) / 2.0
+        let cropRect = CGRect(x: x, y: y, width: targetWidth, height: targetHeight)
+        
+        // 执行裁剪
+        if let croppedCGImage = cgImage.cropping(to: cropRect) {
+            let croppedImage = UIImage(cgImage: croppedCGImage, scale: image.scale, orientation: image.imageOrientation)
+            LMLogger.log("✂️ Image cropped to \(ratio.displayName) - Original: \(imageWidth)x\(imageHeight), Cropped: \(targetWidth)x\(targetHeight)")
+            return croppedImage
+        }
+        
+        LMLogger.log("⚠️ Failed to crop image, returning original")
+        return image
     }
     
     @objc func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
