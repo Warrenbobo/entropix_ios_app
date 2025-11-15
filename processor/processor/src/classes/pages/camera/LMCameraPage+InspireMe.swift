@@ -92,9 +92,17 @@ extension LMCameraPage {
     func showProcessingOverlay() {
         hideProcessingOverlay()
         
+        // 创建半透明遮罩，但不阻止用户交互
         let overlayView = UIView()
-        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.7)
+        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         overlayView.tag = ViewTag.processingOverlay.rawValue
+        overlayView.isUserInteractionEnabled = false // 遮罩本身不拦截交互
+        
+        // 创建加载指示器容器
+        let indicatorContainer = UIView()
+        indicatorContainer.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        indicatorContainer.layer.cornerRadius = 16
+        indicatorContainer.clipsToBounds = true
         
         let spinner = UIActivityIndicatorView(style: .large)
         spinner.color = .white
@@ -105,30 +113,54 @@ extension LMCameraPage {
         label.textColor = .white
         label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
+        label.numberOfLines = 0
         
-        overlayView.addSubview(spinner)
-        overlayView.addSubview(label)
+        indicatorContainer.addSubview(spinner)
+        indicatorContainer.addSubview(label)
+        overlayView.addSubview(indicatorContainer)
         view.addSubview(overlayView)
         
+        // 布局
         overlayView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
         
+        indicatorContainer.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.equalTo(200)
+            make.height.equalTo(120)
+        }
+        
         spinner.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.centerY.equalToSuperview().offset(-20)
+            make.top.equalToSuperview().offset(24)
         }
         
         label.snp.makeConstraints { make in
             make.top.equalTo(spinner.snp.bottom).offset(16)
-            make.centerX.equalToSuperview()
+            make.leading.trailing.equalToSuperview().inset(16)
+            make.bottom.lessThanOrEqualToSuperview().offset(-16)
         }
         
-        view.isUserInteractionEnabled = false
+        // 添加淡入动画
+        overlayView.alpha = 0
+        UIView.animate(withDuration: 0.2) {
+            overlayView.alpha = 1
+        }
+        
+        // 不禁用整个视图的交互，用户仍然可以操作相机
+        // view.isUserInteractionEnabled = false // ❌ 移除这行
     }
     
     func hideProcessingOverlay() {
-        view.viewWithTag(ViewTag.processingOverlay.rawValue)?.removeFromSuperview()
-        view.isUserInteractionEnabled = true
+        if let overlayView = view.viewWithTag(ViewTag.processingOverlay.rawValue) {
+            // 添加淡出动画
+            UIView.animate(withDuration: 0.2, animations: {
+                overlayView.alpha = 0
+            }) { _ in
+                overlayView.removeFromSuperview()
+            }
+        }
+        // view.isUserInteractionEnabled = true // ❌ 移除这行
     }
 }

@@ -151,6 +151,25 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
         }
     }
     
+    // MARK: - Live Photo Delegate Method
+    func photoOutput(_ output: AVCapturePhotoOutput, 
+                     didFinishProcessingLivePhotoToMovieFileAt outputFileURL: URL, 
+                     duration: CMTime, 
+                     photoDisplayTime: CMTime, 
+                     resolvedSettings: AVCaptureResolvedPhotoSettings, 
+                     error: Error?) {
+        if let error = error {
+            LMLogger.log("❌ Error processing Live Photo movie: \(error)")
+            return
+        }
+        
+        LMLogger.log("✅ Live Photo movie processed successfully at: \(outputFileURL.path)")
+        
+        // 这里可以选择保存Live Photo视频到相册
+        // 目前只记录日志，不做额外处理
+        // 如果需要保存，可以使用 PHPhotoLibrary 来保存 Live Photo
+    }
+    
     /// 根据宽高比裁剪图片
     private func cropImageToAspectRatio(_ image: UIImage, ratio: LMAspectRatio) -> UIImage {
         guard let cgImage = image.cgImage else { return image }

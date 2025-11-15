@@ -41,6 +41,11 @@ class LMCameraPage: LMPageWrapper {
     // MARK: - Preview Canvas Properties
     var currentAspectRatio: LMAspectRatio = .ratio3_4
     var previewCanvasView: UIView!
+    var previewCanvasHeightConstraint: Constraint? // 保存高度约束的引用
+    
+    // MARK: - Bottom Controls Properties
+    var bottomControlsHeightConstraint: Constraint? // 保存底部控制栏高度约束
+    var isShowingSuggestions = false // 是否在显示构图建议状态
     
     // MARK: - Feature Flags
     var isInspireMeCapture = false
@@ -145,7 +150,8 @@ class LMCameraPage: LMPageWrapper {
         cameraBottomControlsView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide)
-            make.height.equalTo(LMCameraConstants.bottomControlsHeight)
+            // 保存高度约束的引用
+            self.bottomControlsHeightConstraint = make.height.equalTo(LMCameraConstants.bottomControlsHeight).constraint
         }
         inspireMeButtonView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
@@ -183,7 +189,8 @@ class LMCameraPage: LMPageWrapper {
         previewCanvasView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.centerY.equalTo(topStatusBarView.snp.bottom).offset(availableHeight / 2)
-            make.height.equalTo(canvasHeight)
+            // 保存高度约束的引用，以便后续更新
+            self.previewCanvasHeightConstraint = make.height.equalTo(canvasHeight).constraint
         }
         
         LMLogger.log("📐 Initial canvas setup - Size: \(canvasWidth)x\(canvasHeight)")
@@ -202,17 +209,15 @@ class LMCameraPage: LMPageWrapper {
         
         currentAspectRatio = ratio
         
-        // 移除旧的宽高比约束
-        previewCanvasView.snp.removeConstraints()
-        
         // 计算可用空间
-        let topOffset = AppTheme.Screen.safeAreaTop + LMCameraConstants.topStatusBarHeight // StatusBar高度
-        let bottomOffset = LMCameraConstants.bottomControlsHeight // bottomBarView高度
+        let topOffset = AppTheme.Screen.safeAreaTop + LMCameraConstants.topStatusBarHeight
+        let bottomOffset = LMCameraConstants.bottomControlsHeight
         let availableHeight = AppTheme.Screen.height - topOffset - bottomOffset - AppTheme.Screen.safeAreaBottom
         let screenWidth = AppTheme.Screen.width
         
         LMLogger.log("📐 Available space - Width: \(screenWidth), Height: \(availableHeight)")
         
+        // 计算新的画布高度
         let canvasWidth = screenWidth
         var canvasHeight: CGFloat
         switch ratio {
@@ -223,21 +228,30 @@ class LMCameraPage: LMPageWrapper {
         case .ratio9_16:
             canvasHeight = canvasWidth * 16.0 / 9.0
         }
+        
+        // 限制最大高度
         if canvasHeight > availableHeight {
             canvasHeight = availableHeight
             LMLogger.log("⚠️ Canvas height capped to available height: \(availableHeight)")
         }
-        previewCanvasView.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview()
-            make.centerY.equalTo(topStatusBarView.snp.bottom).offset(availableHeight / 2)
-            make.height.equalTo(canvasHeight)
-        }
+        
+        // 更新高度约束（不移除其他约束，避免抖动）
+        previewCanvasHeightConstraint?.update(offset: canvasHeight)
         
         // 根据参数决定是否使用动画
         if animated {
-            UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut) {
-                self.view.layoutIfNeeded()
-            }
+            // 使用弹簧动画，提供更平滑的过渡效果
+            UIView.animate(
+                withDuration: 0.35,
+                delay: 0,
+                usingSpringWithDamping: 0.85,
+                initialSpringVelocity: 0.5,
+                options: [.curveEaseInOut, .allowUserInteraction],
+                animations: {
+                    self.view.layoutIfNeeded()
+                },
+                completion: nil
+            )
         } else {
             view.layoutIfNeeded()
         }
@@ -359,6 +373,64 @@ class LMCameraPage: LMPageWrapper {
     @objc func handleUserProfileButtonTapped() {
         LMLogger.log("🔙 Back button tapped")
         navigationController?.popViewController(animated: true)
+    }
+    
+    // MARK: - Bottom Controls State Management
+    
+    /// 进入 Show Suggestions 状态
+    func enterShowSuggestionsState() {
+        guard !isShowingSuggestions else { return }
+        
+        isShowingSuggestions = true
+        
+        // 更新底部控制栏高度为 44
+        bottomControlsHeightConstraint?.update(offset: 44)
+        
+        // 隐藏 Inspire Me 按钮
+        inspireMeButtonView.isHidden = true
+        
+        // 使用弹簧动画
+        UIView.animate(
+            withDuration: 0.35,
+            delay: 0,
+            usingSpringWithDamping: 0.85,
+            initialSpringVelocity: 0.5,
+            options: [.curveEaseInOut, .allowUserInteraction],
+            animations: {
+                self.view.layoutIfNeeded()
+            },
+            completion: nil
+        )
+        
+        LMLogger.log("📐 Entered Show Suggestions state - Bottom controls height: 44")
+    }
+    
+    /// 退出 Show Suggestions 状态
+    func exitShowSuggestionsState() {
+        guard isShowingSuggestions else { return }
+        
+        isShowingSuggestions = false
+        
+        // 恢复底部控制栏高度为 90
+        bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
+        
+        // 显示 Inspire Me 按钮
+        inspireMeButtonView.isHidden = false
+        
+        // 使用弹簧动画
+        UIView.animate(
+            withDuration: 0.35,
+            delay: 0,
+            usingSpringWithDamping: 0.85,
+            initialSpringVelocity: 0.5,
+            options: [.curveEaseInOut, .allowUserInteraction],
+            animations: {
+                self.view.layoutIfNeeded()
+            },
+            completion: nil
+        )
+        
+        LMLogger.log("📐 Exited Show Suggestions state - Bottom controls height: 90")
     }
     
     // MARK: - Utilities

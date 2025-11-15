@@ -3,6 +3,7 @@
 //  processor
 //
 //  Created by muz on 2025/9/20.
+//  合并了设备管理和游客模式功能
 //
 
 import UIKit
@@ -30,6 +31,81 @@ struct LMPackageManager {
     // APP包信息
     static var package: LMPackageModel = LMPackageModel.defaultModel()
     
+    // MARK: - Guest Trial Management (游客模式管理)
+    
+    private static let guestTrialCountKey = "lm_guest_trial_count"
+    private static let guestTrialDeviceIdKey = "lm_guest_trial_device_id"
+    private static let maxGuestTrialCount = 3
+    
+    /// 游客模式剩余次数
+    static var guestTrialCount: Int {
+        get {
+            // 检查设备ID是否匹配，防止重装APP刷新次数
+            if let savedDeviceId = UserDefaults.standard.string(forKey: guestTrialDeviceIdKey),
+               savedDeviceId == deviceId {
+                return UserDefaults.standard.integer(forKey: guestTrialCountKey)
+            }
+            // 新设备，初始化为最大次数
+            return maxGuestTrialCount
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: guestTrialCountKey)
+            UserDefaults.standard.set(deviceId, forKey: guestTrialDeviceIdKey)
+            LMLogger.log("📱 Guest trial count updated: \(newValue)")
+        }
+    }
+    
+    /// 是否有游客试用次数
+    static var hasGuestTrialAvailable: Bool {
+        return guestTrialCount > 0
+    }
+    
+    /// 消耗一次游客试用次数
+    @discardableResult
+    static func consumeGuestTrial() -> Bool {
+        guard hasGuestTrialAvailable else {
+            LMLogger.log("⚠️ No guest trial available")
+            return false
+        }
+        
+        guestTrialCount -= 1
+        LMLogger.log("✅ Guest trial consumed, remaining: \(guestTrialCount)")
+        return true
+    }
+    
+    /// 重置游客试用次数（仅用于测试）
+    static func resetGuestTrial() {
+        guestTrialCount = maxGuestTrialCount
+        LMLogger.log("🔄 Guest trial reset to \(maxGuestTrialCount)")
+    }
+    
+    // MARK: - Device ID Management
+    
+    private static let cachedDeviceIdKey = "lm_cached_device_id"
+    
+    /// 设备唯一标识符（使用 identifierForVendor）
+    static var deviceId: String {
+        // 优先使用 identifierForVendor
+        if let uuid = UIDevice.current.identifierForVendor?.uuidString {
+            return uuid
+        }
+        
+        // 如果获取失败，使用缓存的设备ID
+        if let cachedId = UserDefaults.standard.string(forKey: cachedDeviceIdKey) {
+            return cachedId
+        }
+        
+        // 生成新的UUID并缓存
+        let newId = UUID().uuidString
+        UserDefaults.standard.set(newId, forKey: cachedDeviceIdKey)
+        return newId
+    }
+    
+    /// 获取设备信息
+    static func getDeviceInfo() -> LMDeviceInfo {
+        return LMDeviceInfo.current()
+    }
+    
     /// 切换当前窗口的根视图
     public static func switchWindowSceneContent(_ controller: UIViewController) {
         window?.rootViewController = controller
@@ -41,6 +117,14 @@ struct LMPackageManager {
     public static func setup() {
         loadAppPackageData()
         queryDeviceUUID()
+        loadGuestTrialData()
+    }
+    
+    /// 加载游客试用数据
+    private static func loadGuestTrialData() {
+        let count = guestTrialCount
+        LMLogger.log("📱 Device ID: \(deviceId)")
+        LMLogger.log("📱 Guest trial count: \(count)")
     }
     
     

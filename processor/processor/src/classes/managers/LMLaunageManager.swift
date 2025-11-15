@@ -238,6 +238,8 @@ class LMLaunageManager {
                 signUpSuccess: "账户创建成功",
                 resetLinkSent: "重置链接已发送到您的邮箱",
                 availableWithoutAccount: "无需账户即可使用",
+                sessionExpired: "会话已过期",
+                pleaseSignInAgain: "您的会话已过期，请重新登录",
                 createAccountTitle: "创建账户",
                 createAccountSubtitle: "加入我们，发现您的创造力",
                 appName: "InspireCam",

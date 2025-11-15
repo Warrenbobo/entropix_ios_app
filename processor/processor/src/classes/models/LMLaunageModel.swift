@@ -187,6 +187,15 @@ struct LMAuthTextConfig: Codable {
     var sendResetLink: String = "Send Reset Link"
     var backToSignIn: String = "Back to Sign In"
     
+    // Email Verification
+    var emailVerification: String = "Email Verification"
+    var verifyYourEmail: String = "Verify Your Email"
+    var verificationCodeSent: String = "We've sent a verification code to"
+    var resendCode: String = "Resend Code"
+    var verify: String = "Verify"
+    var verificationCodeResent: String = "Verification code has been resent"
+    var emailVerified: String = "Email verified successfully"
+    
     // Validation
     var emailRequired: String = "Email is required"
     var passwordRequired: String = "Password is required"
@@ -198,6 +207,10 @@ struct LMAuthTextConfig: Codable {
     var signUpSuccess: String = "Account created successfully"
     var resetLinkSent: String = "Reset link sent to your email"
     var availableWithoutAccount: String = "Available Without Account"
+    
+    // Session
+    var sessionExpired: String = "Session Expired"
+    var pleaseSignInAgain: String = "Your session has expired, please sign in again"
     
     // Additional
     var createAccountTitle: String = "Create Account"

@@ -31,6 +31,21 @@ struct LMApi {
         
         /// 用户登出
         static let logout = "/v1/auth/tokens"
+        
+        /// Apple登录/注册
+        static let appleLogin = "/v1/auth/apple"
+        
+        /// 会话验证
+        static let validateSession = "/v1/auth/session/validate"
+        
+        /// 发送邮箱验证码
+        static let sendEmailVerification = "/v1/auth/email/verification/send"
+        
+        /// 验证邮箱验证码
+        static let verifyEmailCode = "/v1/auth/email/verification/verify"
+        
+        /// 重新发送验证邮件
+        static let resendEmailVerification = "/v1/auth/email/verification/resend"
     }
     
     // MARK: - Composition APIs

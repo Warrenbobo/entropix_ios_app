@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Alamofire
 
 class LMUserManager {
     
@@ -58,6 +59,29 @@ class LMUserManager {
         return accessToken != nil && currentUser != nil
     }
     
+    // MARK: - Subscription Info
+    
+    private let subscriptionTypeKey = "lm_subscription_type"
+    private let inspirePointsKey = "lm_inspire_points"
+    
+    var subscriptionType: String? {
+        get {
+            return UserDefaults.standard.string(forKey: subscriptionTypeKey)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: subscriptionTypeKey)
+        }
+    }
+    
+    var inspirePoints: Int {
+        get {
+            return UserDefaults.standard.integer(forKey: inspirePointsKey)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: inspirePointsKey)
+        }
+    }
+    
     // MARK: - Authentication Methods
     
     /// 保存登录信息
@@ -69,11 +93,21 @@ class LMUserManager {
         LMLogger.log("✅ User logged in: \(user.username)")
     }
     
+    /// 保存订阅信息
+    func saveSubscriptionInfo(subscriptionType: String, inspirePoints: Int) {
+        self.subscriptionType = subscriptionType
+        self.inspirePoints = inspirePoints
+        
+        LMLogger.log("✅ Subscription info saved: \(subscriptionType), points: \(inspirePoints)")
+    }
+    
     /// 清除登录信息
     func clearLoginInfo() {
         accessToken = nil
         refreshToken = nil
         currentUser = nil
+        subscriptionType = nil
+        inspirePoints = 0
         
         LMLogger.log("✅ User logged out")
     }
@@ -92,9 +126,8 @@ class LMUserManager {
     }
     
     // MARK: - API Wrapper Methods
-    
-    /// 登录
-    func login(identifier: String, password: String, completion: @escaping (Result<LMUserInfo, Error>) -> Void) {
+    /// 登录（邮箱+密码）
+    func login(identifier: String, password: String, completion: @escaping (Result<LMLoginResponse, Error>) -> Void) {
         LMApiService.shared.login(identifier: identifier, password: password) { [weak self] response in
             if response.requestSuccess, let data = response.value {
                 self?.saveLoginInfo(
@@ -102,7 +135,12 @@ class LMUserManager {
                     refreshToken: data.refreshToken,
                     user: data.user
                 )
-                completion(.success(data.user))
+                // 保存订阅信息和构图次数
+                self?.saveSubscriptionInfo(
+                    subscriptionType: data.subscriptionType,
+                    inspirePoints: data.inspirePoints
+                )
+                completion(.success(data))
             } else {
                 let error = NSError(
                     domain: "UserManager",
@@ -114,9 +152,9 @@ class LMUserManager {
         }
     }
     
-    /// 注册
-    func register(identifier: String, password: String, completion: @escaping (Result<LMUserInfo, Error>) -> Void) {
-        LMApiService.shared.register(identifier: identifier, password: password) { response in
+    /// 注册（邮箱+密码）
+    func register(email: String, password: String, name: String?, completion: @escaping (Result<LMUserRegisterResponse, Error>) -> Void) {
+        LMApiService.shared.register(email: email, password: password, name: name) { response in
             if response.requestSuccess, let data = response.value {
                 completion(.success(data))
             } else {
@@ -124,6 +162,102 @@ class LMUserManager {
                     domain: "UserManager",
                     code: response.code ?? -1,
                     userInfo: [NSLocalizedDescriptionKey: response.message ?? "Registration failed"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Apple登录/注册
+    func appleLogin(uid: String, fullName: String?, email: String?, idToken: String, completion: @escaping (Result<LMAppleLoginResponse, Error>) -> Void) {
+        LMApiService.shared.appleLogin(uid: uid, fullName: fullName, email: email, idToken: idToken) { [weak self] response in
+            if response.requestSuccess, let data = response.value {
+                self?.saveLoginInfo(
+                    accessToken: data.accessToken,
+                    refreshToken: data.refreshToken,
+                    user: data.user
+                )
+                // 保存订阅信息和构图次数
+                self?.saveSubscriptionInfo(
+                    subscriptionType: data.subscriptionType,
+                    inspirePoints: data.inspirePoints
+                )
+                
+                LMLogger.log("✅ Apple login success, isNewUser: \(data.isNewUser)")
+                completion(.success(data))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Apple login failed"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// 发送邮箱验证码
+    func sendEmailVerification(email: String, completion: @escaping (Result<LMEmailVerificationResponse, Error>) -> Void) {
+        LMApiService.shared.sendEmailVerification(email: email) { response in
+            if response.requestSuccess, let data = response.value {
+                completion(.success(data))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Failed to send verification email"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// 验证邮箱验证码
+    func verifyEmailCode(email: String, code: String, completion: @escaping (Result<LMEmailVerificationResponse, Error>) -> Void) {
+        LMApiService.shared.verifyEmailCode(email: email, code: code) { response in
+            if response.requestSuccess, let data = response.value {
+                completion(.success(data))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Email verification failed"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// 重新发送验证邮件
+    func resendEmailVerification(email: String, completion: @escaping (Result<LMEmailVerificationResponse, Error>) -> Void) {
+        LMApiService.shared.resendEmailVerification(email: email) { response in
+            if response.requestSuccess, let data = response.value {
+                completion(.success(data))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Failed to resend verification email"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// 会话验证
+    func validateSession(completion: @escaping (Result<Bool, Error>) -> Void) {
+        LMApiService.shared.validateSession { response in
+            if response.requestSuccess {
+                completion(.success(true))
+            } else {
+                // 会话无效，清理本地登录信息
+                if response.code == 401 {
+                    LMUserManager.shared.clearLoginInfo()
+                }
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Session validation failed"]
                 )
                 completion(.failure(error))
             }

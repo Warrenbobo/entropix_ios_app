@@ -10,4 +10,11 @@ import Foundation
 struct LMUserLoginRequest: Codable {
     let identifier: String
     let password: String
+    let deviceInfo: LMDeviceInfo
+    
+    enum CodingKeys: String, CodingKey {
+        case identifier
+        case password
+        case deviceInfo = "device_info"
+    }
 }

@@ -11,6 +11,7 @@ import SnapKit
 protocol LMInspireMeButtonViewDelegate: AnyObject {
     func inspireMeButtonViewDidTapButton()
     func inspireMeButtonViewDidTapQuestionButton()
+    func inspireMeButtonViewDidTapDisabledButton() // 前摄时点击按钮的回调
 }
 
 class LMInspireMeButtonView: UIView {
@@ -22,6 +23,7 @@ class LMInspireMeButtonView: UIView {
     
     weak var delegate: LMInspireMeButtonViewDelegate?
     private var inspirePoints = 1
+    private var isEnabledForCamera = true // 是否因为相机状态而启用（前摄时为false）
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -32,7 +34,12 @@ class LMInspireMeButtonView: UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        setupInspireButtonGradient()
+        // 根据当前状态设置渐变
+        if isEnabledForCamera {
+            setupInspireButtonGradient()
+        } else {
+            setupDisabledGradient()
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -75,6 +82,7 @@ extension LMInspireMeButtonView {
         
         // 创建第一行容器（Inspire Me + 问号）
         let firstLineContainer = UIView()
+        firstLineContainer.isUserInteractionEnabled = false // 不拦截点击事件
         inspireButton.addSubview(firstLineContainer)
         
         // Inspire Me 文字标签
@@ -83,6 +91,7 @@ extension LMInspireMeButtonView {
         inspireMeLabel.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
         inspireMeLabel.textColor = UIColor.white
         inspireMeLabel.textAlignment = .center
+        inspireMeLabel.isUserInteractionEnabled = false // 不拦截点击事件
         firstLineContainer.addSubview(inspireMeLabel)
         
         // 问号按钮
@@ -96,6 +105,7 @@ extension LMInspireMeButtonView {
         inspirePointsLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         inspirePointsLabel.textColor = UIColor.white.withAlphaComponent(0.9)
         inspirePointsLabel.textAlignment = .center
+        inspirePointsLabel.isUserInteractionEnabled = false // 不拦截点击事件
         inspireButton.addSubview(inspirePointsLabel)
         
         // 布局第一行容器
@@ -140,16 +150,23 @@ extension LMInspireMeButtonView {
     
     private func updateInspireButtonAppearance() {
         inspirePointsLabel.text = "Inspire Point -\(inspirePoints)"
-        // 根据点数更新按钮状态
+        // 根据点数和相机状态更新按钮状态
         let hasPoints = inspirePoints > 0
-        inspireButton.isEnabled = hasPoints
-        inspireButton.alpha = hasPoints ? 1.0 : 0.6
+        let shouldEnable = hasPoints && isEnabledForCamera
+        inspireButton.isEnabled = shouldEnable
+        inspireButton.alpha = shouldEnable ? 1.0 : 0.6
     }
 }
 
 extension LMInspireMeButtonView {
     
     @objc private func handleInspireButtonTapped() {
+        // 如果因为前摄而禁用，通知代理显示提示
+        if !isEnabledForCamera {
+            delegate?.inspireMeButtonViewDidTapDisabledButton()
+            return
+        }
+        
         guard inspirePoints > 0 else { return }
         
         // 添加点击动画
@@ -187,21 +204,50 @@ extension LMInspireMeButtonView {
         return inspirePoints
     }
     
-    /// 设置 Inspire Me 按钮的启用/禁用状态
-    /// - Parameter enabled: true 启用，false 禁用
+    /// 设置 Inspire Me 按钮的启用/禁用状态（基于相机状态）
+    /// - Parameter enabled: true 启用（后摄），false 禁用（前摄）
     func setInspireMeButtonEnabled(_ enabled: Bool) {
-        inspireButton.isEnabled = enabled
-        inspireButton.alpha = enabled ? 1.0 : 0.5
+        isEnabledForCamera = enabled
         
-        // 更新容器的交互状态
-        isUserInteractionEnabled = enabled
+        // 保持按钮可交互，以便显示提示信息
+        isUserInteractionEnabled = true
         
-        // 如果禁用，显示灰色样式
+        // 更新按钮外观
+        updateInspireButtonAppearance()
+        
         if !enabled {
-            inspireButton.backgroundColor = UIColor.gray.withAlphaComponent(0.5)
+            // 禁用状态：使用去饱和的渐变 + 半透明
+            setupDisabledGradient()
+            
+            // 减弱阴影效果
+            inspireButton.layer.shadowOpacity = 0.3
+            inspireButton.layer.shadowColor = UIColor.gray.withAlphaComponent(0.3).cgColor
         } else {
-            // 恢复渐变背景
+            // 启用状态：恢复正常渐变背景
+            inspireButton.backgroundColor = UIColor.clear
             setupInspireButtonGradient()
+            
+            // 恢复阴影效果
+            inspireButton.layer.shadowOpacity = 1.0
+            inspireButton.layer.shadowColor = UIColor(red: 102/255, green: 126/255, blue: 234/255, alpha: 0.6).cgColor
         }
+    }
+    
+    /// 设置禁用状态的渐变背景（去饱和的紫色）
+    private func setupDisabledGradient() {
+        // 移除现有的渐变层
+        inspireButton.layer.sublayers?.removeAll { $0 is CAGradientLayer }
+        
+        // 添加去饱和的渐变背景 - 灰紫色渐变
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            UIColor(red: 150/255, green: 150/255, blue: 160/255, alpha: 0.6).cgColor,
+            UIColor(red: 130/255, green: 130/255, blue: 140/255, alpha: 0.6).cgColor
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        gradientLayer.cornerRadius = 35
+        gradientLayer.frame = inspireButton.bounds
+        inspireButton.layer.insertSublayer(gradientLayer, at: 0)
     }
 }

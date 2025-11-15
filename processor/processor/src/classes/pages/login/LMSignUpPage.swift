@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Toast_Swift
 
 class LMSignUpPage: LMPageWrapper {
     
@@ -504,7 +505,27 @@ extension LMSignUpPage {
         guard let password = passwordInputField.text, !password.isEmpty else {
             return false
         }
-        return password.count >= 8
+        
+        // 密码至少8位
+        guard password.count >= 8 else {
+            return false
+        }
+        
+        // 至少包含一个字母
+        let letterRegex = ".*[A-Za-z]+.*"
+        let letterTest = NSPredicate(format: "SELF MATCHES %@", letterRegex)
+        guard letterTest.evaluate(with: password) else {
+            return false
+        }
+        
+        // 至少包含一个数字
+        let numberRegex = ".*[0-9]+.*"
+        let numberTest = NSPredicate(format: "SELF MATCHES %@", numberRegex)
+        guard numberTest.evaluate(with: password) else {
+            return false
+        }
+        
+        return true
     }
     
     private func validateConfirmPasswordInputField() -> Bool {
@@ -531,6 +552,7 @@ extension LMSignUpPage {
     }
 }
 
+// MARK: - Registration Service Methods
 extension LMSignUpPage {
     
     private func performUserRegistrationWithFormData() {
@@ -538,22 +560,42 @@ extension LMSignUpPage {
             return
         }
         
-        let username = usernameInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let name = usernameInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let email = emailInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let password = passwordInputField.text ?? ""
         
         // 禁用注册按钮，防止重复提交
         updateSignUpButtonEnabledState(false)
         
-        // 模拟网络请求
-        simulateRegistrationNetworkRequest(username: username, email: email, password: password)
+        // 显示加载指示器
+        showLoadingIndicator()
+        
+        // 调用真实的注册API
+        LMUserManager.shared.register(email: email, password: password, name: name) { [weak self] result in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                // 隐藏加载指示器
+                self.hideLoadingIndicator()
+                
+                switch result {
+                case .success(let registerResponse):
+                    LMLogger.log("✅ Registration successful: \(email)")
+                    self.handleSuccessfulRegistrationResponse(email: email, registerResponse: registerResponse)
+                    
+                case .failure(let error):
+                    LMLogger.log("❌ Registration failed: \(error.localizedDescription)")
+                    self.handleRegistrationFailure(error: error)
+                }
+            }
+        }
     }
     
     private func validateAllFormInputsAndShowErrors() -> Bool {
         var isValid = true
         
         if !validateUsernameInputField() {
-            usernameInputField.displayErrorMessageWithText("Username is required")
+            usernameInputField.displayErrorMessageWithText("Username is required (minimum 3 characters)")
             isValid = false
         }
         
@@ -563,7 +605,7 @@ extension LMSignUpPage {
         }
         
         if !validatePasswordInputField() {
-            passwordInputField.displayErrorMessageWithText("Password must be at least 8 characters")
+            passwordInputField.displayErrorMessageWithText("Password must be at least 8 characters with at least one number and one letter")
             isValid = false
         }
         
@@ -580,30 +622,57 @@ extension LMSignUpPage {
         return isValid
     }
     
-    private func simulateRegistrationNetworkRequest(username: String, email: String, password: String) {
-        
-        LMApiClient.request(LMApi.User.register,
-                            method: .post,
-                            params: ["username": usernameInputField.text ?? "",
-                                     "password": passwordInputField.text ?? "",
-                                     "email": emailInputField.text ?? ""],
-                            type: LMUserModel.self) { response in
-            let signInModel = response.value
-            print("-------------sigin user nickname is \(signInModel?.username ?? "")")
-        }
-    }
-    
-    private func handleSuccessfulRegistrationResponse() {
-        print("Registration successful")
+    private func handleSuccessfulRegistrationResponse(email: String, registerResponse: LMUserRegisterResponse) {
+        LMLogger.log("✅ Registration successful, need email verification: \(registerResponse.needEmailVerification)")
         
         // 重新启用注册按钮
         validateFormInputsAndUpdateSignUpButtonState()
         
-        // 导航到主界面或登录页面
-        navigateToMainApplicationInterface()
+        // 根据是否需要邮箱验证来决定下一步操作
+        if registerResponse.needEmailVerification {
+            // 需要邮箱验证，跳转到邮箱验证页面
+            navigateToEmailVerificationPage(email: email)
+        } else {
+            // 不需要邮箱验证（理论上不应该发生，但作为备用）
+            presentRegistrationSuccessAlert()
+        }
+    }
+    
+    private func handleRegistrationFailure(error: Error) {
+        // 重新启用注册按钮
+        validateFormInputsAndUpdateSignUpButtonState()
+        
+        // 显示错误提示
+        let nsError = error as NSError
+        let errorMessage = nsError.localizedDescription
+        
+        presentRegistrationErrorAlert(message: errorMessage)
+    }
+    
+    // MARK: - Loading Indicator
+    
+    private func showLoadingIndicator() {
+        // 禁用按钮交互
+        primarySignUpButton.isEnabled = false
+        primarySignUpButton.setTitle("Creating Account...", for: .normal)
+        
+        // 显示 Toast loading activity
+        view.makeToastActivity(.center)
+    }
+    
+    private func hideLoadingIndicator() {
+        // 恢复按钮状态
+        primarySignUpButton.setTitle(LMText.subscription.kContinue, for: .normal)
+        
+        // 隐藏 Toast loading activity
+        view.hideToastActivity()
+        
+        // 重新验证表单以更新按钮状态
+        validateFormInputsAndUpdateSignUpButtonState()
     }
 }
 
+// MARK: - Navigation Methods
 extension LMSignUpPage {
     
     private func presentTermsAndConditionsViewController() {
@@ -615,16 +684,45 @@ extension LMSignUpPage {
         navigationController?.popViewController(animated: true)
     }
     
-    private func navigateToMainApplicationInterface() {
-        if let mainRootPage = AppTheme.Screen.mainPage {
-            AppTheme.Screen.window()?.rootViewController = mainRootPage
-        }
+    private func navigateToEmailVerificationPage(email: String) {
+        let emailVerificationVC = LMEmailVerificationPage(email: email)
+        let navController = UINavigationController(rootViewController: emailVerificationVC)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true)
     }
     
     private func presentTermsAgreementRequiredAlert() {
         let alertController = UIAlertController(
             title: "Terms Agreement Required",
             message: "Please agree to the terms and conditions to continue.",
+            preferredStyle: .alert
+        )
+        
+        let okAction = UIAlertAction(title: "OK", style: .default)
+        alertController.addAction(okAction)
+        
+        present(alertController, animated: true)
+    }
+    
+    private func presentRegistrationSuccessAlert() {
+        let alertController = UIAlertController(
+            title: LMText.auth.signUpSuccess,
+            message: "Your account has been created successfully. Please check your email to verify your account.",
+            preferredStyle: .alert
+        )
+        
+        let okAction = UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+            self?.navigateToLoginViewController()
+        }
+        alertController.addAction(okAction)
+        
+        present(alertController, animated: true)
+    }
+    
+    private func presentRegistrationErrorAlert(message: String) {
+        let alertController = UIAlertController(
+            title: "Registration Failed",
+            message: message,
             preferredStyle: .alert
         )
         

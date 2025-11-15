@@ -48,6 +48,14 @@
 		EA56DDE12EC091B1000AB522 /* EmptyResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC12EC091B1000AB522 /* EmptyResponse.swift */; };
 		EA56DDE72EC091BD000AB522 /* LMApiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDE32EC091BD000AB522 /* LMApiService.swift */; };
 		EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */; };
+		EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */; };
+		EA6019392EC877620067F2F7 /* LMSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019372EC877620067F2F7 /* LMSessionManager.swift */; };
+		EA6019402EC8778B0067F2F7 /* SuggestionItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193E2EC8778B0067F2F7 /* SuggestionItem.swift */; };
+		EA6019412EC8778B0067F2F7 /* LMEmailVerificationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193D2EC8778B0067F2F7 /* LMEmailVerificationRequest.swift */; };
+		EA6019422EC8778B0067F2F7 /* TaskStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */; };
+		EA6019432EC8778B0067F2F7 /* LMAppleLoginRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193B2EC8778B0067F2F7 /* LMAppleLoginRequest.swift */; };
+		EA6019442EC8778B0067F2F7 /* LMDeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193C2EC8778B0067F2F7 /* LMDeviceInfo.swift */; };
+		EA6019462EC877C20067F2F7 /* LMEmailVerificationPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019452EC877C20067F2F7 /* LMEmailVerificationPage.swift */; };
 		EA8629A32EB5A13F00F2B00E /* EVA02.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */; };
 		EA8629A52EB5A15800F2B00E /* LMImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */; };
 		EA8629A72EB5B16300F2B00E /* LMProfileDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */; };
@@ -162,6 +170,14 @@
 		EA56DDCF2EC091B1000AB522 /* LMUserRegisterRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserRegisterRequest.swift; sourceTree = "<group>"; };
 		EA56DDE32EC091BD000AB522 /* LMApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiService.swift; sourceTree = "<group>"; };
 		EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeButtonView.swift; sourceTree = "<group>"; };
+		EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppleAuthManager.swift; sourceTree = "<group>"; };
+		EA6019372EC877620067F2F7 /* LMSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSessionManager.swift; sourceTree = "<group>"; };
+		EA60193B2EC8778B0067F2F7 /* LMAppleLoginRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppleLoginRequest.swift; sourceTree = "<group>"; };
+		EA60193C2EC8778B0067F2F7 /* LMDeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDeviceInfo.swift; sourceTree = "<group>"; };
+		EA60193D2EC8778B0067F2F7 /* LMEmailVerificationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEmailVerificationRequest.swift; sourceTree = "<group>"; };
+		EA60193E2EC8778B0067F2F7 /* SuggestionItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionItem.swift; sourceTree = "<group>"; };
+		EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskStatus.swift; sourceTree = "<group>"; };
+		EA6019452EC877C20067F2F7 /* LMEmailVerificationPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEmailVerificationPage.swift; sourceTree = "<group>"; };
 		EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = EVA02.mlpackage; sourceTree = "<group>"; };
 		EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMImageProcessor.swift; sourceTree = "<group>"; };
 		EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileDisplayView.swift; sourceTree = "<group>"; };
@@ -306,6 +322,8 @@
 		EACA1CCF2E7E49B600C80883 /* managers */ = {
 			isa = PBXGroup;
 			children = (
+				EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */,
+				EA6019372EC877620067F2F7 /* LMSessionManager.swift */,
 				EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */,
 				EA56DDA02EC08078000AB522 /* LMPersonDetectionManager.swift */,
 				EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */,
@@ -321,6 +339,11 @@
 		EACA1CD12E7E49B600C80883 /* models */ = {
 			isa = PBXGroup;
 			children = (
+				EA60193B2EC8778B0067F2F7 /* LMAppleLoginRequest.swift */,
+				EA60193C2EC8778B0067F2F7 /* LMDeviceInfo.swift */,
+				EA60193D2EC8778B0067F2F7 /* LMEmailVerificationRequest.swift */,
+				EA60193E2EC8778B0067F2F7 /* SuggestionItem.swift */,
+				EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */,
 				EA56DDC02EC091B1000AB522 /* BoundingBox.swift */,
 				EA56DDC12EC091B1000AB522 /* EmptyResponse.swift */,
 				EA56DDC22EC091B1000AB522 /* LMChangePasswordRequest.swift */,
@@ -459,6 +482,7 @@
 		EACA1D022E7E4ADD00C80883 /* entrance */ = {
 			isa = PBXGroup;
 			children = (
+				EA6019452EC877C20067F2F7 /* LMEmailVerificationPage.swift */,
 				EACA1CD22E7E49B600C80883 /* LMMainRootPage.swift */,
 				EACA1D032E7E4B0A00C80883 /* LMLaunchSplashPage.swift */,
 				EAFBACAA2E7E72BC00586EC7 /* LMNewInstallerPage.swift */,
@@ -729,6 +753,7 @@
 				EAFBACC12E87DE4E00586EC7 /* LMCameraGridOverlayView.swift in Sources */,
 				EACA1CFB2E7E49B600C80883 /* AppConfigs.swift in Sources */,
 				EAFBAC992E7E5A0800586EC7 /* LMMineUserInfoView.swift in Sources */,
+				EA6019462EC877C20067F2F7 /* LMEmailVerificationPage.swift in Sources */,
 				EA56DDD22EC091B1000AB522 /* LMCompositionSuggestionsResponse.swift in Sources */,
 				EA56DDD32EC091B1000AB522 /* LMConfirmSuggestionRequest.swift in Sources */,
 				EA56DDD42EC091B1000AB522 /* LMRefreshTokenResponse.swift in Sources */,
@@ -778,6 +803,13 @@
 				EAFBACA42E7E695100586EC7 /* LMMembershipCardView.swift in Sources */,
 				EAFBACC62E8F69D100586EC7 /* LMUserProfileModel.swift in Sources */,
 				EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */,
+				EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */,
+				EA6019392EC877620067F2F7 /* LMSessionManager.swift in Sources */,
+				EA6019402EC8778B0067F2F7 /* SuggestionItem.swift in Sources */,
+				EA6019412EC8778B0067F2F7 /* LMEmailVerificationRequest.swift in Sources */,
+				EA6019422EC8778B0067F2F7 /* TaskStatus.swift in Sources */,
+				EA6019432EC8778B0067F2F7 /* LMAppleLoginRequest.swift in Sources */,
+				EA6019442EC8778B0067F2F7 /* LMDeviceInfo.swift in Sources */,
 				EACA1D042E7E4B0A00C80883 /* LMLaunchSplashPage.swift in Sources */,
 				EACA1D0A2E7E4EE900C80883 /* LMLogger.swift in Sources */,
 				EAFBAD852E9393E400586EC7 /* LMLanguagePage.swift in Sources */,

@@ -43,6 +43,12 @@ extension LMCameraPage {
             if captureSession.canAddInput(input) {
                 captureSession.addInput(input)
                 currentCameraDevice = backCamera
+                isUsingFrontCamera = false // 确保初始状态为后摄
+                
+                // 初始化时更新Inspire Me按钮状态
+                DispatchQueue.main.async { [weak self] in
+                    self?.updateInspireMeButtonState()
+                }
             }
         } catch {
             LMLogger.log("❌ Error setting up camera input: \(error)")

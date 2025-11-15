@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 import AuthenticationServices
+import Toast_Swift
 
 class LMSignInPage: LMPageWrapper {
     
@@ -393,10 +394,7 @@ extension LMSignInPage {
 extension LMSignInPage: LMValidatedInputFieldDelegate {
     
     func validatedInputFieldDidChangeText(_ inputField: LMValidatedInputField, text: String) {
-        // 清除之前的错误信息
         inputField.clearErrorMessageDisplay()
-        
-        // 实时验证并更新按钮状态
         validateFormInputsAndUpdateSignInButtonState()
     }
     
@@ -473,54 +471,108 @@ extension LMSignInPage {
         // 验证表单输入
         let isUsernameValid = validateUsernameInputField()
         let isPasswordValid = validatePasswordInputField()
-        
         guard isUsernameValid && isPasswordValid else {
             presentInvalidCredentialsAlert()
             return
         }
-        
-        let username = usernameInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let identifier = usernameInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let password = passwordInputField.text ?? ""
-        
-        // 禁用登录按钮，防止重复提交
         updateSignInButtonEnabledState(false)
-        
-        // 模拟网络请求
-        simulateAuthenticationNetworkRequest(username: username, password: password)
-    }
-    
-    private func simulateAuthenticationNetworkRequest(username: String, password: String) {
-        print("Authenticating user: \(username)")
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            // 模拟登录成功
-            self.handleSuccessfulAuthenticationResponse()
+        showLoadingIndicator()
+        LMUserManager.shared.login(identifier: identifier, password: password) { [weak self] result in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                self.hideLoadingIndicator()
+                switch result {
+                case .success(let loginResponse):
+                    LMLogger.log("✅ Login successful: \(loginResponse.user.username)")
+                    self.handleSuccessfulAuthenticationResponse(loginResponse: loginResponse)
+                case .failure(let error):
+                    LMLogger.log("❌ Login failed: \(error.localizedDescription)")
+                    self.handleAuthenticationFailure(error: error)
+                }
+            }
         }
     }
     
-    private func handleSuccessfulAuthenticationResponse() {
-        print("Authentication successful")
-        
-        // 重新启用登录按钮
+    // 登录成功
+    private func handleSuccessfulAuthenticationResponse(loginResponse: LMLoginResponse) {
+        LMLogger.log("✅ Authentication successful")
         validateFormInputsAndUpdateSignInButtonState()
-        
-        // 导航到主界面
         navigateToMainApplicationInterface()
     }
     
+    // 登录失败
+    private func handleAuthenticationFailure(error: Error) {
+        // 重新启用登录按钮
+        validateFormInputsAndUpdateSignInButtonState()
+        
+        // 显示错误提示
+        let nsError = error as NSError
+        let errorMessage = nsError.localizedDescription
+        
+        presentAuthenticationErrorAlert(message: errorMessage)
+    }
+    
     private func initiateAppleSignInAuthenticationProcess() {
-        print("Initiating Apple Sign In process")
+        LMLogger.log("🍎 Initiating Apple Sign In process")
         
         // 禁用Apple登录按钮
         appleSignInButton.isEnabled = false
         appleSignInButton.alpha = 0.6
         
-        // 模拟Apple登录
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.handleSuccessfulAuthenticationResponse()
-            self.appleSignInButton.isEnabled = true
-            self.appleSignInButton.alpha = 1.0
+        // 使用 LMAppleAuthManager 进行 Apple 登录
+        LMAppleAuthManager.shared.signInWithApple(presentingViewController: self) { [weak self] result in
+            guard let self = self else { return }
+            
+            DispatchQueue.main.async {
+                // 重新启用Apple登录按钮
+                self.appleSignInButton.isEnabled = true
+                self.appleSignInButton.alpha = 1.0
+                
+                switch result {
+                case .success(let appleLoginResponse):
+                    LMLogger.log("✅ Apple login successful")
+                    self.handleSuccessfulAppleAuthenticationResponse(appleLoginResponse: appleLoginResponse)
+                    
+                case .failure(let error):
+                    LMLogger.log("❌ Apple login failed: \(error.localizedDescription)")
+                    // 如果用户取消登录，不显示错误提示
+                    if (error as NSError).code != 1001 {
+                        self.presentAuthenticationErrorAlert(message: error.localizedDescription)
+                    }
+                }
+            }
         }
+    }
+    
+    private func handleSuccessfulAppleAuthenticationResponse(appleLoginResponse: LMAppleLoginResponse) {
+        LMLogger.log("✅ Apple authentication successful")
+        
+        // 导航到主界面
+        navigateToMainApplicationInterface()
+    }
+    
+    // MARK: - Loading Indicator
+    
+    private func showLoadingIndicator() {
+        // 禁用按钮交互
+        primarySignInButton.isEnabled = false
+        primarySignInButton.setTitle("Signing in...", for: .normal)
+        
+        // 显示 Toast loading activity
+        view.makeToastActivity(.center)
+    }
+    
+    private func hideLoadingIndicator() {
+        // 恢复按钮文本
+        primarySignInButton.setTitle(LMText.auth.signIn, for: .normal)
+        
+        // 隐藏 Toast loading activity
+        view.hideToastActivity()
+        
+        // 重新验证表单以更新按钮状态
+        validateFormInputsAndUpdateSignInButtonState()
     }
 }
 
@@ -538,12 +590,7 @@ extension LMSignInPage {
     }
     
     private func navigateToMainApplicationInterface() {
-        let userModel = LMUserModel(userId: "1314125",
-                                    username: "HHHHaaa",
-                                    email: "leonardwork@163.com",
-                                    membership: "0")
-        LMUserManager.userModel = userModel
-        LMUserManager.cachedUserModelData()
+        // 跳转到主界面
         let mainPage = LMNavigationWrapper(rootViewController: LMMinePage())
         AppTheme.Screen.window()?.rootViewController = mainPage
     }
@@ -552,6 +599,19 @@ extension LMSignInPage {
         let alertController = UIAlertController(
             title: "Invalid Credentials",
             message: "Please check your username and password.",
+            preferredStyle: .alert
+        )
+        
+        let okAction = UIAlertAction(title: "OK", style: .default)
+        alertController.addAction(okAction)
+        
+        present(alertController, animated: true)
+    }
+    
+    private func presentAuthenticationErrorAlert(message: String) {
+        let alertController = UIAlertController(
+            title: "Sign In Failed",
+            message: message,
             preferredStyle: .alert
         )
         

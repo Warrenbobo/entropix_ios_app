@@ -169,4 +169,20 @@ extension LMCameraPage: LMInspireMeButtonViewDelegate {
         
         present(alertController, animated: true)
     }
+    
+    func inspireMeButtonViewDidTapDisabledButton() {
+        LMLogger.log("⚠️ Inspire Me button tapped while using front camera")
+        
+        // 显示前摄不可用提示
+        let alertController = UIAlertController(
+            title: "Inspire Me",
+            message: "Inspire Me not available on front camera. Please switch to back camera to use this feature.",
+            preferredStyle: .alert
+        )
+        
+        let okAction = UIAlertAction(title: "OK", style: .default)
+        alertController.addAction(okAction)
+        
+        present(alertController, animated: true)
+    }
 }
