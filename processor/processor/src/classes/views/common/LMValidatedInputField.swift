@@ -190,7 +190,7 @@ extension LMValidatedInputField {
         errorMessageLabel.snp.makeConstraints { make in
             make.top.equalTo(textField.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview()
+            make.bottom.equalToSuperview().priority(.high)  // 降低优先级，避免与 height 冲突
             errorMessageHeightConstraint = make.height.equalTo(0).constraint
         }
     }

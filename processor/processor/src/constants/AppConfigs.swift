@@ -18,7 +18,7 @@ struct AppConfigs {
             return release
 #endif
         }
-        static let mvpTest = "http://47.111.152.147:8888/v1"
+        static let mvpTest = "http://47.111.152.147:8888"
         
         static let release = ""
     }

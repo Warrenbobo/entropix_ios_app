@@ -75,12 +75,12 @@ class LMApiService {
             "full_name": fullName ?? "",
             "email": email ?? "",
             "id_token": idToken,
-            "device_info": [
-                "device_id": deviceInfo.deviceId,
-                "device_model": deviceInfo.deviceModel,
-                "system_version": deviceInfo.systemVersion,
-                "app_version": deviceInfo.appVersion
-            ]
+//            "device_info": [
+//                "device_id": deviceInfo.deviceId,
+//                "device_model": deviceInfo.deviceModel,
+//                "system_version": deviceInfo.systemVersion,
+//                "app_version": deviceInfo.appVersion
+//            ]
         ]
         
         LMApiClient.request(

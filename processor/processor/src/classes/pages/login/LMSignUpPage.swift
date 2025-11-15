@@ -563,21 +563,12 @@ extension LMSignUpPage {
         let name = usernameInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let email = emailInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let password = passwordInputField.text ?? ""
-        
-        // 禁用注册按钮，防止重复提交
         updateSignUpButtonEnabledState(false)
-        
-        // 显示加载指示器
         showLoadingIndicator()
-        
-        // 调用真实的注册API
         LMUserManager.shared.register(email: email, password: password, name: name) { [weak self] result in
             guard let self = self else { return }
-            
             DispatchQueue.main.async {
-                // 隐藏加载指示器
                 self.hideLoadingIndicator()
-                
                 switch result {
                 case .success(let registerResponse):
                     LMLogger.log("✅ Registration successful: \(email)")

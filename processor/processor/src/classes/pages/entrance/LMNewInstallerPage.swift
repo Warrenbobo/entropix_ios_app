@@ -132,7 +132,7 @@ extension LMNewInstallerPage {
         welcomeView.configureAuthenticationButtonsEnabled(false)
         
         // 使用 LMAppleAuthManager 处理 Apple 登录
-        LMAppleAuthManager.shared.signInWithApple(presentingViewController: self) { [weak self] result in
+        LMAppleAuthManager.shared.signInWithApple { [weak self] result in
             guard let self = self else { return }
             
             // 重新启用认证按钮

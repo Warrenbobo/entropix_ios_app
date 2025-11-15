@@ -20,8 +20,10 @@ class LMAppleAuthManager: NSObject {
     // MARK: - Public Methods
     
     /// 发起Apple登录
-    func signInWithApple(presentingViewController: UIViewController, completion: @escaping (Result<LMAppleLoginResponse, Error>) -> Void) {
+    func signInWithApple(completion: @escaping (Result<LMAppleLoginResponse, Error>) -> Void) {
         self.completion = completion
+        
+        LMLogger.log("🍎 Starting Apple Sign In process...")
         
         let appleIDProvider = ASAuthorizationAppleIDProvider()
         let request = appleIDProvider.createRequest()
@@ -30,6 +32,8 @@ class LMAppleAuthManager: NSObject {
         let authorizationController = ASAuthorizationController(authorizationRequests: [request])
         authorizationController.delegate = self
         authorizationController.presentationContextProvider = self
+        
+        LMLogger.log("🍎 Performing authorization requests...")
         authorizationController.performRequests()
         
         LMLogger.log("🍎 Apple Sign In initiated")
@@ -53,7 +57,10 @@ class LMAppleAuthManager: NSObject {
 extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
     
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+        LMLogger.log("🍎 Authorization completed successfully")
+        
         guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            LMLogger.log("❌ Invalid Apple ID credential")
             let error = NSError(
                 domain: "AppleAuthManager",
                 code: -1,
@@ -66,7 +73,6 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
         let userID = appleIDCredential.user
         let fullName = appleIDCredential.fullName
         let email = appleIDCredential.email
-        
         // 获取 ID Token
         guard let identityTokenData = appleIDCredential.identityToken,
               let identityToken = String(data: identityTokenData, encoding: .utf8) else {
@@ -78,7 +84,6 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
             completion?(.failure(error))
             return
         }
-        
         // 构建完整姓名
         var fullNameString: String?
         if let fullName = fullName {
@@ -87,12 +92,10 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
                 fullNameString = components.joined(separator: " ")
             }
         }
-        
         LMLogger.log("🍎 Apple Sign In success")
         LMLogger.log("   User ID: \(userID)")
         LMLogger.log("   Full Name: \(fullNameString ?? "nil")")
         LMLogger.log("   Email: \(email ?? "nil")")
-        
         // 调用后端API
         LMUserManager.shared.appleLogin(
             uid: userID,
@@ -132,9 +135,6 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
 extension LMAppleAuthManager: ASAuthorizationControllerPresentationContextProviding {
     
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        guard let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) else {
-            return UIWindow()
-        }
-        return window
+        return LMPackageManager.window!
     }
 }

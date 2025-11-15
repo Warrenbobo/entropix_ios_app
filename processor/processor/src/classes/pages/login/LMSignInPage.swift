@@ -13,35 +13,30 @@ import Toast_Swift
 class LMSignInPage: LMPageWrapper {
     
     private let scrollView = UIScrollView()
-    private let contentStackView = UIStackView()
+    private let contentView = UIView()  // 改为普通 UIView
     
     // 顶部品牌区域
-    private let brandingSectionView = UIView()
     private let appIconImageView = UIImageView()
     private let appNameLabel = UILabel()
     private let appTaglineLabel = UILabel()
     
     // 登录表单区域
-    private let loginFormSectionView = UIView()
     private let usernameInputField = LMValidatedInputField()
     private let passwordInputField = LMValidatedInputField()
     private let forgotPasswordButton = UIButton()
     
-    // 登录按钮区域
-    private let signInButtonSectionView = UIView()
+    // 登录按钮
     private let primarySignInButton = UIButton()
     
-    // 分隔符区域
-    private let separatorSectionView = UIView()
+    // 分隔符
+    private let separatorView = UIView()
     private let separatorLabel = UILabel()
     
-    // Apple登录区域
-    private let appleSignInSectionView = UIView()
+    // Apple登录按钮
     private let appleSignInButton = ASAuthorizationAppleIDButton(type: .default,
                                                                  style: .black)
     
-    // 注册提示区域
-    private let signUpPromptSectionView = UIView()
+    // 注册提示
     private let signUpPromptLabel = UILabel()
     
     override func viewDidLoad() {
@@ -63,38 +58,34 @@ class LMSignInPage: LMPageWrapper {
 extension LMSignInPage {
     
     private func setupUserInterfaceComponents() {
-        setupScrollViewAndContentStack()
-        setupBrandingSectionComponents()
-        setupLoginFormSectionComponents()
-        setupSignInButtonSectionComponents()
-        setupSeparatorSectionComponents()
-        setupAppleSignInSectionComponents()
-        setupSignUpPromptSectionComponents()
+        setupScrollViewAndContentView()
+        setupBrandingComponents()
+        setupLoginFormComponents()
+        setupSignInButtonComponent()
+        setupSeparatorComponents()
+        setupAppleSignInComponent()
+        setupSignUpPromptComponent()
     }
     
-    private func setupScrollViewAndContentStack() {
+    private func setupScrollViewAndContentView() {
         view.addSubview(scrollView)
-        scrollView.addSubview(contentStackView)
+        scrollView.addSubview(contentView)
         
-        contentStackView.axis = .vertical
-        contentStackView.spacing = 32
-        contentStackView.alignment = .fill
-        contentStackView.distribution = .fill
-        
-        // 添加所有主要区域到堆栈视图
-        contentStackView.addArrangedSubview(brandingSectionView)
-        contentStackView.addArrangedSubview(loginFormSectionView)
-        contentStackView.addArrangedSubview(signInButtonSectionView)
-        contentStackView.addArrangedSubview(separatorSectionView)
-        contentStackView.addArrangedSubview(appleSignInSectionView)
-        contentStackView.addArrangedSubview(signUpPromptSectionView)
+        // 直接添加所有组件到 contentView
+        contentView.addSubview(appIconImageView)
+        contentView.addSubview(appNameLabel)
+        contentView.addSubview(appTaglineLabel)
+        contentView.addSubview(usernameInputField)
+        contentView.addSubview(passwordInputField)
+        contentView.addSubview(forgotPasswordButton)
+        contentView.addSubview(primarySignInButton)
+        contentView.addSubview(separatorView)
+        contentView.addSubview(separatorLabel)
+        contentView.addSubview(appleSignInButton)
+        contentView.addSubview(signUpPromptLabel)
     }
     
-    private func setupBrandingSectionComponents() {
-        brandingSectionView.addSubview(appIconImageView)
-        brandingSectionView.addSubview(appNameLabel)
-        brandingSectionView.addSubview(appTaglineLabel)
-        
+    private func setupBrandingComponents() {
         // 应用图标设置
         appIconImageView.image = UIImage(named: "app_logo_transparent_bg")
         
@@ -113,10 +104,7 @@ extension LMSignInPage {
         appTaglineLabel.numberOfLines = 0
     }
     
-    private func setupLoginFormSectionComponents() {
-        loginFormSectionView.addSubview(usernameInputField)
-        loginFormSectionView.addSubview(passwordInputField)
-        loginFormSectionView.addSubview(forgotPasswordButton)
+    private func setupLoginFormComponents() {
         
         // 配置用户名输入框（不显示标题）
         usernameInputField.configureInputFieldProperties(
@@ -146,8 +134,7 @@ extension LMSignInPage {
         forgotPasswordButton.addTarget(self, action: #selector(handleForgotPasswordButtonTapped), for: .touchUpInside)
     }
     
-    private func setupSignInButtonSectionComponents() {
-        signInButtonSectionView.addSubview(primarySignInButton)
+    private func setupSignInButtonComponent() {
         
         // 主要登录按钮设置
         primarySignInButton.setTitle(LMText.auth.signIn, for: .normal)
@@ -161,9 +148,8 @@ extension LMSignInPage {
         addTouchFeedbackEffectToButton(primarySignInButton)
     }
     
-    private func setupSeparatorSectionComponents() {
-        separatorSectionView.backgroundColor = .hexColor("#EEEEEE")
-        separatorSectionView.addSubview(separatorLabel)
+    private func setupSeparatorComponents() {
+        separatorView.backgroundColor = .hexColor("#EEEEEE")
         
         separatorLabel.backgroundColor = .white
         separatorLabel.text = LMText.auth.or
@@ -172,14 +158,12 @@ extension LMSignInPage {
         separatorLabel.textAlignment = .center
     }
     
-    private func setupAppleSignInSectionComponents() {
-        appleSignInSectionView.addSubview(appleSignInButton)
-        // Apple登录按钮设置
+    private func setupAppleSignInComponent() {
+        // 添加事件监听
         appleSignInButton.addTarget(self, action: #selector(handleAppleSignInButtonTapped), for: .touchUpInside)
     }
     
-    private func setupSignUpPromptSectionComponents() {
-        signUpPromptSectionView.addSubview(signUpPromptLabel)
+    private func setupSignUpPromptComponent() {
         
         let attributedText = NSMutableAttributedString(
             string: "Don't have an account? Sign up",
@@ -202,7 +186,6 @@ extension LMSignInPage {
     }
     
 
-    
     private func addTouchFeedbackEffectToButton(_ button: UIButton) {
         button.addTarget(self, action: #selector(handleButtonTouchDownAnimation(_:)), for: .touchDown)
         button.addTarget(self, action: #selector(handleButtonTouchUpAnimation(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
@@ -226,7 +209,7 @@ extension LMSignInPage {
             make.edges.equalToSuperview()
         }
         
-        contentStackView.snp.makeConstraints { make in
+        contentView.snp.makeConstraints { make in
             make.edges.equalToSuperview().inset(24)
             make.width.equalTo(scrollView).offset(-48)
         }
@@ -250,13 +233,12 @@ extension LMSignInPage {
             make.centerX.equalToSuperview()
             make.top.equalTo(appNameLabel.snp.bottom).offset(12)
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-24)
         }
     }
     
     private func configureLoginFormSectionConstraints() {
         usernameInputField.snp.makeConstraints { make in
-            make.top.equalToSuperview()
+            make.top.equalTo(appTaglineLabel.snp.bottom).offset(40)
             make.leading.trailing.equalToSuperview()
         }
         
@@ -269,39 +251,42 @@ extension LMSignInPage {
             make.top.equalTo(passwordInputField.snp.bottom).offset(16)
             make.trailing.equalToSuperview()
             make.height.equalTo(30)
-            make.bottom.equalToSuperview()
         }
     }
     
     private func configureSignInButtonSectionConstraints() {
         primarySignInButton.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.top.equalTo(forgotPasswordButton.snp.bottom).offset(24)
+            make.leading.trailing.equalToSuperview()
             make.height.equalTo(50)
         }
     }
     
     private func configureSeparatorSectionConstraints() {
-        separatorSectionView.snp.makeConstraints { make in
+        separatorView.snp.makeConstraints { make in
+            make.top.equalTo(primarySignInButton.snp.bottom).offset(30)
+            make.leading.trailing.equalToSuperview()
             make.height.equalTo(1)
-            make.leading.equalToSuperview()
-            make.trailing.equalToSuperview()
         }
         separatorLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+            make.center.equalTo(separatorView)
             make.width.equalTo(80)
         }
     }
     
     private func configureAppleSignInSectionConstraints() {
         appleSignInButton.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-            make.height.equalTo(48)
+            make.top.equalTo(separatorView.snp.bottom).offset(30)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(50)
         }
     }
     
     private func configureSignUpPromptSectionConstraints() {
         signUpPromptLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.top.equalTo(appleSignInButton.snp.bottom).offset(30)
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview().offset(-20)
         }
     }
 }
@@ -327,6 +312,7 @@ extension LMSignInPage {
     
     private func configureKeyboardDismissalBehavior() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleViewTappedToDismissKeyboard))
+        tapGesture.cancelsTouchesInView = false  // 关键：不取消其他视图的触摸事件
         view.addGestureRecognizer(tapGesture)
     }
     
@@ -356,7 +342,7 @@ extension LMSignInPage {
     }
     
     @objc private func handleAppleSignInButtonTapped() {
-        print("Apple sign in button tapped")
+        LMLogger.log("🍎 ========== Apple sign in button tapped ==========")
         initiateAppleSignInAuthenticationProcess()
     }
     
@@ -521,8 +507,8 @@ extension LMSignInPage {
         appleSignInButton.isEnabled = false
         appleSignInButton.alpha = 0.6
         
-        // 使用 LMAppleAuthManager 进行 Apple 登录
-        LMAppleAuthManager.shared.signInWithApple(presentingViewController: self) { [weak self] result in
+        // 使用 LMAppleAuthManager 进行 Apple 登录，传递 presentingViewController
+        LMAppleAuthManager.shared.signInWithApple { [weak self] result in
             guard let self = self else { return }
             
             DispatchQueue.main.async {
@@ -645,6 +631,10 @@ extension LMSignInPage {
         passwordInputField.clearErrorMessageDisplay()
         
         validateFormInputsAndUpdateSignInButtonState()
+        view.endEditing(true)
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         view.endEditing(true)
     }
 }

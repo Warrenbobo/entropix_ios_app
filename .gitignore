@@ -37,8 +37,12 @@ CocoaPods
 # you should judge for yourself, the pros and cons are mentioned at:
 # https://guides.cocoapods.org/using/using-cocoapods.html#should-i-check-the-pods-directory-into-source-control
 #
+# Ignore all Pods directories
 Pods/
-#
+
+# Ignore Podfile.lock to avoid merge conflicts (optional, comment out if you want to track it)
+# Podfile.lock
+
 # Add this line if you want to avoid checking in source code from the Xcode workspace
 *.xcworkspace
 
