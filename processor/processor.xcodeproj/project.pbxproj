@@ -35,7 +35,6 @@
 		EA56DDD52EC091B1000AB522 /* LMConfirmSuggestionResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC92EC091B1000AB522 /* LMConfirmSuggestionResponse.swift */; };
 		EA56DDD72EC091B1000AB522 /* LMCompositionResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC32EC091B1000AB522 /* LMCompositionResult.swift */; };
 		EA56DDD82EC091B1000AB522 /* LMCompositionResultsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC42EC091B1000AB522 /* LMCompositionResultsResponse.swift */; };
-		EA56DDD92EC091B1000AB522 /* LMUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDCD2EC091B1000AB522 /* LMUserInfo.swift */; };
 		EA56DDDA2EC091B1000AB522 /* BoundingBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC02EC091B1000AB522 /* BoundingBox.swift */; };
 		EA56DDDB2EC091B1000AB522 /* LMLoginResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDCA2EC091B1000AB522 /* LMLoginResponse.swift */; };
 		EA56DDDE2EC091B1000AB522 /* LMUserRegisterResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDCF2EC091B1000AB522 /* LMUserRegisterResponse.swift */; };
@@ -154,7 +153,6 @@
 		EA56DDC92EC091B1000AB522 /* LMConfirmSuggestionResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMConfirmSuggestionResponse.swift; sourceTree = "<group>"; };
 		EA56DDCA2EC091B1000AB522 /* LMLoginResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLoginResponse.swift; sourceTree = "<group>"; };
 		EA56DDCC2EC091B1000AB522 /* LMRefreshTokenResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMRefreshTokenResponse.swift; sourceTree = "<group>"; };
-		EA56DDCD2EC091B1000AB522 /* LMUserInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserInfo.swift; sourceTree = "<group>"; };
 		EA56DDCF2EC091B1000AB522 /* LMUserRegisterResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserRegisterResponse.swift; sourceTree = "<group>"; };
 		EA56DDE32EC091BD000AB522 /* LMApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiService.swift; sourceTree = "<group>"; };
 		EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeButtonView.swift; sourceTree = "<group>"; };
@@ -337,7 +335,6 @@
 				EA56DDC92EC091B1000AB522 /* LMConfirmSuggestionResponse.swift */,
 				EA56DDCA2EC091B1000AB522 /* LMLoginResponse.swift */,
 				EA56DDCC2EC091B1000AB522 /* LMRefreshTokenResponse.swift */,
-				EA56DDCD2EC091B1000AB522 /* LMUserInfo.swift */,
 				EA56DDCF2EC091B1000AB522 /* LMUserRegisterResponse.swift */,
 				EA56DD9C2EC07CAD000AB522 /* LMCompositionAnalysisModel.swift */,
 				EA0A47432EBF8F3C002CBB80 /* SubscriptionPlan.swift */,
@@ -738,7 +735,6 @@
 				EA56DDD52EC091B1000AB522 /* LMConfirmSuggestionResponse.swift in Sources */,
 				EA56DDD72EC091B1000AB522 /* LMCompositionResult.swift in Sources */,
 				EA56DDD82EC091B1000AB522 /* LMCompositionResultsResponse.swift in Sources */,
-				EA56DDD92EC091B1000AB522 /* LMUserInfo.swift in Sources */,
 				EA56DDDA2EC091B1000AB522 /* BoundingBox.swift in Sources */,
 				EA56DDDB2EC091B1000AB522 /* LMLoginResponse.swift in Sources */,
 				EA56DDDE2EC091B1000AB522 /* LMUserRegisterResponse.swift in Sources */,

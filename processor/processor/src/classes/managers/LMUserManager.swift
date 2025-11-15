@@ -37,10 +37,10 @@ class LMUserManager {
         }
     }
     
-    var currentUser: LMUserInfo? {
+    var currentUser: LMUserModel? {
         get {
             guard let data = UserDefaults.standard.data(forKey: userInfoKey),
-                  let user = try? JSONDecoder().decode(LMUserInfo.self, from: data) else {
+                  let user = try? JSONDecoder().decode(LMUserModel.self, from: data) else {
                 return nil
             }
             return user
@@ -49,11 +49,17 @@ class LMUserManager {
             if let user = newValue,
                let data = try? JSONEncoder().encode(user) {
                 UserDefaults.standard.set(data, forKey: userInfoKey)
+                // 发送用户数据变化通知
+                NotificationCenter.default.post(name: Self.userDataDidChangeNotification, object: nil)
             } else {
                 UserDefaults.standard.removeObject(forKey: userInfoKey)
+                NotificationCenter.default.post(name: Self.userDataDidChangeNotification, object: nil)
             }
         }
     }
+    
+    // 用户数据变化通知
+    static let userDataDidChangeNotification = Notification.Name("LMUserDataDidChange")
     
     var isLoggedIn: Bool {
         return accessToken != nil
@@ -85,18 +91,26 @@ class LMUserManager {
     // MARK: - Authentication Methods
     
     /// 保存登录信息
-    func saveLoginInfo(accessToken: String, refreshToken: String, user: LMUserInfo) {
+    func saveLoginInfo(accessToken: String, refreshToken: String, user: LMUserInfo, subscriptionType: String = "free", inspirePoints: Int = 0) {
         self.accessToken = accessToken
         self.refreshToken = refreshToken
-        self.currentUser = user
         
-        LMLogger.log("✅ User logged in: \(user.username)")
+        // 转换LMUserInfo为LMUserModel
+        let subscriptionTypeEnum = SubscriptionType(rawValue: subscriptionType) ?? .free
+        let lmUser = user.toLMUser(subscriptionType: subscriptionTypeEnum, inspirePoints: inspirePoints)
+        self.currentUser = lmUser
+        
+        LMLogger.log("✅ User logged in: \(user.username), subscription: \(subscriptionType), points: \(inspirePoints)")
     }
     
-    /// 保存订阅信息
+    /// 保存订阅信息（已废弃，使用saveLoginInfo的完整版本）
+    @available(*, deprecated, message: "Use saveLoginInfo with subscription parameters instead")
     func saveSubscriptionInfo(subscriptionType: String, inspirePoints: Int) {
-        self.subscriptionType = subscriptionType
-        self.inspirePoints = inspirePoints
+        if var user = currentUser {
+            user.subscriptionType = SubscriptionType(rawValue: subscriptionType) ?? .free
+            user.inspirePoints = inspirePoints
+            currentUser = user
+        }
         
         LMLogger.log("✅ Subscription info saved: \(subscriptionType), points: \(inspirePoints)")
     }
@@ -113,9 +127,38 @@ class LMUserManager {
     }
     
     /// 更新用户信息
-    func updateUserInfo(_ user: LMUserInfo) {
+    func updateUser(_ user: LMUserModel) {
         currentUser = user
         LMLogger.log("✅ User info updated")
+    }
+    
+    /// 更新Inspire Points
+    func updateInspirePoints(_ points: Int) {
+        if var user = currentUser {
+            user.inspirePoints = points
+            currentUser = user
+            LMLogger.log("✅ Inspire points updated: \(points)")
+        }
+    }
+    
+    /// 增加Inspire Points
+    func addInspirePoints(_ points: Int) {
+        if var user = currentUser {
+            user.inspirePoints += points
+            currentUser = user
+            LMLogger.log("✅ Inspire points added: +\(points), total: \(user.inspirePoints)")
+        }
+    }
+    
+    /// 减少Inspire Points
+    func deductInspirePoints(_ points: Int) -> Bool {
+        guard var user = currentUser else { return false }
+        guard user.inspirePoints >= points else { return false }
+        
+        user.inspirePoints -= points
+        currentUser = user
+        LMLogger.log("✅ Inspire points deducted: -\(points), remaining: \(user.inspirePoints)")
+        return true
     }
     
     /// 更新 Token
@@ -130,13 +173,11 @@ class LMUserManager {
     func login(identifier: String, password: String, completion: @escaping (Result<LMLoginResponse, Error>) -> Void) {
         LMApiService.shared.login(identifier: identifier, password: password) { [weak self] response in
             if response.requestSuccess, let data = response.value {
+                // 使用新的saveLoginInfo方法，直接传入订阅信息
                 self?.saveLoginInfo(
                     accessToken: data.accessToken,
                     refreshToken: data.refreshToken,
-                    user: data.user
-                )
-                // 保存订阅信息和构图次数
-                self?.saveSubscriptionInfo(
+                    user: data.user,
                     subscriptionType: data.subscriptionType,
                     inspirePoints: data.inspirePoints
                 )
@@ -172,13 +213,11 @@ class LMUserManager {
     func appleLogin(uid: String, fullName: String?, email: String?, idToken: String, completion: @escaping (Result<LMAppleLoginResponse, Error>) -> Void) {
         LMApiService.shared.appleLogin(uid: uid, fullName: fullName, email: email, idToken: idToken) { [weak self] response in
             if response.requestSuccess, let data = response.value {
+                // 使用新的saveLoginInfo方法，直接传入订阅信息
                 self?.saveLoginInfo(
                     accessToken: data.accessToken,
                     refreshToken: data.refreshToken,
-                    user: data.user
-                )
-                // 保存订阅信息和构图次数
-                self?.saveSubscriptionInfo(
+                    user: data.user,
                     subscriptionType: data.subscriptionType,
                     inspirePoints: data.inspirePoints
                 )
@@ -315,7 +354,12 @@ class LMUserManager {
     func fetchUserInfo(completion: @escaping (Result<LMUserInfo, Error>) -> Void) {
         LMApiService.shared.getUserInfo { [weak self] response in
             if response.requestSuccess, let data = response.value {
-                self?.updateUserInfo(data)
+                // 如果当前有用户，更新用户信息
+                if var currentUser = self?.currentUser {
+                    currentUser.username = data.username
+                    currentUser.email = data.email
+                    self?.updateUser(currentUser)
+                }
                 completion(.success(data))
             } else {
                 let error = NSError(
@@ -378,16 +422,7 @@ class LMUserManager {
                 LMUserManager.shared.fetchUserInfo { userResult in
                     switch userResult {
                     case .success(let userInfo):
-                        // 更新 userModel（仅内存，不持久化）
-                        let model = LMUserModel(
-                            userId: userInfo.userId,
-                            username: userInfo.username,
-                            email: userInfo.email,
-                            membership: nil,
-                            subscriptionType: LMUserManager.shared.subscriptionType,
-                            subscriptionExpirationDate: nil
-                        )
-                        userModel = model
+                        userModel = userInfo.toLMUser()
                         LMLogger.log("✅ User data loaded and updated in memory")
                         completion?(true)
                     case .failure(let error):

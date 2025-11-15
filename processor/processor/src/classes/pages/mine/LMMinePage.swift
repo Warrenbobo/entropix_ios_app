@@ -39,11 +39,11 @@ class LMMinePage: LMPageWrapper {
         createTheFloatingCameraEntranceView()
         viewAdapter(scrollView)
         
-        // 监听语言变化
+        // 监听用户数据变化
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(languageDidChange),
-            name: LMLaunageManager.languageDidChangeNotification,
+            selector: #selector(userDataDidChange),
+            name: LMUserManager.userDataDidChangeNotification,
             object: nil
         )
     }
@@ -51,6 +51,7 @@ class LMMinePage: LMPageWrapper {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        refreshUserData()
     }
     
     deinit {
@@ -58,15 +59,9 @@ class LMMinePage: LMPageWrapper {
     }
     
     // MARK: - Localization
-    
-    @objc private func languageDidChange() {
-        updateTexts()
-    }
-    
-    private func updateTexts() {
-        topBar.setTitle(LMText.profile.profile)
-        floatingGalleryButton?.setTitle(LMText.profile.gallery, for: .normal)
-        floatingSavedIdeasButton?.setTitle(LMText.profile.savedIdeas, for: .normal)
+
+    @objc private func userDataDidChange() {
+        refreshUserData()
     }
     
     private func setupCustomNavigationBar() {
@@ -166,9 +161,46 @@ class LMMinePage: LMPageWrapper {
         present(router, animated: true)
     }
     
+    /// 点击观看广告按钮
     private func watchAdsButtonTapped() {
-        print("Watch ads button tapped")
-        upgradeButtonTapped()
+        if let user = LMUserManager.shared.currentUser {
+            if user.subscriptionType == .plus || user.subscriptionType == .lifelong {
+                showAdWithoutReward()
+            } else {
+                showAdWithReward()
+            }
+        }
+    }
+    
+    private func showAdWithReward() {
+        // TODO: 集成Google AdMob SDK
+        print("Show ad with reward - AdMob integration pending")
+        simulateAdRewardSuccess()
+    }
+    
+    private func showAdWithoutReward() {
+        // TODO: 集成Google AdMob SDK
+        print("Show ad without reward - AdMob integration pending")
+        let alert = UIAlertController(
+            title: "Thanks for watching!",
+            message: "Your support helps us improve the app",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
+        present(alert, animated: true)
+    }
+    
+    private func simulateAdRewardSuccess() {
+        // 临时模拟：增加5个Inspire Points
+        LMUserManager.shared.addInspirePoints(5)
+        // 显示成功消息
+        let alert = UIAlertController(
+            title: "Success!",
+            message: "You earned 5 Inspire Points!",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
+        present(alert, animated: true)
     }
     
     private func upgradeButtonTapped() {
@@ -180,6 +212,63 @@ class LMMinePage: LMPageWrapper {
     private func cameraButtonTapped() {
         let cameraView = LMCameraPage()
         navigationController?.pushViewController(cameraView, animated: true)
+    }
+    
+    // MARK: - Data Management
+    private func refreshUserData() {
+        let userManager = LMUserManager.shared
+        if let user = userManager.currentUser {
+            updateUIForLoggedInUser(user)
+        } else {
+            updateUIForLoggedOutUser()
+        }
+    }
+    
+    private func updateUIForLoggedInUser(_ user: LMUserModel) {
+        profileView.updateUserInfo(
+            name: user.nickname ?? user.username ?? "User",
+            email: user.email ?? "",
+            avatar: user.avatar
+        )
+        
+        // 计算到期天数
+        var expiryDays: Int?
+        if let expiryDate = user.subscriptionExpiryDate {
+            let calendar = Calendar.current
+            let now = Date()
+            let components = calendar.dateComponents([.day], from: now, to: expiryDate)
+            expiryDays = components.day
+        }
+        
+        // 更新会员卡片
+        let isPlusUser = (user.subscriptionType == .plus || user.subscriptionType == .lifelong)
+        membershipCardView.updateMembershipStatus(
+            isPlusUser: isPlusUser,
+            inspirePoints: user.inspirePoints,
+            expiryDays: expiryDays
+        )
+        
+        // 刷新Gallery和Saved Ideas
+        photoCollectionView.reloadData()
+    }
+    
+    private func updateUIForLoggedOutUser() {
+        // 未登录状态显示默认内容
+        profileView.updateUserInfo(
+            name: "Sign-in",
+            email: "",
+            avatar: nil
+        )
+        
+        // 显示免费计划，0个Inspire Points
+        membershipCardView.updateMembershipStatus(
+            isPlusUser: false,
+            inspirePoints: 0,
+            expiryDays: nil
+        )
+        
+        // 清空Gallery和Saved Ideas
+        photoCollectionView.reloadData()
     }
     
     private func setupFloatingMenu() {

@@ -82,9 +82,46 @@ class LMLaunageManager {
         return currentConfig?.settings ?? LMSettingsTextConfig()
     }
     
+    // MARK: - Public Methods for Initialization
+    func loadLanguageConfiguration() {
+        loadLanguageData()
+        loadSavedLanguage()
+    }
+    
     // MARK: - Private Methods
     private func loadLanguageData() {
-        // Initialize with default English and Chinese configurations
+        // 尝试从JSON文件加载配置
+        if let model = loadLanguageFromJSON() {
+            languageModel = model
+            LMLogger.log("✅ Language configuration loaded from JSON")
+            return
+        }
+        
+        // 如果JSON加载失败，使用默认配置
+        LMLogger.log("⚠️ Failed to load language JSON, using default configuration")
+        loadDefaultLanguageData()
+    }
+    
+    /// 从JSON文件加载语言配置
+    private func loadLanguageFromJSON() -> LMLaunageModel? {
+        guard let url = Bundle.main.url(forResource: "language_config", withExtension: "json") else {
+            LMLogger.log("❌ language_config.json not found in bundle")
+            return nil
+        }
+        do {
+            let data = try Data(contentsOf: url)
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let model = try decoder.decode(LMLaunageModel.self, from: data)
+            return model
+        } catch {
+            LMLogger.log("❌ Failed to decode language JSON: \(error)")
+            return nil
+        }
+    }
+    
+    /// 加载默认语言配置（作为后备方案）
+    private func loadDefaultLanguageData() {
         let englishConfig = LMAppLaunageConfig(
             common: LMCommonTextConfig(),
             camera: LMCameraTextConfig(),
@@ -93,7 +130,6 @@ class LMLaunageManager {
             auth: LMAuthTextConfig(),
             settings: LMSettingsTextConfig()
         )
-        
         let chineseConfig = LMAppLaunageConfig(
             common: LMCommonTextConfig(
                 ok: "确定",

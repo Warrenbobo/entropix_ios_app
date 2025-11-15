@@ -91,6 +91,13 @@ struct LMPackageManager {
         loadAppPackageData()
         queryDeviceUUID()
         loadGuestTrialData()
+        loadLanguageConfiguration()
+    }
+    
+    /// 加载语言配置
+    private static func loadLanguageConfiguration() {
+        LMLaunageManager.shared.loadLanguageConfiguration()
+        LMLogger.log("✅ Language configuration initialized")
     }
     
     /// 加载游客试用数据

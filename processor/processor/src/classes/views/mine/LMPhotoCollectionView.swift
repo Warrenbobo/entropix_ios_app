@@ -237,6 +237,27 @@ extension LMPhotoCollectionView {
         return currentTab
     }
     
+    // MARK: - Public Methods
+    
+    /// 重新加载数据
+    func reloadData() {
+        // 检查登录状态
+        let isLoggedIn = LMUserManager.shared.isLoggedIn
+        
+        if isLoggedIn {
+            // 已登录，加载用户数据
+            galleryPageView.reloadData()
+            ideasPageView.reloadData()
+        } else {
+            // 未登录，显示提示信息
+            galleryPageView.showSignInPrompt()
+            ideasPageView.showSignInPrompt()
+        }
+        
+        // 更新高度
+        updateContentHeight()
+    }
+    
     private func updateContentHeight() {
         DispatchQueue.main.async {
             var contentHeight: CGFloat = 0

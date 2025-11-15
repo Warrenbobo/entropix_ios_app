@@ -158,6 +158,71 @@ extension LMGalleryPageView {
         
         return totalHeight
     }
+    
+    // MARK: - Public Methods
+    
+    /// 重新加载数据
+    func reloadData() {
+        // TODO: 从后端或本地缓存加载真实的Gallery数据
+        // 目前使用示例数据
+        loadSampleData()
+        
+        // 隐藏空状态提示
+        hideEmptyState()
+        
+        // 刷新集合视图
+        collectionView.reloadData()
+    }
+    
+    /// 显示登录提示
+    func showSignInPrompt() {
+        // 清空数据
+        galleryImages = []
+        collectionView.reloadData()
+        
+        // 显示"Please sign in"提示
+        showEmptyState(message: "Please sign in")
+    }
+    
+    /// 显示空状态提示
+    private func showEmptyState(message: String) {
+        // 移除之前的空状态视图
+        subviews.forEach { view in
+            if view.tag == 999 {
+                view.removeFromSuperview()
+            }
+        }
+        
+        let emptyStateView = UIView()
+        emptyStateView.tag = 999
+        emptyStateView.backgroundColor = .clear
+        
+        let messageLabel = UILabel()
+        messageLabel.text = message
+        messageLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        messageLabel.textColor = UIColor.systemGray
+        messageLabel.textAlignment = .center
+        
+        emptyStateView.addSubview(messageLabel)
+        addSubview(emptyStateView)
+        
+        emptyStateView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        messageLabel.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+    }
+    
+    /// 隐藏空状态提示
+    private func hideEmptyState() {
+        subviews.forEach { view in
+            if view.tag == 999 {
+                view.removeFromSuperview()
+            }
+        }
+    }
 }
 
 // MARK: - Custom Collection View Cell

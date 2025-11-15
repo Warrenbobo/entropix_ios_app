@@ -9,8 +9,6 @@ import Foundation
 import StoreKit
 
 
-
-
 // MARK: - Store Error Types
 enum StoreError: LocalizedError {
     case productNotFound
@@ -324,14 +322,16 @@ class LMStoreManager {
         
         // Update current user info with new subscription
         if var currentUser = LMUserManager.shared.currentUser {
-            // Create updated user info with new subscription
-            let updatedUser = LMUserInfo(
-                userId: currentUser.userId,
-                username: currentUser.username,
-                email: currentUser.email,
-                subscription: type
-            )
-            LMUserManager.shared.updateUserInfo(updatedUser)
+            // 更新订阅类型
+            currentUser.subscriptionType = SubscriptionType(rawValue: type) ?? .free
+            
+            // 更新到期日期
+            if let expirationDateString = expirationDate {
+                let dateFormatter = ISO8601DateFormatter()
+                currentUser.subscriptionExpiryDate = dateFormatter.date(from: expirationDateString)
+            }
+            
+            LMUserManager.shared.updateUser(currentUser)
             LMLogger.log("✅ User subscription updated in local storage")
         }
     }

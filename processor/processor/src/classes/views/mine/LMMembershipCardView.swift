@@ -14,14 +14,29 @@ class LMMembershipCardView: UIView {
     var upgradeButtonAction: (() -> Void)?
     
     private var isPlusUser: Bool = false
+    private var currentExpiryDays: Int?
+    private var currentInspirePoints: Int?
     
-    func updateMembershipStatus(isPlusUser: Bool, inspirePoints: Int?) {
+    func updateMembershipStatus(isPlusUser: Bool, inspirePoints: Int?, expiryDays: Int? = nil) {
         self.isPlusUser = isPlusUser
+        self.currentExpiryDays = expiryDays
+        self.currentInspirePoints = inspirePoints
         
         if isPlusUser {
             setupPlusUserStyle()
             titleLabel.text = LMText.profile.plusPlan
-            subtitleLabel.text = LMText.profile.unlimitedInspires
+            
+            // 显示到期倒计时（仅当少于7天时）
+            if let days = expiryDays, days < 7 {
+                subtitleLabel.text = "Expires in \(days) day\(days == 1 ? "" : "s")"
+                subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.9)
+                expiryWarningIcon.isHidden = false
+            } else {
+                subtitleLabel.text = LMText.profile.unlimitedInspires
+                subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
+                expiryWarningIcon.isHidden = true
+            }
+            
             mainLabel.text = LMText.profile.unlimited
             descLabel.text = LMText.profile.inspirePoints
             watchAdsButton.setTitle(LMText.profile.watchAdsWithIcon, for: .normal)
@@ -34,6 +49,7 @@ class LMMembershipCardView: UIView {
             descLabel.text = LMText.profile.inspirePoints
             watchAdsButton.setTitle(LMText.profile.watchAds, for: .normal)
             upgradeButton.isHidden = false
+            expiryWarningIcon.isHidden = true
         }
     }
     
@@ -50,6 +66,7 @@ class LMMembershipCardView: UIView {
     private let iconImageView = UIImageView()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
+    private let expiryWarningIcon = UIImageView()  // 新增：到期警告图标
     private let upgradeButton = UIButton()
     private let pointsActionContainer = UIView()
     private let mainLabel = UILabel()
@@ -62,6 +79,11 @@ class LMMembershipCardView: UIView {
         setupMembershipViews()
         setupContentConstraints()
         configureDefaultContent()
+        setupLanguageObserver()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     required init?(coder: NSCoder) {
@@ -79,6 +101,7 @@ class LMMembershipCardView: UIView {
         subscriptionInfoContainer.addSubview(iconImageView)
         subscriptionInfoContainer.addSubview(titleLabel)
         subscriptionInfoContainer.addSubview(subtitleLabel)
+        subscriptionInfoContainer.addSubview(expiryWarningIcon)
         subscriptionInfoContainer.addSubview(upgradeButton)
         
         // Points and action section
@@ -100,6 +123,12 @@ class LMMembershipCardView: UIView {
         
         // Setup subtitle label  
         subtitleLabel.font = UIFont.systemFont(ofSize: 12)
+        
+        // Setup expiry warning icon
+        expiryWarningIcon.image = UIImage(systemName: "exclamationmark.triangle.fill")
+        expiryWarningIcon.tintColor = UIColor.systemYellow
+        expiryWarningIcon.contentMode = .scaleAspectFit
+        expiryWarningIcon.isHidden = true
         
         // Setup upgrade button
         upgradeButton.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
@@ -152,6 +181,12 @@ class LMMembershipCardView: UIView {
         subtitleLabel.snp.makeConstraints { make in
             make.leading.equalTo(titleLabel)
             make.top.equalTo(titleLabel.snp.bottom).offset(2)
+        }
+        
+        expiryWarningIcon.snp.makeConstraints { make in
+            make.leading.equalTo(subtitleLabel.snp.trailing).offset(6)
+            make.centerY.equalTo(subtitleLabel)
+            make.size.equalTo(14)
         }
         
         upgradeButton.snp.makeConstraints { make in
@@ -320,5 +355,25 @@ class LMMembershipCardView: UIView {
             }
         }
         upgradeButtonAction?()
+    }
+    
+    // MARK: - Language Support
+    
+    private func setupLanguageObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(languageDidChange),
+            name: LMLaunageManager.languageDidChangeNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func languageDidChange() {
+        // 重新应用当前状态的文本
+        updateMembershipStatus(
+            isPlusUser: isPlusUser,
+            inspirePoints: currentInspirePoints,
+            expiryDays: currentExpiryDays
+        )
     }
 }
