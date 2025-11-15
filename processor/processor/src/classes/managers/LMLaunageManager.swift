@@ -25,11 +25,7 @@ class LMLaunageManager {
     
     // Singleton instance
     static let shared = LMLaunageManager()
-    
-    // Current language
     private(set) var currentLanguage: LMLanguageType = .english
-    
-    // Language data
     private var languageModel: LMLaunageModel?
     
     // Current language config
@@ -58,20 +54,10 @@ class LMLaunageManager {
         
         currentLanguage = language
         saveLanguage()
-        
-        // Post notification for language change
         NotificationCenter.default.post(name: Self.languageDidChangeNotification, object: nil)
     }
     
-    /// Get text for a specific key path
-    func text(for keyPath: String) -> String {
-        // This is a helper method for dynamic key path access
-        // You can implement more sophisticated key path resolution here
-        return keyPath
-    }
-    
     // MARK: - Text Accessors
-    
     var common: LMCommonTextConfig {
         return currentConfig?.common ?? LMCommonTextConfig()
     }
@@ -97,7 +83,6 @@ class LMLaunageManager {
     }
     
     // MARK: - Private Methods
-    
     private func loadLanguageData() {
         // Initialize with default English and Chinese configurations
         let englishConfig = LMAppLaunageConfig(
@@ -307,7 +292,13 @@ class LMLaunageManager {
                 takePhotosStandard: "使用标准功能拍照",
                 leftFormat: "剩余 %d",
                 languageChangedSuccess: "语言已成功更改。所有文本将被更新。",
-                switchToFormat: "切换到 %@？"
+                switchToFormat: "切换到 %@？",
+                signInWithEmail: "使用邮箱登录",
+                termsAndPrivacy: "继续即表示您同意我们的服务条款和隐私政策",
+                termsOfServiceLink: "服务条款",
+                privacyPolicyLink: "隐私政策",
+                noAccountPrompt: "还没有账户？注册",
+                signUpLink: "注册"
             )
         )
         

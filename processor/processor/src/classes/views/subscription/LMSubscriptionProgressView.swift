@@ -30,7 +30,7 @@ class LMSubscriptionProgressView: UIView {
         self.progressText = text
         self.textColor = textColor
         super.init(frame: .zero)
-        setupUI()
+        configureSubviews()
         setupLayout()
     }
     
@@ -38,8 +38,8 @@ class LMSubscriptionProgressView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - Subview Configuration
+    private func configureSubviews() {
         addSubview(containerView)
         containerView.addSubview(titleLabel)
         containerView.addSubview(progressBarContainer)

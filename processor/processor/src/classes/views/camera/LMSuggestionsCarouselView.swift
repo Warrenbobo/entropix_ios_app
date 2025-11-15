@@ -76,7 +76,7 @@ class LMSuggestionsCarouselView: UIView {
     // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupUI()
+        configureSubviews()
         setupConstraints()
         setupGestureRecognizers()
     }
@@ -85,8 +85,8 @@ class LMSuggestionsCarouselView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - Subview Configuration
+    private func configureSubviews() {
         backgroundColor = UIColor.clear
         
         // 配置滚动视图

@@ -31,30 +31,23 @@
 		EA56DDBD2EC08E1D000AB522 /* LMCameraPage+InspireMe.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDB02EC08E1D000AB522 /* LMCameraPage+InspireMe.swift */; };
 		EA56DDBF2EC08E82000AB522 /* LMCameraPage+Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDBE2EC08E81000AB522 /* LMCameraPage+Session.swift */; };
 		EA56DDD22EC091B1000AB522 /* LMCompositionSuggestionsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC62EC091B1000AB522 /* LMCompositionSuggestionsResponse.swift */; };
-		EA56DDD32EC091B1000AB522 /* LMConfirmSuggestionRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC82EC091B1000AB522 /* LMConfirmSuggestionRequest.swift */; };
 		EA56DDD42EC091B1000AB522 /* LMRefreshTokenResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDCC2EC091B1000AB522 /* LMRefreshTokenResponse.swift */; };
 		EA56DDD52EC091B1000AB522 /* LMConfirmSuggestionResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC92EC091B1000AB522 /* LMConfirmSuggestionResponse.swift */; };
-		EA56DDD62EC091B1000AB522 /* LMUserLoginRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDCE2EC091B1000AB522 /* LMUserLoginRequest.swift */; };
 		EA56DDD72EC091B1000AB522 /* LMCompositionResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC32EC091B1000AB522 /* LMCompositionResult.swift */; };
 		EA56DDD82EC091B1000AB522 /* LMCompositionResultsResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC42EC091B1000AB522 /* LMCompositionResultsResponse.swift */; };
 		EA56DDD92EC091B1000AB522 /* LMUserInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDCD2EC091B1000AB522 /* LMUserInfo.swift */; };
 		EA56DDDA2EC091B1000AB522 /* BoundingBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC02EC091B1000AB522 /* BoundingBox.swift */; };
 		EA56DDDB2EC091B1000AB522 /* LMLoginResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDCA2EC091B1000AB522 /* LMLoginResponse.swift */; };
-		EA56DDDC2EC091B1000AB522 /* LMRefreshTokenRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDCB2EC091B1000AB522 /* LMRefreshTokenRequest.swift */; };
-		EA56DDDD2EC091B1000AB522 /* LMChangePasswordRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC22EC091B1000AB522 /* LMChangePasswordRequest.swift */; };
-		EA56DDDE2EC091B1000AB522 /* LMUserRegisterRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDCF2EC091B1000AB522 /* LMUserRegisterRequest.swift */; };
+		EA56DDDE2EC091B1000AB522 /* LMUserRegisterResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDCF2EC091B1000AB522 /* LMUserRegisterResponse.swift */; };
 		EA56DDDF2EC091B1000AB522 /* LMCompositionSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC52EC091B1000AB522 /* LMCompositionSuggestion.swift */; };
 		EA56DDE02EC091B1000AB522 /* LMCompositionTaskResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC72EC091B1000AB522 /* LMCompositionTaskResponse.swift */; };
-		EA56DDE12EC091B1000AB522 /* EmptyResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC12EC091B1000AB522 /* EmptyResponse.swift */; };
 		EA56DDE72EC091BD000AB522 /* LMApiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDE32EC091BD000AB522 /* LMApiService.swift */; };
 		EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */; };
 		EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */; };
 		EA6019392EC877620067F2F7 /* LMSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019372EC877620067F2F7 /* LMSessionManager.swift */; };
-		EA6019402EC8778B0067F2F7 /* SuggestionItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193E2EC8778B0067F2F7 /* SuggestionItem.swift */; };
-		EA6019412EC8778B0067F2F7 /* LMEmailVerificationRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193D2EC8778B0067F2F7 /* LMEmailVerificationRequest.swift */; };
+		EA6019412EC8778B0067F2F7 /* LMEmailVerificationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193D2EC8778B0067F2F7 /* LMEmailVerificationResponse.swift */; };
 		EA6019422EC8778B0067F2F7 /* TaskStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */; };
-		EA6019432EC8778B0067F2F7 /* LMAppleLoginRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193B2EC8778B0067F2F7 /* LMAppleLoginRequest.swift */; };
-		EA6019442EC8778B0067F2F7 /* LMDeviceInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193C2EC8778B0067F2F7 /* LMDeviceInfo.swift */; };
+		EA6019432EC8778B0067F2F7 /* LMAppleLoginResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193B2EC8778B0067F2F7 /* LMAppleLoginResponse.swift */; };
 		EA6019462EC877C20067F2F7 /* LMEmailVerificationPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019452EC877C20067F2F7 /* LMEmailVerificationPage.swift */; };
 		EA8629A32EB5A13F00F2B00E /* EVA02.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */; };
 		EA8629A52EB5A15800F2B00E /* LMImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */; };
@@ -153,29 +146,22 @@
 		EA56DDB02EC08E1D000AB522 /* LMCameraPage+InspireMe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+InspireMe.swift"; sourceTree = "<group>"; };
 		EA56DDBE2EC08E81000AB522 /* LMCameraPage+Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+Session.swift"; sourceTree = "<group>"; };
 		EA56DDC02EC091B1000AB522 /* BoundingBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundingBox.swift; sourceTree = "<group>"; };
-		EA56DDC12EC091B1000AB522 /* EmptyResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyResponse.swift; sourceTree = "<group>"; };
-		EA56DDC22EC091B1000AB522 /* LMChangePasswordRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMChangePasswordRequest.swift; sourceTree = "<group>"; };
 		EA56DDC32EC091B1000AB522 /* LMCompositionResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionResult.swift; sourceTree = "<group>"; };
 		EA56DDC42EC091B1000AB522 /* LMCompositionResultsResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionResultsResponse.swift; sourceTree = "<group>"; };
 		EA56DDC52EC091B1000AB522 /* LMCompositionSuggestion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionSuggestion.swift; sourceTree = "<group>"; };
 		EA56DDC62EC091B1000AB522 /* LMCompositionSuggestionsResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionSuggestionsResponse.swift; sourceTree = "<group>"; };
 		EA56DDC72EC091B1000AB522 /* LMCompositionTaskResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionTaskResponse.swift; sourceTree = "<group>"; };
-		EA56DDC82EC091B1000AB522 /* LMConfirmSuggestionRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMConfirmSuggestionRequest.swift; sourceTree = "<group>"; };
 		EA56DDC92EC091B1000AB522 /* LMConfirmSuggestionResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMConfirmSuggestionResponse.swift; sourceTree = "<group>"; };
 		EA56DDCA2EC091B1000AB522 /* LMLoginResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLoginResponse.swift; sourceTree = "<group>"; };
-		EA56DDCB2EC091B1000AB522 /* LMRefreshTokenRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMRefreshTokenRequest.swift; sourceTree = "<group>"; };
 		EA56DDCC2EC091B1000AB522 /* LMRefreshTokenResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMRefreshTokenResponse.swift; sourceTree = "<group>"; };
 		EA56DDCD2EC091B1000AB522 /* LMUserInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserInfo.swift; sourceTree = "<group>"; };
-		EA56DDCE2EC091B1000AB522 /* LMUserLoginRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserLoginRequest.swift; sourceTree = "<group>"; };
-		EA56DDCF2EC091B1000AB522 /* LMUserRegisterRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserRegisterRequest.swift; sourceTree = "<group>"; };
+		EA56DDCF2EC091B1000AB522 /* LMUserRegisterResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserRegisterResponse.swift; sourceTree = "<group>"; };
 		EA56DDE32EC091BD000AB522 /* LMApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiService.swift; sourceTree = "<group>"; };
 		EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeButtonView.swift; sourceTree = "<group>"; };
 		EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppleAuthManager.swift; sourceTree = "<group>"; };
 		EA6019372EC877620067F2F7 /* LMSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSessionManager.swift; sourceTree = "<group>"; };
-		EA60193B2EC8778B0067F2F7 /* LMAppleLoginRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppleLoginRequest.swift; sourceTree = "<group>"; };
-		EA60193C2EC8778B0067F2F7 /* LMDeviceInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDeviceInfo.swift; sourceTree = "<group>"; };
-		EA60193D2EC8778B0067F2F7 /* LMEmailVerificationRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEmailVerificationRequest.swift; sourceTree = "<group>"; };
-		EA60193E2EC8778B0067F2F7 /* SuggestionItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionItem.swift; sourceTree = "<group>"; };
+		EA60193B2EC8778B0067F2F7 /* LMAppleLoginResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppleLoginResponse.swift; sourceTree = "<group>"; };
+		EA60193D2EC8778B0067F2F7 /* LMEmailVerificationResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEmailVerificationResponse.swift; sourceTree = "<group>"; };
 		EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskStatus.swift; sourceTree = "<group>"; };
 		EA6019452EC877C20067F2F7 /* LMEmailVerificationPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEmailVerificationPage.swift; sourceTree = "<group>"; };
 		EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = EVA02.mlpackage; sourceTree = "<group>"; };
@@ -339,27 +325,20 @@
 		EACA1CD12E7E49B600C80883 /* models */ = {
 			isa = PBXGroup;
 			children = (
-				EA60193B2EC8778B0067F2F7 /* LMAppleLoginRequest.swift */,
-				EA60193C2EC8778B0067F2F7 /* LMDeviceInfo.swift */,
-				EA60193D2EC8778B0067F2F7 /* LMEmailVerificationRequest.swift */,
-				EA60193E2EC8778B0067F2F7 /* SuggestionItem.swift */,
+				EA60193B2EC8778B0067F2F7 /* LMAppleLoginResponse.swift */,
+				EA60193D2EC8778B0067F2F7 /* LMEmailVerificationResponse.swift */,
 				EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */,
 				EA56DDC02EC091B1000AB522 /* BoundingBox.swift */,
-				EA56DDC12EC091B1000AB522 /* EmptyResponse.swift */,
-				EA56DDC22EC091B1000AB522 /* LMChangePasswordRequest.swift */,
 				EA56DDC32EC091B1000AB522 /* LMCompositionResult.swift */,
 				EA56DDC42EC091B1000AB522 /* LMCompositionResultsResponse.swift */,
 				EA56DDC52EC091B1000AB522 /* LMCompositionSuggestion.swift */,
 				EA56DDC62EC091B1000AB522 /* LMCompositionSuggestionsResponse.swift */,
 				EA56DDC72EC091B1000AB522 /* LMCompositionTaskResponse.swift */,
-				EA56DDC82EC091B1000AB522 /* LMConfirmSuggestionRequest.swift */,
 				EA56DDC92EC091B1000AB522 /* LMConfirmSuggestionResponse.swift */,
 				EA56DDCA2EC091B1000AB522 /* LMLoginResponse.swift */,
-				EA56DDCB2EC091B1000AB522 /* LMRefreshTokenRequest.swift */,
 				EA56DDCC2EC091B1000AB522 /* LMRefreshTokenResponse.swift */,
 				EA56DDCD2EC091B1000AB522 /* LMUserInfo.swift */,
-				EA56DDCE2EC091B1000AB522 /* LMUserLoginRequest.swift */,
-				EA56DDCF2EC091B1000AB522 /* LMUserRegisterRequest.swift */,
+				EA56DDCF2EC091B1000AB522 /* LMUserRegisterResponse.swift */,
 				EA56DD9C2EC07CAD000AB522 /* LMCompositionAnalysisModel.swift */,
 				EA0A47432EBF8F3C002CBB80 /* SubscriptionPlan.swift */,
 				EACA1CD02E7E49B600C80883 /* LMApiResponseModel.swift */,
@@ -755,22 +734,17 @@
 				EAFBAC992E7E5A0800586EC7 /* LMMineUserInfoView.swift in Sources */,
 				EA6019462EC877C20067F2F7 /* LMEmailVerificationPage.swift in Sources */,
 				EA56DDD22EC091B1000AB522 /* LMCompositionSuggestionsResponse.swift in Sources */,
-				EA56DDD32EC091B1000AB522 /* LMConfirmSuggestionRequest.swift in Sources */,
 				EA56DDD42EC091B1000AB522 /* LMRefreshTokenResponse.swift in Sources */,
 				EA56DDD52EC091B1000AB522 /* LMConfirmSuggestionResponse.swift in Sources */,
-				EA56DDD62EC091B1000AB522 /* LMUserLoginRequest.swift in Sources */,
 				EA56DDD72EC091B1000AB522 /* LMCompositionResult.swift in Sources */,
 				EA56DDD82EC091B1000AB522 /* LMCompositionResultsResponse.swift in Sources */,
 				EA56DDD92EC091B1000AB522 /* LMUserInfo.swift in Sources */,
 				EA56DDDA2EC091B1000AB522 /* BoundingBox.swift in Sources */,
 				EA56DDDB2EC091B1000AB522 /* LMLoginResponse.swift in Sources */,
-				EA56DDDC2EC091B1000AB522 /* LMRefreshTokenRequest.swift in Sources */,
-				EA56DDDD2EC091B1000AB522 /* LMChangePasswordRequest.swift in Sources */,
-				EA56DDDE2EC091B1000AB522 /* LMUserRegisterRequest.swift in Sources */,
+				EA56DDDE2EC091B1000AB522 /* LMUserRegisterResponse.swift in Sources */,
 				EA56DDDF2EC091B1000AB522 /* LMCompositionSuggestion.swift in Sources */,
 				EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */,
 				EA56DDE02EC091B1000AB522 /* LMCompositionTaskResponse.swift in Sources */,
-				EA56DDE12EC091B1000AB522 /* EmptyResponse.swift in Sources */,
 				EAFBACB52E7E7C7100586EC7 /* LMValidatedInputField.swift in Sources */,
 				EAFBACB72E7E7D1F00586EC7 /* LMCameraPage.swift in Sources */,
 				EA56DD9A2EC076B6000AB522 /* LMSavedIdeaDetailPage.swift in Sources */,
@@ -805,11 +779,9 @@
 				EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */,
 				EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */,
 				EA6019392EC877620067F2F7 /* LMSessionManager.swift in Sources */,
-				EA6019402EC8778B0067F2F7 /* SuggestionItem.swift in Sources */,
-				EA6019412EC8778B0067F2F7 /* LMEmailVerificationRequest.swift in Sources */,
+				EA6019412EC8778B0067F2F7 /* LMEmailVerificationResponse.swift in Sources */,
 				EA6019422EC8778B0067F2F7 /* TaskStatus.swift in Sources */,
-				EA6019432EC8778B0067F2F7 /* LMAppleLoginRequest.swift in Sources */,
-				EA6019442EC8778B0067F2F7 /* LMDeviceInfo.swift in Sources */,
+				EA6019432EC8778B0067F2F7 /* LMAppleLoginResponse.swift in Sources */,
 				EACA1D042E7E4B0A00C80883 /* LMLaunchSplashPage.swift in Sources */,
 				EACA1D0A2E7E4EE900C80883 /* LMLogger.swift in Sources */,
 				EAFBAD852E9393E400586EC7 /* LMLanguagePage.swift in Sources */,

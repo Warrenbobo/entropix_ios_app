@@ -294,4 +294,12 @@ struct LMSettingsTextConfig: Codable {
     var leftFormat: String = "%d left"
     var languageChangedSuccess: String = "Language changed successfully. All text will be updated."
     var switchToFormat: String = "Switch to %@?"
+    
+    // Welcome Authentication
+    var signInWithEmail: String = "Sign in with Email"
+    var termsAndPrivacy: String = "By continuing, you agree to our Terms of Service and Privacy Policy"
+    var termsOfServiceLink: String = "Terms of Service"
+    var privacyPolicyLink: String = "Privacy Policy"
+    var noAccountPrompt: String = "Don't have an account? Sign up"
+    var signUpLink: String = "Sign up"
 }

@@ -46,7 +46,7 @@ class LMEmailVerificationPage: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
+        configureViewHierarchy()
         setupConstraints()
         startCountdown()
         
@@ -59,8 +59,8 @@ class LMEmailVerificationPage: UIViewController {
         countdownTimer?.invalidate()
     }
     
-    // MARK: - Setup UI
-    private func setupUI() {
+    // MARK: - View Hierarchy Configuration
+    private func configureViewHierarchy() {
         view.backgroundColor = .systemBackground
         title = LMText.auth.emailVerification
         

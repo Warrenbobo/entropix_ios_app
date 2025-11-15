@@ -44,7 +44,7 @@ class LMSubscriptionPage: LMPageWrapper {
         super.viewDidLoad()
         barTitle = "Choose Your Plan"
         viewAdapter(scrollView)
-        setupUI()
+        configureViewHierarchy()
         setupLayout()
         setupStyles()
         setupDelegates()
@@ -63,8 +63,8 @@ class LMSubscriptionPage: LMPageWrapper {
         countdownTimer?.invalidate()
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - View Hierarchy Configuration
+    private func configureViewHierarchy() {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         contentView.addSubview(heroView)

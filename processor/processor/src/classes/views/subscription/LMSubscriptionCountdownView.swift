@@ -35,7 +35,7 @@ class LMSubscriptionCountdownView: UIView {
     init(textColor: UIColor) {
         self.textColor = textColor
         super.init(frame: .zero)
-        setupUI()
+        configureSubviews()
         setupLayout()
     }
     
@@ -43,8 +43,8 @@ class LMSubscriptionCountdownView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - Subview Configuration
+    private func configureSubviews() {
         addSubview(containerView)
         containerView.addSubview(titleLabel)
         containerView.addSubview(timerStackView)

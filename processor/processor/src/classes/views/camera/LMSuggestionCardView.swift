@@ -40,7 +40,7 @@ class LMSuggestionCardView: UIView {
     // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupUI()
+        configureSubviews()
         setupConstraints()
     }
     
@@ -48,8 +48,8 @@ class LMSuggestionCardView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - Subview Configuration
+    private func configureSubviews() {
         // 容器视图设置
         containerView.layer.cornerRadius = 12
         containerView.clipsToBounds = true

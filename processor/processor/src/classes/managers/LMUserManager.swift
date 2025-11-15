@@ -56,7 +56,7 @@ class LMUserManager {
     }
     
     var isLoggedIn: Bool {
-        return accessToken != nil && currentUser != nil
+        return accessToken != nil
     }
     
     // MARK: - Subscription Info
@@ -350,21 +350,57 @@ class LMUserManager {
     }
     
     
-    /// 用户数据
+    /// 用户数据（仅内存缓存，不持久化）
     static var userModel: LMUserModel?
     
     
+    /// 已废弃：不再将 UserModel 存入本地
+    @available(*, deprecated, message: "UserModel no longer persisted to local storage")
     static func cachedUserModelData() {
-        guard let model = userModel else { return }
-        if let modelData = try? JSONEncoder().encode(model) {
-            UserDefaults.standard.set(modelData, forKey: cachedUserModelKey)
-        }
+        // 不再执行任何操作
+        LMLogger.log("⚠️ cachedUserModelData() is deprecated and does nothing")
     }
     
-    static func loadCachedUserModelData() {
-        if let data = UserDefaults.standard.data(forKey: cachedUserModelKey),
-           let model = try? JSONDecoder().decode(LMUserModel.self, from: data) {
-            userModel = model
+    /// 加载缓存的用户数据：先刷新 Token，然后获取最新用户信息
+    static func loadCachedUserModelData(completion: ((Bool) -> Void)? = nil) {
+        // 检查是否有登录状态
+        guard LMUserManager.shared.isLoggedIn else {
+            LMLogger.log("⚠️ No login session found, skipping user data load")
+            completion?(false)
+            return
+        }
+        
+        LMLogger.log("🔄 Loading user data: refreshing token first...")
+        LMUserManager.shared.refreshAccessToken { result in
+            switch result {
+            case .success:
+                LMLogger.log("✅ Token refreshed successfully")
+                LMUserManager.shared.fetchUserInfo { userResult in
+                    switch userResult {
+                    case .success(let userInfo):
+                        // 更新 userModel（仅内存，不持久化）
+                        let model = LMUserModel(
+                            userId: userInfo.userId,
+                            username: userInfo.username,
+                            email: userInfo.email,
+                            membership: nil,
+                            subscriptionType: LMUserManager.shared.subscriptionType,
+                            subscriptionExpirationDate: nil
+                        )
+                        userModel = model
+                        LMLogger.log("✅ User data loaded and updated in memory")
+                        completion?(true)
+                    case .failure(let error):
+                        LMLogger.log("❌ Failed to fetch user info: \(error.localizedDescription)")
+                        completion?(false)
+                    }
+                }
+            case .failure(let error):
+                LMLogger.log("❌ Failed to refresh token: \(error.localizedDescription)")
+                // Token 刷新失败，可能需要重新登录
+                LMUserManager.shared.clearLoginInfo()
+                completion?(false)
+            }
         }
     }
     

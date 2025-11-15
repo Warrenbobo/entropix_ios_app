@@ -18,18 +18,18 @@ class LMApiService {
     
     /// 用户注册（邮箱+密码）
     func register(email: String, password: String, name: String?, completion: @escaping (LMApiResponseModel<LMUserRegisterResponse>) -> Void) {
-        let deviceInfo = LMPackageManager.getDeviceInfo()
+//        let deviceInfo = LMPackageManager.getDeviceInfo()
         
         let params: [String: Any] = [
             "email": email,
             "password": password,
             "name": name ?? "",
-            "device_info": [
-                "device_id": deviceInfo.deviceId,
-                "device_model": deviceInfo.deviceModel,
-                "system_version": deviceInfo.systemVersion,
-                "app_version": deviceInfo.appVersion
-            ]
+//            "device_info": [
+//                "device_id": deviceInfo.deviceId,
+//                "device_model": deviceInfo.deviceModel,
+//                "system_version": deviceInfo.systemVersion,
+//                "app_version": deviceInfo.appVersion
+//            ]
         ]
         
         LMApiClient.request(
@@ -43,17 +43,17 @@ class LMApiService {
     
     /// 用户登录（邮箱+密码）
     func login(identifier: String, password: String, completion: @escaping (LMApiResponseModel<LMLoginResponse>) -> Void) {
-        let deviceInfo = LMPackageManager.getDeviceInfo()
+//        let deviceInfo = LMPackageManager.getDeviceInfo()
         
         let params: [String: Any] = [
             "identifier": identifier,
             "password": password,
-            "device_info": [
-                "device_id": deviceInfo.deviceId,
-                "device_model": deviceInfo.deviceModel,
-                "system_version": deviceInfo.systemVersion,
-                "app_version": deviceInfo.appVersion
-            ]
+//            "device_info": [
+//                "device_id": deviceInfo.deviceId,
+//                "device_model": deviceInfo.deviceModel,
+//                "system_version": deviceInfo.systemVersion,
+//                "app_version": deviceInfo.appVersion
+//            ]
         ]
         
         LMApiClient.request(
@@ -67,7 +67,7 @@ class LMApiService {
     
     /// Apple登录/注册
     func appleLogin(uid: String, fullName: String?, email: String?, idToken: String, completion: @escaping (LMApiResponseModel<LMAppleLoginResponse>) -> Void) {
-        let deviceInfo = LMPackageManager.getDeviceInfo()
+//        let deviceInfo = LMPackageManager.getDeviceInfo()
         
         let params: [String: Any] = [
             "provider": "apple",
@@ -139,18 +139,16 @@ class LMApiService {
     }
     
     /// 会话验证
-    func validateSession(completion: @escaping (LMApiResponseModel<EmptyResponse>) -> Void) {
-        let deviceInfo = LMPackageManager.getDeviceInfo()
-        
+    func validateSession(completion: @escaping (LMApiResponseModel<LMEmptyModel>) -> Void) {
         let params: [String: Any] = [
-            "device_id": deviceInfo.deviceId
+            "device_id": LMPackageManager.package.uuid
         ]
         
         LMApiClient.request(
             LMApi.Auth.validateSession,
             method: .get,
             params: params,
-            type: EmptyResponse.self,
+            type: LMEmptyModel.self,
             completeHandler: completion
         )
     }
@@ -181,7 +179,7 @@ class LMApiService {
     }
     
     /// 修改密码
-    func changePassword(oldPassword: String, newPassword: String, completion: @escaping (LMApiResponseModel<EmptyResponse>) -> Void) {
+    func changePassword(oldPassword: String, newPassword: String, completion: @escaping (LMApiResponseModel<LMEmptyModel>) -> Void) {
         let params: [String: Any] = [
             "old_password": oldPassword,
             "new_password": newPassword
@@ -191,17 +189,17 @@ class LMApiService {
             LMApi.User.changePassword,
             method: .post,
             params: params,
-            type: EmptyResponse.self,
+            type: LMEmptyModel.self,
             completeHandler: completion
         )
     }
     
     /// 用户登出
-    func logout(completion: @escaping (LMApiResponseModel<EmptyResponse>) -> Void) {
+    func logout(completion: @escaping (LMApiResponseModel<LMEmptyModel>) -> Void) {
         LMApiClient.request(
             LMApi.Auth.logout,
             method: .post,
-            type: EmptyResponse.self,
+            type: LMEmptyModel.self,
             completeHandler: completion
         )
     }
@@ -324,11 +322,11 @@ extension LMApiClient {
     static func defaultHTTPHeaders() -> HTTPHeaders {
         var headers: HTTPHeaders = [
             "Content-Type": "application/json",
-            "platform": "iOS",
-            "channel": "appstore",
+            "Platform": "iOS",
+            "Channel": "AppStore",
             "Version": LMPackageManager.package.version,
-            "model": LMPackageManager.package.model,
-            "PackageName": LMPackageManager.package.bundleName
+//            "Model": LMPackageManager.package.model,
+//            "PackageName": LMPackageManager.package.bundleName
         ]
         
         // Add Authorization token if available

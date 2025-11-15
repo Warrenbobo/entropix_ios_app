@@ -122,7 +122,7 @@ extension LMWelcomeAuthenticationView {
         signInWithEmailButton.backgroundColor = UIColor.systemBlue
         signInWithEmailButton.layer.cornerRadius = 8
         signInWithEmailButton.adjust(image: UIImage(named: "email_item"),
-                                     title: "Sign in with Email",
+                                     title: LMLaunageManager.shared.settings.signInWithEmail,
                                      titlePosition: .right,
                                      additionalSpacing: 5,
                                      state: .normal)
@@ -142,8 +142,12 @@ extension LMWelcomeAuthenticationView {
     private func setupTermsOfServiceSectionComponents() {
         termsOfServiceSectionView.addSubview(termsOfServiceLabel)
         
+        let fullText = LMLaunageManager.shared.settings.termsAndPrivacy
+        let termsText = LMLaunageManager.shared.settings.termsOfServiceLink
+        let privacyText = LMLaunageManager.shared.settings.privacyPolicyLink
+        
         let attributedText = NSMutableAttributedString(
-            string: "By continuing, you agree to our Terms of Service and Privacy Policy",
+            string: fullText,
             attributes: [
                 .font: UIFont.systemFont(ofSize: 14),
                 .foregroundColor: UIColor.secondaryLabel
@@ -151,8 +155,8 @@ extension LMWelcomeAuthenticationView {
         )
         
         // 设置链接样式
-        let termsRange = (attributedText.string as NSString).range(of: "Terms of Service")
-        let privacyRange = (attributedText.string as NSString).range(of: "Privacy Policy")
+        let termsRange = (attributedText.string as NSString).range(of: termsText)
+        let privacyRange = (attributedText.string as NSString).range(of: privacyText)
         
         attributedText.addAttribute(.foregroundColor, value: UIColor.systemBlue, range: termsRange)
         attributedText.addAttribute(.foregroundColor, value: UIColor.systemBlue, range: privacyRange)
@@ -169,15 +173,18 @@ extension LMWelcomeAuthenticationView {
     private func setupSignUpPromptSectionComponents() {
         signUpPromptSectionView.addSubview(signUpPromptLabel)
         
+        let fullText = LMLaunageManager.shared.settings.noAccountPrompt
+        let signUpText = LMLaunageManager.shared.settings.signUpLink
+        
         let attributedText = NSMutableAttributedString(
-            string: "Don't have an account? Sign up",
+            string: fullText,
             attributes: [
                 .font: UIFont.systemFont(ofSize: 16),
                 .foregroundColor: UIColor.secondaryLabel
             ]
         )
         
-        let signUpRange = (attributedText.string as NSString).range(of: "Sign up")
+        let signUpRange = (attributedText.string as NSString).range(of: signUpText)
         attributedText.addAttribute(.foregroundColor, value: UIColor.systemBlue, range: signUpRange)
         attributedText.addAttribute(.font, value: UIFont.systemFont(ofSize: 16, weight: .semibold), range: signUpRange)
         
@@ -281,9 +288,12 @@ extension LMWelcomeAuthenticationView {
         let location = gesture.location(in: termsOfServiceLabel)
         let attributedText = termsOfServiceLabel.attributedText!
         
+        let termsText = LMLaunageManager.shared.settings.termsOfServiceLink
+        let privacyText = LMLaunageManager.shared.settings.privacyPolicyLink
+        
         // 检测点击的是哪个链接
-        if let termsRange = attributedText.string.range(of: "Terms of Service"),
-           let privacyRange = attributedText.string.range(of: "Privacy Policy") {
+        if let termsRange = attributedText.string.range(of: termsText),
+           let privacyRange = attributedText.string.range(of: privacyText) {
             
             let termsNSRange = NSRange(termsRange, in: attributedText.string)
             let privacyNSRange = NSRange(privacyRange, in: attributedText.string)
@@ -340,5 +350,54 @@ extension LMWelcomeAuthenticationView {
         continueWithAppleButton.isEnabled = enabled
         signInWithEmailButton.alpha = enabled ? 1.0 : 0.6
         continueWithAppleButton.alpha = enabled ? 1.0 : 0.6
+    }
+    
+    /// 更新所有文本以反映语言变化
+    func refreshLanguageContent() {
+        // 更新邮箱登录按钮
+        signInWithEmailButton.adjust(image: UIImage(named: "email_item"),
+                                     title: LMLaunageManager.shared.settings.signInWithEmail,
+                                     titlePosition: .right,
+                                     additionalSpacing: 5,
+                                     state: .normal)
+        
+        // 更新服务条款和隐私政策文本
+        let fullText = LMLaunageManager.shared.settings.termsAndPrivacy
+        let termsText = LMLaunageManager.shared.settings.termsOfServiceLink
+        let privacyText = LMLaunageManager.shared.settings.privacyPolicyLink
+        
+        let attributedText = NSMutableAttributedString(
+            string: fullText,
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 14),
+                .foregroundColor: UIColor.secondaryLabel
+            ]
+        )
+        
+        let termsRange = (attributedText.string as NSString).range(of: termsText)
+        let privacyRange = (attributedText.string as NSString).range(of: privacyText)
+        
+        attributedText.addAttribute(.foregroundColor, value: UIColor.systemBlue, range: termsRange)
+        attributedText.addAttribute(.foregroundColor, value: UIColor.systemBlue, range: privacyRange)
+        
+        termsOfServiceLabel.attributedText = attributedText
+        
+        // 更新注册提示文本
+        let promptText = LMLaunageManager.shared.settings.noAccountPrompt
+        let signUpText = LMLaunageManager.shared.settings.signUpLink
+        
+        let promptAttributedText = NSMutableAttributedString(
+            string: promptText,
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 16),
+                .foregroundColor: UIColor.secondaryLabel
+            ]
+        )
+        
+        let signUpRange = (promptAttributedText.string as NSString).range(of: signUpText)
+        promptAttributedText.addAttribute(.foregroundColor, value: UIColor.systemBlue, range: signUpRange)
+        promptAttributedText.addAttribute(.font, value: UIFont.systemFont(ofSize: 16, weight: .semibold), range: signUpRange)
+        
+        signUpPromptLabel.attributedText = promptAttributedText
     }
 }

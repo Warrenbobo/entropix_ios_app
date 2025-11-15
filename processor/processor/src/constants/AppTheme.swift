@@ -115,23 +115,7 @@ struct AppTheme {
         
         /// 正在显示的顶层Window
         static func window() -> UIWindow? {
-            var window: UIWindow?
-            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                window = windowScene.windows.first
-            }
-            if window?.windowLevel != UIWindow.Level.normal {
-                var windows = [UIWindow]()
-                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                    windows = windowScene.windows
-                }
-                for tempWindow in windows {
-                    if tempWindow.windowLevel == UIWindow.Level.normal {
-                        window = tempWindow
-                        break
-                    }
-                }
-            }
-            return window
+            return LMPackageManager.window
         }
         
         /// 当前可见的最上层controller

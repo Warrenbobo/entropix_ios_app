@@ -35,7 +35,7 @@ class LMGalleryDetailPage: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
+        configureViewHierarchy()
         setupLayout()
         setupActions()
     }
@@ -45,8 +45,8 @@ class LMGalleryDetailPage: UIViewController {
         navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - View Hierarchy Configuration
+    private func configureViewHierarchy() {
         view.backgroundColor = .black
         photoImageView.image = galleryItem.image
         photoImageView.contentMode = .scaleAspectFit

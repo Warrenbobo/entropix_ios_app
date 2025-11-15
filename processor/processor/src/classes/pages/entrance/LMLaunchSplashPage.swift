@@ -20,7 +20,7 @@ class LMLaunchSplashPage: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
+        configureViewHierarchy()
         setupConstraints()
         loadAppDataAndCheckVersion()
     }
@@ -51,17 +51,23 @@ class LMLaunchSplashPage: UIViewController {
     
     /// 加载配置信息并进入首页
     private func loadPackageDataAndEnterHomePage() {
-        LMUserManager.loadCachedUserModelData()
-        var rootController: UIViewController = LMNewInstallerPage()
-        if LMUserManager.isSignIn {
-            rootController = LMMinePage()
+        // 尝试加载用户数据（刷新 Token + 获取用户信息）
+        LMUserManager.loadCachedUserModelData { success in
+            DispatchQueue.main.async {
+                if LMUserManager.isSignIn {
+                    // 已登录，进入主页
+                   let rootController = LMNavigationWrapper(rootViewController: LMMinePage())
+                    LMPackageManager.switchWindowSceneContent( rootController)
+                } else {
+                    let rootController = LMNavigationWrapper(rootViewController: LMNewInstallerPage())
+                    LMPackageManager.switchWindowSceneContent( rootController)
+                }
+            }
         }
-        LMPackageManager.switchWindowSceneContent(LMNavigationWrapper(rootViewController: rootController))
     }
     
     // MARK: - UI Setup
-    
-    private func setupUI() {
+    private func configureViewHierarchy() {
         // 背景色
         view.backgroundColor = .white
         

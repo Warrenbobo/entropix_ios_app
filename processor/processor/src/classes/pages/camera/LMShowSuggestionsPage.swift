@@ -46,7 +46,7 @@ class LMShowSuggestionsPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setupUI()
+        configureViewHierarchy()
         setupConstraints()
         updateUI()
         startPolling()
@@ -61,9 +61,9 @@ class LMShowSuggestionsPage: LMPageWrapper {
         stopPolling()
     }
     
-    // MARK: - Setup
+    // MARK: - View Hierarchy Configuration
     
-    private func setupUI() {
+    private func configureViewHierarchy() {
         view.backgroundColor = .black
         
         // Top Bar

@@ -27,7 +27,7 @@ class LMSubscriptionAdRewardsView: UIView {
     // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupUI()
+        configureSubviews()
         setupLayout()
         setupStyles()
     }
@@ -41,8 +41,8 @@ class LMSubscriptionAdRewardsView: UIView {
         updateGradientLayer()
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - Subview Configuration
+    private func configureSubviews() {
         addSubview(adRewardsIcon)
         addSubview(adRewardsTitleLabel)
         addSubview(adRewardsDescLabel)

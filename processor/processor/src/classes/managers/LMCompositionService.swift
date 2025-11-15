@@ -16,7 +16,6 @@ class LMCompositionService {
     
     // MARK: - Type Aliases for Backward Compatibility
     typealias CompositionStatusResponse = LMCompositionSuggestionsResponse
-    typealias ConfirmSuggestionRequest = LMConfirmSuggestionRequest
     typealias ConfirmSuggestionResponse = LMConfirmSuggestionResponse
     typealias CompositionHistoryResponse = LMCompositionResultsResponse
     

@@ -39,12 +39,12 @@ class LMCameraPreviewManager: NSObject {
     init(containerView: UIView) {
         self.containerView = containerView
         super.init()
-        setupUI()
+        configureComponents()
         setupConstraints()
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - Component Configuration
+    private func configureComponents() {
         // 建议轮播视图设置
         suggestionsCarousel.delegate = self
         suggestionsCarousel.isHidden = true

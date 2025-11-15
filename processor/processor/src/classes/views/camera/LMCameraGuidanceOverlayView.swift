@@ -39,7 +39,7 @@ class LMCameraGuidanceOverlayView: UIView {
     // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupUI()
+        configureSubviews()
         setupConstraints()
         setupGestureRecognizers()
     }
@@ -48,8 +48,8 @@ class LMCameraGuidanceOverlayView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - Subview Configuration
+    private func configureSubviews() {
         backgroundColor = UIColor.clear
         
         // 参考图片视图设置
@@ -292,14 +292,14 @@ class LMReferenceImageView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupUI()
+        configureSubviews()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func setupUI() {
+    private func configureSubviews() {
         layer.cornerRadius = 12
         clipsToBounds = true
         layer.borderWidth = 2
@@ -408,14 +408,14 @@ class LMGuidanceFrameView: UIView {
     init(style: LMGuidanceFrameStyle) {
         self.style = style
         super.init(frame: .zero)
-        setupUI()
+        configureSubviews()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func setupUI() {
+    private func configureSubviews() {
         backgroundColor = UIColor.clear
         layer.cornerRadius = 15
         
@@ -533,14 +533,14 @@ class LMConnectionLineView: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupUI()
+        configureSubviews()
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func setupUI() {
+    private func configureSubviews() {
         backgroundColor = UIColor.clear
         
         shapeLayer.strokeColor = UIColor.systemBlue.cgColor

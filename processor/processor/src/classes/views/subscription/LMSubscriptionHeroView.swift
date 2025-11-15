@@ -19,7 +19,7 @@ class LMSubscriptionHeroView: UIView {
     // MARK: - Initialization
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupUI()
+        configureSubviews()
         setupLayout()
         setupStyles()
     }
@@ -33,8 +33,8 @@ class LMSubscriptionHeroView: UIView {
         updateGradientLayer()
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - Subview Configuration
+    private func configureSubviews() {
         addSubview(heroIcon)
         addSubview(heroTitleLabel)
         addSubview(heroDescLabel)

@@ -1,30 +1,11 @@
 //
-//  LMAppleLoginRequest.swift
+//  LMAppleLoginResponse.swift
 //  processor
 //
 //  Apple登录请求模型
 //
 
 import Foundation
-
-/// Apple登录/注册请求
-struct LMAppleLoginRequest: Codable {
-    let provider: String = "apple"
-    let uid: String
-    let fullName: String?
-    let email: String?
-    let idToken: String
-    let deviceInfo: LMDeviceInfo
-    
-    enum CodingKeys: String, CodingKey {
-        case provider
-        case uid
-        case fullName = "full_name"
-        case email
-        case idToken = "id_token"
-        case deviceInfo = "device_info"
-    }
-}
 
 /// Apple登录响应
 struct LMAppleLoginResponse: Codable {

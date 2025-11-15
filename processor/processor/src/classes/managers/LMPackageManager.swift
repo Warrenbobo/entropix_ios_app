@@ -42,7 +42,7 @@ struct LMPackageManager {
         get {
             // 检查设备ID是否匹配，防止重装APP刷新次数
             if let savedDeviceId = UserDefaults.standard.string(forKey: guestTrialDeviceIdKey),
-               savedDeviceId == deviceId {
+               savedDeviceId == package.uuid {
                 return UserDefaults.standard.integer(forKey: guestTrialCountKey)
             }
             // 新设备，初始化为最大次数
@@ -50,7 +50,7 @@ struct LMPackageManager {
         }
         set {
             UserDefaults.standard.set(newValue, forKey: guestTrialCountKey)
-            UserDefaults.standard.set(deviceId, forKey: guestTrialDeviceIdKey)
+            UserDefaults.standard.set(package.uuid, forKey: guestTrialDeviceIdKey)
             LMLogger.log("📱 Guest trial count updated: \(newValue)")
         }
     }
@@ -79,33 +79,6 @@ struct LMPackageManager {
         LMLogger.log("🔄 Guest trial reset to \(maxGuestTrialCount)")
     }
     
-    // MARK: - Device ID Management
-    
-    private static let cachedDeviceIdKey = "lm_cached_device_id"
-    
-    /// 设备唯一标识符（使用 identifierForVendor）
-    static var deviceId: String {
-        // 优先使用 identifierForVendor
-        if let uuid = UIDevice.current.identifierForVendor?.uuidString {
-            return uuid
-        }
-        
-        // 如果获取失败，使用缓存的设备ID
-        if let cachedId = UserDefaults.standard.string(forKey: cachedDeviceIdKey) {
-            return cachedId
-        }
-        
-        // 生成新的UUID并缓存
-        let newId = UUID().uuidString
-        UserDefaults.standard.set(newId, forKey: cachedDeviceIdKey)
-        return newId
-    }
-    
-    /// 获取设备信息
-    static func getDeviceInfo() -> LMDeviceInfo {
-        return LMDeviceInfo.current()
-    }
-    
     /// 切换当前窗口的根视图
     public static func switchWindowSceneContent(_ controller: UIViewController) {
         window?.rootViewController = controller
@@ -123,7 +96,7 @@ struct LMPackageManager {
     /// 加载游客试用数据
     private static func loadGuestTrialData() {
         let count = guestTrialCount
-        LMLogger.log("📱 Device ID: \(deviceId)")
+        LMLogger.log("📱 Device ID: \(package.uuid)")
         LMLogger.log("📱 Guest trial count: \(count)")
     }
     

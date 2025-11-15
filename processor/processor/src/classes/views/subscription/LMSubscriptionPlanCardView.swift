@@ -29,7 +29,7 @@ class LMSubscriptionPlanCardView: UIView {
     init(plan: SubscriptionPlan) {
         self.plan = plan
         super.init(frame: .zero)
-        setupUI()
+        configureSubviews()
         setupLayout()
         setupStyles()
     }
@@ -43,8 +43,8 @@ class LMSubscriptionPlanCardView: UIView {
         updateGradientLayer()
     }
     
-    // MARK: - Setup Methods
-    private func setupUI() {
+    // MARK: - Subview Configuration
+    private func configureSubviews() {
         layer.cornerRadius = 16
         layer.masksToBounds = true
         

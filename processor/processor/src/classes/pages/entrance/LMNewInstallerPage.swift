@@ -159,15 +159,9 @@ extension LMNewInstallerPage {
     }
     
     private func handleAppleLoginSuccess(response: LMAppleLoginResponse) {
-        // 显示欢迎消息
-        if response.isNewUser {
-            showWelcomeNewUserMessage {
-                self.navigateToMainApplicationInterface()
-            }
-        } else {
-            showWelcomeBackMessage {
-                self.navigateToMainApplicationInterface()
-            }
+        // 导航到主应用界面
+        if let mainRootPage = AppTheme.Screen.mainPage {
+            AppTheme.Screen.window()?.rootViewController = mainRootPage
         }
     }
     
@@ -181,41 +175,6 @@ extension LMNewInstallerPage {
         
         alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
         present(alert, animated: true)
-    }
-    
-    private func showWelcomeNewUserMessage(completion: @escaping () -> Void) {
-        let alert = UIAlertController(
-            title: LMText.auth.signUpSuccess,
-            message: "Welcome to FramAIst! Your account has been created successfully.",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default) { _ in
-            completion()
-        })
-        
-        present(alert, animated: true)
-    }
-    
-    private func showWelcomeBackMessage(completion: @escaping () -> Void) {
-        let alert = UIAlertController(
-            title: LMText.auth.signInSuccess,
-            message: "Welcome back to FramAIst!",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default) { _ in
-            completion()
-        })
-        
-        present(alert, animated: true)
-    }
-    
-    private func navigateToMainApplicationInterface() {
-        // 导航到主应用界面
-        if let mainRootPage = AppTheme.Screen.mainPage {
-            AppTheme.Screen.window()?.rootViewController = mainRootPage
-        }
     }
 }
 
