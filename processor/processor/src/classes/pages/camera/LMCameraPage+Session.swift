@@ -94,34 +94,54 @@ extension LMCameraPage {
     }
     
     func switchCameraPosition() {
-        guard let captureSession = captureSession else { return }
-        
-        captureSession.beginConfiguration()
-        
-        if let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput {
-            captureSession.removeInput(currentInput)
-        }
-        
-        let newPosition: AVCaptureDevice.Position = isUsingFrontCamera ? .back : .front
-        
-        guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition) else {
-            captureSession.commitConfiguration()
+        guard let captureSession = captureSession else {
+            LMLogger.log("❌ Capture session not available")
             return
         }
         
-        do {
-            let newInput = try AVCaptureDeviceInput(device: newCamera)
-            if captureSession.canAddInput(newInput) {
-                captureSession.addInput(newInput)
-                currentCameraDevice = newCamera
-                isUsingFrontCamera.toggle()
-                updateInspireMeButtonState()
+        // 在后台线程执行相机切换，避免阻塞主线程
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            captureSession.beginConfiguration()
+            
+            // 移除当前输入
+            if let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput {
+                captureSession.removeInput(currentInput)
             }
-        } catch {
-            LMLogger.log("❌ Error switching camera: \(error)")
+            
+            // 确定新的相机位置
+            let newPosition: AVCaptureDevice.Position = self.isUsingFrontCamera ? .back : .front
+            
+            // 获取新相机设备
+            guard let newCamera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: newPosition) else {
+                LMLogger.log("❌ Unable to access \(newPosition == .front ? "front" : "back") camera")
+                captureSession.commitConfiguration()
+                return
+            }
+            
+            do {
+                let newInput = try AVCaptureDeviceInput(device: newCamera)
+                if captureSession.canAddInput(newInput) {
+                    captureSession.addInput(newInput)
+                    
+                    // 在主线程更新 UI 相关的状态
+                    DispatchQueue.main.async {
+                        self.currentCameraDevice = newCamera
+                        self.isUsingFrontCamera.toggle()
+                        self.updateInspireMeButtonState()
+                        
+                        LMLogger.log("✅ Camera switched to \(self.isUsingFrontCamera ? "front" : "back")")
+                    }
+                } else {
+                    LMLogger.log("❌ Cannot add new camera input")
+                }
+            } catch {
+                LMLogger.log("❌ Error switching camera: \(error)")
+            }
+            
+            captureSession.commitConfiguration()
         }
-        
-        captureSession.commitConfiguration()
     }
     
     func setDefaultCameraParameters() {
@@ -137,10 +157,10 @@ extension LMCameraPage {
     
     func updateInspireMeButtonState() {
         if isUsingFrontCamera {
-            cameraBottomControlsView.setInspireMeButtonEnabled(false)
+            inspireMeButtonView.setInspireMeButtonEnabled(false)
             LMLogger.log("📷 Front camera: Inspire Me button disabled")
         } else {
-            cameraBottomControlsView.setInspireMeButtonEnabled(true)
+            inspireMeButtonView.setInspireMeButtonEnabled(true)
             LMLogger.log("📷 Back camera: Inspire Me button enabled")
         }
     }

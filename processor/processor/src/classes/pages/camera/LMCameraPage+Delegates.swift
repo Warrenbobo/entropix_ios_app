@@ -118,22 +118,6 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
         configureARGuidanceFeatures(isEnabled)
     }
     
-    func cameraBottomControlsViewDidTapInspireButton() {
-        LMLogger.log("🎯 Inspire button tapped")
-        
-        let subscriptionStatus = LMStoreManager.shared.currentSubscriptionStatus
-        
-        if subscriptionStatus == .free {
-            let remainingPoints = getUserInspirePoints()
-            if remainingPoints < 1 {
-                showInsufficientPointsAlert()
-                return
-            }
-        }
-        
-        handleInspireMeFeature()
-    }
-    
     func cameraBottomControlsViewDidTapCaptureButton() {
         let timerDuration = cameraControlsView.getCurrentTimerDuration().seconds
         
@@ -148,5 +132,41 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     func cameraBottomControlsViewDidTapFlipCameraButton() {
         LMLogger.log("🔄 Flipping camera")
         switchCameraPosition()
+    }
+}
+
+// MARK: - Inspire Me Button Delegate
+extension LMCameraPage: LMInspireMeButtonViewDelegate {
+    
+    func inspireMeButtonViewDidTapButton() {
+        LMLogger.log("🎯 Inspire Me button tapped")
+        
+        let subscriptionStatus = LMStoreManager.shared.currentSubscriptionStatus
+        
+        if subscriptionStatus == .free {
+            let remainingPoints = getUserInspirePoints()
+            if remainingPoints < 1 {
+                showInsufficientPointsAlert()
+                return
+            }
+        }
+        
+        handleInspireMeFeature()
+    }
+    
+    func inspireMeButtonViewDidTapQuestionButton() {
+        LMLogger.log("❓ Inspire Me question button tapped")
+        
+        // 显示 Inspire Me 功能说明
+        let alertController = UIAlertController(
+            title: "Inspire Me",
+            message: "Tap to get AI-powered composition suggestions for your photo. Each use costs 1 Inspire Point.",
+            preferredStyle: .alert
+        )
+        
+        let okAction = UIAlertAction(title: "OK", style: .default)
+        alertController.addAction(okAction)
+        
+        present(alertController, animated: true)
     }
 }

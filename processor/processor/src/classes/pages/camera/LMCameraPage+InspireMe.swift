@@ -49,12 +49,12 @@ extension LMCameraPage {
         
         if subscriptionStatus == .free {
             LMLogger.log("📉 Decrementing Inspire Points for Free Plan user")
-            cameraBottomControlsView.decrementInspirePointsCount()
+            inspireMeButtonView.decrementInspirePointsCount()
         }
     }
     
     func getUserInspirePoints() -> Int {
-        return cameraBottomControlsView.getCurrentInspirePoints()
+        return inspireMeButtonView.getCurrentInspirePoints()
     }
     
     func showInsufficientPointsAlert() {

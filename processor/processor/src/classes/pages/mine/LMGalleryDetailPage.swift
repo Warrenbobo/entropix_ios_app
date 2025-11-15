@@ -15,9 +15,11 @@ class LMGalleryDetailPage: UIViewController {
     
     // MARK: - UI Components
     private let photoImageView = UIImageView()
-    private let backButton = UIButton(type: .system)
-    private let downloadButton = UIButton(type: .system)
-    private let deleteButton = UIButton(type: .system)
+    private let backButtonContainer = UIView()
+    private let backIconImageView = UIImageView()
+    private let backLabel = UILabel()
+    private let downloadButton = UIButton(type: .custom)
+    private let deleteButton = UIButton(type: .custom)
     private let successIndicator = UIView()
     
     // MARK: - Initialization
@@ -46,27 +48,32 @@ class LMGalleryDetailPage: UIViewController {
     // MARK: - Setup Methods
     private func setupUI() {
         view.backgroundColor = .black
-        
-        // Photo Image View
         photoImageView.image = galleryItem.image
         photoImageView.contentMode = .scaleAspectFit
         view.addSubview(photoImageView)
+        backButtonContainer.backgroundColor = UIColor(white: 0.25, alpha: 0.85)
+        backButtonContainer.layer.cornerRadius = 22
+        backButtonContainer.layer.borderWidth = 1
+        backButtonContainer.layer.borderColor = UIColor.white.withAlphaComponent(0.15).cgColor
+        view.addSubview(backButtonContainer)
         
-        // Back Button
-        backButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        backButton.layer.cornerRadius = 20
-        backButton.layer.borderWidth = 1
-        backButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        // 配置左箭头图标
+        let backImage = UIImage(named: "left_arrow_white")
+        backIconImageView.image = backImage
+        backIconImageView.tintColor = .white
+        backIconImageView.contentMode = .scaleAspectFit
+        backButtonContainer.addSubview(backIconImageView)
         
-        let backConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        let backImage = UIImage(systemName: "chevron.left", withConfiguration: backConfig)
-        backButton.setImage(backImage, for: .normal)
-        backButton.setTitle(LMText.settings.back, for: .normal)
-        backButton.setTitleColor(.white, for: .normal)
-        backButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-        backButton.tintColor = .white
+        // 配置 Back 文字
+        backLabel.text = "Back"
+        backLabel.textColor = .white
+        backLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        backButtonContainer.addSubview(backLabel)
         
-        view.addSubview(backButton)
+        // 添加点击手势
+        let backTapGesture = UITapGestureRecognizer(target: self, action: #selector(backButtonTapped))
+        backButtonContainer.addGestureRecognizer(backTapGesture)
+        backButtonContainer.isUserInteractionEnabled = true
         
         // Download Button
         downloadButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
@@ -131,10 +138,22 @@ class LMGalleryDetailPage: UIViewController {
             make.edges.equalToSuperview()
         }
         
-        backButton.snp.makeConstraints { make in
+        backButtonContainer.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
             make.leading.equalToSuperview().offset(20)
-            make.height.equalTo(40)
+            make.height.equalTo(44)
+        }
+        
+        backIconImageView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(16)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(20)
+        }
+        
+        backLabel.snp.makeConstraints { make in
+            make.leading.equalTo(backIconImageView.snp.trailing).offset(6)
+            make.trailing.equalToSuperview().offset(-20)
+            make.centerY.equalToSuperview()
         }
         
         deleteButton.snp.makeConstraints { make in
@@ -156,7 +175,6 @@ class LMGalleryDetailPage: UIViewController {
     }
     
     private func setupActions() {
-        backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
         downloadButton.addTarget(self, action: #selector(downloadButtonTapped), for: .touchUpInside)
         deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
     }

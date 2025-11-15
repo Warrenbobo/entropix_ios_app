@@ -11,6 +11,15 @@ import SnapKit
 import MetalPerformanceShaders
 import CoreML
 
+struct LMCameraConstants {
+    
+    static let bottomControlsHeight: CGFloat = 90
+    
+    static let topStatusBarHeight: CGFloat = 44
+    
+    private init() {}
+}
+
 class LMCameraPage: LMPageWrapper {
     
     // MARK: - UI Components
@@ -20,6 +29,7 @@ class LMCameraPage: LMPageWrapper {
     var cameraPreviewView: LMCameraPreviewView!
     var cameraControlsView: LMCameraControlsView!
     var cameraBottomControlsView: LMCameraBottomControlsView!
+    var inspireMeButtonView: LMInspireMeButtonView!
     
     // MARK: - Camera Properties
     var captureSession: AVCaptureSession?
@@ -77,6 +87,7 @@ class LMCameraPage: LMPageWrapper {
         setupCameraPreviewComponent()
         setupCameraControlsComponent()
         setupCameraBottomControlsComponent()
+        setupInspireMeButtonComponent()
     }
     
     private func setupTopStatusBarComponents() {
@@ -89,14 +100,11 @@ class LMCameraPage: LMPageWrapper {
     }
     
     private func setupCameraPreviewComponent() {
-        // 创建预览画布容器
         previewCanvasView = UIView()
         previewCanvasView.backgroundColor = .black
         previewCanvasView.clipsToBounds = true
         
         view.addSubview(previewCanvasView)
-        
-        // 创建相机预览视图（填充整个画布）
         cameraPreviewView = LMCameraPreviewView()
         cameraPreviewView.delegate = self
         previewCanvasView.addSubview(cameraPreviewView)
@@ -114,12 +122,18 @@ class LMCameraPage: LMPageWrapper {
         view.addSubview(cameraBottomControlsView)
     }
     
+    private func setupInspireMeButtonComponent() {
+        inspireMeButtonView = LMInspireMeButtonView()
+        inspireMeButtonView.delegate = self
+        view.addSubview(inspireMeButtonView)
+    }
+    
     // MARK: - Layout
     private func configureLayoutConstraints() {
         topStatusBarView.snp.makeConstraints { make in
             make.top.equalTo(AppTheme.Screen.safeAreaTop)
             make.leading.trailing.equalToSuperview()
-            make.height.equalTo(44)
+            make.height.equalTo(LMCameraConstants.topStatusBarHeight)
         }
         
         backButton.snp.makeConstraints { make in
@@ -131,17 +145,19 @@ class LMCameraPage: LMPageWrapper {
         cameraBottomControlsView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
             make.bottom.equalTo(view.safeAreaLayoutGuide)
-            make.height.equalTo(120)
+            make.height.equalTo(LMCameraConstants.bottomControlsHeight)
+        }
+        inspireMeButtonView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-20)
+            make.width.equalTo(240)
+            make.height.equalTo(70)
         }
         
-        // 初始化预览画布为3:4比例（无动画）
         setupInitialPreviewCanvasLayout()
-        
-        // 相机预览视图填充整个画布
         cameraPreviewView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        
         cameraControlsView.snp.makeConstraints { make in
             make.trailing.equalToSuperview()
             make.centerY.equalTo(previewCanvasView)
@@ -151,8 +167,8 @@ class LMCameraPage: LMPageWrapper {
     
     /// 初始化预览画布布局（无动画，避免首次进入时抖动）
     private func setupInitialPreviewCanvasLayout() {
-        let topOffset = AppTheme.Screen.safeAreaTop + 44
-        let bottomOffset: CGFloat = 120
+        let topOffset = AppTheme.Screen.safeAreaTop + LMCameraConstants.topStatusBarHeight
+        let bottomOffset = LMCameraConstants.bottomControlsHeight
         let availableHeight = AppTheme.Screen.height - topOffset - bottomOffset - AppTheme.Screen.safeAreaBottom
         let screenWidth = AppTheme.Screen.width
         
@@ -190,8 +206,8 @@ class LMCameraPage: LMPageWrapper {
         previewCanvasView.snp.removeConstraints()
         
         // 计算可用空间
-        let topOffset = AppTheme.Screen.safeAreaTop + 44 // StatusBar高度
-        let bottomOffset: CGFloat = 120 // bottomBarView高度
+        let topOffset = AppTheme.Screen.safeAreaTop + LMCameraConstants.topStatusBarHeight // StatusBar高度
+        let bottomOffset = LMCameraConstants.bottomControlsHeight // bottomBarView高度
         let availableHeight = AppTheme.Screen.height - topOffset - bottomOffset - AppTheme.Screen.safeAreaBottom
         let screenWidth = AppTheme.Screen.width
         

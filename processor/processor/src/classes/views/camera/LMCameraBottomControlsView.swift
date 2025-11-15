@@ -9,8 +9,6 @@ import UIKit
 import SnapKit
 
 protocol LMCameraBottomControlsViewDelegate: AnyObject {
-    // Inspire按钮点击
-    func cameraBottomControlsViewDidTapInspireButton()
     // 拍照按钮
     func cameraBottomControlsViewDidTapCaptureButton()
     // 翻转相机
@@ -20,14 +18,6 @@ protocol LMCameraBottomControlsViewDelegate: AnyObject {
 }
 
 class LMCameraBottomControlsView: UIView {
-    
-    // Inspire Me 按钮区域
-    private let inspireButtonContainer = UIView()
-    private let inspireButton = UIButton()
-    private let inspirePointsContainer = UIView()
-    private let starImageView = UIImageView()
-    private let inspirePointsLabel = UILabel()
-    private let questionButton = UIButton()
     
     // 拍照按钮
     private let captureButton = UIButton()
@@ -43,7 +33,6 @@ class LMCameraBottomControlsView: UIView {
     private let arGuidanceLabel = UILabel()
     
     weak var delegate: LMCameraBottomControlsViewDelegate?
-    private var inspirePoints = 1
     private var isARGuidanceEnabled = false
     
     override init(frame: CGRect) {
@@ -51,30 +40,6 @@ class LMCameraBottomControlsView: UIView {
         setupBottomControlsComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        
-        // 设置渐变背景
-        setupInspireButtonGradient()
-    }
-    
-    private func setupInspireButtonGradient() {
-        // 移除现有的渐变层
-        inspireButton.layer.sublayers?.removeAll { $0 is CAGradientLayer }
-        
-        // 添加新的渐变背景 - 紫色渐变
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.colors = [
-            UIColor(red: 120/255, green: 140/255, blue: 230/255, alpha: 1).cgColor,
-            UIColor(red: 110/255, green: 100/255, blue: 200/255, alpha: 1).cgColor
-        ]
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        gradientLayer.cornerRadius = 25
-        gradientLayer.frame = inspireButton.bounds
-        inspireButton.layer.insertSublayer(gradientLayer, at: 0)
     }
     
     required init?(coder: NSCoder) {
@@ -85,40 +50,9 @@ class LMCameraBottomControlsView: UIView {
 extension LMCameraBottomControlsView {
     
     private func setupBottomControlsComponents() {
-        setupInspireButtonComponents()
         setupCaptureButtonComponents()
         setupFlipCameraComponents()
         setupARGuidanceComponents()
-    }
-    
-    private func setupInspireButtonComponents() {
-        addSubview(inspireButtonContainer)
-        inspireButtonContainer.addSubview(inspireButton)
-        inspireButtonContainer.addSubview(inspirePointsContainer)
-        
-        // Inspire按钮设置 - 渐变背景
-        inspireButton.setTitle(LMText.camera.inspireMeButton, for: .normal)
-        inspireButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        inspireButton.setTitleColor(UIColor.white, for: .normal)
-        inspireButton.layer.cornerRadius = 25
-        inspireButton.clipsToBounds = false
-        inspireButton.addTarget(self, action: #selector(handleInspireButtonTapped), for: .touchUpInside)
-        
-        // 添加发光阴影效果
-        inspireButton.layer.shadowColor = UIColor(red: 102/255, green: 126/255, blue: 234/255, alpha: 0.6).cgColor
-        inspireButton.layer.shadowOffset = CGSize(width: 0, height: 8)
-        inspireButton.layer.shadowRadius = 20
-        inspireButton.layer.shadowOpacity = 1.0
-        
-        // 点数容器设置
-        inspirePointsContainer.backgroundColor = UIColor.clear
-        inspirePointsContainer.addSubview(inspirePointsLabel)
-        
-        // 点数标签 - 显示 "Inspire Point -1"
-        inspirePointsLabel.text = String(format: LMText.camera.inspirePointsFormat, inspirePoints)
-        inspirePointsLabel.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        inspirePointsLabel.textColor = UIColor.white.withAlphaComponent(0.9)
-        inspirePointsLabel.textAlignment = .center
     }
     
     private func setupCaptureButtonComponents() {
@@ -140,18 +74,23 @@ extension LMCameraBottomControlsView {
         flipCameraContainer.addSubview(flipCameraButton)
         flipCameraContainer.addSubview(flipCameraLabel)
         
-        // 翻转相机按钮
-        flipCameraButton.setImage(UIImage(systemName: "camera.rotate"), for: .normal)
+        // 翻转相机按钮 - 仅用于显示图标，不处理点击
+        flipCameraButton.setImage(UIImage(named: "flip_camera"), for: .normal)
         flipCameraButton.tintColor = UIColor.white
-        flipCameraButton.addTarget(self, action: #selector(handleFlipCameraButtonTapped), for: .touchUpInside)
+        flipCameraButton.isUserInteractionEnabled = false // 禁用按钮交互
         
         // 翻转相机标签
-        flipCameraLabel.text = LMText.camera.flipCamera
+        flipCameraLabel.text = LMLaunageManager.shared.camera.flipCamera
         flipCameraLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
         flipCameraLabel.textColor = UIColor.white
         flipCameraLabel.textAlignment = .center
         flipCameraLabel.shadowColor = UIColor.black.withAlphaComponent(0.7)
         flipCameraLabel.shadowOffset = CGSize(width: 0, height: 1)
+        
+        // 在容器上添加点击手势
+        let flipTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleFlipCameraButtonTapped))
+        flipCameraContainer.addGestureRecognizer(flipTapGesture)
+        flipCameraContainer.isUserInteractionEnabled = true
     }
     
     private func setupARGuidanceComponents() {
@@ -159,18 +98,23 @@ extension LMCameraBottomControlsView {
         arGuidanceContainer.addSubview(arGuidanceButton)
         arGuidanceContainer.addSubview(arGuidanceLabel)
         
-        // AR Guidance 按钮
-        arGuidanceButton.setImage(UIImage(systemName: "person.2.crop.square.stack"), for: .normal)
-        arGuidanceButton.tintColor = UIColor.lightGray
-        arGuidanceButton.addTarget(self, action: #selector(handleARGuidanceButtonTapped), for: .touchUpInside)
+        // AR Guidance 按钮 - 仅用于显示图标，不处理点击
+        arGuidanceButton.setImage(UIImage(named: "users_viewfinder_off_white"), for: .normal)
+        arGuidanceButton.setImage(UIImage(named: "users_viewfinder_white"), for: .selected)
+        arGuidanceButton.isUserInteractionEnabled = false // 禁用按钮交互
         
         // AR Guidance 标签
-        arGuidanceLabel.text = LMText.camera.arGuidance
+        arGuidanceLabel.text = LMLaunageManager.shared.camera.arGuidance
         arGuidanceLabel.font = UIFont.systemFont(ofSize: 10, weight: .medium)
-        arGuidanceLabel.textColor = UIColor.lightGray
+        arGuidanceLabel.textColor = UIColor.white
         arGuidanceLabel.textAlignment = .center
         arGuidanceLabel.shadowColor = UIColor.black.withAlphaComponent(0.7)
         arGuidanceLabel.shadowOffset = CGSize(width: 0, height: 1)
+        
+        // 在容器上添加点击手势
+        let arTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleARGuidanceButtonTapped))
+        arGuidanceContainer.addGestureRecognizer(arTapGesture)
+        arGuidanceContainer.isUserInteractionEnabled = true
         
         updateARGuidanceAppearance()
     }
@@ -184,78 +128,43 @@ extension LMCameraBottomControlsView {
 extension LMCameraBottomControlsView {
     
     private func configureLayoutConstraints() {
-        // Inspire按钮容器 - 在上方
-        inspireButtonContainer.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-120)
-            make.width.equalTo(220)
-            make.height.equalTo(80)
-        }
-        
-        // Inspire按钮 - 更大的胶囊形状
-        inspireButton.snp.makeConstraints { make in
-            make.top.equalToSuperview()
-            make.leading.trailing.equalToSuperview()
-            make.height.equalTo(50)
-        }
-        
-        // 点数容器
-        inspirePointsContainer.snp.makeConstraints { make in
-            make.top.equalTo(inspireButton.snp.bottom).offset(8)
-            make.centerX.equalToSuperview()
-            make.height.equalTo(20)
-        }
-        
-        // 点数标签
-        inspirePointsLabel.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        
-        // 拍照按钮 - 在 Inspire Me 按钮下方
+        // 拍照按钮 - 放在 View 底部
         captureButton.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-40)
+            make.bottom.equalToSuperview().offset(-10)
             make.size.equalTo(70)
         }
         
-        // 翻转相机容器 - 在拍照按钮左侧
+        // 翻转相机按钮 - 与拍照按钮垂直对齐
         flipCameraContainer.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(32)
             make.centerY.equalTo(captureButton)
             make.width.equalTo(80)
             make.height.equalTo(50)
         }
-        
-        // 翻转相机按钮
         flipCameraButton.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.centerX.equalToSuperview()
             make.size.equalTo(30)
         }
-        
-        // 翻转相机标签
         flipCameraLabel.snp.makeConstraints { make in
             make.top.equalTo(flipCameraButton.snp.bottom).offset(4)
             make.centerX.equalToSuperview()
             make.bottom.equalToSuperview()
         }
         
-        // AR Guidance 容器 - 在拍照按钮右侧
+        // AR Guidance 按钮 - 与拍照按钮垂直对齐
         arGuidanceContainer.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-24)
             make.centerY.equalTo(captureButton)
             make.width.equalTo(80)
             make.height.equalTo(50)
         }
-        
-        // AR Guidance 按钮
         arGuidanceButton.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.centerX.equalToSuperview()
             make.size.equalTo(30)
         }
-        
-        // AR Guidance 标签
         arGuidanceLabel.snp.makeConstraints { make in
             make.top.equalTo(arGuidanceButton.snp.bottom).offset(4)
             make.centerX.equalToSuperview()
@@ -268,75 +177,30 @@ extension LMCameraBottomControlsView {
     
     private func configureDefaultContentAndStyles() {
         backgroundColor = UIColor.clear
-        updateInspireButtonAppearance()
-    }
-    
-    private func updateInspireButtonAppearance() {
-        inspirePointsLabel.text = String(format: LMText.camera.inspirePointsFormat, inspirePoints)
-        
-        // 根据点数更新按钮状态
-        let hasPoints = inspirePoints > 0
-        inspireButton.isEnabled = hasPoints
-        inspireButton.alpha = hasPoints ? 1.0 : 0.6
-        inspirePointsContainer.alpha = hasPoints ? 1.0 : 0.6
     }
     
     private func updateARGuidanceAppearance() {
         if isARGuidanceEnabled {
-            arGuidanceButton.tintColor = UIColor.white
-            arGuidanceLabel.textColor = UIColor.white
+            arGuidanceButton.isSelected = true
         } else {
-            arGuidanceButton.tintColor = UIColor.lightGray
-            arGuidanceLabel.textColor = UIColor.lightGray
+            arGuidanceButton.isSelected = false
         }
     }
 }
 
 extension LMCameraBottomControlsView {
     
-    @objc private func handleInspireButtonTapped() {
-        guard inspirePoints > 0 else { return }
-        
-        // 添加点击动画
-        UIView.animate(withDuration: 0.1, animations: {
-            self.inspireButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                self.inspireButton.transform = CGAffineTransform.identity
-            }
-        }
-        
-        delegate?.cameraBottomControlsViewDidTapInspireButton()
-    }
-    
     @objc private func handleCaptureButtonTapped() {
         delegate?.cameraBottomControlsViewDidTapCaptureButton()
     }
     
     @objc private func handleFlipCameraButtonTapped() {
-        // 添加旋转动画
-        UIView.animate(withDuration: 0.3) {
-            self.flipCameraButton.transform = CGAffineTransform(rotationAngle: .pi)
-        } completion: { _ in
-            self.flipCameraButton.transform = CGAffineTransform.identity
-        }
-        
         delegate?.cameraBottomControlsViewDidTapFlipCameraButton()
     }
     
     @objc private func handleARGuidanceButtonTapped() {
         isARGuidanceEnabled.toggle()
         updateARGuidanceAppearance()
-        
-        // 添加点击动画
-        UIView.animate(withDuration: 0.1, animations: {
-            self.arGuidanceButton.transform = CGAffineTransform(scaleX: 0.9, y: 0.9)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                self.arGuidanceButton.transform = CGAffineTransform.identity
-            }
-        }
-        
         delegate?.cameraBottomControlsViewDidTapARGuidanceButton()
     }
     
@@ -355,25 +219,9 @@ extension LMCameraBottomControlsView {
 
 extension LMCameraBottomControlsView {
     
-    func updateInspirePointsCount(_ points: Int) {
-        inspirePoints = max(0, points)
-        updateInspireButtonAppearance()
-    }
-    
-    func decrementInspirePointsCount() {
-        if inspirePoints > 0 {
-            inspirePoints -= 1
-            updateInspireButtonAppearance()
-        }
-    }
-    
     func setARGuidanceEnabled(_ enabled: Bool) {
         isARGuidanceEnabled = enabled
         updateARGuidanceAppearance()
-    }
-    
-    func getCurrentInspirePointsCount() -> Int {
-        return inspirePoints
     }
     
     func getCurrentARGuidanceStatus() -> Bool {
@@ -400,28 +248,5 @@ extension LMCameraBottomControlsView {
                 flashView.removeFromSuperview()
             }
         }
-    }
-    
-    /// 设置 Inspire Me 按钮的启用/禁用状态
-    /// - Parameter enabled: true 启用，false 禁用
-    func setInspireMeButtonEnabled(_ enabled: Bool) {
-        inspireButton.isEnabled = enabled
-        inspireButton.alpha = enabled ? 1.0 : 0.5
-        
-        // 更新容器的交互状态
-        inspireButtonContainer.isUserInteractionEnabled = enabled
-        
-        // 如果禁用，显示灰色样式
-        if !enabled {
-            inspireButton.backgroundColor = UIColor.gray.withAlphaComponent(0.5)
-        } else {
-            // 恢复渐变背景
-            setupInspireButtonGradient()
-        }
-    }
-    
-    /// 获取当前 Inspire Points 数量
-    func getCurrentInspirePoints() -> Int {
-        return inspirePoints
     }
 }

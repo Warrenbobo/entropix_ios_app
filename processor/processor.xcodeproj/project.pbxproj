@@ -47,6 +47,7 @@
 		EA56DDE02EC091B1000AB522 /* LMCompositionTaskResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC72EC091B1000AB522 /* LMCompositionTaskResponse.swift */; };
 		EA56DDE12EC091B1000AB522 /* EmptyResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC12EC091B1000AB522 /* EmptyResponse.swift */; };
 		EA56DDE72EC091BD000AB522 /* LMApiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDE32EC091BD000AB522 /* LMApiService.swift */; };
+		EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */; };
 		EA8629A32EB5A13F00F2B00E /* EVA02.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */; };
 		EA8629A52EB5A15800F2B00E /* LMImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */; };
 		EA8629A72EB5B16300F2B00E /* LMProfileDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */; };
@@ -160,6 +161,7 @@
 		EA56DDCE2EC091B1000AB522 /* LMUserLoginRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserLoginRequest.swift; sourceTree = "<group>"; };
 		EA56DDCF2EC091B1000AB522 /* LMUserRegisterRequest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserRegisterRequest.swift; sourceTree = "<group>"; };
 		EA56DDE32EC091BD000AB522 /* LMApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiService.swift; sourceTree = "<group>"; };
+		EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeButtonView.swift; sourceTree = "<group>"; };
 		EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = EVA02.mlpackage; sourceTree = "<group>"; };
 		EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMImageProcessor.swift; sourceTree = "<group>"; };
 		EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileDisplayView.swift; sourceTree = "<group>"; };
@@ -546,6 +548,7 @@
 		EAFBACBE2E7E8DB200586EC7 /* camera */ = {
 			isa = PBXGroup;
 			children = (
+				EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */,
 				EA8629AC2EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift */,
 				EA8629AE2EB5EEF700F2B00E /* LMCameraPreviewManager.swift */,
 				EA8629AF2EB5EEF700F2B00E /* LMSuggestionCardView.swift */,
@@ -740,6 +743,7 @@
 				EA56DDDD2EC091B1000AB522 /* LMChangePasswordRequest.swift in Sources */,
 				EA56DDDE2EC091B1000AB522 /* LMUserRegisterRequest.swift in Sources */,
 				EA56DDDF2EC091B1000AB522 /* LMCompositionSuggestion.swift in Sources */,
+				EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */,
 				EA56DDE02EC091B1000AB522 /* LMCompositionTaskResponse.swift in Sources */,
 				EA56DDE12EC091B1000AB522 /* EmptyResponse.swift in Sources */,
 				EAFBACB52E7E7C7100586EC7 /* LMValidatedInputField.swift in Sources */,
