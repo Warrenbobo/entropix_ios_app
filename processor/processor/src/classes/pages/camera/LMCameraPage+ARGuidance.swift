@@ -29,9 +29,17 @@ extension LMCameraPage {
             return
         }
         
-        guard suggestion.personBoundingBox != nil else {
+        guard let targetBox = suggestion.personBoundingBox else {
             LMLogger.log("⚠️ No person bounding box in suggestion")
             showError("This suggestion doesn't support AR guidance")
+            cameraBottomControlsView.setARGuidanceEnabled(false)
+            return
+        }
+        
+        // 检查横竖方向是否一致（PRD 3.16.3.4）
+        if !checkOrientationCompatibility(targetBox: targetBox) {
+            LMLogger.log("⚠️ Orientation mismatch: suggestion and camera have different orientations")
+            showError("Please rotate your device to match the reference photo orientation")
             cameraBottomControlsView.setARGuidanceEnabled(false)
             return
         }
@@ -47,6 +55,24 @@ extension LMCameraPage {
         showARGuidanceOverlay()
         
         LMLogger.log("✅ AR guidance session started")
+    }
+    
+    /// 检查参考图与取景方向是否一致
+    /// PRD 3.16.3.4: 若横竖宽高方向不一致，则bbox和连线不显示
+    func checkOrientationCompatibility(targetBox: BoundingBox) -> Bool {
+        // 获取参考图的方向（通过 bbox 的宽高比判断）
+        let targetIsPortrait = targetBox.height > targetBox.width
+        
+        // 获取当前相机预览的方向
+        let previewBounds = cameraPreviewView.bounds
+        let cameraIsPortrait = previewBounds.height > previewBounds.width
+        
+        // 方向必须一致
+        let isCompatible = targetIsPortrait == cameraIsPortrait
+        
+        LMLogger.log("📐 Orientation check - Target: \(targetIsPortrait ? "Portrait" : "Landscape"), Camera: \(cameraIsPortrait ? "Portrait" : "Landscape"), Compatible: \(isCompatible)")
+        
+        return isCompatible
     }
     
     func stopARGuidanceSession() {
@@ -93,6 +119,7 @@ extension LMCameraPage {
         cameraPreviewView.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.removeFromSuperview()
         cameraPreviewView.viewWithTag(ViewTag.arHintLabel.rawValue)?.removeFromSuperview()
         cameraPreviewView.viewWithTag(ViewTag.personDetectionFrame.rawValue)?.removeFromSuperview()
+        cameraPreviewView.viewWithTag(ViewTag.arGuidanceLine.rawValue)?.removeFromSuperview()
     }
     
     func createGuidanceFrame(for boundingBox: BoundingBox) -> UIView {
@@ -143,8 +170,11 @@ extension LMCameraPage {
     }
     
     func updateDetectedPersonFrame(_ boundingBox: BoundingBox, isAligned: Bool) {
+        // 移除旧的检测框和连线
         cameraPreviewView.viewWithTag(ViewTag.personDetectionFrame.rawValue)?.removeFromSuperview()
+        cameraPreviewView.viewWithTag(ViewTag.arGuidanceLine.rawValue)?.removeFromSuperview()
         
+        // 创建实时检测的人物框（蓝色/绿色）
         let frame = UIView()
         frame.tag = ViewTag.personDetectionFrame.rawValue
         frame.backgroundColor = .clear
@@ -159,12 +189,88 @@ extension LMCameraPage {
         let height = boundingBox.height * Double(previewBounds.height)
         
         frame.frame = CGRect(x: x, y: y, width: width, height: height)
-        
         cameraPreviewView.addSubview(frame)
+        
+        // 绘制中点连线（PRD 3.16.3.4）
+        if let targetBox = currentSuggestion?.personBoundingBox {
+            drawGuidanceLine(from: targetBox, to: boundingBox, isAligned: isAligned)
+        }
         
         if isAligned {
             showAlignmentFeedback()
         }
+    }
+    
+    /// 绘制从参考框到实时检测框的中点连线
+    /// PRD 3.16.3.4: 计算两个bbox框的中点，显示位置指导连线
+    func drawGuidanceLine(from targetBox: BoundingBox, to detectedBox: BoundingBox, isAligned: Bool) {
+        let previewBounds = cameraPreviewView.bounds
+        
+        // 计算参考框（白色静止框）的中点
+        let targetCenterX = (targetBox.x + targetBox.width / 2.0) * Double(previewBounds.width)
+        let targetCenterY = (targetBox.y + targetBox.height / 2.0) * Double(previewBounds.height)
+        let targetCenter = CGPoint(x: targetCenterX, y: targetCenterY)
+        
+        // 计算实时检测框的中点
+        let detectedCenterX = (detectedBox.x + detectedBox.width / 2.0) * Double(previewBounds.width)
+        let detectedCenterY = (detectedBox.y + detectedBox.height / 2.0) * Double(previewBounds.height)
+        let detectedCenter = CGPoint(x: detectedCenterX, y: detectedCenterY)
+        
+        // 创建连线容器视图
+        let lineContainer = UIView()
+        lineContainer.tag = ViewTag.arGuidanceLine.rawValue
+        lineContainer.backgroundColor = .clear
+        lineContainer.frame = previewBounds
+        
+        // 使用 CAShapeLayer 绘制连线
+        let linePath = UIBezierPath()
+        linePath.move(to: targetCenter)
+        linePath.addLine(to: detectedCenter)
+        
+        let lineLayer = CAShapeLayer()
+        lineLayer.path = linePath.cgPath
+        lineLayer.strokeColor = (isAligned ? UIColor.systemGreen : UIColor.systemYellow).withAlphaComponent(0.8).cgColor
+        lineLayer.lineWidth = 3
+        lineLayer.lineDashPattern = [8, 4] // 虚线样式
+        lineLayer.lineCap = .round
+        
+        lineContainer.layer.addSublayer(lineLayer)
+        
+        // 在参考框中点添加圆点标记
+        let targetDot = createCenterDot(at: targetCenter, color: .systemGreen)
+        lineContainer.addSubview(targetDot)
+        
+        // 在实时检测框中点添加圆点标记
+        let detectedDot = createCenterDot(at: detectedCenter, color: isAligned ? .systemGreen : .systemBlue)
+        lineContainer.addSubview(detectedDot)
+        
+        // 添加到预览视图（在检测框下方）
+        cameraPreviewView.insertSubview(lineContainer, at: 0)
+        
+        // 计算距离并显示提示
+        let distance = sqrt(pow(targetCenter.x - detectedCenter.x, 2) + pow(targetCenter.y - detectedCenter.y, 2))
+        LMLogger.log("📏 Guidance line drawn - Distance: \(String(format: "%.1f", distance))px, Aligned: \(isAligned)")
+    }
+    
+    /// 创建中点标记圆点
+    func createCenterDot(at point: CGPoint, color: UIColor) -> UIView {
+        let dotSize: CGFloat = 12
+        let dot = UIView(frame: CGRect(x: point.x - dotSize/2, y: point.y - dotSize/2, width: dotSize, height: dotSize))
+        dot.backgroundColor = color.withAlphaComponent(0.9)
+        dot.layer.cornerRadius = dotSize / 2
+        dot.layer.borderWidth = 2
+        dot.layer.borderColor = UIColor.white.cgColor
+        
+        // 添加脉动动画
+        let pulseAnimation = CABasicAnimation(keyPath: "transform.scale")
+        pulseAnimation.duration = 1.0
+        pulseAnimation.fromValue = 1.0
+        pulseAnimation.toValue = 1.3
+        pulseAnimation.autoreverses = true
+        pulseAnimation.repeatCount = .infinity
+        dot.layer.add(pulseAnimation, forKey: "pulse")
+        
+        return dot
     }
     
     func showAlignmentFeedback() {
@@ -181,12 +287,12 @@ extension LMCameraPage {
     }
 }
 
-// MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
-extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
+// MARK: - Video Frame Processing for AR Guidance
+extension LMCameraPage {
     
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+    /// 处理AR引导的视频帧
+    func processARGuidanceFrame(_ sampleBuffer: CMSampleBuffer) {
         guard isARGuidanceActive else { return }
-        
         personDetectionManager?.processVideoFrame(sampleBuffer)
     }
 }
@@ -196,6 +302,17 @@ extension LMCameraPage: LMPersonDetectionManagerDelegate {
     
     func personDetectionManager(_ manager: LMPersonDetectionManager, didDetectPerson result: PersonDetectionResult) {
         guard let targetBox = currentSuggestion?.personBoundingBox else {
+            return
+        }
+        
+        // 再次检查方向兼容性（防止设备旋转）
+        guard checkOrientationCompatibility(targetBox: targetBox) else {
+            // 方向不兼容，停止 AR 引导
+            DispatchQueue.main.async { [weak self] in
+                self?.stopARGuidanceSession()
+                self?.cameraBottomControlsView.setARGuidanceEnabled(false)
+                self?.showError("Device orientation changed. Please rotate to match the reference photo.")
+            }
             return
         }
         

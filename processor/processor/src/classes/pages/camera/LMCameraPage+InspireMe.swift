@@ -15,17 +15,23 @@ extension LMCameraPage {
     func handleInspireMeFeature() {
         LMLogger.log("🎯 Starting Inspire Me feature...")
         
-        guard validateCameraState(), let photoOutput = photoOutput else {
+        guard validateCameraState() else {
             return
         }
         
         showProcessingOverlay()
         isInspireMeCapture = true
         
-        let photoSettings = AVCapturePhotoSettings()
-        photoOutput.capturePhoto(with: photoSettings, delegate: self)
+        // 从相机流中获取当前帧图片
+        captureFrameFromVideoStream()
         
-        LMLogger.log("📸 Inspire Me photo capture initiated")
+        LMLogger.log("📸 Inspire Me capturing frame from video stream")
+    }
+    
+    /// 从视频流中捕获当前帧
+    private func captureFrameFromVideoStream() {
+        // 设置标志，让视频流代理捕获下一帧
+        shouldCaptureNextFrame = true
     }
     
     func processInspireMeImage(_ image: UIImage) {

@@ -50,6 +50,7 @@ class LMCameraPage: LMPageWrapper {
     // MARK: - Feature Flags
     var isInspireMeCapture = false
     var isARGuidanceActive = false
+    var shouldCaptureNextFrame = false // 标志：是否应该捕获下一帧用于Inspire Me
     
     // MARK: - AR Guidance
     var personDetectionManager: LMPersonDetectionManager?
@@ -61,6 +62,7 @@ class LMCameraPage: LMPageWrapper {
         case arGuidanceFrame = 8888
         case arHintLabel = 8889
         case personDetectionFrame = 8890
+        case arGuidanceLine = 8891 // 中点连线
     }
     
     // MARK: - Lifecycle

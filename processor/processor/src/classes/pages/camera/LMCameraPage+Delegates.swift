@@ -135,6 +135,66 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     }
 }
 
+// MARK: - Video Data Output Delegate
+extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
+    
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        // 处理 Inspire Me 功能的帧捕获
+        if shouldCaptureNextFrame {
+            handleInspireMeFrameCapture(sampleBuffer)
+            return
+        }
+        
+        // 处理 AR Guidance 功能的实时检测
+        if isARGuidanceActive {
+            processARGuidanceFrame(sampleBuffer)
+        }
+    }
+    
+    /// 处理 Inspire Me 的帧捕获
+    private func handleInspireMeFrameCapture(_ sampleBuffer: CMSampleBuffer) {
+        // 重置标志，避免重复捕获
+        shouldCaptureNextFrame = false
+        
+        // 从 sample buffer 中提取图片
+        guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+            LMLogger.log("❌ Failed to get image buffer from sample buffer")
+            DispatchQueue.main.async { [weak self] in
+                self?.hideProcessingOverlay()
+                self?.showError("Failed to capture frame from video stream")
+            }
+            return
+        }
+        
+        // 转换为 UIImage
+        let ciImage = CIImage(cvPixelBuffer: imageBuffer)
+        let context = CIContext()
+        
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+            LMLogger.log("❌ Failed to create CGImage from CIImage")
+            DispatchQueue.main.async { [weak self] in
+                self?.hideProcessingOverlay()
+                self?.showError("Failed to process captured frame")
+            }
+            return
+        }
+        
+        let image = UIImage(cgImage: cgImage)
+        
+        LMLogger.log("✅ Frame captured from video stream, size: \(image.size)")
+        
+        // 在主线程处理图片
+        DispatchQueue.main.async { [weak self] in
+            self?.processInspireMeImage(image)
+        }
+    }
+    
+    func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        // 可选：记录丢帧情况
+        // LMLogger.log("⚠️ Video frame dropped")
+    }
+}
+
 // MARK: - Inspire Me Button Delegate
 extension LMCameraPage: LMInspireMeButtonViewDelegate {
     
