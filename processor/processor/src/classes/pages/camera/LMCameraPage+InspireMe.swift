@@ -39,7 +39,7 @@ extension LMCameraPage {
         
         if detectImageBlur(image) {
             hideProcessingOverlay()
-            showError("Image is too blurry. Please try again with better lighting or steadier hands.")
+            showAlert("Image is too blurry. Please try again with better lighting or steadier hands.", style: .error)
             return
         }
         

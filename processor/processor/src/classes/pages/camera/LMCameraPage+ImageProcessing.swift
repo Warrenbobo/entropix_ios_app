@@ -202,13 +202,13 @@ extension LMCameraPage {
         
         guard let compressedImage = compressImage(image, maxLongSide: 1080) else {
             hideProcessingOverlay()
-            showError("Image compression failed")
+            showAlert("Image compression failed", style: .error)
             return
         }
         
         guard let optimizedImage = compressImage(image, maxLongSide: 960) else {
             hideProcessingOverlay()
-            showError("Image optimization failed")
+            showAlert("Image optimization failed", style: .error)
             return
         }
         
@@ -231,19 +231,21 @@ extension LMCameraPage {
                 
             case .failure(let error):
                 LMLogger.log("❌ Task submission failed: \(error.localizedDescription)")
-                self?.showError("Analysis failed: \(error.localizedDescription)")
+                self?.showAlert("Analysis failed: \(error.localizedDescription)", style: .error)
             }
         }
     }
     
     func navigateToShowSuggestions(_ response: CompositionTaskResponse) {
-        LMLogger.log("✅ Composition analysis completed, navigating to suggestions")
+        LMLogger.log("✅ Composition analysis completed")
         LMLogger.log("📊 Received \(response.suggestions.count) suggestions")
         
-        let suggestionsPage = LMShowSuggestionsPage(
-            taskId: response.taskId,
-            initialSuggestions: response.suggestions
-        )
-        navigationController?.pushViewController(suggestionsPage, animated: true)
+        // PRD 3.14: 在 Camera 页面内展示构图建议，不跳转到独立页面
+        DispatchQueue.main.async { [weak self] in
+            self?.enterShowSuggestionsState(
+                taskId: response.taskId,
+                suggestions: response.suggestions
+            )
+        }
     }
 }

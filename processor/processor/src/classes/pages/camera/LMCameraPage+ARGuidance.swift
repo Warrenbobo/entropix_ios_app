@@ -24,14 +24,14 @@ extension LMCameraPage {
     func startARGuidanceSession() {
         guard let suggestion = currentSuggestion else {
             LMLogger.log("⚠️ No suggestion selected, cannot start AR guidance")
-            showError("Please select a composition suggestion first")
+            showAlert("Please select a composition suggestion first", style: .warning)
             cameraBottomControlsView.setARGuidanceEnabled(false)
             return
         }
         
         guard let targetBox = suggestion.personBoundingBox else {
             LMLogger.log("⚠️ No person bounding box in suggestion")
-            showError("This suggestion doesn't support AR guidance")
+            showAlert("This suggestion doesn't support AR guidance", style: .warning)
             cameraBottomControlsView.setARGuidanceEnabled(false)
             return
         }
@@ -39,7 +39,7 @@ extension LMCameraPage {
         // 检查横竖方向是否一致（PRD 3.16.3.4）
         if !checkOrientationCompatibility(targetBox: targetBox) {
             LMLogger.log("⚠️ Orientation mismatch: suggestion and camera have different orientations")
-            showError("Please rotate your device to match the reference photo orientation")
+            showAlert("Please rotate your device to match the reference photo orientation", style: .warning)
             cameraBottomControlsView.setARGuidanceEnabled(false)
             return
         }
@@ -311,7 +311,7 @@ extension LMCameraPage: LMPersonDetectionManagerDelegate {
             DispatchQueue.main.async { [weak self] in
                 self?.stopARGuidanceSession()
                 self?.cameraBottomControlsView.setARGuidanceEnabled(false)
-                self?.showError("Device orientation changed. Please rotate to match the reference photo.")
+                self?.showAlert("Device orientation changed. Please rotate to match the reference photo.", style: .warning)
             }
             return
         }

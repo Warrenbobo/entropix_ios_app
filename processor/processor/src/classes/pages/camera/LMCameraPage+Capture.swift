@@ -49,19 +49,19 @@ extension LMCameraPage {
         
         guard AVCaptureDevice.default(for: .video) != nil else {
             LMLogger.log("❌ No camera device available")
-            showError("Camera not available on this device")
+            showAlert("Camera not available on this device", style: .error)
             return false
         }
         
         guard photoOutput != nil else {
             LMLogger.log("❌ Photo output not initialized")
-            showError("Camera not ready. Please try again.")
+            showAlert("Camera not ready. Please try again.", style: .error)
             return false
         }
         
         guard let captureSession = captureSession, captureSession.isRunning else {
             LMLogger.log("❌ Capture session not running")
-            showError("Camera session not active. Please restart the camera.")
+            showAlert("Camera session not active. Please restart the camera.", style: .error)
             return false
         }
         
@@ -122,7 +122,7 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
             LMLogger.log("❌ Error capturing photo: \(error)")
             if isInspireMeCapture {
                 hideProcessingOverlay()
-                showError("Capture failed: \(error.localizedDescription)")
+                showAlert("Capture failed: \(error.localizedDescription)", style: .error)
                 isInspireMeCapture = false
             }
             return
@@ -133,7 +133,7 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
             LMLogger.log("❌ Error processing photo data")
             if isInspireMeCapture {
                 hideProcessingOverlay()
-                showError("Failed to process image")
+                showAlert("Failed to process image", style: .error)
                 isInspireMeCapture = false
             }
             return

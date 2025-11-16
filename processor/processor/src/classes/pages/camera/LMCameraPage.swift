@@ -45,7 +45,6 @@ class LMCameraPage: LMPageWrapper {
     
     // MARK: - Bottom Controls Properties
     var bottomControlsHeightConstraint: Constraint? // 保存底部控制栏高度约束
-    var isShowingSuggestions = false // 是否在显示构图建议状态
     
     // MARK: - Feature Flags
     var isInspireMeCapture = false
@@ -56,6 +55,23 @@ class LMCameraPage: LMPageWrapper {
     var personDetectionManager: LMPersonDetectionManager?
     var currentSuggestion: LMSuggestion?
     
+    // MARK: - Camera State
+    enum CameraState {
+        case normal              // 普通相机状态
+        case inspireMeProcessing // Inspire Me 处理中
+        case showingSuggestions  // 显示构图建议
+        case compositionSelected // 已选择构图（AR 引导）
+    }
+    
+    var currentCameraState: CameraState = .normal
+    
+    // MARK: - Show Suggestions Properties
+    var suggestionsCarouselView: LMSuggestionsCarouselView?
+    var suggestionsContainerView: UIView?
+    var currentTaskId: String?
+    var currentSuggestions: [LMCompositionSuggestion] = []
+    var pollTimer: Timer?
+    
     // MARK: - View Tags
     enum ViewTag: Int {
         case processingOverlay = 9999
@@ -63,6 +79,7 @@ class LMCameraPage: LMPageWrapper {
         case arHintLabel = 8889
         case personDetectionFrame = 8890
         case arGuidanceLine = 8891 // 中点连线
+        case suggestionsContainer = 8892 // Show Suggestions 容器
     }
     
     // MARK: - Lifecycle
@@ -374,76 +391,33 @@ class LMCameraPage: LMPageWrapper {
     // MARK: - Actions
     @objc func handleUserProfileButtonTapped() {
         LMLogger.log("🔙 Back button tapped")
+        
+        // 根据当前状态决定返回行为
+        switch currentCameraState {
+        case .showingSuggestions:
+            showLeaveConfirmation { [weak self] shouldLeave in
+                if shouldLeave {
+                    self?.exitShowSuggestionsState()
+                    self?.navigateBack()
+                }
+            }
+            
+        case .compositionSelected:
+            showLeaveCompositionConfirmation { [weak self] shouldLeave in
+                if shouldLeave {
+                    // TODO: 退出 Composition Selected 状态
+                    self?.navigateBack()
+                }
+            }
+            
+        default:
+            navigateBack()
+        }
+    }
+    
+    // MARK: - Navigation
+    private func navigateBack() {
         navigationController?.popViewController(animated: true)
-    }
-    
-    // MARK: - Bottom Controls State Management
-    
-    /// 进入 Show Suggestions 状态
-    func enterShowSuggestionsState() {
-        guard !isShowingSuggestions else { return }
-        
-        isShowingSuggestions = true
-        
-        // 更新底部控制栏高度为 44
-        bottomControlsHeightConstraint?.update(offset: 44)
-        
-        // 隐藏 Inspire Me 按钮
-        inspireMeButtonView.isHidden = true
-        
-        // 使用弹簧动画
-        UIView.animate(
-            withDuration: 0.35,
-            delay: 0,
-            usingSpringWithDamping: 0.85,
-            initialSpringVelocity: 0.5,
-            options: [.curveEaseInOut, .allowUserInteraction],
-            animations: {
-                self.view.layoutIfNeeded()
-            },
-            completion: nil
-        )
-        
-        LMLogger.log("📐 Entered Show Suggestions state - Bottom controls height: 44")
-    }
-    
-    /// 退出 Show Suggestions 状态
-    func exitShowSuggestionsState() {
-        guard isShowingSuggestions else { return }
-        
-        isShowingSuggestions = false
-        
-        // 恢复底部控制栏高度为 90
-        bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
-        
-        // 显示 Inspire Me 按钮
-        inspireMeButtonView.isHidden = false
-        
-        // 使用弹簧动画
-        UIView.animate(
-            withDuration: 0.35,
-            delay: 0,
-            usingSpringWithDamping: 0.85,
-            initialSpringVelocity: 0.5,
-            options: [.curveEaseInOut, .allowUserInteraction],
-            animations: {
-                self.view.layoutIfNeeded()
-            },
-            completion: nil
-        )
-        
-        LMLogger.log("📐 Exited Show Suggestions state - Bottom controls height: 90")
-    }
-    
-    // MARK: - Utilities
-    func showError(_ message: String) {
-        let alert = UIAlertController(
-            title: "Error",
-            message: message,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
     }
 }
 

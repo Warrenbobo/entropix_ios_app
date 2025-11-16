@@ -161,7 +161,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
             LMLogger.log("❌ Failed to get image buffer from sample buffer")
             DispatchQueue.main.async { [weak self] in
                 self?.hideProcessingOverlay()
-                self?.showError("Failed to capture frame from video stream")
+                self?.showAlert("Failed to capture frame from video stream", style: .error)
             }
             return
         }
@@ -174,7 +174,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
             LMLogger.log("❌ Failed to create CGImage from CIImage")
             DispatchQueue.main.async { [weak self] in
                 self?.hideProcessingOverlay()
-                self?.showError("Failed to process captured frame")
+                self?.showAlert("Failed to process captured frame", style: .error)
             }
             return
         }
