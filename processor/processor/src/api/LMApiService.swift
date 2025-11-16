@@ -17,20 +17,44 @@ class LMApiService {
     // MARK: - User APIs
     
     /// 用户注册（邮箱+密码）
-    func register(email: String, password: String, name: String?, completion: @escaping (LMApiResponseModel<LMUserRegisterResponse>) -> Void) {
-//        let deviceInfo = LMPackageManager.getDeviceInfo()
-        
+    func register(username: String, email: String, password: String, completion: @escaping (LMApiResponseModel<LMUserInfo>) -> Void) {
         let params: [String: Any] = [
+            "username": username,
             "email": email,
             "password": password,
-            "name": name ?? "",
-//            "device_info": [
-//                "device_id": deviceInfo.deviceId,
-//                "device_model": deviceInfo.deviceModel,
-//                "system_version": deviceInfo.systemVersion,
-//                "app_version": deviceInfo.appVersion
-//            ]
+            "provider": "local"
         ]
+        
+        LMApiClient.request(
+            LMApi.User.register,
+            method: .post,
+            params: params,
+            type: LMUserInfo.self,
+            completeHandler: completion
+        )
+    }
+    
+    /// Apple 注册
+    func registerWithApple(
+        appleUid: String,
+        idToken: String,
+        email: String?,
+        fullName: String?,
+        completion: @escaping (LMApiResponseModel<LMUserRegisterResponse>) -> Void
+    ) {
+        var params: [String: Any] = [
+            "provider": "apple",
+            "apple_uid": appleUid,
+            "apple_id_token": idToken
+        ]
+        
+        if let email = email {
+            params["apple_email"] = email
+        }
+        
+        if let fullName = fullName {
+            params["apple_full_name"] = fullName
+        }
         
         LMApiClient.request(
             LMApi.User.register,
@@ -43,17 +67,10 @@ class LMApiService {
     
     /// 用户登录（邮箱+密码）
     func login(identifier: String, password: String, completion: @escaping (LMApiResponseModel<LMLoginResponse>) -> Void) {
-//        let deviceInfo = LMPackageManager.getDeviceInfo()
-        
         let params: [String: Any] = [
             "identifier": identifier,
             "password": password,
-//            "device_info": [
-//                "device_id": deviceInfo.deviceId,
-//                "device_model": deviceInfo.deviceModel,
-//                "system_version": deviceInfo.systemVersion,
-//                "app_version": deviceInfo.appVersion
-//            ]
+            "provider": "",
         ]
         
         LMApiClient.request(
@@ -65,90 +82,26 @@ class LMApiService {
         )
     }
     
-    /// Apple登录/注册
-    func appleLogin(uid: String, fullName: String?, email: String?, idToken: String, completion: @escaping (LMApiResponseModel<LMAppleLoginResponse>) -> Void) {
-//        let deviceInfo = LMPackageManager.getDeviceInfo()
-        
+    /// Apple 登录
+    func loginWithApple(
+        appleUid: String,
+        idToken: String,
+        email: String?,
+        completion: @escaping (LMApiResponseModel<LMLoginResponse>) -> Void
+    ) {
         let params: [String: Any] = [
             "provider": "apple",
-            "uid": uid,
-            "full_name": fullName ?? "",
-            "email": email ?? "",
-            "id_token": idToken,
-//            "device_info": [
-//                "device_id": deviceInfo.deviceId,
-//                "device_model": deviceInfo.deviceModel,
-//                "system_version": deviceInfo.systemVersion,
-//                "app_version": deviceInfo.appVersion
-//            ]
+            "apple_uid": appleUid,
+            "username": "",
+            "apple_id_token": idToken,
+            "email": email ?? ""
         ]
         
         LMApiClient.request(
-            LMApi.Auth.appleLogin,
+            LMApi.Auth.login,
             method: .post,
             params: params,
-            type: LMAppleLoginResponse.self,
-            completeHandler: completion
-        )
-    }
-    
-    /// 发送邮箱验证码
-    func sendEmailVerification(email: String, completion: @escaping (LMApiResponseModel<LMEmailVerificationResponse>) -> Void) {
-        let params: [String: Any] = [
-            "email": email
-        ]
-        
-        LMApiClient.request(
-            LMApi.Auth.sendEmailVerification,
-            method: .post,
-            params: params,
-            type: LMEmailVerificationResponse.self,
-            completeHandler: completion
-        )
-    }
-    
-    /// 验证邮箱验证码
-    func verifyEmailCode(email: String, code: String, completion: @escaping (LMApiResponseModel<LMEmailVerificationResponse>) -> Void) {
-        let params: [String: Any] = [
-            "email": email,
-            "verification_code": code
-        ]
-        
-        LMApiClient.request(
-            LMApi.Auth.verifyEmailCode,
-            method: .post,
-            params: params,
-            type: LMEmailVerificationResponse.self,
-            completeHandler: completion
-        )
-    }
-    
-    /// 重新发送验证邮件
-    func resendEmailVerification(email: String, completion: @escaping (LMApiResponseModel<LMEmailVerificationResponse>) -> Void) {
-        let params: [String: Any] = [
-            "email": email
-        ]
-        
-        LMApiClient.request(
-            LMApi.Auth.resendEmailVerification,
-            method: .post,
-            params: params,
-            type: LMEmailVerificationResponse.self,
-            completeHandler: completion
-        )
-    }
-    
-    /// 会话验证
-    func validateSession(completion: @escaping (LMApiResponseModel<LMEmptyModel>) -> Void) {
-        let params: [String: Any] = [
-            "device_id": LMPackageManager.package.uuid
-        ]
-        
-        LMApiClient.request(
-            LMApi.Auth.validateSession,
-            method: .get,
-            params: params,
-            type: LMEmptyModel.self,
+            type: LMLoginResponse.self,
             completeHandler: completion
         )
     }
@@ -161,7 +114,7 @@ class LMApiService {
         
         LMApiClient.request(
             LMApi.Auth.refreshToken,
-            method: .post,
+            method: .put,  // ✅ 使用 PUT 方法
             params: params,
             type: LMRefreshTokenResponse.self,
             completeHandler: completion
@@ -178,7 +131,7 @@ class LMApiService {
         )
     }
     
-    /// 修改密码
+    /// 修改密码（需要旧密码）
     func changePassword(oldPassword: String, newPassword: String, completion: @escaping (LMApiResponseModel<LMEmptyModel>) -> Void) {
         let params: [String: Any] = [
             "old_password": oldPassword,
@@ -187,7 +140,23 @@ class LMApiService {
         
         LMApiClient.request(
             LMApi.User.changePassword,
-            method: .post,
+            method: .put,  // ✅ 使用 PUT 方法
+            params: params,
+            type: LMEmptyModel.self,
+            completeHandler: completion
+        )
+    }
+    
+    /// 重置密码（忘记密码，不需要旧密码）
+    func resetPassword(email: String, newPassword: String, completion: @escaping (LMApiResponseModel<LMEmptyModel>) -> Void) {
+        let params: [String: Any] = [
+            "email": email,
+            "new_password": newPassword
+        ]
+        
+        LMApiClient.request(
+            LMApi.User.resetPassword,
+            method: .post,  // ✅ 使用 POST 方法
             params: params,
             type: LMEmptyModel.self,
             completeHandler: completion
@@ -198,7 +167,7 @@ class LMApiService {
     func logout(completion: @escaping (LMApiResponseModel<LMEmptyModel>) -> Void) {
         LMApiClient.request(
             LMApi.Auth.logout,
-            method: .post,
+            method: .delete,  // ✅ 使用 DELETE 方法
             type: LMEmptyModel.self,
             completeHandler: completion
         )

@@ -19,7 +19,8 @@ class LMSessionManager {
     
     // MARK: - Session Validation
     
-    /// 验证会话有效性
+    /// 验证会话有效性（通过刷新 Token）
+    /// 注意：接口文档中没有 validateSession 接口，改用 Token 刷新机制
     func validateSession(completion: @escaping (Bool, String?) -> Void) {
         guard !isValidating else {
             LMLogger.log("⚠️ Session validation already in progress")
@@ -34,12 +35,13 @@ class LMSessionManager {
         
         isValidating = true
         
-        LMUserManager.shared.validateSession { [weak self] result in
+        // 使用 Token 刷新来验证会话有效性
+        LMUserManager.shared.refreshAccessToken { [weak self] result in
             self?.isValidating = false
             
             switch result {
             case .success:
-                LMLogger.log("✅ Session valid")
+                LMLogger.log("✅ Session valid (token refreshed)")
                 completion(true, nil)
                 
             case .failure(let error):
@@ -48,10 +50,8 @@ class LMSessionManager {
                 
                 if nsError.code == 401 {
                     reason = "token_invalid"
-                } else if nsError.domain == "device_mismatch" {
-                    reason = "device_mismatch"
                 } else {
-                    reason = "unknown"
+                    reason = "token_refresh_failed"
                 }
                 
                 LMLogger.log("❌ Session invalid: \(reason)")

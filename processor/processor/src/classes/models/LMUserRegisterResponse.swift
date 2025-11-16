@@ -9,7 +9,7 @@ import Foundation
 
 /// 注册响应
 struct LMUserRegisterResponse: Codable {
-    let status: String  // "pending", "success"
+    let status: Int
     let message: String
     let needEmailVerification: Bool
     let user: LMUserInfo?

@@ -18,7 +18,9 @@ class LMForgotPasswordPage: LMPageWrapper {
     private let titleLabel = UILabel()
     private let descriptionLabel = UILabel()
     private let emailInputField = LMValidatedInputField()
-    private let sendResetLinkButton = UIButton()
+    private let newPasswordInputField = LMValidatedInputField()
+    private let confirmPasswordInputField = LMValidatedInputField()
+    private let resetPasswordButton = UIButton()
     private let backToSignInButton = UIButton()
     
     override func viewDidLoad() {
@@ -45,13 +47,17 @@ extension LMForgotPasswordPage {
         contentView.addSubview(titleLabel)
         contentView.addSubview(descriptionLabel)
         contentView.addSubview(emailInputField)
-        contentView.addSubview(sendResetLinkButton)
+        contentView.addSubview(newPasswordInputField)
+        contentView.addSubview(confirmPasswordInputField)
+        contentView.addSubview(resetPasswordButton)
         contentView.addSubview(backToSignInButton)
         
         setupTitleLabel()
         setupDescriptionLabel()
         setupEmailInputField()
-        setupSendResetLinkButton()
+        setupNewPasswordInputField()
+        setupConfirmPasswordInputField()
+        setupResetPasswordButton()
         setupBackToSignInButton()
     }
     
@@ -64,7 +70,7 @@ extension LMForgotPasswordPage {
     }
     
     private func setupDescriptionLabel() {
-        descriptionLabel.text = "Enter your email address and we'll send you a link to reset your password."
+        descriptionLabel.text = "Enter your email and new password to reset your password."
         descriptionLabel.font = UIFont.systemFont(ofSize: 16)
         descriptionLabel.textColor = UIColor.secondaryLabel
         descriptionLabel.textAlignment = .center
@@ -78,19 +84,41 @@ extension LMForgotPasswordPage {
             isSecure: false,
             keyboardType: .emailAddress
         )
-        emailInputField.returnKeyType = .done
+        emailInputField.returnKeyType = .next
         emailInputField.delegate = self
     }
     
-    private func setupSendResetLinkButton() {
-        sendResetLinkButton.setTitle(LMText.auth.sendResetLink, for: .normal)
-        sendResetLinkButton.setTitleColor(.white, for: .normal)
-        sendResetLinkButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        sendResetLinkButton.backgroundColor = UIColor.systemOrange
-        sendResetLinkButton.layer.cornerRadius = 12
-        sendResetLinkButton.isEnabled = false
-        sendResetLinkButton.alpha = 0.6
-        sendResetLinkButton.addTarget(self, action: #selector(handleSendResetLinkButtonTapped), for: .touchUpInside)
+    private func setupNewPasswordInputField() {
+        newPasswordInputField.configureInputFieldProperties(
+            title: "",
+            placeholder: "New password",
+            isSecure: true,
+            keyboardType: .default
+        )
+        newPasswordInputField.returnKeyType = .next
+        newPasswordInputField.delegate = self
+    }
+    
+    private func setupConfirmPasswordInputField() {
+        confirmPasswordInputField.configureInputFieldProperties(
+            title: "",
+            placeholder: "Confirm new password",
+            isSecure: true,
+            keyboardType: .default
+        )
+        confirmPasswordInputField.returnKeyType = .done
+        confirmPasswordInputField.delegate = self
+    }
+    
+    private func setupResetPasswordButton() {
+        resetPasswordButton.setTitle("Reset Password", for: .normal)
+        resetPasswordButton.setTitleColor(.white, for: .normal)
+        resetPasswordButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        resetPasswordButton.backgroundColor = UIColor.systemOrange
+        resetPasswordButton.layer.cornerRadius = 12
+        resetPasswordButton.isEnabled = false
+        resetPasswordButton.alpha = 0.6
+        resetPasswordButton.addTarget(self, action: #selector(handleResetPasswordButtonTapped), for: .touchUpInside)
     }
     
     private func setupBackToSignInButton() {
@@ -129,14 +157,24 @@ extension LMForgotPasswordPage {
             make.leading.trailing.equalToSuperview().inset(24)
         }
         
-        sendResetLinkButton.snp.makeConstraints { make in
-            make.top.equalTo(emailInputField.snp.bottom).offset(32)
+        newPasswordInputField.snp.makeConstraints { make in
+            make.top.equalTo(emailInputField.snp.bottom).offset(24)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
+        
+        confirmPasswordInputField.snp.makeConstraints { make in
+            make.top.equalTo(newPasswordInputField.snp.bottom).offset(24)
+            make.leading.trailing.equalToSuperview().inset(24)
+        }
+        
+        resetPasswordButton.snp.makeConstraints { make in
+            make.top.equalTo(confirmPasswordInputField.snp.bottom).offset(32)
             make.leading.trailing.equalToSuperview().inset(24)
             make.height.equalTo(50)
         }
         
         backToSignInButton.snp.makeConstraints { make in
-            make.top.equalTo(sendResetLinkButton.snp.bottom).offset(24)
+            make.top.equalTo(resetPasswordButton.snp.bottom).offset(24)
             make.centerX.equalToSuperview()
             make.bottom.equalToSuperview().offset(-40)
         }
@@ -169,15 +207,17 @@ extension LMForgotPasswordPage {
         navigationController?.popViewController(animated: true)
     }
     
-    @objc private func handleSendResetLinkButtonTapped() {
+    @objc private func handleResetPasswordButtonTapped() {
         // 清除之前的错误信息
         emailInputField.clearErrorMessageDisplay()
+        newPasswordInputField.clearErrorMessageDisplay()
+        confirmPasswordInputField.clearErrorMessageDisplay()
         
-        // 验证邮箱
-        guard validateEmail() else { return }
+        // 验证所有输入
+        guard validateAllInputs() else { return }
         
-        // 发送重置链接
-        sendPasswordResetLink()
+        // 重置密码
+        resetPassword()
     }
 }
 
@@ -203,30 +243,87 @@ extension LMForgotPasswordPage {
         return true
     }
     
-    private func updateSendResetLinkButtonState() {
-        let email = emailInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let isEnabled = !email.isEmpty
+    private func validateNewPassword() -> Bool {
+        guard let password = newPasswordInputField.text, !password.isEmpty else {
+            newPasswordInputField.displayErrorMessageWithText("Password is required")
+            return false
+        }
         
-        sendResetLinkButton.isEnabled = isEnabled
-        sendResetLinkButton.alpha = isEnabled ? 1.0 : 0.6
-        sendResetLinkButton.backgroundColor = isEnabled ? UIColor.systemOrange : UIColor.systemGray4
+        // 密码至少8位
+        guard password.count >= 8 else {
+            newPasswordInputField.displayErrorMessageWithText("Password must be at least 8 characters")
+            return false
+        }
+        
+        // 至少包含一个字母
+        let letterRegex = ".*[A-Za-z]+.*"
+        let letterTest = NSPredicate(format: "SELF MATCHES %@", letterRegex)
+        guard letterTest.evaluate(with: password) else {
+            newPasswordInputField.displayErrorMessageWithText("Password must contain at least one letter")
+            return false
+        }
+        
+        // 至少包含一个数字
+        let numberRegex = ".*[0-9]+.*"
+        let numberTest = NSPredicate(format: "SELF MATCHES %@", numberRegex)
+        guard numberTest.evaluate(with: password) else {
+            newPasswordInputField.displayErrorMessageWithText("Password must contain at least one number")
+            return false
+        }
+        
+        return true
+    }
+    
+    private func validateConfirmPassword() -> Bool {
+        guard let password = newPasswordInputField.text,
+              let confirmPassword = confirmPasswordInputField.text,
+              !password.isEmpty, !confirmPassword.isEmpty else {
+            confirmPasswordInputField.displayErrorMessageWithText("Please confirm your password")
+            return false
+        }
+        
+        guard password == confirmPassword else {
+            confirmPasswordInputField.displayErrorMessageWithText("Passwords do not match")
+            return false
+        }
+        
+        return true
+    }
+    
+    private func validateAllInputs() -> Bool {
+        let isEmailValid = validateEmail()
+        let isPasswordValid = validateNewPassword()
+        let isConfirmPasswordValid = validateConfirmPassword()
+        
+        return isEmailValid && isPasswordValid && isConfirmPasswordValid
+    }
+    
+    private func updateResetPasswordButtonState() {
+        let email = emailInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let password = newPasswordInputField.text ?? ""
+        let confirmPassword = confirmPasswordInputField.text ?? ""
+        let isEnabled = !email.isEmpty && !password.isEmpty && !confirmPassword.isEmpty
+        
+        resetPasswordButton.isEnabled = isEnabled
+        resetPasswordButton.alpha = isEnabled ? 1.0 : 0.6
+        resetPasswordButton.backgroundColor = isEnabled ? UIColor.systemOrange : UIColor.systemGray4
     }
 }
 
 // MARK: - Password Reset Logic
 extension LMForgotPasswordPage {
     
-    private func sendPasswordResetLink() {
-        guard let email = emailInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+    private func resetPassword() {
+        guard let email = emailInputField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let newPassword = newPasswordInputField.text else {
             return
         }
         
         // 显示加载状态
         showLoadingIndicator()
         
-        // 调用忘记密码API（注意：根据PRD，这个功能在MVP版本中可能不完整）
-        // 目前我们使用发送邮箱验证码的API作为临时方案
-        LMUserManager.shared.sendEmailVerification(email: email) { [weak self] result in
+        // 调用重置密码API
+        LMUserManager.shared.resetPassword(email: email, newPassword: newPassword) { [weak self] result in
             guard let self = self else { return }
             
             DispatchQueue.main.async {
@@ -234,39 +331,39 @@ extension LMForgotPasswordPage {
                 
                 switch result {
                 case .success:
-                    LMLogger.log("✅ Password reset link sent to: \(email)")
-                    self.showResetLinkSentSuccess(email: email)
+                    LMLogger.log("✅ Password reset successfully for: \(email)")
+                    self.showResetPasswordSuccess()
                     
                 case .failure(let error):
-                    LMLogger.log("❌ Failed to send reset link: \(error.localizedDescription)")
-                    self.showResetLinkError(message: error.localizedDescription)
+                    LMLogger.log("❌ Failed to reset password: \(error.localizedDescription)")
+                    self.showResetPasswordError(message: error.localizedDescription)
                 }
             }
         }
     }
     
     private func showLoadingIndicator() {
-        sendResetLinkButton.isEnabled = false
-        sendResetLinkButton.setTitle("Sending...", for: .normal)
+        resetPasswordButton.isEnabled = false
+        resetPasswordButton.setTitle("Resetting...", for: .normal)
         
         // 显示 Toast loading activity
         view.makeToastActivity(.center)
     }
     
     private func hideLoadingIndicator() {
-        sendResetLinkButton.setTitle(LMText.auth.sendResetLink, for: .normal)
+        resetPasswordButton.setTitle("Reset Password", for: .normal)
         
         // 隐藏 Toast loading activity
         view.hideToastActivity()
         
         // 重新验证以更新按钮状态
-        updateSendResetLinkButtonState()
+        updateResetPasswordButtonState()
     }
     
-    private func showResetLinkSentSuccess(email: String) {
+    private func showResetPasswordSuccess() {
         let alert = UIAlertController(
             title: LMText.common.success,
-            message: LMText.auth.resetLinkSent,
+            message: "Your password has been reset successfully. Please sign in with your new password.",
             preferredStyle: .alert
         )
         
@@ -277,7 +374,7 @@ extension LMForgotPasswordPage {
         present(alert, animated: true)
     }
     
-    private func showResetLinkError(message: String) {
+    private func showResetPasswordError(message: String) {
         let alert = UIAlertController(
             title: LMText.common.error,
             message: message,
@@ -298,7 +395,7 @@ extension LMForgotPasswordPage: LMValidatedInputFieldDelegate {
         inputField.clearErrorMessageDisplay()
         
         // 更新按钮状态
-        updateSendResetLinkButtonState()
+        updateResetPasswordButtonState()
     }
     
     func validatedInputFieldDidBeginEditing(_ inputField: LMValidatedInputField) {
@@ -311,11 +408,18 @@ extension LMForgotPasswordPage: LMValidatedInputFieldDelegate {
     }
     
     func validatedInputFieldShouldReturn(_ inputField: LMValidatedInputField) -> Bool {
-        if inputField == emailInputField {
+        switch inputField {
+        case emailInputField:
+            newPasswordInputField.becomeFirstResponder()
+        case newPasswordInputField:
+            confirmPasswordInputField.becomeFirstResponder()
+        case confirmPasswordInputField:
             inputField.resignFirstResponder()
-            if sendResetLinkButton.isEnabled {
-                handleSendResetLinkButtonTapped()
+            if resetPasswordButton.isEnabled {
+                handleResetPasswordButtonTapped()
             }
+        default:
+            inputField.resignFirstResponder()
         }
         return true
     }

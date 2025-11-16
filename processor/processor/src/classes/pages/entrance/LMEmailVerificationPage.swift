@@ -4,10 +4,19 @@
 //
 //  邮箱验证页面
 //
+//  ⚠️ 注意：此页面已废弃
+//  原因：最新接口文档中没有邮箱验证相关接口
+//  - /v1/auth/email/verification/send
+//  - /v1/auth/email/verification/verify
+//  - /v1/auth/email/verification/resend
+//
+//  如果需要邮箱验证功能，请联系后端团队添加相应接口
+//
 
 import UIKit
 import SnapKit
 
+@available(*, deprecated, message: "Email verification API endpoints are not available in current backend")
 class LMEmailVerificationPage: UIViewController {
     
     // MARK: - Properties
@@ -201,6 +210,13 @@ class LMEmailVerificationPage: UIViewController {
     @objc private func handleResendButtonTapped() {
         guard remainingSeconds == 0 else { return }
         
+        // ⚠️ API 不可用：resendEmailVerification 接口在最新接口文档中不存在
+        showAlert(
+            title: LMText.common.error,
+            message: "Email verification feature is currently unavailable. Please contact support."
+        )
+        
+        /* 原始实现（已废弃）：
         resendButton.isEnabled = false
         loadingIndicator.startAnimating()
         
@@ -218,11 +234,19 @@ class LMEmailVerificationPage: UIViewController {
                 }
             }
         }
+        */
     }
     
     @objc private func handleVerifyButtonTapped() {
         guard verificationCode.count == codeLength else { return }
         
+        // ⚠️ API 不可用：verifyEmailCode 接口在最新接口文档中不存在
+        showAlert(
+            title: LMText.common.error,
+            message: "Email verification feature is currently unavailable. Please contact support."
+        )
+        
+        /* 原始实现（已废弃）：
         verifyButton.isEnabled = false
         loadingIndicator.startAnimating()
         
@@ -242,6 +266,7 @@ class LMEmailVerificationPage: UIViewController {
                 }
             }
         }
+        */
     }
     
     @objc private func textFieldDidChange(_ textField: UITextField) {

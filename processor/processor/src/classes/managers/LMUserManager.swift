@@ -171,6 +171,46 @@ class LMUserManager {
     // MARK: - API Wrapper Methods
     /// 登录（邮箱+密码）
     func login(identifier: String, password: String, completion: @escaping (Result<LMLoginResponse, Error>) -> Void) {
+        // 🧪 测试模式：使用特定测试账号时返回模拟数据
+        if identifier == "test" && password == "Test1234" {
+            LMLogger.log("🧪 Test mode: Using mock login data")
+            
+            // 延迟模拟网络请求
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                // 创建模拟用户信息
+                let mockUser = LMUserInfo(
+                    userId: "test_user_001",
+                    username: "TestUser",
+                    email: "test@framAIst.com",
+                    subscription: nil,
+                    membership: "2025-01-01 00:00:00"
+                )
+                
+                // 创建模拟登录响应
+                let mockResponse = LMLoginResponse(
+                    accessToken: "mock_access_token_\(UUID().uuidString)",
+                    refreshToken: "mock_refresh_token_\(UUID().uuidString)",
+                    user: mockUser,
+                    subscriptionType: "free",  // 可以改为 "plus" 或 "lifelong" 测试不同订阅
+                    inspirePoints: 10
+                )
+                
+                // 保存登录信息
+                self?.saveLoginInfo(
+                    accessToken: mockResponse.accessToken,
+                    refreshToken: mockResponse.refreshToken,
+                    user: mockResponse.user,
+                    subscriptionType: mockResponse.subscriptionType,
+                    inspirePoints: mockResponse.inspirePoints
+                )
+                
+                LMLogger.log("✅ Mock login successful")
+                completion(.success(mockResponse))
+            }
+            return
+        }
+        
+        // 正常登录流程
         LMApiService.shared.login(identifier: identifier, password: password) { [weak self] response in
             if response.requestSuccess, let data = response.value {
                 // 使用新的saveLoginInfo方法，直接传入订阅信息
@@ -194,8 +234,8 @@ class LMUserManager {
     }
     
     /// 注册（邮箱+密码）
-    func register(email: String, password: String, name: String?, completion: @escaping (Result<LMUserRegisterResponse, Error>) -> Void) {
-        LMApiService.shared.register(email: email, password: password, name: name) { response in
+    func register(username: String, email: String, password: String, completion: @escaping (Result<LMUserInfo, Error>) -> Void) {
+        LMApiService.shared.register(username: username, email: email, password: password) { response in
             if response.requestSuccess, let data = response.value {
                 completion(.success(data))
             } else {
@@ -209,9 +249,25 @@ class LMUserManager {
         }
     }
     
-    /// Apple登录/注册
-    func appleLogin(uid: String, fullName: String?, email: String?, idToken: String, completion: @escaping (Result<LMAppleLoginResponse, Error>) -> Void) {
-        LMApiService.shared.appleLogin(uid: uid, fullName: fullName, email: email, idToken: idToken) { [weak self] response in
+    /// Apple 注册
+    func registerWithApple(appleUid: String, idToken: String, email: String?, fullName: String?, completion: @escaping (Result<LMUserRegisterResponse, Error>) -> Void) {
+        LMApiService.shared.registerWithApple(appleUid: appleUid, idToken: idToken, email: email, fullName: fullName) { response in
+            if response.requestSuccess, let data = response.value {
+                completion(.success(data))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Apple registration failed"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Apple 登录（统一使用 LMLoginResponse）
+    func loginWithApple(appleUid: String, idToken: String, email: String?, completion: @escaping (Result<LMLoginResponse, Error>) -> Void) {
+        LMApiService.shared.loginWithApple(appleUid: appleUid, idToken: idToken, email: email) { [weak self] response in
             if response.requestSuccess, let data = response.value {
                 // 使用新的saveLoginInfo方法，直接传入订阅信息
                 self?.saveLoginInfo(
@@ -222,7 +278,7 @@ class LMUserManager {
                     inspirePoints: data.inspirePoints
                 )
                 
-                LMLogger.log("✅ Apple login success, isNewUser: \(data.isNewUser)")
+                LMLogger.log("✅ Apple login success")
                 completion(.success(data))
             } else {
                 let error = NSError(
@@ -235,73 +291,7 @@ class LMUserManager {
         }
     }
     
-    /// 发送邮箱验证码
-    func sendEmailVerification(email: String, completion: @escaping (Result<LMEmailVerificationResponse, Error>) -> Void) {
-        LMApiService.shared.sendEmailVerification(email: email) { response in
-            if response.requestSuccess, let data = response.value {
-                completion(.success(data))
-            } else {
-                let error = NSError(
-                    domain: "UserManager",
-                    code: response.code ?? -1,
-                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Failed to send verification email"]
-                )
-                completion(.failure(error))
-            }
-        }
-    }
-    
-    /// 验证邮箱验证码
-    func verifyEmailCode(email: String, code: String, completion: @escaping (Result<LMEmailVerificationResponse, Error>) -> Void) {
-        LMApiService.shared.verifyEmailCode(email: email, code: code) { response in
-            if response.requestSuccess, let data = response.value {
-                completion(.success(data))
-            } else {
-                let error = NSError(
-                    domain: "UserManager",
-                    code: response.code ?? -1,
-                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Email verification failed"]
-                )
-                completion(.failure(error))
-            }
-        }
-    }
-    
-    /// 重新发送验证邮件
-    func resendEmailVerification(email: String, completion: @escaping (Result<LMEmailVerificationResponse, Error>) -> Void) {
-        LMApiService.shared.resendEmailVerification(email: email) { response in
-            if response.requestSuccess, let data = response.value {
-                completion(.success(data))
-            } else {
-                let error = NSError(
-                    domain: "UserManager",
-                    code: response.code ?? -1,
-                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Failed to resend verification email"]
-                )
-                completion(.failure(error))
-            }
-        }
-    }
-    
-    /// 会话验证
-    func validateSession(completion: @escaping (Result<Bool, Error>) -> Void) {
-        LMApiService.shared.validateSession { response in
-            if response.requestSuccess {
-                completion(.success(true))
-            } else {
-                // 会话无效，清理本地登录信息
-                if response.code == 401 {
-                    LMUserManager.shared.clearLoginInfo()
-                }
-                let error = NSError(
-                    domain: "UserManager",
-                    code: response.code ?? -1,
-                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Session validation failed"]
-                )
-                completion(.failure(error))
-            }
-        }
-    }
+
     
     /// 登出
     func logout(completion: @escaping (Result<Void, Error>) -> Void) {
@@ -372,7 +362,7 @@ class LMUserManager {
         }
     }
     
-    /// 修改密码
+    /// 修改密码（需要旧密码）
     func changePassword(oldPassword: String, newPassword: String, completion: @escaping (Result<Void, Error>) -> Void) {
         LMApiService.shared.changePassword(oldPassword: oldPassword, newPassword: newPassword) { response in
             if response.requestSuccess {
@@ -382,6 +372,22 @@ class LMUserManager {
                     domain: "UserManager",
                     code: response.code ?? -1,
                     userInfo: [NSLocalizedDescriptionKey: response.message ?? "Password change failed"]
+                )
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// 重置密码（忘记密码，不需要旧密码）
+    func resetPassword(email: String, newPassword: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        LMApiService.shared.resetPassword(email: email, newPassword: newPassword) { response in
+            if response.requestSuccess {
+                completion(.success(()))
+            } else {
+                let error = NSError(
+                    domain: "UserManager",
+                    code: response.code ?? -1,
+                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Password reset failed"]
                 )
                 completion(.failure(error))
             }

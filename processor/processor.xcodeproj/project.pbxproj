@@ -45,9 +45,7 @@
 		EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */; };
 		EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */; };
 		EA6019392EC877620067F2F7 /* LMSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019372EC877620067F2F7 /* LMSessionManager.swift */; };
-		EA6019412EC8778B0067F2F7 /* LMEmailVerificationResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193D2EC8778B0067F2F7 /* LMEmailVerificationResponse.swift */; };
 		EA6019422EC8778B0067F2F7 /* TaskStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */; };
-		EA6019432EC8778B0067F2F7 /* LMAppleLoginResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193B2EC8778B0067F2F7 /* LMAppleLoginResponse.swift */; };
 		EA6019462EC877C20067F2F7 /* LMEmailVerificationPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019452EC877C20067F2F7 /* LMEmailVerificationPage.swift */; };
 		EA8629A32EB5A13F00F2B00E /* EVA02.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */; };
 		EA8629A52EB5A15800F2B00E /* LMImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */; };
@@ -160,8 +158,6 @@
 		EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeButtonView.swift; sourceTree = "<group>"; };
 		EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppleAuthManager.swift; sourceTree = "<group>"; };
 		EA6019372EC877620067F2F7 /* LMSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSessionManager.swift; sourceTree = "<group>"; };
-		EA60193B2EC8778B0067F2F7 /* LMAppleLoginResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppleLoginResponse.swift; sourceTree = "<group>"; };
-		EA60193D2EC8778B0067F2F7 /* LMEmailVerificationResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEmailVerificationResponse.swift; sourceTree = "<group>"; };
 		EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskStatus.swift; sourceTree = "<group>"; };
 		EA6019452EC877C20067F2F7 /* LMEmailVerificationPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEmailVerificationPage.swift; sourceTree = "<group>"; };
 		EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = EVA02.mlpackage; sourceTree = "<group>"; };
@@ -325,8 +321,6 @@
 		EACA1CD12E7E49B600C80883 /* models */ = {
 			isa = PBXGroup;
 			children = (
-				EA60193B2EC8778B0067F2F7 /* LMAppleLoginResponse.swift */,
-				EA60193D2EC8778B0067F2F7 /* LMEmailVerificationResponse.swift */,
 				EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */,
 				EA56DDC02EC091B1000AB522 /* BoundingBox.swift */,
 				EA56DDC32EC091B1000AB522 /* LMCompositionResult.swift */,
@@ -779,9 +773,7 @@
 				EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */,
 				EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */,
 				EA6019392EC877620067F2F7 /* LMSessionManager.swift in Sources */,
-				EA6019412EC8778B0067F2F7 /* LMEmailVerificationResponse.swift in Sources */,
 				EA6019422EC8778B0067F2F7 /* TaskStatus.swift in Sources */,
-				EA6019432EC8778B0067F2F7 /* LMAppleLoginResponse.swift in Sources */,
 				EACA1D042E7E4B0A00C80883 /* LMLaunchSplashPage.swift in Sources */,
 				EACA1D0A2E7E4EE900C80883 /* LMLogger.swift in Sources */,
 				EAFBAD852E9393E400586EC7 /* LMLanguagePage.swift in Sources */,

@@ -507,7 +507,7 @@ extension LMSignInPage {
         appleSignInButton.isEnabled = false
         appleSignInButton.alpha = 0.6
         
-        // 使用 LMAppleAuthManager 进行 Apple 登录，传递 presentingViewController
+        // 使用 LMAppleAuthManager 进行 Apple 登录（统一使用 LMLoginResponse）
         LMAppleAuthManager.shared.signInWithApple { [weak self] result in
             guard let self = self else { return }
             
@@ -517,9 +517,9 @@ extension LMSignInPage {
                 self.appleSignInButton.alpha = 1.0
                 
                 switch result {
-                case .success(let appleLoginResponse):
+                case .success(let loginResponse):
                     LMLogger.log("✅ Apple login successful")
-                    self.handleSuccessfulAppleAuthenticationResponse(appleLoginResponse: appleLoginResponse)
+                    self.handleSuccessfulAppleAuthenticationResponse(loginResponse: loginResponse)
                     
                 case .failure(let error):
                     LMLogger.log("❌ Apple login failed: \(error.localizedDescription)")
@@ -532,7 +532,7 @@ extension LMSignInPage {
         }
     }
     
-    private func handleSuccessfulAppleAuthenticationResponse(appleLoginResponse: LMAppleLoginResponse) {
+    private func handleSuccessfulAppleAuthenticationResponse(loginResponse: LMLoginResponse) {
         LMLogger.log("✅ Apple authentication successful")
         
         // 导航到主界面

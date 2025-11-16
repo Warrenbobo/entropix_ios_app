@@ -37,13 +37,13 @@ extension LMCameraPage {
     func processInspireMeImage(_ image: UIImage) {
         LMLogger.log("📸 Processing Inspire Me image...")
         
-        if detectImageBlur(image) {
-            hideProcessingOverlay()
-            showAlert("Image is too blurry. Please try again with better lighting or steadier hands.", style: .error)
-            return
-        }
+//        if detectImageBlur(image) {
+//            hideProcessingOverlay()
+//            showAlert("Image is too blurry. Please try again with better lighting or steadier hands.", style: .error)
+//            return
+//        }
         
-        LMLogger.log("✅ Image is sharp, proceeding with analysis...")
+//        LMLogger.log("✅ Image is sharp, proceeding with analysis...")
         
         let sceneFeature = analyzeSceneWithFastVLM(image)
         processAndUploadImage(image, sceneFeature: sceneFeature)

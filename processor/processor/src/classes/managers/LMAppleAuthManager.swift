@@ -15,12 +15,12 @@ class LMAppleAuthManager: NSObject {
     private override init() {}
     
     // MARK: - Properties
-    private var completion: ((Result<LMAppleLoginResponse, Error>) -> Void)?
+    private var completion: ((Result<LMLoginResponse, Error>) -> Void)?
     
     // MARK: - Public Methods
     
-    /// 发起Apple登录
-    func signInWithApple(completion: @escaping (Result<LMAppleLoginResponse, Error>) -> Void) {
+    /// 发起Apple登录（统一使用 LMLoginResponse）
+    func signInWithApple(completion: @escaping (Result<LMLoginResponse, Error>) -> Void) {
         self.completion = completion
         
         LMLogger.log("🍎 Starting Apple Sign In process...")
@@ -96,12 +96,12 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
         LMLogger.log("   User ID: \(userID)")
         LMLogger.log("   Full Name: \(fullNameString ?? "nil")")
         LMLogger.log("   Email: \(email ?? "nil")")
-        // 调用后端API
-        LMUserManager.shared.appleLogin(
-            uid: userID,
-            fullName: fullNameString,
-            email: email,
-            idToken: identityToken
+        
+        // 调用后端 API - 使用新的 loginWithApple 方法
+        LMUserManager.shared.loginWithApple(
+            appleUid: userID,
+            idToken: identityToken,
+            email: email
         ) { [weak self] result in
             DispatchQueue.main.async {
                 self?.completion?(result)

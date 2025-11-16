@@ -565,7 +565,7 @@ extension LMSignUpPage {
         let password = passwordInputField.text ?? ""
         updateSignUpButtonEnabledState(false)
         showLoadingIndicator()
-        LMUserManager.shared.register(email: email, password: password, name: name) { [weak self] result in
+        LMUserManager.shared.register(username: name, email: email, password: password) { [weak self] result in
             guard let self = self else { return }
             DispatchQueue.main.async {
                 self.hideLoadingIndicator()
@@ -613,20 +613,20 @@ extension LMSignUpPage {
         return isValid
     }
     
-    private func handleSuccessfulRegistrationResponse(email: String, registerResponse: LMUserRegisterResponse) {
-        LMLogger.log("✅ Registration successful, need email verification: \(registerResponse.needEmailVerification)")
+    private func handleSuccessfulRegistrationResponse(email: String, registerResponse: LMUserInfo) {
+//        LMLogger.log("✅ Registration successful, need email verification: \(registerResponse.needEmailVerification)")
         
         // 重新启用注册按钮
         validateFormInputsAndUpdateSignUpButtonState()
         
-        // 根据是否需要邮箱验证来决定下一步操作
-        if registerResponse.needEmailVerification {
-            // 需要邮箱验证，跳转到邮箱验证页面
-            navigateToEmailVerificationPage(email: email)
-        } else {
-            // 不需要邮箱验证（理论上不应该发生，但作为备用）
+//        // 根据是否需要邮箱验证来决定下一步操作
+//        if registerResponse.needEmailVerification {
+//            // 需要邮箱验证，跳转到邮箱验证页面
+//            navigateToEmailVerificationPage(email: email)
+//        } else {
+//            // 不需要邮箱验证（理论上不应该发生，但作为备用）
             presentRegistrationSuccessAlert()
-        }
+//        }
     }
     
     private func handleRegistrationFailure(error: Error) {

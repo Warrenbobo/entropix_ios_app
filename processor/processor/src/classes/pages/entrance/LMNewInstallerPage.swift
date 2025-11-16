@@ -143,12 +143,12 @@ extension LMNewInstallerPage {
                 // Apple 登录成功
                 LMLogger.log("✅ Apple Sign In successful")
                 LMLogger.log("   User: \(response.user.username)")
-                LMLogger.log("   Is New User: \(response.isNewUser)")
+//                LMLogger.log("   Is New User: \(response.user.isNewUser)")
                 LMLogger.log("   Subscription: \(response.subscriptionType)")
                 LMLogger.log("   Inspire Points: \(response.inspirePoints)")
                 
                 // 处理登录成功
-                self.handleAppleLoginSuccess(response: response)
+                self.handleAppleLoginSuccess()
                 
             case .failure(let error):
                 // Apple 登录失败
@@ -158,7 +158,7 @@ extension LMNewInstallerPage {
         }
     }
     
-    private func handleAppleLoginSuccess(response: LMAppleLoginResponse) {
+    private func handleAppleLoginSuccess() {
         // 导航到主应用界面
         if let mainRootPage = AppTheme.Screen.mainPage {
             AppTheme.Screen.window()?.rootViewController = mainRootPage

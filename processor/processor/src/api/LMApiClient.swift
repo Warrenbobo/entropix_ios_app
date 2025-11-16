@@ -60,7 +60,7 @@ class LMApiClient {
         let resultURLString = AppConfigs.Host.path() + url
         requestAndParser(resultURLString,
                          method: method,
-                         params: addSecretSign(with: params ?? [:]),
+                         params: params,
                          type: type,
                          encoding: resultEncoding,
                          header: defaultHTTPHeaders(),
@@ -203,19 +203,5 @@ class LMApiClient {
             responseParser = "\(responseParser)\(error.localizedDescription)"
         }
         LMLogger.log("\(requestParser)\n\(LMLogger.dividingLine)\n\(responseParser)")
-    }
-    
-    private static let secret = "j^f-9wGbfiSElxCxG+&O4gIvts_FE#Cb4Z&@#j3g"
-    /// 给请求参数加密
-    static private func addSecretSign(with params: [String: Any]) -> [String: Any] {
-        var originalParams = params
-        originalParams["timestamp"] = String(format: "%.f", Date().timeIntervalSince1970 * 1000)
-        let paramList = originalParams.sorted(by: { $0.key < $1.key })
-        let stringList = paramList.map {(key, value) -> String in
-            return "\(key)=\(value)"
-        }
-        let originalString = stringList.joined(separator: "") + secret
-        originalParams["sign"] = CocoaSecurity.md5(originalString).hexLower
-        return originalParams
     }
 }
