@@ -179,13 +179,36 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
             return
         }
         
-        let image = UIImage(cgImage: cgImage)
+        // 获取正确的图片方向
+        let imageOrientation = getImageOrientation()
+        let image = UIImage(cgImage: cgImage, scale: 1.0, orientation: imageOrientation)
         
-        LMLogger.log("✅ Frame captured from video stream, size: \(image.size)")
+        LMLogger.log("✅ Frame captured from video stream, size: \(image.size), orientation: \(imageOrientation.rawValue)")
         
         // 在主线程处理图片
         DispatchQueue.main.async { [weak self] in
             self?.processInspireMeImage(image)
+        }
+    }
+    
+    /// 根据设备方向和相机位置获取正确的图片方向
+    private func getImageOrientation() -> UIImage.Orientation {
+        let deviceOrientation = UIDevice.current.orientation
+        let isFrontCamera = isUsingFrontCamera
+        
+        // 根据设备方向和相机位置确定图片方向
+        switch deviceOrientation {
+        case .portrait:
+            return isFrontCamera ? .leftMirrored : .right
+        case .portraitUpsideDown:
+            return isFrontCamera ? .rightMirrored : .left
+        case .landscapeLeft:
+            return isFrontCamera ? .downMirrored : .up
+        case .landscapeRight:
+            return isFrontCamera ? .upMirrored : .down
+        default:
+            // 默认竖屏方向
+            return isFrontCamera ? .leftMirrored : .right
         }
     }
     

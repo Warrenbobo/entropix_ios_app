@@ -249,6 +249,14 @@ extension LMCameraPreviewManager: LMSuggestionsCarouselViewDelegate {
     func suggestionsCarouselViewDidRequestMoreSuggestions(_ view: LMSuggestionsCarouselView) {
         addGeneratingSuggestion()
     }
+    
+    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpSuggestion suggestion: LMCompositionSuggestion, at index: Int) {
+        // 向上滑动选中构图，进入引导模式
+        selectSuggestion(suggestion)
+        currentState = .composition
+        updateViewVisibility()
+        delegate?.cameraPreviewManager(self, didSelectSuggestion: suggestion)
+    }
 }
 
 // MARK: - LMCameraGuidanceOverlayViewDelegate

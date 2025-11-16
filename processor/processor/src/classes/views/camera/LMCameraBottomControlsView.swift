@@ -35,6 +35,20 @@ class LMCameraBottomControlsView: UIView {
     weak var delegate: LMCameraBottomControlsViewDelegate?
     private var isARGuidanceEnabled = false
     
+    // 约束引用，用于动态调整
+    private var captureButtonSizeConstraint: Constraint?
+    private var captureButtonBottomConstraint: Constraint?
+    private var flipContainerHeightConstraint: Constraint?
+    private var arContainerHeightConstraint: Constraint?
+    
+    // 布局模式
+    enum LayoutMode {
+        case normal   // 高度 90，按钮正常大小
+        case compact  // 高度 44，按钮缩小
+    }
+    
+    private var currentLayoutMode: LayoutMode = .normal
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupBottomControlsComponents()
@@ -131,8 +145,8 @@ extension LMCameraBottomControlsView {
         // 拍照按钮 - 放在 View 底部
         captureButton.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-10)
-            make.size.equalTo(70)
+            captureButtonBottomConstraint = make.bottom.equalToSuperview().offset(-10).constraint
+            captureButtonSizeConstraint = make.size.equalTo(70).constraint
         }
         
         // 翻转相机按钮 - 与拍照按钮垂直对齐
@@ -140,7 +154,7 @@ extension LMCameraBottomControlsView {
             make.leading.equalToSuperview().offset(32)
             make.centerY.equalTo(captureButton)
             make.width.equalTo(80)
-            make.height.equalTo(50)
+            flipContainerHeightConstraint = make.height.equalTo(50).constraint
         }
         flipCameraButton.snp.makeConstraints { make in
             make.top.equalToSuperview()
@@ -158,7 +172,7 @@ extension LMCameraBottomControlsView {
             make.trailing.equalToSuperview().offset(-24)
             make.centerY.equalTo(captureButton)
             make.width.equalTo(80)
-            make.height.equalTo(50)
+            arContainerHeightConstraint = make.height.equalTo(50).constraint
         }
         arGuidanceButton.snp.makeConstraints { make in
             make.top.equalToSuperview()
@@ -219,13 +233,78 @@ extension LMCameraBottomControlsView {
 
 extension LMCameraBottomControlsView {
     
+    /// 设置AR Guidance的启用状态
+    /// - Parameter enabled: 是否启用
+    /// - Note: 此方法会同步更新内部状态和视觉外观
     func setARGuidanceEnabled(_ enabled: Bool) {
+        // 确保状态同步
         isARGuidanceEnabled = enabled
         updateARGuidanceAppearance()
+        
+        LMLogger.log("🎯 AR Guidance button state set to: \(enabled ? "ON" : "OFF")")
     }
     
     func getCurrentARGuidanceStatus() -> Bool {
         return isARGuidanceEnabled
+    }
+    
+    /// 切换布局模式
+    /// - Parameters:
+    ///   - mode: 布局模式（normal 或 compact）
+    ///   - animated: 是否使用动画
+    func setLayoutMode(_ mode: LayoutMode, animated: Bool = true) {
+        guard mode != currentLayoutMode else { return }
+        
+        currentLayoutMode = mode
+        
+        switch mode {
+        case .normal:
+            // 恢复正常大小：拍照按钮 70，容器高度 50，底部间距 10
+            captureButtonSizeConstraint?.update(offset: 70)
+            captureButtonBottomConstraint?.update(offset: -10)
+            flipContainerHeightConstraint?.update(offset: 50)
+            arContainerHeightConstraint?.update(offset: 50)
+            
+        case .compact:
+            // 缩小尺寸：拍照按钮 44，容器高度 44，垂直居中
+            captureButtonSizeConstraint?.update(offset: 44)
+            captureButtonBottomConstraint?.update(offset: 0)
+            flipContainerHeightConstraint?.update(offset: 44)
+            arContainerHeightConstraint?.update(offset: 44)
+        }
+        
+        // 应用布局变化和圆角动画
+        if animated {
+            UIView.animate(
+                withDuration: 0.35,
+                delay: 0,
+                usingSpringWithDamping: 0.85,
+                initialSpringVelocity: 0.5,
+                options: [.curveEaseInOut, .allowUserInteraction]
+            ) {
+                self.layoutIfNeeded()
+                // 在动画块中更新圆角，使其平滑过渡
+                self.updateCaptureButtonCornerRadius(for: mode)
+            }
+        } else {
+            layoutIfNeeded()
+            updateCaptureButtonCornerRadius(for: mode)
+        }
+        
+        LMLogger.log("📐 Bottom controls layout mode changed to: \(mode == .normal ? "Normal" : "Compact")")
+    }
+    
+    /// 更新拍摄按钮的圆角半径
+    /// - Parameter mode: 布局模式
+    private func updateCaptureButtonCornerRadius(for mode: LayoutMode) {
+        switch mode {
+        case .normal:
+            // 70x70 按钮，圆角半径 35（保持圆形）
+            captureButton.layer.cornerRadius = 35
+        case .compact:
+            // 44x44 按钮，圆角半径 22（保持圆形）
+            captureButton.layer.cornerRadius = 22
+        }
     }
     
     func showCaptureAnimation() {

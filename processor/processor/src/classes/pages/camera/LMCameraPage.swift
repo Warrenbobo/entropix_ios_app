@@ -80,6 +80,7 @@ class LMCameraPage: LMPageWrapper {
         case personDetectionFrame = 8890
         case arGuidanceLine = 8891 // 中点连线
         case suggestionsContainer = 8892 // Show Suggestions 容器
+        case referenceImageView = 8893 // 参考图（左下角）
     }
     
     // MARK: - Lifecycle

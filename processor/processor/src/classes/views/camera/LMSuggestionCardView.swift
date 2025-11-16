@@ -3,6 +3,7 @@
 //  processor
 //
 //  Created by Kiro on 2025/11/1.
+//  Refactored to inherit from UICollectionViewCell
 //
 
 import UIKit
@@ -12,11 +13,7 @@ protocol LMSuggestionCardViewDelegate: AnyObject {
     func suggestionCardView(_ cardView: LMSuggestionCardView, didToggleFavorite isFavorite: Bool)
 }
 
-enum AdjacentMarginSide {
-    case left, right
-}
-
-class LMSuggestionCardView: UIView {
+class LMSuggestionCardView: UICollectionViewCell {
     
     // MARK: - UI Components
     private let containerView = UIView()
@@ -29,13 +26,10 @@ class LMSuggestionCardView: UIView {
     // MARK: - Properties
     weak var delegate: LMSuggestionCardViewDelegate?
     private var suggestion: SuggestionDisplayModel?
-    private var isSelected: Bool = false
-    private var adjacentMargins: Set<AdjacentMarginSide> = []
     
     // MARK: - Constants
-    private let cardSize = CGSize(width: 75, height: 100)
-    private let selectedScale: CGFloat = 1.3
-    private let selectedTranslationY: CGFloat = -15
+    private let selectedScale: CGFloat = 1.1 // 适中的放大倍数
+    private let selectedTranslationY: CGFloat = -7 // 适中的向上偏移
     
     // MARK: - Initialization
     override init(frame: CGRect) {
@@ -50,6 +44,10 @@ class LMSuggestionCardView: UIView {
     
     // MARK: - Subview Configuration
     private func configureSubviews() {
+        // 允许 cell 内容超出边界显示（用于缩放效果）
+        contentView.clipsToBounds = false
+        clipsToBounds = false
+        
         // 容器视图设置
         containerView.layer.cornerRadius = 12
         containerView.clipsToBounds = true
@@ -85,8 +83,8 @@ class LMSuggestionCardView: UIView {
         loadingLabel.textColor = UIColor.white
         loadingLabel.textAlignment = .center
         
-        // 添加子视图
-        addSubview(containerView)
+        // 添加子视图到 contentView
+        contentView.addSubview(containerView)
         containerView.addSubview(imageView)
         containerView.addSubview(heartButton)
         containerView.addSubview(loadingView)
@@ -100,8 +98,7 @@ class LMSuggestionCardView: UIView {
     private func setupConstraints() {
         // 容器视图约束
         containerView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.size.equalTo(cardSize)
+            make.edges.equalToSuperview()
         }
         
         // 图片视图约束
@@ -132,11 +129,6 @@ class LMSuggestionCardView: UIView {
             make.top.equalTo(loadingSpinner.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview().inset(8)
         }
-        
-        // 设置视图大小
-        self.snp.makeConstraints { make in
-            make.size.equalTo(cardSize)
-        }
     }
     
     // MARK: - Public Methods
@@ -162,40 +154,70 @@ class LMSuggestionCardView: UIView {
         }
     }
     
-    func setSelected(_ selected: Bool, animated: Bool) {
-        guard isSelected != selected else { return }
-        isSelected = selected
-        
-        let animations = {
-            if selected {
-                self.containerView.layer.borderColor = UIColor.systemBlue.cgColor
-                self.containerView.transform = CGAffineTransform(scaleX: self.selectedScale, y: self.selectedScale)
-                    .concatenating(CGAffineTransform(translationX: 0, y: self.selectedTranslationY))
-                self.heartButton.alpha = 1.0
-            } else {
-                self.containerView.layer.borderColor = UIColor.clear.cgColor
-                self.containerView.transform = CGAffineTransform.identity
-                self.heartButton.alpha = self.suggestion?.isFavorite == true ? 1.0 : 0.0
+    // MARK: - UICollectionViewCell Override
+    override var isSelected: Bool {
+        didSet {
+            updateSelectionState(animated: true)
+        }
+    }
+    
+    // MARK: - Selection State
+    private func updateSelectionState(animated: Bool) {
+        if isSelected {
+            // 更新边框颜色
+            containerView.layer.borderColor = UIColor.systemBlue.cgColor
+            
+            // 提升 zPosition，让选中的 cell 显示在最上层
+            layer.zPosition = 100
+            
+            // 显示收藏按钮
+            heartButton.alpha = 1.0
+            
+            // 使用 CATransform3D 进行缩放，这样更可靠
+            let scale = selectedScale
+            let translateY = selectedTranslationY
+            
+            var transform = CATransform3DIdentity
+            transform = CATransform3DScale(transform, scale, scale, 1.0)
+            transform = CATransform3DTranslate(transform, 0, translateY, 0)
+            
+            if animated {
+                let animation = CABasicAnimation(keyPath: "transform")
+                animation.fromValue = layer.transform
+                animation.toValue = transform
+                animation.duration = 0.3
+                animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                animation.fillMode = .forwards
+                animation.isRemovedOnCompletion = false
+                layer.add(animation, forKey: "scaleAnimation")
             }
             
-            self.updateAdjacentMarginsTransform()
-        }
-        
-        if animated {
-            UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseInOut, animations: animations)
+            layer.transform = transform
+            
         } else {
-            animations()
+            // 恢复边框颜色
+            containerView.layer.borderColor = UIColor.clear.cgColor
+            
+            // 恢复 zPosition
+            layer.zPosition = 0
+            
+            // 根据收藏状态决定是否显示收藏按钮
+            heartButton.alpha = suggestion?.isFavorite == true ? 1.0 : 0.0
+            
+            // 恢复变换
+            if animated {
+                let animation = CABasicAnimation(keyPath: "transform")
+                animation.fromValue = layer.transform
+                animation.toValue = CATransform3DIdentity
+                animation.duration = 0.3
+                animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                animation.fillMode = .forwards
+                animation.isRemovedOnCompletion = false
+                layer.add(animation, forKey: "scaleAnimation")
+            }
+            
+            layer.transform = CATransform3DIdentity
         }
-    }
-    
-    func addAdjacentMargin(_ side: AdjacentMarginSide) {
-        adjacentMargins.insert(side)
-        updateAdjacentMarginsTransform()
-    }
-    
-    func removeAdjacentMargins() {
-        adjacentMargins.removeAll()
-        updateAdjacentMarginsTransform()
     }
     
     // MARK: - Private Methods
@@ -234,26 +256,6 @@ class LMSuggestionCardView: UIView {
         // 为了演示，我们使用占位图片
         imageView.image = UIImage(systemName: "photo")
         imageView.tintColor = UIColor.systemGray3
-    }
-    
-    private func updateAdjacentMarginsTransform() {
-        var marginTransform = CGAffineTransform.identity
-        
-        if adjacentMargins.contains(.left) {
-            marginTransform = marginTransform.concatenating(CGAffineTransform(translationX: 16, y: 0))
-        }
-        if adjacentMargins.contains(.right) {
-            marginTransform = marginTransform.concatenating(CGAffineTransform(translationX: -16, y: 0))
-        }
-        
-        // 合并选中状态的变换
-        if isSelected {
-            let selectedTransform = CGAffineTransform(scaleX: selectedScale, y: selectedScale)
-                .concatenating(CGAffineTransform(translationX: 0, y: selectedTranslationY))
-            containerView.transform = selectedTransform.concatenating(marginTransform)
-        } else {
-            containerView.transform = marginTransform
-        }
     }
     
     // MARK: - Actions
