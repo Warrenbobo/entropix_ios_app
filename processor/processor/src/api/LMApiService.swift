@@ -18,6 +18,26 @@ class LMApiService {
     
     /// 用户注册（邮箱+密码）
     func register(username: String, email: String, password: String, completion: @escaping (LMApiResponseModel<LMUserInfo>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testRegisterResponse = LMTestDataManager.shared.testRegisterResponse()
+                let userInfo = LMUserInfo(
+                    userId: "test_user_\(UUID().uuidString)",
+                    username: username,
+                    email: email,
+                    subscription: nil,
+                    membership: nil
+                )
+                var apiResponse = LMApiResponseModel<LMUserInfo>()
+                apiResponse.code = 0
+                apiResponse.value = userInfo
+                apiResponse.message = testRegisterResponse.message
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         let params: [String: Any] = [
             "username": username,
             "email": email,
@@ -42,6 +62,18 @@ class LMApiService {
         fullName: String?,
         completion: @escaping (LMApiResponseModel<LMUserRegisterResponse>) -> Void
     ) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testRegisterResponse = LMTestDataManager.shared.testRegisterResponse()
+                var apiResponse = LMApiResponseModel<LMUserRegisterResponse>()
+                apiResponse.code = 0
+                apiResponse.value = testRegisterResponse
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         var params: [String: Any] = [
             "provider": "apple",
             "apple_uid": appleUid,
@@ -67,6 +99,18 @@ class LMApiService {
     
     /// 用户登录（邮箱+密码）
     func login(identifier: String, password: String, completion: @escaping (LMApiResponseModel<LMLoginResponse>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testLoginResponse = LMTestDataManager.shared.testLoginResponse()
+                var apiResponse = LMApiResponseModel<LMLoginResponse>()
+                apiResponse.code = 0
+                apiResponse.value = testLoginResponse
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         let params: [String: Any] = [
             "identifier": identifier,
             "password": password,
@@ -89,6 +133,18 @@ class LMApiService {
         email: String?,
         completion: @escaping (LMApiResponseModel<LMLoginResponse>) -> Void
     ) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testLoginResponse = LMTestDataManager.shared.testLoginResponse()
+                var apiResponse = LMApiResponseModel<LMLoginResponse>()
+                apiResponse.code = 0
+                apiResponse.value = testLoginResponse
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         let params: [String: Any] = [
             "provider": "apple",
             "apple_uid": appleUid,
@@ -108,6 +164,18 @@ class LMApiService {
     
     /// 刷新 Token
     func refreshToken(refreshToken: String, completion: @escaping (LMApiResponseModel<LMRefreshTokenResponse>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testRefreshResponse = LMTestDataManager.shared.testRefreshTokenResponse()
+                var apiResponse = LMApiResponseModel<LMRefreshTokenResponse>()
+                apiResponse.code = 0
+                apiResponse.value = testRefreshResponse
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         let params: [String: Any] = [
             "refresh_token": refreshToken
         ]
@@ -123,6 +191,18 @@ class LMApiService {
     
     /// 获取当前用户信息
     func getUserInfo(completion: @escaping (LMApiResponseModel<LMUserInfo>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testUserInfo = LMTestDataManager.shared.getCurrentTestUserInfo()
+                var apiResponse = LMApiResponseModel<LMUserInfo>()
+                apiResponse.code = 0
+                apiResponse.value = testUserInfo
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         LMApiClient.request(
             LMApi.User.info,
             method: .get,
@@ -133,6 +213,17 @@ class LMApiService {
     
     /// 修改密码（需要旧密码）
     func changePassword(oldPassword: String, newPassword: String, completion: @escaping (LMApiResponseModel<LMEmptyModel>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                var apiResponse = LMApiResponseModel<LMEmptyModel>()
+                apiResponse.code = 0
+                apiResponse.message = "Password changed successfully"
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         let params: [String: Any] = [
             "old_password": oldPassword,
             "new_password": newPassword
@@ -149,6 +240,17 @@ class LMApiService {
     
     /// 重置密码（忘记密码，不需要旧密码）
     func resetPassword(email: String, newPassword: String, completion: @escaping (LMApiResponseModel<LMEmptyModel>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                var apiResponse = LMApiResponseModel<LMEmptyModel>()
+                apiResponse.code = 0
+                apiResponse.message = "Password reset link sent to your email"
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         let params: [String: Any] = [
             "email": email,
             "new_password": newPassword
@@ -165,6 +267,17 @@ class LMApiService {
     
     /// 用户登出
     func logout(completion: @escaping (LMApiResponseModel<LMEmptyModel>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                var apiResponse = LMApiResponseModel<LMEmptyModel>()
+                apiResponse.code = 0
+                apiResponse.message = "Logged out successfully"
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         LMApiClient.request(
             LMApi.Auth.logout,
             method: .delete,  // ✅ 使用 DELETE 方法
@@ -184,6 +297,18 @@ class LMApiService {
         sceneType: String?,
         completion: @escaping (LMApiResponseModel<LMCompositionTaskResponse>) -> Void
     ) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testTaskResponse = LMTestDataManager.shared.testCompositionTaskResponse()
+                var apiResponse = LMApiResponseModel<LMCompositionTaskResponse>()
+                apiResponse.code = 0
+                apiResponse.value = testTaskResponse
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         guard let originalImageData = originalImage.jpegData(compressionQuality: 0.9),
               let optimizedImageData = optimizedImage.jpegData(compressionQuality: 0.9) else {
             LMLogger.log("❌ Failed to convert images to data")
@@ -245,6 +370,18 @@ class LMApiService {
     
     /// 获取任务建议图
     func getSuggestions(taskId: String, completion: @escaping (LMApiResponseModel<LMCompositionSuggestionsResponse>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testSuggestionsResponse = LMTestDataManager.shared.testCompositionSuggestionsResponse()
+                var apiResponse = LMApiResponseModel<LMCompositionSuggestionsResponse>()
+                apiResponse.code = 0
+                apiResponse.value = testSuggestionsResponse
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         LMApiClient.request(
             LMApi.Composition.suggestions(taskId: taskId),
             method: .get,
@@ -255,6 +392,18 @@ class LMApiService {
     
     /// 分页获取历史构图结果
     func getCompositionResults(page: Int = 1, number: Int = 4, completion: @escaping (LMApiResponseModel<LMCompositionResultsResponse>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testResultsResponse = LMTestDataManager.shared.testCompositionResultsResponse()
+                var apiResponse = LMApiResponseModel<LMCompositionResultsResponse>()
+                apiResponse.code = 0
+                apiResponse.value = testResultsResponse
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         let params: [String: Any] = [
             "page": page,
             "number": number
@@ -271,6 +420,18 @@ class LMApiService {
     
     /// 确认建议图
     func confirmSuggestion(taskId: String, suggestionId: String, completion: @escaping (LMApiResponseModel<LMConfirmSuggestionResponse>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testConfirmResponse = LMTestDataManager.shared.testConfirmSuggestionResponse()
+                var apiResponse = LMApiResponseModel<LMConfirmSuggestionResponse>()
+                apiResponse.code = 0
+                apiResponse.value = testConfirmResponse
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
         let params: [String: Any] = [
             "task_id": taskId,
             "suggestion_id": suggestionId

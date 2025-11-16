@@ -52,6 +52,22 @@ class LMMinePage: LMPageWrapper {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
         refreshUserData()
+        updateDebugButtonVisibility()
+    }
+    
+    private func updateDebugButtonVisibility() {
+        // 检查是否已存在 Debug 按钮（使用 tag 识别）
+        let existingDebugButton = stackView.viewWithTag(9999)
+        
+        if LMTestDataManager.shared.isTestModeEnabled {
+            // 测试模式开启，如果按钮不存在则创建
+            if existingDebugButton == nil {
+                setupDebugButton()
+            }
+        } else {
+            // 测试模式关闭，移除按钮
+            existingDebugButton?.removeFromSuperview()
+        }
     }
     
     deinit {
@@ -74,6 +90,36 @@ class LMMinePage: LMPageWrapper {
             make.top.leading.trailing.equalToSuperview()
             make.height.equalTo(AppTheme.Screen.safeAreaTop + 44)
         }
+        
+        // 🐛 Debug 模式：添加 Debug 按钮
+        setupDebugButton()
+    }
+    
+    private func setupDebugButton() {
+        // 仅在测试模式下显示 Debug 按钮
+        guard LMTestDataManager.shared.isTestModeEnabled else { return }
+        
+        let debugButton = UIButton(type: .system)
+        debugButton.setTitle("🐛", for: .normal)
+        debugButton.titleLabel?.font = .systemFont(ofSize: 28)
+        debugButton.addTarget(self, action: #selector(debugButtonTapped), for: .touchUpInside)
+        debugButton.tag = 9999 // 用于识别 debug 按钮
+        
+        // 将按钮添加到 profileView 的父视图（stackView）
+        stackView.addSubview(debugButton)
+        debugButton.snp.makeConstraints { make in
+            make.trailing.equalTo(profileView).offset(-8)
+            make.centerY.equalTo(profileView)
+            make.width.height.equalTo(50)
+        }
+        
+        LMLogger.log("🐛 Debug button added to Profile page (right side of user info)")
+    }
+    
+    @objc private func debugButtonTapped() {
+        LMLogger.log("🐛 Debug button tapped - Opening Debug Menu")
+        let debugMenu = LMDebugMenuPage()
+        navigationController?.pushViewController(debugMenu, animated: true)
     }
     
     private func setupScrollView() {

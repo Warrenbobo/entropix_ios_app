@@ -42,6 +42,11 @@
 		EA56DDE72EC091BD000AB522 /* LMApiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDE32EC091BD000AB522 /* LMApiService.swift */; };
 		EA5835442EC976200013E531 /* LMCameraPage+ShowSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */; };
 		EA5835462EC979830013E531 /* LMCameraPage+Alerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835452EC979830013E531 /* LMCameraPage+Alerts.swift */; };
+		EA5835492EC999330013E531 /* LMTestModeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835482EC999330013E531 /* LMTestModeConfig.swift */; };
+		EA58354A2EC999330013E531 /* LMTestDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835472EC999330013E531 /* LMTestDataManager.swift */; };
+		EA58354E2EC99E0D0013E531 /* LMDebugMenuPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA58354B2EC99E0D0013E531 /* LMDebugMenuPage.swift */; };
+		EA58354F2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA58354C2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift */; };
+		EA5835512EC99E1F0013E531 /* LMInspireMeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */; };
 		EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */; };
 		EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */; };
 		EA6019392EC877620067F2F7 /* LMSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019372EC877620067F2F7 /* LMSessionManager.swift */; };
@@ -155,6 +160,11 @@
 		EA56DDE32EC091BD000AB522 /* LMApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiService.swift; sourceTree = "<group>"; };
 		EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+ShowSuggestions.swift"; sourceTree = "<group>"; };
 		EA5835452EC979830013E531 /* LMCameraPage+Alerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+Alerts.swift"; sourceTree = "<group>"; };
+		EA5835472EC999330013E531 /* LMTestDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMTestDataManager.swift; sourceTree = "<group>"; };
+		EA5835482EC999330013E531 /* LMTestModeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMTestModeConfig.swift; sourceTree = "<group>"; };
+		EA58354B2EC99E0D0013E531 /* LMDebugMenuPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDebugMenuPage.swift; sourceTree = "<group>"; };
+		EA58354C2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeRecordsPage.swift; sourceTree = "<group>"; };
+		EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeRecord.swift; sourceTree = "<group>"; };
 		EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeButtonView.swift; sourceTree = "<group>"; };
 		EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppleAuthManager.swift; sourceTree = "<group>"; };
 		EA6019372EC877620067F2F7 /* LMSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSessionManager.swift; sourceTree = "<group>"; };
@@ -283,6 +293,15 @@
 			path = api;
 			sourceTree = "<group>";
 		};
+		EA58354D2EC99E0D0013E531 /* debug */ = {
+			isa = PBXGroup;
+			children = (
+				EA58354B2EC99E0D0013E531 /* LMDebugMenuPage.swift */,
+				EA58354C2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift */,
+			);
+			path = debug;
+			sourceTree = "<group>";
+		};
 		EACA1BE82E7E408900C80883 = {
 			isa = PBXGroup;
 			children = (
@@ -304,6 +323,8 @@
 		EACA1CCF2E7E49B600C80883 /* managers */ = {
 			isa = PBXGroup;
 			children = (
+				EA5835472EC999330013E531 /* LMTestDataManager.swift */,
+				EA5835482EC999330013E531 /* LMTestModeConfig.swift */,
 				EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */,
 				EA6019372EC877620067F2F7 /* LMSessionManager.swift */,
 				EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */,
@@ -321,6 +342,7 @@
 		EACA1CD12E7E49B600C80883 /* models */ = {
 			isa = PBXGroup;
 			children = (
+				EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */,
 				EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */,
 				EA56DDC02EC091B1000AB522 /* BoundingBox.swift */,
 				EA56DDC32EC091B1000AB522 /* LMCompositionResult.swift */,
@@ -346,6 +368,7 @@
 		EACA1CD32E7E49B600C80883 /* pages */ = {
 			isa = PBXGroup;
 			children = (
+				EA58354D2EC99E0D0013E531 /* debug */,
 				EACA1D022E7E4ADD00C80883 /* entrance */,
 				EACA1D0E2E7E517400C80883 /* camera */,
 				EACA1D0F2E7E517B00C80883 /* mine */,
@@ -689,6 +712,8 @@
 				EACA1CF22E7E49B600C80883 /* LMApiResponseModel.swift in Sources */,
 				EACA1CF32E7E49B600C80883 /* processor.xcdatamodeld in Sources */,
 				EA8629B92EB5F7C000F2B00E /* LMLaunageManager.swift in Sources */,
+				EA58354E2EC99E0D0013E531 /* LMDebugMenuPage.swift in Sources */,
+				EA58354F2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift in Sources */,
 				EAFBADC82EA4C90E00586EC7 /* LMNotificationsPage.swift in Sources */,
 				EA54E1DB2EBEED04000DB5EE /* LMSubscriptionPage.swift in Sources */,
 				EA8629A92EB5B18B00F2B00E /* LMProfileEditView.swift in Sources */,
@@ -759,7 +784,10 @@
 				EA8629B42EB5EEF700F2B00E /* LMSuggestionCardView.swift in Sources */,
 				EA8629B52EB5EEF700F2B00E /* LMCameraPreviewManager.swift in Sources */,
 				EA8629B62EB5EEF700F2B00E /* LMSuggestionsCarouselView.swift in Sources */,
+				EA5835492EC999330013E531 /* LMTestModeConfig.swift in Sources */,
+				EA58354A2EC999330013E531 /* LMTestDataManager.swift in Sources */,
 				EA8629AB2EB5B70300F2B00E /* LMNotificationTableViewCell.swift in Sources */,
+				EA5835512EC99E1F0013E531 /* LMInspireMeRecord.swift in Sources */,
 				EACA1D0C2E7E504F00C80883 /* LMWebViewPage.swift in Sources */,
 				EAFBAD882E93B94B00586EC7 /* LMPhotoCollectionView.swift in Sources */,
 				EACA1D082E7E4CBF00C80883 /* LMPackageModel.swift in Sources */,

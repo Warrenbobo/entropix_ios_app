@@ -82,13 +82,13 @@ class LMMineUserInfoView: UIView {
         nameLabel.snp.makeConstraints { make in
             make.leading.equalTo(avatarImageView.snp.trailing).offset(16)
             make.top.equalTo(avatarImageView).offset(8)
-            make.trailing.equalToSuperview()
+            make.trailing.equalToSuperview().offset(-60) // 为 debug 按钮留出空间
         }
         
         emailLabel.snp.makeConstraints { make in
             make.leading.equalTo(nameLabel)
             make.top.equalTo(nameLabel.snp.bottom).offset(4)
-            make.trailing.equalToSuperview()
+            make.trailing.equalToSuperview().offset(-60) // 为 debug 按钮留出空间
         }
     }
     

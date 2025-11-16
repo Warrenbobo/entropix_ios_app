@@ -46,6 +46,10 @@ extension LMCameraPage {
 //        LMLogger.log("✅ Image is sharp, proceeding with analysis...")
         
         let sceneFeature = analyzeSceneWithFastVLM(image)
+        
+        // 📝 记录数据到 LMTestDataManager
+        LMTestDataManager.shared.recordInspireMeData(sceneFeature: sceneFeature, image: image)
+        
         processAndUploadImage(image, sceneFeature: sceneFeature)
         syncInspirePointsToBackend()
     }

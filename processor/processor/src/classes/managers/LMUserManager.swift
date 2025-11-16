@@ -171,45 +171,6 @@ class LMUserManager {
     // MARK: - API Wrapper Methods
     /// 登录（邮箱+密码）
     func login(identifier: String, password: String, completion: @escaping (Result<LMLoginResponse, Error>) -> Void) {
-        // 🧪 测试模式：使用特定测试账号时返回模拟数据
-        if identifier == "test" && password == "Test1234" {
-            LMLogger.log("🧪 Test mode: Using mock login data")
-            
-            // 延迟模拟网络请求
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                // 创建模拟用户信息
-                let mockUser = LMUserInfo(
-                    userId: "test_user_001",
-                    username: "TestUser",
-                    email: "test@framAIst.com",
-                    subscription: nil,
-                    membership: "2025-01-01 00:00:00"
-                )
-                
-                // 创建模拟登录响应
-                let mockResponse = LMLoginResponse(
-                    accessToken: "mock_access_token_\(UUID().uuidString)",
-                    refreshToken: "mock_refresh_token_\(UUID().uuidString)",
-                    user: mockUser,
-                    subscriptionType: "free",  // 可以改为 "plus" 或 "lifelong" 测试不同订阅
-                    inspirePoints: 10
-                )
-                
-                // 保存登录信息
-                self?.saveLoginInfo(
-                    accessToken: mockResponse.accessToken,
-                    refreshToken: mockResponse.refreshToken,
-                    user: mockResponse.user,
-                    subscriptionType: mockResponse.subscriptionType,
-                    inspirePoints: mockResponse.inspirePoints
-                )
-                
-                LMLogger.log("✅ Mock login successful")
-                completion(.success(mockResponse))
-            }
-            return
-        }
-        
         // 正常登录流程
         LMApiService.shared.login(identifier: identifier, password: password) { [weak self] response in
             if response.requestSuccess, let data = response.value {
