@@ -10,6 +10,8 @@ import SnapKit
 
 class LMGalleryDetailPage: UIViewController {
     
+    public var fromCamera: Bool = false
+    
     // MARK: - Properties
     private let galleryItem: GalleryItem
     
@@ -181,7 +183,11 @@ class LMGalleryDetailPage: UIViewController {
     
     // MARK: - Actions
     @objc private func backButtonTapped() {
-        navigationController?.popViewController(animated: true)
+        if fromCamera {
+            navigationController?.popToRootViewController(animated: true)
+        } else {
+            navigationController?.popViewController(animated: true)
+        }
     }
     
     @objc private func downloadButtonTapped() {

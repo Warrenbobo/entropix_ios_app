@@ -34,7 +34,6 @@ extension LMCameraPage {
         }
         
         photoOutput.capturePhoto(with: photoSettings, delegate: self)
-        cameraBottomControlsView.showCaptureAnimation()
         
         LMLogger.log("📸 Photo capture initiated")
     }
@@ -120,35 +119,18 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if let error = error {
             LMLogger.log("❌ Error capturing photo: \(error)")
-            if isInspireMeCapture {
-                hideProcessingOverlay()
-                showAlert("Capture failed: \(error.localizedDescription)", style: .error)
-                isInspireMeCapture = false
-            }
             return
         }
         
         guard let imageData = photo.fileDataRepresentation(),
               let capturedImage = UIImage(data: imageData) else {
             LMLogger.log("❌ Error processing photo data")
-            if isInspireMeCapture {
-                hideProcessingOverlay()
-                showAlert("Failed to process image", style: .error)
-                isInspireMeCapture = false
-            }
             return
         }
-        
         // 根据当前选择的宽高比裁剪照片
         let croppedImage = cropImageToAspectRatio(capturedImage, ratio: currentAspectRatio)
-        
-        if isInspireMeCapture {
-            isInspireMeCapture = false
-            processInspireMeImage(croppedImage)
-        } else {
-            UIImageWriteToSavedPhotosAlbum(croppedImage, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
-            LMLogger.log("✅ Photo captured successfully")
-        }
+        // 进入照片预览
+        showPhotoPreview(image: croppedImage)
     }
     
     // MARK: - Live Photo Delegate Method
@@ -278,5 +260,109 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
                 checkmarkView.removeFromSuperview()
             }
         }
+    }
+    
+    // MARK: - Photo Preview
+    
+    /// 显示照片预览页面
+    func showPhotoPreview(image: UIImage) {
+        LMLogger.log("📸 Showing photo preview")
+        
+        // 创建 GalleryItem
+        let galleryItem = GalleryItem(
+            image: image,
+            title: nil,
+            id: UUID().uuidString
+        )
+        
+        // 创建预览页面
+        let previewPage = LMGalleryDetailPage(item: galleryItem)
+        previewPage.fromCamera = true
+        // 如果在 showSuggestion 状态，重置相机状态
+        if currentCameraState == .showingSuggestions || currentCameraState == .compositionSelected {
+            LMLogger.log("🔄 Resetting camera state from \(currentCameraState) to normal")
+            resetCameraToNormalState()
+        }
+        
+        // 推送到预览页面
+        navigationController?.pushViewController(previewPage, animated: true)
+        
+        LMLogger.log("✅ Navigated to photo preview page")
+    }
+    
+    /// 重置相机到初始状态
+    func resetCameraToNormalState() {
+        LMLogger.log("🔄 Starting camera state reset...")
+        
+        // 清理 Show Suggestions 相关视图
+        if let suggestionsContainer = view.viewWithTag(ViewTag.suggestionsContainer.rawValue) {
+            suggestionsContainer.removeFromSuperview()
+            LMLogger.log("  ✓ Removed suggestions container")
+        }
+        suggestionsCarouselView = nil
+        suggestionsContainerView = nil
+        
+        // 停止轮询
+        pollTimer?.invalidate()
+        pollTimer = nil
+        LMLogger.log("  ✓ Stopped polling timer")
+        
+        // 清理参考图
+        if let referenceImageView = view.viewWithTag(ViewTag.referenceImageView.rawValue) {
+            referenceImageView.removeFromSuperview()
+            LMLogger.log("  ✓ Removed reference image")
+        }
+        
+        // 清理 AR 引导相关视图
+        if let arFrame = view.viewWithTag(ViewTag.arGuidanceFrame.rawValue) {
+            arFrame.removeFromSuperview()
+        }
+        if let personFrame = view.viewWithTag(ViewTag.personDetectionFrame.rawValue) {
+            personFrame.removeFromSuperview()
+        }
+        if let arLine = view.viewWithTag(ViewTag.arGuidanceLine.rawValue) {
+            arLine.removeFromSuperview()
+        }
+        if let arHint = view.viewWithTag(ViewTag.arHintLabel.rawValue) {
+            arHint.removeFromSuperview()
+        }
+        LMLogger.log("  ✓ Removed AR guidance views")
+        
+        // 重置状态变量
+        currentCameraState = .normal
+        currentTaskId = nil
+        currentSuggestions = []
+        currentSuggestion = nil
+        isARGuidanceActive = false
+        LMLogger.log("  ✓ Reset state variables")
+        
+        // 恢复 Inspire Me 按钮显示
+        inspireMeButtonView.isHidden = false
+        LMLogger.log("  ✓ Restored Inspire Me button visibility")
+        
+        // 恢复底部控制栏高度约束
+        bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
+        LMLogger.log("  ✓ Restored bottom controls height constraint to \(LMCameraConstants.bottomControlsHeight)")
+        
+        // 恢复快门按钮到正常尺寸（切换到 normal 布局模式）
+        cameraBottomControlsView.setLayoutMode(.normal, animated: true)
+        LMLogger.log("  ✓ Restored shutter button size (normal layout mode)")
+        
+        // 关闭 AR 引导按钮
+        cameraBottomControlsView.setARGuidanceEnabled(false)
+        LMLogger.log("  ✓ Disabled AR guidance button")
+        
+        // 应用布局变化（使用动画）
+        UIView.animate(
+            withDuration: 0.35,
+            delay: 0,
+            usingSpringWithDamping: 0.85,
+            initialSpringVelocity: 0.5,
+            options: [.curveEaseInOut, .allowUserInteraction]
+        ) {
+            self.view.layoutIfNeeded()
+        }
+        
+        LMLogger.log("✅ Camera state reset to normal completed")
     }
 }

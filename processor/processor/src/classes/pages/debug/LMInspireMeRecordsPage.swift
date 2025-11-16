@@ -141,7 +141,7 @@ class LMInspireMeRecordsPage: UIViewController {
         let text = """
         ID: \(record.id)
         Timestamp: \(record.formattedTimestamp)
-        Scene Feature: \(record.sceneFeature)
+        Scene Feature: \(record.sceneFeature ?? [])
         """
         
         UIPasteboard.general.string = text
@@ -325,7 +325,7 @@ class LMInspireMeRecordCell: UITableViewCell {
         
         timestampLabel.text = record.formattedTimestamp
         idLabel.text = "ID: \(record.id.prefix(8))..."
-        sceneFeatureLabel.text = String(describing: record.sceneFeature)
+        sceneFeatureLabel.text = "数据长度 \(String(describing: record.sceneFeature?.count ?? 0))个"
         
         if let image = record.image {
             thumbnailImageView.image = image
@@ -339,7 +339,7 @@ class LMInspireMeRecordCell: UITableViewCell {
     
     @objc private func copyButtonTapped() {
         guard let record = currentRecord else { return }
-        UIPasteboard.general.string = String(describing: record.sceneFeature)
+        UIPasteboard.general.string = String(describing: record.sceneFeature ?? [])
         
         // 视觉反馈
         copyButton.alpha = 0.5

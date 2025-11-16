@@ -73,7 +73,6 @@ class LMSuggestionsCarouselView: UIView {
     weak var delegate: LMSuggestionsCarouselViewDelegate?
     private var suggestions: [SuggestionDisplayModel] = []
     private var selectedIndex: Int = -1 // -1 表示未选中任何卡片
-    private var panGestureRecognizer: UIPanGestureRecognizer!
     
     // MARK: - Constants
     private let cardSize = CGSize(width: 120, height: 160) 
@@ -122,11 +121,6 @@ class LMSuggestionsCarouselView: UIView {
         collectionView.register(LMSuggestionCardView.self, forCellWithReuseIdentifier: cellIdentifier)
         
         addSubview(collectionView)
-        
-        // 添加向上滑动手势识别
-        panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
-        panGestureRecognizer.delegate = self
-        collectionView.addGestureRecognizer(panGestureRecognizer)
     }
     
     private func setupConstraints() {
@@ -139,19 +133,13 @@ class LMSuggestionsCarouselView: UIView {
     func updateSuggestions(_ suggestions: [SuggestionDisplayModel]) {
         self.suggestions = suggestions
         collectionView.reloadData()
-        if !suggestions.isEmpty {
-            selectSuggestion(at: 0)
-        }
     }
     
-    func selectSuggestion(at index: Int) {
+    func selectSuggestion(at index: Int, animated: Bool = true) {
         guard index >= 0 && index < suggestions.count else { return }
-        
         selectedIndex = index
-        
-        // 使用 CollectionView 的选中机制
         let indexPath = IndexPath(item: index, section: 0)
-        collectionView.selectItem(at: indexPath, animated: true, scrollPosition: .centeredHorizontally)
+        collectionView.selectItem(at: indexPath, animated: animated, scrollPosition: .centeredHorizontally)
     }
     
     func addGeneratingCard() {
@@ -163,42 +151,6 @@ class LMSuggestionsCarouselView: UIView {
         
         let indexPath = IndexPath(item: suggestions.count - 1, section: 0)
         collectionView.insertItems(at: [indexPath])
-    }
-    
-    // MARK: - Private Methods
-    private func scrollToSelectedCard(animated: Bool) {
-        guard selectedIndex >= 0 && selectedIndex < suggestions.count else { return }
-        
-        let indexPath = IndexPath(item: selectedIndex, section: 0)
-        collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: animated)
-    }
-    
-    private func snapToNearestCard() {
-        let centerX = collectionView.contentOffset.x + collectionView.bounds.width / 2
-        
-        var nearestIndex = 0
-        var minDistance = CGFloat.greatestFiniteMagnitude
-        
-        for index in 0..<suggestions.count {
-            let indexPath = IndexPath(item: index, section: 0)
-            guard let attributes = collectionView.layoutAttributesForItem(at: indexPath) else { continue }
-            
-            let cellCenterX = attributes.center.x
-            let distance = abs(cellCenterX - centerX)
-            
-            if distance < minDistance {
-                minDistance = distance
-                nearestIndex = index
-            }
-        }
-        
-        if nearestIndex != selectedIndex {
-            selectSuggestion(at: nearestIndex)
-            
-            let suggestion = suggestions[nearestIndex]
-            let compositionSuggestion = convertToCompositionSuggestion(suggestion)
-            delegate?.suggestionsCarouselView(self, didSelectSuggestion: compositionSuggestion, at: nearestIndex)
-        }
     }
     
     // MARK: - Helper Methods
@@ -220,43 +172,6 @@ class LMSuggestionsCarouselView: UIView {
     }
     
     // MARK: - Gesture Handling
-    
-    @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
-        let translation = gesture.translation(in: self)
-        let velocity = gesture.velocity(in: self)
-        
-        switch gesture.state {
-        case .changed:
-            // 只处理向上滑动
-            if translation.y < 0 {
-                // 可以添加视觉反馈，例如轻微移动cell
-                LMLogger.log("📱 Panning up: \(translation.y)")
-            }
-            
-        case .ended:
-            // 判断是否为向上滑动手势（向上速度 > 500 或向上移动 > 50）
-            let isSwipeUp = velocity.y < -500 || translation.y < -50
-            
-            if isSwipeUp && selectedIndex >= 0 && selectedIndex < suggestions.count {
-                LMLogger.log("⬆️ Swipe up detected - selecting suggestion at index: \(selectedIndex)")
-                
-                let suggestion = suggestions[selectedIndex]
-                let compositionSuggestion = convertToCompositionSuggestion(suggestion)
-                delegate?.suggestionsCarouselView(self, didSwipeUpSuggestion: compositionSuggestion, at: selectedIndex)
-            }
-            
-        default:
-            break
-        }
-    }
-}
-
-// MARK: - UIGestureRecognizerDelegate
-extension LMSuggestionsCarouselView: UIGestureRecognizerDelegate {
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        // 允许pan手势与collectionView的滚动手势同时识别
-        return true
-    }
 }
 
 // MARK: - UICollectionViewDataSource
@@ -273,8 +188,6 @@ extension LMSuggestionsCarouselView: UICollectionViewDataSource {
         cell.configure(with: suggestion)
         cell.delegate = self
         
-        // 不需要手动设置选中状态，CollectionView 会自动管理
-        
         return cell
     }
 }
@@ -283,26 +196,11 @@ extension LMSuggestionsCarouselView: UICollectionViewDataSource {
 extension LMSuggestionsCarouselView: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let index = indexPath.item
-        
         if index != selectedIndex {
             selectSuggestion(at: index)
-            
             let suggestion = suggestions[index]
             let compositionSuggestion = convertToCompositionSuggestion(suggestion)
             delegate?.suggestionsCarouselView(self, didSelectSuggestion: compositionSuggestion, at: index)
-        }
-    }
-}
-
-// MARK: - UIScrollViewDelegate
-extension LMSuggestionsCarouselView: UIScrollViewDelegate {
-    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        snapToNearestCard()
-    }
-    
-    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        if !decelerate {
-            snapToNearestCard()
         }
     }
 }
@@ -332,5 +230,16 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
         // 转换为 LMCompositionSuggestion 用于 delegate 回调
         let compositionSuggestion = convertToCompositionSuggestion(suggestion)
         delegate?.suggestionsCarouselView(self, didToggleFavorite: compositionSuggestion, at: index)
+    }
+    
+    func suggestionCardView(_ cardView: LMSuggestionCardView, didSwipeUp suggestion: SuggestionDisplayModel) {
+        guard let indexPath = collectionView.indexPath(for: cardView) else { return }
+        let index = indexPath.item
+        
+        LMLogger.log("⬆️ Card swiped up at index: \(index)")
+        
+        // 转换为 LMCompositionSuggestion 用于 delegate 回调
+        let compositionSuggestion = convertToCompositionSuggestion(suggestion)
+        delegate?.suggestionsCarouselView(self, didSwipeUpSuggestion: compositionSuggestion, at: index)
     }
 }

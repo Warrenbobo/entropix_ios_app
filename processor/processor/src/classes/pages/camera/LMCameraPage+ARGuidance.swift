@@ -52,11 +52,14 @@ extension LMCameraPage {
         addCenterReferenceFrame()
     }
     
-    /// 添加白色固定参考框（位于屏幕中心，宽80，高120）
+    /// 添加白色固定参考框（位于屏幕中心，宽为屏幕宽度的1/3，高为宽度的1.2倍）
     func addCenterReferenceFrame() {
         let previewBounds = cameraPreviewView.bounds
-        let frameWidth: CGFloat = 80
-        let frameHeight: CGFloat = 120
+        
+        // 宽度为屏幕宽度的1/3
+        let frameWidth: CGFloat = previewBounds.width / 3.0
+        // 高度为宽度的1.2倍
+        let frameHeight: CGFloat = frameWidth * 1.2
         
         let centerX = previewBounds.width / 2
         let centerY = previewBounds.height / 2
@@ -80,7 +83,7 @@ extension LMCameraPage {
         
         cameraPreviewView.addSubview(centerFrame)
         
-        LMLogger.log("📐 Added white center reference frame at (\(String(format: "%.1f", centerX)), \(String(format: "%.1f", centerY))) size: \(frameWidth)x\(frameHeight)")
+        LMLogger.log("📐 Added white center reference frame at (\(String(format: "%.1f", centerX)), \(String(format: "%.1f", centerY))) size: \(String(format: "%.1f", frameWidth))x\(String(format: "%.1f", frameHeight))")
     }
     
 
@@ -129,9 +132,9 @@ extension LMCameraPage {
     /// 更新检测到的人物框和引导元素
     /// 新需求：白色固定框在中心（80x120），绿色动态框跟随检测到的人物（略小）
     func updateDetectedPersonFrame(_ boundingBox: BoundingBox, isAligned: Bool) {
-        // 移除旧的绿色动态检测框和连线（保留白色固定框）
+        // 移除旧的绿色动态检测框（保留白色固定框）
         cameraPreviewView.viewWithTag(ViewTag.personDetectionFrame.rawValue)?.removeFromSuperview()
-        cameraPreviewView.viewWithTag(ViewTag.arGuidanceLine.rawValue)?.removeFromSuperview()
+        // 注意：不在这里移除连线，让 drawGuidanceLineFromCenterToDetected 方法自己处理
         
         LMLogger.log("📊 Detected bbox: (\(String(format: "%.3f", boundingBox.x)), \(String(format: "%.3f", boundingBox.y))) size: \(String(format: "%.3f", boundingBox.width))x\(String(format: "%.3f", boundingBox.height))")
         
@@ -142,9 +145,10 @@ extension LMCameraPage {
         let detectedWidth = boundingBox.width * Double(previewBounds.width)
         let detectedHeight = boundingBox.height * Double(previewBounds.height)
         
-        // 计算绿色框的尺寸（固定为70x105，保持宽高比与白色框一致）
-        let greenFrameWidth: CGFloat = 70
-        let greenFrameHeight: CGFloat = 105
+        // 计算绿色框的尺寸（比白色框略小，保持宽高比1:1.2）
+        let whiteFrameWidth = previewBounds.width / 3.0
+        let greenFrameWidth: CGFloat = whiteFrameWidth * 0.85 // 白色框的85%
+        let greenFrameHeight: CGFloat = greenFrameWidth * 1.2 // 保持1:1.2的宽高比
         
         // 绿色框的中心点与检测到的人物中心点对齐
         let detectedCenterX = detectedX + detectedWidth / 2.0
@@ -197,7 +201,7 @@ extension LMCameraPage {
         
         let lineLayer = CAShapeLayer()
         lineLayer.path = linePath.cgPath
-        lineLayer.strokeColor = (isAligned ? UIColor.systemGreen : UIColor.systemYellow).withAlphaComponent(0.8).cgColor
+        lineLayer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.8).cgColor // 蓝色虚线
         lineLayer.lineWidth = 3
         lineLayer.lineDashPattern = [8, 4] // 虚线样式
         lineLayer.lineCap = .round
@@ -212,8 +216,18 @@ extension LMCameraPage {
         let greenDot = createCenterDot(at: detectedCenter, color: .systemGreen)
         lineContainer.addSubview(greenDot)
         
-        // 添加到预览视图（在检测框下方）
-        cameraPreviewView.insertSubview(lineContainer, at: 0)
+        // 添加到预览视图（在检测框之前，确保连线可见）
+        // 先移除可能存在的旧连线
+        cameraPreviewView.viewWithTag(ViewTag.arGuidanceLine.rawValue)?.removeFromSuperview()
+        // 添加新连线到预览视图
+        cameraPreviewView.addSubview(lineContainer)
+        // 将连线移到白色框和绿色框之后
+        if let whiteFrame = cameraPreviewView.viewWithTag(ViewTag.arGuidanceFrame.rawValue) {
+            cameraPreviewView.bringSubviewToFront(whiteFrame)
+        }
+        if let greenFrame = cameraPreviewView.viewWithTag(ViewTag.personDetectionFrame.rawValue) {
+            cameraPreviewView.bringSubviewToFront(greenFrame)
+        }
         
         // 计算距离并显示提示
         let distance = sqrt(pow(whiteCenter.x - detectedCenter.x, 2) + pow(whiteCenter.y - detectedCenter.y, 2))
@@ -258,9 +272,24 @@ extension LMCameraPage {
 // MARK: - Video Frame Processing for AR Guidance
 extension LMCameraPage {
     
-    /// 处理AR引导的视频帧
+    /// 处理AR引导的视频帧（限制频率为每1秒处理一次）
     func processARGuidanceFrame(_ sampleBuffer: CMSampleBuffer) {
         guard isARGuidanceActive else { return }
+        
+        // 时间控制：每1秒处理一次
+        let currentTime = Date().timeIntervalSince1970
+        if let lastProcessTime = lastARGuidanceProcessTime {
+            let timeSinceLastProcess = currentTime - lastProcessTime
+            if timeSinceLastProcess < 1.0 {
+                // 距离上次处理不足1秒，跳过本次处理
+                return
+            }
+        }
+        
+        // 更新最后处理时间
+        lastARGuidanceProcessTime = currentTime
+        
+        // 处理视频帧
         personDetectionManager?.processVideoFrame(sampleBuffer)
     }
 }

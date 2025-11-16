@@ -307,25 +307,13 @@ extension LMCameraBottomControlsView {
         }
     }
     
-    func showCaptureAnimation() {
-        // 拍照时的闪烁动画
-        let flashView = UIView()
-        flashView.backgroundColor = UIColor.white
-        flashView.alpha = 0
-        addSubview(flashView)
-        
-        flashView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        
-        UIView.animate(withDuration: 0.1, animations: {
-            flashView.alpha = 0.8
-        }) { _ in
-            UIView.animate(withDuration: 0.2, animations: {
-                flashView.alpha = 0
-            }) { _ in
-                flashView.removeFromSuperview()
-            }
-        }
+    /// 恢复快门按钮到正常尺寸
+    func restoreShutterButtonSize() {
+        setLayoutMode(.normal, animated: true)
+    }
+    
+    /// 恢复底部控制栏高度（通过恢复布局模式实现）
+    func restoreBottomControlsHeight() {
+        setLayoutMode(.normal, animated: true)
     }
 }

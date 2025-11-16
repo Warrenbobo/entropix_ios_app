@@ -54,6 +54,7 @@ class LMCameraPage: LMPageWrapper {
     // MARK: - AR Guidance
     var personDetectionManager: LMPersonDetectionManager?
     var currentSuggestion: LMSuggestion?
+    var lastARGuidanceProcessTime: TimeInterval? // 上次处理AR引导帧的时间戳
     
     // MARK: - Camera State
     enum CameraState {

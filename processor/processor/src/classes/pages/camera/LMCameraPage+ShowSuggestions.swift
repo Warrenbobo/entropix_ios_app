@@ -115,21 +115,9 @@ extension LMCameraPage {
             make.edges.equalToSuperview()
         }
         
-        // 转换为 DisplayModel 并更新
-        let displayModels = currentSuggestions.map { SuggestionDisplayModel(from: $0) }
-        carouselView.updateSuggestions(displayModels)
-        
         // 保存引用
         self.suggestionsContainerView = containerView
         self.suggestionsCarouselView = carouselView
-        
-        // 淡入动画
-        containerView.alpha = 0
-        UIView.animate(withDuration: 0.3) {
-            containerView.alpha = 1
-        }
-        
-        LMLogger.log("✅ Suggestions carousel displayed with \(displayModels.count) items")
     }
     
     /// 隐藏构图轮播视图
