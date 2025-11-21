@@ -26,6 +26,9 @@ protocol LMPersonDetectionManagerDelegate: AnyObject {
     /// 检测到人物
     func personDetectionManager(_ manager: LMPersonDetectionManager, didDetectPerson result: PersonDetectionResult)
     
+    /// 未检测到人物
+    func personDetectionManagerDidNotDetectPerson(_ manager: LMPersonDetectionManager)
+    
     /// 检测失败
     func personDetectionManager(_ manager: LMPersonDetectionManager, didFailWithError error: Error)
 }
@@ -47,6 +50,12 @@ class LMPersonDetectionManager {
             self?.handleDetectionResults(request: request, error: error)
         }
         request.upperBodyOnly = false // 检测全身
+        return request
+    }()
+    
+    // 人脸检测请求
+    private lazy var faceDetectionRequest: VNDetectFaceRectanglesRequest = {
+        let request = VNDetectFaceRectanglesRequest()
         return request
     }()
     
@@ -109,10 +118,20 @@ class LMPersonDetectionManager {
     
     /// 执行检测（CVPixelBuffer）
     private func performDetection(on pixelBuffer: CVPixelBuffer) {
-        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
+        // 获取设备方向并转换为 CGImagePropertyOrientation
+        let deviceOrientation = UIDevice.current.orientation
+        let imageOrientation = cgImageOrientation(from: deviceOrientation)
+        
+        // 创建带有方向信息的请求处理器
+        let handler = VNImageRequestHandler(
+            cvPixelBuffer: pixelBuffer,
+            orientation: imageOrientation,
+            options: [:]
+        )
         
         do {
-            try handler.perform([personDetectionRequest])
+            // 同时执行人体检测和人脸检测
+            try handler.perform([personDetectionRequest, faceDetectionRequest])
         } catch {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -123,15 +142,44 @@ class LMPersonDetectionManager {
     
     /// 执行检测（CGImage）
     private func performDetection(on cgImage: CGImage) {
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        // 获取设备方向并转换为 CGImagePropertyOrientation
+        let deviceOrientation = UIDevice.current.orientation
+        let imageOrientation = cgImageOrientation(from: deviceOrientation)
+        
+        // 创建带有方向信息的请求处理器
+        let handler = VNImageRequestHandler(
+            cgImage: cgImage,
+            orientation: imageOrientation,
+            options: [:]
+        )
         
         do {
-            try handler.perform([personDetectionRequest])
+            // 同时执行人体检测和人脸检测
+            try handler.perform([personDetectionRequest, faceDetectionRequest])
         } catch {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.personDetectionManager(self, didFailWithError: error)
             }
+        }
+    }
+    
+    /// 将设备方向转换为 CGImagePropertyOrientation
+    /// - Parameter deviceOrientation: 设备方向
+    /// - Returns: CGImage 方向
+    private func cgImageOrientation(from deviceOrientation: UIDeviceOrientation) -> CGImagePropertyOrientation {
+        switch deviceOrientation {
+        case .portrait:
+            return .right // 后置摄像头，设备竖直时图像需要向右旋转90度
+        case .portraitUpsideDown:
+            return .left
+        case .landscapeLeft:
+            return .up // 设备向左横屏时，后置摄像头图像是正的
+        case .landscapeRight:
+            return .down
+        default:
+            // 默认使用竖屏方向
+            return .right
         }
     }
     
@@ -147,7 +195,22 @@ class LMPersonDetectionManager {
         
         guard let observations = request.results as? [VNHumanObservation],
               let firstPerson = observations.first else {
-            // 未检测到人物
+            // 未检测到人物，通知代理
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.personDetectionManagerDidNotDetectPerson(self)
+            }
+            return
+        }
+        
+        // 检查是否检测到人脸
+        guard hasFaceInRegion(firstPerson.boundingBox) else {
+            // 检测到人体但没有人脸，视为未检测到有效人物
+            LMLogger.log("👤 Person detected but no face found - treating as no person")
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.personDetectionManagerDidNotDetectPerson(self)
+            }
             return
         }
         
@@ -174,6 +237,54 @@ class LMPersonDetectionManager {
             guard let self = self else { return }
             self.delegate?.personDetectionManager(self, didDetectPerson: result)
         }
+    }
+    
+    /// 检查指定区域内是否有人脸
+    /// - Parameter personBox: 人体检测的边界框
+    /// - Returns: 是否检测到人脸
+    private func hasFaceInRegion(_ personBox: CGRect) -> Bool {
+        // 获取人脸检测结果
+        guard let faceObservations = faceDetectionRequest.results as? [VNFaceObservation] else {
+            return false
+        }
+        
+        // 如果没有检测到任何人脸，返回 false
+        guard !faceObservations.isEmpty else {
+            return false
+        }
+        
+        // 检查是否有人脸在人体区域内
+        // 人脸应该在人体框的上半部分
+        for face in faceObservations {
+            let faceBox = face.boundingBox
+            
+            // 计算人脸中心点
+            let faceCenterX = faceBox.origin.x + faceBox.width / 2
+            let faceCenterY = faceBox.origin.y + faceBox.height / 2
+            
+            // 检查人脸中心点是否在人体框内
+            if personBox.contains(CGPoint(x: faceCenterX, y: faceCenterY)) {
+                LMLogger.log("✅ Face detected within person bounding box")
+                return true
+            }
+            
+            // 也检查人脸框是否与人体框有重叠
+            if personBox.intersects(faceBox) {
+                // 计算重叠面积
+                let intersection = personBox.intersection(faceBox)
+                let intersectionArea = intersection.width * intersection.height
+                let faceArea = faceBox.width * faceBox.height
+                
+                // 如果重叠面积超过人脸面积的30%，认为人脸在人体区域内
+                if intersectionArea / faceArea > 0.3 {
+                    LMLogger.log("✅ Face detected with \(String(format: "%.1f", (intersectionArea / faceArea) * 100))% overlap")
+                    return true
+                }
+            }
+        }
+        
+        LMLogger.log("❌ No face found in person bounding box")
+        return false
     }
 }
 

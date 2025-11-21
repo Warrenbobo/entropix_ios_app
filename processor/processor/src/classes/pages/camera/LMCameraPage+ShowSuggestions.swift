@@ -2,9 +2,6 @@
 //  LMCameraPage+ShowSuggestions.swift
 //  processor
 //
-//  Show Suggestions feature implementation
-//  PRD 3.14: 在 Camera 页面内展示构图建议
-//
 
 import UIKit
 
@@ -315,6 +312,7 @@ extension LMCameraPage {
         let referenceImageView = UIImageView()
         referenceImageView.tag = ViewTag.referenceImageView.rawValue
         referenceImageView.contentMode = .scaleAspectFill
+        referenceImageView.isUserInteractionEnabled = true
         referenceImageView.clipsToBounds = true
         referenceImageView.layer.cornerRadius = 12
         referenceImageView.layer.borderWidth = 2
@@ -357,15 +355,12 @@ extension LMCameraPage {
             referenceImageView.image = UIImage(systemName: "photo")
         }
         
-        // 添加双击放大手势
-        let doubleTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleReferenceImageDoubleTap))
-        doubleTapGesture.numberOfTapsRequired = 2
-        referenceImageView.isUserInteractionEnabled = true
-        referenceImageView.addGestureRecognizer(doubleTapGesture)
-        
         // 添加拖动手势
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handleReferenceImagePan(_:)))
         referenceImageView.addGestureRecognizer(panGesture)
+        
+        // 将参考图置于最上层，确保在对焦指示器之上
+        view.bringSubviewToFront(referenceImageView)
         
         // 淡入动画
         referenceImageView.alpha = 0
@@ -399,6 +394,13 @@ extension LMCameraPage {
         // 显示构图轮播
         showSuggestionsCarousel()
         
+        // 更新轮播视图的数据
+        if let carouselView = suggestionsCarouselView {
+            let displayModels = currentSuggestions.map { SuggestionDisplayModel(from: $0) }
+            carouselView.updateSuggestions(displayModels)
+            LMLogger.log("📐 Updated carousel with \(displayModels.count) suggestions")
+        }
+        
         // 调整底部控制栏
         bottomControlsHeightConstraint?.update(offset: 44)
         cameraBottomControlsView.setLayoutMode(.compact, animated: true)
@@ -408,16 +410,6 @@ extension LMCameraPage {
         }
         
         LMLogger.log("✅ Reference image closed, returned to Show Suggestions state")
-    }
-    
-    /// 处理参考图双击放大
-    @objc func handleReferenceImageDoubleTap() {
-        guard let referenceImageView = view.viewWithTag(ViewTag.referenceImageView.rawValue) else {
-            return
-        }
-        
-        // TODO: 实现放大查看功能
-        LMLogger.log("📷 Reference image double tapped")
     }
     
     /// 处理参考图拖动
@@ -430,14 +422,35 @@ extension LMCameraPage {
         
         switch gesture.state {
         case .changed:
-            referenceImageView.center = CGPoint(
+            // 计算新的中心点
+            var newCenter = CGPoint(
                 x: referenceImageView.center.x + translation.x,
                 y: referenceImageView.center.y + translation.y
             )
+            
+            // 获取边界约束
+            let imageHalfWidth = referenceImageView.bounds.width / 2
+            let imageHalfHeight = referenceImageView.bounds.height / 2
+            
+            // 顶部边界：状态栏底部
+            let topBoundary = view.safeAreaInsets.top + 44 + imageHalfHeight
+            
+            // 底部边界：底部控制栏顶部
+            let bottomBoundary = cameraBottomControlsView.frame.minY - imageHalfHeight - 30
+            
+            // 左右边界：屏幕边缘
+            let leftBoundary = imageHalfWidth
+            let rightBoundary = view.bounds.width - imageHalfWidth
+            
+            // 应用边界约束
+            newCenter.x = max(leftBoundary, min(newCenter.x, rightBoundary))
+            newCenter.y = max(topBoundary, min(newCenter.y, bottomBoundary))
+            
+            // 更新位置
+            referenceImageView.center = newCenter
             gesture.setTranslation(.zero, in: view)
             
         case .ended:
-            // 可以添加边界检查，确保不会拖出屏幕
             LMLogger.log("📷 Reference image moved to: \(referenceImageView.center)")
             
         default:

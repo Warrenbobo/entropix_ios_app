@@ -133,6 +133,9 @@ class LMSuggestionsCarouselView: UIView {
     func updateSuggestions(_ suggestions: [SuggestionDisplayModel]) {
         self.suggestions = suggestions
         collectionView.reloadData()
+        if suggestions.count > 0 && selectedIndex < 0 {
+            selectSuggestion(at: 0)
+        }
     }
     
     func selectSuggestion(at index: Int, animated: Bool = true) {
