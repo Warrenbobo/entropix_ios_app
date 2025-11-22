@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import SnapKit
+import Toast_Swift
 
 class LMSubscriptionPage: LMPageWrapper {
     
@@ -438,25 +439,13 @@ extension LMSubscriptionPage: LMSubscriptionDialogViewDelegate {
     }
     
     private func showPurchaseSuccess(plan: SubscriptionPlan) {
-        let alert = UIAlertController(
-            title: "🎉 Success!",
-            message: "You've successfully subscribed to \(plan.title). Enjoy all premium features!",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        showToast("🎉 Successfully subscribed to \(plan.title)!", duration: 2.5)
     }
     
     private func showPurchaseError(_ error: Error) {
         let errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         
-        let alert = UIAlertController(
-            title: "Purchase Failed",
-            message: errorMessage,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        showToast(errorMessage)
     }
     
     private func updateUIForSubscriptionStatus() {

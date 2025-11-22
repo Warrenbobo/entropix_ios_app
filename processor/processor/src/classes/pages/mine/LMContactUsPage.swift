@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Toast_Swift
 
 class LMContactUsPage: LMPageWrapper {
     
@@ -430,14 +431,10 @@ extension LMContactUsPage {
         UIPasteboard.general.string = text
         
         // Show success feedback
-        let alert = UIAlertController(title: LMText.settings.copied, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        showToast(message, duration: 2.0)
     }
     
     private func showAlert(title: String, message: String) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        showToast(message, duration: 2.5)
     }
 }

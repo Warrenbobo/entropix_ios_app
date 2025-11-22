@@ -361,29 +361,13 @@ extension LMForgotPasswordPage {
     }
     
     private func showResetPasswordSuccess() {
-        let alert = UIAlertController(
-            title: LMText.common.success,
-            message: "Your password has been reset successfully. Please sign in with your new password.",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default) { [weak self] _ in
+        showToast("Password reset successfully! Please sign in.", duration: 2.5) { [weak self] _ in
             self?.navigationController?.popViewController(animated: true)
-        })
-        
-        present(alert, animated: true)
+        }
     }
     
     private func showResetPasswordError(message: String) {
-        let alert = UIAlertController(
-            title: LMText.common.error,
-            message: message,
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
-        
-        present(alert, animated: true)
+        showToast(message)
     }
 }
 

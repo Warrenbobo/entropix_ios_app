@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Toast_Swift
 
 class LMLanguagePage: LMPageWrapper {
     
@@ -258,16 +259,9 @@ extension LMLanguagePage {
     }
     
     private func showLanguageChangedAlert() {
-        let alert = UIAlertController(
-            title: LMText.common.success,
-            message: LMText.settings.languageChangedSuccess,
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default) { _ in
+        showToast(LMText.settings.languageChangedSuccess, duration: 2.0) { _ in
             let rootController = LMMinePage()
             LMPackageManager.switchWindowSceneContent(LMNavigationWrapper(rootViewController: rootController))
-        })
-        
-        present(alert, animated: true)
+        }
     }
 }

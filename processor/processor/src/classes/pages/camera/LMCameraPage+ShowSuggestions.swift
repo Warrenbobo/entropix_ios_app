@@ -111,7 +111,6 @@ extension LMCameraPage {
         carouselView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        
         // 保存引用
         self.suggestionsContainerView = containerView
         self.suggestionsCarouselView = carouselView

@@ -282,83 +282,52 @@ extension LMSettingPage {
 extension LMSettingPage {
     
     private func showLogoutConfirmation() {
-        let alert = UIAlertController(
+        let config = LMAlertDialogConfig(
             title: LMText.auth.logOut,
             message: LMText.settings.areYouSureLogout,
-            preferredStyle: .alert
+            cancelButtonText: LMText.common.cancel,
+            confirmButtonText: LMText.auth.logOut,
+            confirmButtonStyle: .destructive,
+            onConfirm: { [weak self] in
+                self?.performLogout()
+            }
         )
-        
-        alert.addAction(UIAlertAction(title: LMText.common.cancel, style: .cancel))
-        alert.addAction(UIAlertAction(title: LMText.auth.logOut, style: .destructive) { _ in
-            self.performLogout()
-        })
-        
-        present(alert, animated: true)
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
     
     private func performLogout() {
         // 执行登出逻辑
         // 这里应该清除用户数据、token等
-        
-        // 显示加载状态
-        showLogoutLoadingState()
+        LMUserManager.shared.clearLoginInfo()
         
         // 模拟网络请求
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.hideLogoutLoadingState()
-            
             // 导航回登录页面或主页
             self.navigateToLoginPage()
         }
     }
     
-    private func showLogoutLoadingState() {
-        logoutButton.isEnabled = false
-        logoutButton.setTitle(LMText.auth.loggingOut, for: .normal)
-        
-        let activityIndicator = UIActivityIndicatorView(style: .medium)
-        activityIndicator.color = .white
-        activityIndicator.tag = 999
-        logoutButton.addSubview(activityIndicator)
-        
-        activityIndicator.snp.makeConstraints { make in
-            make.trailing.equalTo(logoutButton.titleLabel!.snp.leading).offset(-8)
-            make.centerY.equalToSuperview()
-        }
-        
-        activityIndicator.startAnimating()
-    }
-    
-    private func hideLogoutLoadingState() {
-        logoutButton.isEnabled = true
-        logoutButton.setTitle(LMText.auth.logOut, for: .normal)
-        
-        if let activityIndicator = logoutButton.viewWithTag(999) {
-            activityIndicator.removeFromSuperview()
-        }
-    }
-    
     private func navigateToLoginPage() {
         // 导航到登录页面
-        let loginPage = LMSignInPage()
-        let navController = LMNavigationWrapper(rootViewController: loginPage)
-        
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
+        let installer = LMNewInstallerPage()
+        let navController = LMNavigationWrapper(rootViewController: installer)
+        if let window = AppTheme.Screen.window() {
             window.rootViewController = navController
-            window.makeKeyAndVisible()
         }
     }
     
     private func showComingSoonAlert(for feature: String) {
-        let alert = UIAlertController(
+        let config = LMAlertDialogConfig(
             title: LMText.settings.comingSoon,
             message: String(format: LMText.settings.comingSoonMessage, feature),
-            preferredStyle: .alert
+            cancelButtonText: "",
+            confirmButtonText: LMText.common.ok,
+            confirmButtonStyle: .normal,
+            onConfirm: {}
         )
-        
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
-        present(alert, animated: true)
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
 }
 

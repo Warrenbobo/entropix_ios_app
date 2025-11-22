@@ -206,18 +206,13 @@ class LMGalleryDetailPage: UIViewController {
     }
     
     @objc private func deleteButtonTapped() {
-        let alert = UIAlertController(
+        let dialog = LMAlertDialog.deleteConfirmation(
             title: "Are you sure to delete this photo from gallery?",
-            message: "This action cannot be undone.",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            message: "This action cannot be undone."
+        ) { [weak self] in
             self?.performDelete()
-        })
-        
-        present(alert, animated: true)
+        }
+        dialog.show(on: self)
     }
     
     private func performDelete() {
@@ -262,8 +257,15 @@ class LMGalleryDetailPage: UIViewController {
     }
     
     private func showError(message: String) {
-        let alert = UIAlertController(title: LMText.common.error, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        let config = LMAlertDialogConfig(
+            title: LMText.common.error,
+            message: message,
+            cancelButtonText: "",
+            confirmButtonText: "OK",
+            confirmButtonStyle: .normal,
+            onConfirm: {}
+        )
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
 }

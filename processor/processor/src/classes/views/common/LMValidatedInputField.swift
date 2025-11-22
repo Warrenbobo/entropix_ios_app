@@ -20,7 +20,7 @@ class LMValidatedInputField: UIView {
     private let titleLabel = UILabel()
     private let textField = UITextField()
     private let errorMessageLabel = UILabel()
-    private let passwordVisibilityButton = UIButton()
+    private let passwordVisibilityButton = UIButton(type: .custom)
     
     weak var delegate: LMValidatedInputFieldDelegate?
     
@@ -38,7 +38,6 @@ class LMValidatedInputField: UIView {
         get { return textField.isSecureTextEntry }
         set { 
             textField.isSecureTextEntry = newValue
-            passwordVisibilityButton.isHidden = !newValue
         }
     }
     
@@ -52,7 +51,6 @@ class LMValidatedInputField: UIView {
         set { textField.returnKeyType = newValue }
     }
     
-    private var isPasswordVisible = false
     private var errorMessageHeightConstraint: Constraint?
     private var textFieldTopConstraint: Constraint?
     
@@ -70,7 +68,8 @@ class LMValidatedInputField: UIView {
     func configureInputFieldProperties(title: String, placeholder: String, isSecure: Bool = false, keyboardType: UIKeyboardType = .default) {
         titleLabel.text = title
         self.placeholder = placeholder
-        self.isSecureTextEntry = isSecure
+        self.textField.rightView?.isHidden = !isSecure
+        self.textField.isSecureTextEntry = isSecure
         self.keyboardType = keyboardType
         
         updateTitleLabelVisibilityAndLayout(title: title)
@@ -108,12 +107,13 @@ extension LMValidatedInputField {
         addSubview(titleLabel)
         addSubview(textField)
         addSubview(errorMessageLabel)
-        textField.addSubview(passwordVisibilityButton)
-        
+    
         setupTitleLabelConfiguration()
         setupTextFieldConfiguration()
         setupErrorMessageLabelConfiguration()
         setupPasswordVisibilityButtonConfiguration()
+        textField.rightView = passwordVisibilityButton
+        textField.rightViewMode = .always
     }
     
     private func setupTitleLabelConfiguration() {
@@ -158,11 +158,11 @@ extension LMValidatedInputField {
     
     private func setupPasswordVisibilityButtonConfiguration() {
         passwordVisibilityButton.setImage(UIImage(named: "eye_slash"), for: .normal)
-        passwordVisibilityButton.imageEdgeInsets = UIEdgeInsets(top: 2,
-                                                                left: 4,
-                                                                bottom: 2,
-                                                                right: 0)
-        passwordVisibilityButton.isHidden = true
+        passwordVisibilityButton.setImage(UIImage(named: "eye_solid"), for: .selected)
+        passwordVisibilityButton.imageEdgeInsets = UIEdgeInsets(top: 0,
+                                                                left: -10,
+                                                                bottom: 0,
+                                                                right: 10)
         passwordVisibilityButton.addTarget(self, action: #selector(handlePasswordVisibilityButtonTapped), for: .touchUpInside)
     }
 }
@@ -179,12 +179,6 @@ extension LMValidatedInputField {
             textFieldTopConstraint = make.top.equalTo(titleLabel.snp.bottom).offset(8).constraint
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(50)
-        }
-        
-        passwordVisibilityButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-12)
-            make.centerY.equalToSuperview()
-            make.size.equalTo(20)
         }
         
         errorMessageLabel.snp.makeConstraints { make in
@@ -285,11 +279,8 @@ extension LMValidatedInputField {
     }
     
     @objc private func handlePasswordVisibilityButtonTapped() {
-        isPasswordVisible.toggle()
-        textField.isSecureTextEntry = !isPasswordVisible
-        
-        let imageName = isPasswordVisible ? "eye_solid" : "eye_slash"
-        passwordVisibilityButton.setImage(UIImage(named: imageName), for: .normal)
+        passwordVisibilityButton.isSelected = !passwordVisibilityButton.isSelected
+        textField.isSecureTextEntry = !passwordVisibilityButton.isSelected
     }
 }
 

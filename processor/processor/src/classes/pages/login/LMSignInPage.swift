@@ -9,6 +9,7 @@ import UIKit
 import SnapKit
 import AuthenticationServices
 import Toast_Swift
+import Toast_Swift
 
 class LMSignInPage: LMPageWrapper {
     
@@ -582,29 +583,11 @@ extension LMSignInPage {
     }
     
     private func presentInvalidCredentialsAlert() {
-        let alertController = UIAlertController(
-            title: "Invalid Credentials",
-            message: "Please check your username and password.",
-            preferredStyle: .alert
-        )
-        
-        let okAction = UIAlertAction(title: "OK", style: .default)
-        alertController.addAction(okAction)
-        
-        present(alertController, animated: true)
+        showToast("Invalid credentials. Please check your username and password.")
     }
     
     private func presentAuthenticationErrorAlert(message: String) {
-        let alertController = UIAlertController(
-            title: "Sign In Failed",
-            message: message,
-            preferredStyle: .alert
-        )
-        
-        let okAction = UIAlertAction(title: "OK", style: .default)
-        alertController.addAction(okAction)
-        
-        present(alertController, animated: true)
+        showToast(message)
     }
 }
 

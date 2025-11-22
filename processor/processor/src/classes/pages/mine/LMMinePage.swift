@@ -201,10 +201,8 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func avatarTapped() {
-        let loginView = LMSignInPage()
-        let router = LMNavigationWrapper(rootViewController: loginView)
-        router.modalPresentationStyle = .fullScreen
-        present(router, animated: true)
+        let profilePage = LMAccountProfilePage()
+        navigationController?.pushViewController(profilePage, animated: true)
     }
     
     /// 点击观看广告按钮
@@ -227,26 +225,32 @@ class LMMinePage: LMPageWrapper {
     private func showAdWithoutReward() {
         // TODO: 集成Google AdMob SDK
         print("Show ad without reward - AdMob integration pending")
-        let alert = UIAlertController(
+        let config = LMAlertDialogConfig(
             title: "Thanks for watching!",
             message: "Your support helps us improve the app",
-            preferredStyle: .alert
+            cancelButtonText: "",
+            confirmButtonText: LMText.common.ok,
+            confirmButtonStyle: .normal,
+            onConfirm: {}
         )
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
-        present(alert, animated: true)
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
     
     private func simulateAdRewardSuccess() {
         // 临时模拟：增加5个Inspire Points
         LMUserManager.shared.addInspirePoints(5)
         // 显示成功消息
-        let alert = UIAlertController(
+        let config = LMAlertDialogConfig(
             title: "Success!",
             message: "You earned 5 Inspire Points!",
-            preferredStyle: .alert
+            cancelButtonText: "",
+            confirmButtonText: LMText.common.ok,
+            confirmButtonStyle: .normal,
+            onConfirm: {}
         )
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
-        present(alert, animated: true)
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
     
     private func upgradeButtonTapped() {

@@ -378,3 +378,19 @@ extension UIButton {
         self.imageEdgeInsets = imageInsets
     }
 }
+
+
+import Toast_Swift
+
+extension UIViewController {
+    
+    /// Show a toast message with default settings
+    /// - Parameters:
+    ///   - message: The message to display
+    ///   - duration: Duration in seconds (default: 3.0)
+    ///   - completion: Optional completion handler
+    func showToast(_ message: String, duration: TimeInterval = 3.0, completion: ((Bool) -> Void)? = nil) {
+        view.hideAllToasts()
+        view.makeToast(message, duration: duration, position: .center, completion: completion)
+    }
+}

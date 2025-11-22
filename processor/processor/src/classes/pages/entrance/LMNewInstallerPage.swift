@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 import AuthenticationServices
+import Toast_Swift
 
 class LMNewInstallerPage: LMPageWrapper {
     
@@ -166,15 +167,7 @@ extension LMNewInstallerPage {
     }
     
     private func handleAppleSignInError(message: String) {
-        // 显示错误提示
-        let alert = UIAlertController(
-            title: LMText.common.error,
-            message: message,
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
-        present(alert, animated: true)
+        showToast(message)
     }
 }
 

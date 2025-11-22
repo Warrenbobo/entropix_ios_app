@@ -683,44 +683,17 @@ extension LMSignUpPage {
     }
     
     private func presentTermsAgreementRequiredAlert() {
-        let alertController = UIAlertController(
-            title: "Terms Agreement Required",
-            message: "Please agree to the terms and conditions to continue.",
-            preferredStyle: .alert
-        )
-        
-        let okAction = UIAlertAction(title: "OK", style: .default)
-        alertController.addAction(okAction)
-        
-        present(alertController, animated: true)
+        showToast("Please agree to the terms and conditions to continue.")
     }
     
     private func presentRegistrationSuccessAlert() {
-        let alertController = UIAlertController(
-            title: LMText.auth.signUpSuccess,
-            message: "Your account has been created successfully. Please check your email to verify your account.",
-            preferredStyle: .alert
-        )
-        
-        let okAction = UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+        showToast("Account created! Please check your email to verify.") { [weak self] _ in
             self?.navigateToLoginViewController()
         }
-        alertController.addAction(okAction)
-        
-        present(alertController, animated: true)
     }
     
     private func presentRegistrationErrorAlert(message: String) {
-        let alertController = UIAlertController(
-            title: "Registration Failed",
-            message: message,
-            preferredStyle: .alert
-        )
-        
-        let okAction = UIAlertAction(title: "OK", style: .default)
-        alertController.addAction(okAction)
-        
-        present(alertController, animated: true)
+        showToast(message)
     }
 }
 

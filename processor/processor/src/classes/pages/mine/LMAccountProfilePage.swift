@@ -7,6 +7,8 @@
 
 import UIKit
 import SnapKit
+import AVFoundation
+import Photos
 
 // MARK: - User Profile Data Model
 struct UserProfileData {
@@ -36,6 +38,7 @@ class LMAccountProfilePage: LMPageWrapper {
     // MARK: - Properties
     private var userProfileData = UserProfileData.createDefault()
     private var isEditingMode = false
+    private var imagePicker: UIImagePickerController?
     
     // MARK: - UI Components
     private let scrollView = UIScrollView()
@@ -157,7 +160,7 @@ extension LMAccountProfilePage {
                                     size: CGSize(width: 50,
                                                  height: 44))
         actionButton.setTitleColor(UIColor.systemBlue, for: .normal)
-        actionButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        actionButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         actionButton.addTarget(self, action: #selector(handleSaveButtonTapped), for: .touchUpInside)
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: actionButton)
     }
@@ -269,14 +272,7 @@ extension LMAccountProfilePage {
     }
     
     private func showSaveSuccessAlert() {
-        let alert = UIAlertController(
-            title: LMText.profile.profileUpdated,
-            message: LMText.profile.profileUpdatedMessage,
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
-        present(alert, animated: true)
+        showToast(LMText.profile.profileUpdated, duration: 2.0)
     }
 }
 
@@ -311,18 +307,138 @@ extension LMAccountProfilePage: ProfileDisplayViewDelegate {
         updateViewsWithData()
         
         // 显示确认
-        let alert = UIAlertController(
-            title: LMText.profile.subscriptionCancelled,
-            message: LMText.profile.subscriptionCancelledMessage,
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
-        present(alert, animated: true)
+        showToast(LMText.profile.subscriptionCancelled, duration: 2.5)
     }
     
     func profileDisplayViewDidTapEditProfileData(_ view: LMProfileDisplayView) {
         showEditView()
+    }
+}
+
+// MARK: - UIImagePickerControllerDelegate & UINavigationControllerDelegate
+extension LMAccountProfilePage: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        picker.dismiss(animated: true) { [weak self] in
+            guard let self = self else { return }
+            
+            // 优先使用编辑后的图片，如果没有则使用原图
+            var selectedImage: UIImage?
+            if let editedImage = info[.editedImage] as? UIImage {
+                selectedImage = editedImage
+            } else if let originalImage = info[.originalImage] as? UIImage {
+                selectedImage = originalImage
+            }
+            
+            guard let image = selectedImage else {
+                self.showImageProcessingError()
+                return
+            }
+            
+            // 处理图片（裁剪为圆形，调整大小）
+            self.processAndUpdateAvatar(image)
+        }
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
+    }
+    
+    // MARK: - Image Processing
+    
+    private func processAndUpdateAvatar(_ image: UIImage) {
+        // 在后台线程处理图片
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            // 1. 调整图片大小为 128x128
+            let targetSize = CGSize(width: 128, height: 128)
+            let processedImage = self.resizeImage(image, targetSize: targetSize)
+            
+            // 2. 裁剪为圆形（可选，因为 UI 会用 cornerRadius 显示）
+            // let circularImage = self.cropToCircle(processedImage)
+            
+            // 回到主线程更新 UI
+            DispatchQueue.main.async {
+                // 更新数据模型
+                self.userProfileData.avatarImage = processedImage
+                
+                // 更新编辑视图的头像
+                self.editView.updateAvatar(processedImage)
+                
+                // 显示成功提示
+                self.showAvatarUpdateSuccess()
+            }
+        }
+    }
+    
+    private func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage {
+        let size = image.size
+        
+        let widthRatio = targetSize.width / size.width
+        let heightRatio = targetSize.height / size.height
+        
+        // 使用较小的比例以确保图片完全覆盖目标尺寸
+        let scaleFactor = max(widthRatio, heightRatio)
+        
+        let scaledSize = CGSize(
+            width: size.width * scaleFactor,
+            height: size.height * scaleFactor
+        )
+        
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        let resizedImage = renderer.image { _ in
+            // 计算居中位置
+            let x = (targetSize.width - scaledSize.width) / 2
+            let y = (targetSize.height - scaledSize.height) / 2
+            
+            image.draw(in: CGRect(
+                x: x,
+                y: y,
+                width: scaledSize.width,
+                height: scaledSize.height
+            ))
+        }
+        
+        return resizedImage
+    }
+    
+    private func cropToCircle(_ image: UIImage) -> UIImage {
+        let size = image.size
+        let minDimension = min(size.width, size.height)
+        
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: minDimension, height: minDimension))
+        let circularImage = renderer.image { context in
+            let rect = CGRect(x: 0, y: 0, width: minDimension, height: minDimension)
+            
+            // 创建圆形路径
+            let path = UIBezierPath(ovalIn: rect)
+            path.addClip()
+            
+            // 绘制图片
+            let drawX = (minDimension - size.width) / 2
+            let drawY = (minDimension - size.height) / 2
+            image.draw(in: CGRect(x: drawX, y: drawY, width: size.width, height: size.height))
+        }
+        
+        return circularImage
+    }
+    
+    private func showAvatarUpdateSuccess() {
+        showToast("Avatar updated")
+    }
+    
+    private func showImageProcessingError() {
+        let config = LMAlertDialogConfig(
+            title: "Error",
+            message: "Failed to process the selected image. Please try again.",
+            cancelButtonText: "",
+            confirmButtonText: "OK",
+            confirmButtonStyle: .normal,
+            onConfirm: {}
+        )
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
 }
 
@@ -341,13 +457,19 @@ extension LMAccountProfilePage: ProfileEditViewDelegate {
     private func showImagePicker() {
         let alert = UIAlertController(title: LMText.profile.changePhoto, message: "Choose a photo source", preferredStyle: .actionSheet)
         
-        alert.addAction(UIAlertAction(title: LMText.profile.camera, style: .default) { _ in
-            // 实现相机功能
-        })
+        // 相机选项
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            alert.addAction(UIAlertAction(title: LMText.profile.camera, style: .default) { [weak self] _ in
+                self?.checkCameraPermissionAndPresent()
+            })
+        }
         
-        alert.addAction(UIAlertAction(title: LMText.profile.photoLibrary, style: .default) { _ in
-            // 实现相册功能
-        })
+        // 相册选项
+        if UIImagePickerController.isSourceTypeAvailable(.photoLibrary) {
+            alert.addAction(UIAlertAction(title: LMText.profile.photoLibrary, style: .default) { [weak self] _ in
+                self?.checkPhotoLibraryPermissionAndPresent()
+            })
+        }
         
         alert.addAction(UIAlertAction(title: LMText.common.cancel, style: .cancel))
         
@@ -358,5 +480,93 @@ extension LMAccountProfilePage: ProfileEditViewDelegate {
         }
         
         present(alert, animated: true)
+    }
+    
+    // MARK: - Camera Permission
+    
+    private func checkCameraPermissionAndPresent() {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        
+        switch status {
+        case .authorized:
+            presentImagePicker(sourceType: .camera)
+            
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        self?.presentImagePicker(sourceType: .camera)
+                    } else {
+                        self?.showPermissionDeniedAlert(for: "Camera")
+                    }
+                }
+            }
+            
+        case .denied, .restricted:
+            showPermissionDeniedAlert(for: "Camera")
+            
+        @unknown default:
+            showPermissionDeniedAlert(for: "Camera")
+        }
+    }
+    
+    // MARK: - Photo Library Permission
+    
+    private func checkPhotoLibraryPermissionAndPresent() {
+        let status = PHPhotoLibrary.authorizationStatus()
+        
+        switch status {
+        case .authorized, .limited:
+            presentImagePicker(sourceType: .photoLibrary)
+            
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization { [weak self] newStatus in
+                DispatchQueue.main.async {
+                    if newStatus == .authorized || newStatus == .limited {
+                        self?.presentImagePicker(sourceType: .photoLibrary)
+                    } else {
+                        self?.showPermissionDeniedAlert(for: "Photo Library")
+                    }
+                }
+            }
+            
+        case .denied, .restricted:
+            showPermissionDeniedAlert(for: "Photo Library")
+            
+        @unknown default:
+            showPermissionDeniedAlert(for: "Photo Library")
+        }
+    }
+    
+    // MARK: - Present Image Picker
+    
+    private func presentImagePicker(sourceType: UIImagePickerController.SourceType) {
+        let picker = UIImagePickerController()
+        picker.sourceType = sourceType
+        picker.delegate = self
+        picker.allowsEditing = true // 允许编辑（裁剪）
+        picker.modalPresentationStyle = .fullScreen
+        
+        self.imagePicker = picker
+        present(picker, animated: true)
+    }
+    
+    // MARK: - Permission Denied Alert
+    
+    private func showPermissionDeniedAlert(for feature: String) {
+        let config = LMAlertDialogConfig(
+            title: "\(feature) Access Required",
+            message: "Please enable \(feature) access in Settings to change your profile photo.",
+            cancelButtonText: LMText.common.cancel,
+            confirmButtonText: "Open Settings",
+            confirmButtonStyle: .normal,
+            onConfirm: {
+                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(settingsURL)
+                }
+            }
+        )
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
 }

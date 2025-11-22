@@ -7,6 +7,7 @@
 
 import UIKit
 import AVFoundation
+import Toast_Swift
 
 // MARK: - Photo Capture
 extension LMCameraPage {
@@ -221,16 +222,7 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
     }
     
     func showPhotoSaveErrorAlert() {
-        let alertController = UIAlertController(
-            title: "Save Error",
-            message: "Unable to save photo to your photo library.",
-            preferredStyle: .alert
-        )
-        
-        let okAction = UIAlertAction(title: "OK", style: .default)
-        alertController.addAction(okAction)
-        
-        present(alertController, animated: true)
+        showToast("Unable to save photo to your photo library.")
     }
     
     func showPhotoSavedConfirmation() {

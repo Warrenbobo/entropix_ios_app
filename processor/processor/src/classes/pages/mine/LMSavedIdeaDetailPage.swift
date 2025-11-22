@@ -185,18 +185,13 @@ class LMSavedIdeaDetailPage: UIViewController {
     }
     
     private func showUnlikeConfirmation() {
-        let alert = UIAlertController(
+        let dialog = LMAlertDialog.deleteConfirmation(
             title: "Remove this photo from Saved Idea?",
-            message: "This action cannot be recall.",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Remove", style: .destructive) { [weak self] _ in
+            message: "This action cannot be recall."
+        ) { [weak self] in
             self?.performUnlike()
-        })
-        
-        present(alert, animated: true)
+        }
+        dialog.show(on: self)
     }
     
     private func performUnlike() {

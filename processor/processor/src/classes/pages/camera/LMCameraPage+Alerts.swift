@@ -36,64 +36,36 @@ extension LMCameraPage {
     
     /// 显示错误对话框
     private func showErrorAlert(_ message: String) {
-        let alert = UIAlertController(
+        let config = LMAlertDialogConfig(
             title: "Error",
             message: message,
-            preferredStyle: .alert
+            cancelButtonText: "",
+            confirmButtonText: "OK",
+            confirmButtonStyle: .normal,
+            onConfirm: {}
         )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        // Hide cancel button by making it invisible
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
     
     /// 显示警告对话框
     private func showWarningAlert(_ message: String) {
-        let alert = UIAlertController(
+        let config = LMAlertDialogConfig(
             title: "Warning",
             message: message,
-            preferredStyle: .alert
+            cancelButtonText: "",
+            confirmButtonText: "OK",
+            confirmButtonStyle: .normal,
+            onConfirm: {}
         )
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        present(alert, animated: true)
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
     
     /// 显示 Toast 轻量提示
     private func showToastMessage(_ message: String, duration: TimeInterval = 2.0) {
-        // 移除已存在的 toast
-        view.subviews
-            .filter { $0.tag == ViewTag.toastMessage }
-            .forEach { $0.removeFromSuperview() }
-        
-        let toast = UILabel()
-        toast.tag = ViewTag.toastMessage
-        toast.text = message
-        toast.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        toast.textColor = .white
-        toast.backgroundColor = UIColor.black.withAlphaComponent(0.8)
-        toast.textAlignment = .center
-        toast.numberOfLines = 0
-        toast.layer.cornerRadius = 8
-        toast.clipsToBounds = true
-        toast.alpha = 0
-        
-        view.addSubview(toast)
-        toast.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-100)
-            make.leading.greaterThanOrEqualToSuperview().offset(40)
-            make.trailing.lessThanOrEqualToSuperview().offset(-40)
-            make.height.greaterThanOrEqualTo(40)
-        }
-        
-        // 动画显示和隐藏
-        UIView.animate(withDuration: 0.3, animations: {
-            toast.alpha = 1
-        }) { _ in
-            UIView.animate(withDuration: 0.3, delay: duration, animations: {
-                toast.alpha = 0
-            }) { _ in
-                toast.removeFromSuperview()
-            }
-        }
+        showToast(message, duration: duration)
     }
 }
 
@@ -102,40 +74,34 @@ extension LMCameraPage {
     
     /// 显示离开 Show Suggestions 确认对话框
     func showLeaveConfirmation(completion: @escaping (Bool) -> Void) {
-        let alert = UIAlertController(
+        let config = LMAlertDialogConfig(
+            image: UIImage(systemName: "exclamationmark.triangle.fill"),
             title: "Leave Suggestions?",
             message: "You will lose these suggestions if you go back.",
-            preferredStyle: .alert
+            cancelButtonText: LMLaunageManager.shared.common.cancel,
+            confirmButtonText: "Leave",
+            confirmButtonStyle: .destructive,
+            onCancel: { completion(false) },
+            onConfirm: { completion(true) }
         )
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-            completion(false)
-        })
-        
-        alert.addAction(UIAlertAction(title: "Leave", style: .destructive) { _ in
-            completion(true)
-        })
-        
-        present(alert, animated: true)
+        let customDialog = LMAlertDialog(config: config)
+        customDialog.show(on: self)
     }
     
     /// 显示离开 Composition Selected 确认对话框
     func showLeaveCompositionConfirmation(completion: @escaping (Bool) -> Void) {
-        let alert = UIAlertController(
+        let config = LMAlertDialogConfig(
+            image: UIImage(systemName: "exclamationmark.triangle.fill"),
             title: "Leave Composition?",
             message: "You will lose the current composition guidance.",
-            preferredStyle: .alert
+            cancelButtonText: LMLaunageManager.shared.common.cancel,
+            confirmButtonText: "Leave",
+            confirmButtonStyle: .destructive,
+            onCancel: { completion(false) },
+            onConfirm: { completion(true) }
         )
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-            completion(false)
-        })
-        
-        alert.addAction(UIAlertAction(title: "Leave", style: .destructive) { _ in
-            completion(true)
-        })
-        
-        present(alert, animated: true)
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
 }
 

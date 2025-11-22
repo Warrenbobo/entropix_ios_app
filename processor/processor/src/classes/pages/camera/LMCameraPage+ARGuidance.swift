@@ -359,12 +359,12 @@ extension LMCameraPage {
         
         // 创建绿色对勾图片视图
         let checkImageView = UIImageView()
-        checkImageView.image = UIImage(systemName: "checkmark.circle.fill")
+        checkImageView.image = UIImage(named: "check_circle_green")
         checkImageView.tintColor = .systemGreen
         checkImageView.contentMode = .scaleAspectFit
         
         // 设置大小和位置（屏幕中心）
-        let size: CGFloat = 80
+        let size: CGFloat = 36
         let centerX = cameraPreviewView.bounds.width / 2
         let centerY = cameraPreviewView.bounds.height / 2
         
@@ -391,15 +391,9 @@ extension LMCameraPage {
         }) { _ in
             // 3秒后消失
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                UIView.animate(withDuration: 0.3, animations: {
-                    indicatorView.alpha = 0
-                    indicatorView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-                }) { _ in
-                    indicatorView.removeFromSuperview()
-                    
-                    // 不再恢复校准框显示，保持AR引导关闭状态
-                    LMLogger.log("✅ AR guidance stopped after alignment success")
-                }
+                indicatorView.alpha = 0
+                indicatorView.removeFromSuperview()
+                LMLogger.log("✅ AR guidance stopped after alignment success")
             }
         }
         

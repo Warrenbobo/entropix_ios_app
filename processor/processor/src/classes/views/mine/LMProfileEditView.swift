@@ -343,6 +343,12 @@ class LMProfileEditView: UIView {
         updateNonEditableFields(with: data)
     }
     
+    /// 更新头像图片
+    func updateAvatar(_ image: UIImage) {
+        avatarImageView.image = image
+        profileData?.avatarImage = image
+    }
+    
     private func updateNonEditableFields(with data: UserProfileData) {
         // 清除现有的非编辑字段
         nonEditableFieldsView.subviews.forEach { $0.removeFromSuperview() }

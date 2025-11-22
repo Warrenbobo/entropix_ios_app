@@ -28,6 +28,6 @@ struct AppConfigs {
         // appid
         static let appid = ""
         // 激励视频广告
-        static let rewardVideoAdId = "103344746"
+        static let rewardVideoAdId = ""
     }
 }

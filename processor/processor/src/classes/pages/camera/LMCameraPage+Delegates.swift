@@ -7,6 +7,7 @@
 
 import UIKit
 import AVFoundation
+import Toast_Swift
 
 // MARK: - Camera Preview Delegate
 extension LMCameraPage: LMCameraPreviewViewDelegate {
@@ -94,18 +95,18 @@ extension LMCameraPage: LMCameraControlsViewDelegate {
     }
     
     func showLivePhotosNotSupportedAlert() {
-        let alertController = UIAlertController(
+        let config = LMAlertDialogConfig(
             title: "Live Photos",
             message: "Live Photos is not supported on this device.",
-            preferredStyle: .alert
+            cancelButtonText: "",
+            confirmButtonText: "OK",
+            confirmButtonStyle: .normal,
+            onConfirm: { [weak self] in
+                self?.cameraControlsView.updateLivePhotoStatus(false)
+            }
         )
-        
-        let okAction = UIAlertAction(title: "OK", style: .default) { _ in
-            self.cameraControlsView.updateLivePhotoStatus(false)
-        }
-        alertController.addAction(okAction)
-        
-        present(alertController, animated: true)
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
 }
 
@@ -241,31 +242,13 @@ extension LMCameraPage: LMInspireMeButtonViewDelegate {
         LMLogger.log("❓ Inspire Me question button tapped")
         
         // 显示 Inspire Me 功能说明
-        let alertController = UIAlertController(
-            title: "Inspire Me",
-            message: "Tap to get AI-powered composition suggestions for your photo. Each use costs 1 Inspire Point.",
-            preferredStyle: .alert
-        )
-        
-        let okAction = UIAlertAction(title: "OK", style: .default)
-        alertController.addAction(okAction)
-        
-        present(alertController, animated: true)
+        showToast("Tap to get AI-powered composition suggestions for your photo. Each use costs 1 Inspire Point.")
     }
     
     func inspireMeButtonViewDidTapDisabledButton() {
         LMLogger.log("⚠️ Inspire Me button tapped while using front camera")
         
         // 显示前摄不可用提示
-        let alertController = UIAlertController(
-            title: "Inspire Me",
-            message: "Inspire Me not available on front camera. Please switch to back camera to use this feature.",
-            preferredStyle: .alert
-        )
-        
-        let okAction = UIAlertAction(title: "OK", style: .default)
-        alertController.addAction(okAction)
-        
-        present(alertController, animated: true)
+        showToast("Inspire Me not available on front camera. Please switch to back camera to use this feature.")
     }
 }

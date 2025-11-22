@@ -49,7 +49,6 @@ class LMInspireMeButtonView: UIView {
     private func setupInspireButtonGradient() {
         // 移除现有的渐变层
         inspireButton.layer.sublayers?.removeAll { $0 is CAGradientLayer }
-        
         // 添加新的渐变背景 - 紫色渐变
         let gradientLayer = CAGradientLayer()
         gradientLayer.colors = [

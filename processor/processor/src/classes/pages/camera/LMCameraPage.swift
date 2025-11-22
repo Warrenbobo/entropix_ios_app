@@ -329,40 +329,41 @@ class LMCameraPage: LMPageWrapper {
     
     /// 处理权限被拒绝的情况
     private func handlePermissionDenied() {
-        let alert = UIAlertController(
+        let config = LMAlertDialogConfig(
             title: "Camera Access Denied",
             message: "Camera access is required to use this feature.",
-            preferredStyle: .alert
+            cancelButtonText: "",
+            confirmButtonText: "OK",
+            confirmButtonStyle: .normal,
+            onConfirm: { [weak self] in
+                // 返回上一页
+                self?.navigationController?.popViewController(animated: true)
+            }
         )
-        
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
-            // 返回上一页
-            self?.navigationController?.popViewController(animated: true)
-        })
-        
-        present(alert, animated: true)
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
     
     /// 显示前往设置的提示
     func showPermissionSettingsAlert() {
-        let alert = UIAlertController(
+        let config = LMAlertDialogConfig(
             title: "Camera Access Required",
             message: "FramAist needs camera access to take photos. Please enable camera access in Settings.",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
-            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(settingsURL)
+            cancelButtonText: "Cancel",
+            confirmButtonText: "Open Settings",
+            confirmButtonStyle: .normal,
+            onCancel: { [weak self] in
+                // 返回上一页
+                self?.navigationController?.popViewController(animated: true)
+            },
+            onConfirm: {
+                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(settingsURL)
+                }
             }
-        })
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
-            // 返回上一页
-            self?.navigationController?.popViewController(animated: true)
-        })
-        
-        present(alert, animated: true)
+        )
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
     
     /// 公开方法：检查相机权限状态（供外部调用）

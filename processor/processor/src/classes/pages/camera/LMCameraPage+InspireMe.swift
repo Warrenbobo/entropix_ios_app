@@ -68,23 +68,23 @@ extension LMCameraPage {
     }
     
     func showInsufficientPointsAlert() {
-        let alert = UIAlertController(
+        // First show the main alert
+        let config = LMAlertDialogConfig(
             title: "Out of Inspire Points",
             message: "Please subscribe or earn points by watching ads.",
-            preferredStyle: .alert
+            cancelButtonText: "Cancel",
+            confirmButtonText: "Watch Ads",
+            confirmButtonStyle: .normal,
+            onConfirm: { [weak self] in
+                self?.navigateToProfile()
+            }
         )
+        let dialog = LMAlertDialog(config: config)
         
-        alert.addAction(UIAlertAction(title: "Watch Ads", style: .default) { _ in
-            self.navigateToProfile()
-        })
-        
-        alert.addAction(UIAlertAction(title: "Subscribe", style: .default) { _ in
-            self.navigateToSubscription()
-        })
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        
-        present(alert, animated: true)
+        // Add a custom action sheet for multiple options
+        // For now, we'll use the simpler two-button approach
+        // TODO: Consider creating a custom action sheet component for 3+ options
+        dialog.show(on: self)
     }
     
     func navigateToProfile() {

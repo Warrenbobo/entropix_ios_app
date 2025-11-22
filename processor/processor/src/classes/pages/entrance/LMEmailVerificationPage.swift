@@ -15,6 +15,7 @@
 
 import UIKit
 import SnapKit
+import Toast_Swift
 
 @available(*, deprecated, message: "Email verification API endpoints are not available in current backend")
 class LMEmailVerificationPage: UIViewController {
@@ -338,11 +339,9 @@ class LMEmailVerificationPage: UIViewController {
     }
     
     private func showAlert(title: String, message: String, completion: (() -> Void)? = nil) {
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default) { _ in
+        showToast(message, duration: 2.5) { _ in
             completion?()
-        })
-        present(alert, animated: true)
+        }
     }
 }
 
