@@ -57,17 +57,21 @@ class LMGalleryPageView: UIView {
     }
     
     private func loadSampleData() {
-        // 加载Gallery示例数据
-        galleryImages = [
-            GalleryItem(image: createSampleImage(color: .systemBlue), title: "Nature Scene 1", id: "gallery_1"),
-            GalleryItem(image: createSampleImage(color: .systemGreen), title: "Portrait 1", id: "gallery_2"),
-            GalleryItem(image: createSampleImage(color: .systemOrange), title: "Landscape 1", id: "gallery_3"),
-            GalleryItem(image: createSampleImage(color: .systemPurple), title: "Adventure 1", id: "gallery_4"),
-            GalleryItem(image: createSampleImage(color: .systemTeal), title: "Castle View", id: "gallery_5"),
-            GalleryItem(image: createSampleImage(color: .systemPink), title: "Garden Scene", id: "gallery_6"),
-            GalleryItem(image: createSampleImage(color: .systemIndigo), title: "Mountain View", id: "gallery_7"),
-            GalleryItem(image: createSampleImage(color: .systemRed), title: "River Scene", id: "gallery_8")
-        ]
+        // 从CoreData加载真实的Gallery数据
+        loadPhotosFromStorage()
+    }
+    
+    private func loadPhotosFromStorage() {
+        let photoEntities = LMPhotoStorageManager.shared.fetchAllPhotos()
+        galleryImages = photoEntities.compactMap { $0.toGalleryItem() }
+        LMLogger.log("📸 Loaded \(galleryImages.count) photos from storage")
+        
+        // 如果没有数据，显示空状态
+        if galleryImages.isEmpty {
+            showEmptyState(message: "No photos yet")
+        } else {
+            hideEmptyState()
+        }
     }
     
     private func createSampleImage(color: UIColor) -> UIImage {
@@ -156,19 +160,16 @@ extension LMGalleryPageView {
         
         let totalHeight = CGFloat(rows) * itemHeight + CGFloat(max(0, rows - 1)) * 8 + 32 // 行高 + 行间距 + 上下边距
         
-        return totalHeight
+        // 确保最小高度为 360
+        return max(totalHeight, 360)
     }
     
     // MARK: - Public Methods
     
     /// 重新加载数据
     func reloadData() {
-        // TODO: 从后端或本地缓存加载真实的Gallery数据
-        // 目前使用示例数据
-        loadSampleData()
-        
-        // 隐藏空状态提示
-        hideEmptyState()
+        // 从CoreData加载真实的Gallery数据
+        loadPhotosFromStorage()
         
         // 刷新集合视图
         collectionView.reloadData()
@@ -197,22 +198,43 @@ extension LMGalleryPageView {
         emptyStateView.tag = 999
         emptyStateView.backgroundColor = .clear
         
+        // 创建占位图片
+        let placeholderImageView = UIImageView()
+        placeholderImageView.image = UIImage(named: "multi_image_gray")
+        placeholderImageView.contentMode = .scaleAspectFit
+        placeholderImageView.tintColor = UIColor.systemGray3
+        
+        // 创建提示文本
         let messageLabel = UILabel()
         messageLabel.text = message
         messageLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         messageLabel.textColor = UIColor.systemGray
         messageLabel.textAlignment = .center
+        messageLabel.numberOfLines = 0
         
+        // 添加到容器
+        emptyStateView.addSubview(placeholderImageView)
         emptyStateView.addSubview(messageLabel)
         addSubview(emptyStateView)
         
+        // 布局约束
         emptyStateView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
         
-        messageLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+        placeholderImageView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.centerY.equalToSuperview().offset(-40)
+            make.width.height.equalTo(80)
         }
+        
+        messageLabel.snp.makeConstraints { make in
+            make.top.equalTo(placeholderImageView.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview().inset(40)
+            make.centerX.equalToSuperview()
+        }
+        
+        LMLogger.log("📭 Gallery empty state shown: \(message)")
     }
     
     /// 隐藏空状态提示

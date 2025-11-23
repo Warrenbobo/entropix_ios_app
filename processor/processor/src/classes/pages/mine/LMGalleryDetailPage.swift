@@ -228,12 +228,22 @@ class LMGalleryDetailPage: UIViewController {
         loadingIndicator.bottomAnchor.constraint(equalTo: loadingAlert.view.bottomAnchor, constant: -20).isActive = true
         present(loadingAlert, animated: true)
         
-        // TODO: Call API to delete from server
-        // For now, simulate deletion with delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            loadingAlert.dismiss(animated: true) {
-                LMLogger.log("✅ Gallery item deleted successfully")
-                self?.navigationController?.popViewController(animated: true)
+        // Delete from CoreData
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            let success = LMPhotoStorageManager.shared.deletePhoto(byId: self.galleryItem.id)
+            
+            DispatchQueue.main.async {
+                loadingAlert.dismiss(animated: true) {
+                    if success {
+                        LMLogger.log("✅ Gallery item deleted successfully from storage")
+                        self.navigationController?.popViewController(animated: true)
+                    } else {
+                        LMLogger.log("❌ Failed to delete gallery item from storage")
+                        self.showError(message: "Failed to delete photo. Please try again.")
+                    }
+                }
             }
         }
     }

@@ -76,7 +76,7 @@ class LMAlertDialog: UIView {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 28, weight: .bold)
+        label.font = UIFont.systemFont(ofSize: 22, weight: .bold)
         label.textColor = .hexColor("#333333")
         label.textAlignment = .center
         label.numberOfLines = 0

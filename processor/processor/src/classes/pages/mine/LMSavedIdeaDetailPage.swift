@@ -195,22 +195,55 @@ class LMSavedIdeaDetailPage: UIViewController {
     }
     
     private func performUnlike() {
-        isLiked = false
-        updateLikeButtonAppearance()
-        
         LMLogger.log("💔 Unliking saved idea: \(savedIdea.id)")
         
-        // TODO: Call API to unlike from server
-        // For now, just update UI
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            LMLogger.log("✅ Saved idea unliked successfully")
-            // Optionally navigate back or show confirmation
-        }
+        // Show loading indicator
+        let loadingAlert = UIAlertController(title: nil, message: LMText.settings.deleting, preferredStyle: .alert)
+        let loadingIndicator = UIActivityIndicatorView(style: .medium)
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        loadingIndicator.startAnimating()
+        loadingAlert.view.addSubview(loadingIndicator)
+        loadingIndicator.centerXAnchor.constraint(equalTo: loadingAlert.view.centerXAnchor).isActive = true
+        loadingIndicator.bottomAnchor.constraint(equalTo: loadingAlert.view.bottomAnchor, constant: -20).isActive = true
+        present(loadingAlert, animated: true)
         
-        // Go back after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.navigationController?.popViewController(animated: true)
+        // Delete from CoreData
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            let success = LMPhotoStorageManager.shared.deleteSavedIdea(byId: self.savedIdea.id)
+            
+            DispatchQueue.main.async {
+                loadingAlert.dismiss(animated: true) {
+                    if success {
+                        LMLogger.log("✅ Saved idea deleted successfully from storage")
+                        
+                        // Update UI
+                        self.isLiked = false
+                        self.updateLikeButtonAppearance()
+                        
+                        // Navigate back to refresh the list
+                        self.navigationController?.popViewController(animated: true)
+                    } else {
+                        LMLogger.log("❌ Failed to delete saved idea from storage")
+                        self.showError(message: "Failed to remove saved idea. Please try again.")
+                    }
+                }
+            }
         }
+    }
+    
+    private func showError(message: String) {
+        let config = LMAlertDialogConfig(
+            title: LMText.common.error,
+            message: message,
+            cancelButtonText: "",
+            confirmButtonText: "OK",
+            confirmButtonStyle: .normal,
+            onConfirm: {}
+        )
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
     }
     
     private func animateLikeButton() {

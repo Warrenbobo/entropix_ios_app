@@ -260,16 +260,30 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
     func showPhotoPreview(image: UIImage) {
         LMLogger.log("📸 Showing photo preview")
         
+        // 保存到本地存储
+        guard let savedPhoto = LMPhotoStorageManager.shared.savePhoto(
+            image: image,
+            referenceImage: nil,
+            title: nil
+        ) else {
+            LMLogger.log("❌ Failed to save photo to storage")
+            showToast("Failed to save photo. Please try again.")
+            return
+        }
+        
+        LMLogger.log("✅ Photo saved to Gallery with ID: \(savedPhoto.id ?? "unknown")")
+        
         // 创建 GalleryItem
         let galleryItem = GalleryItem(
             image: image,
             title: nil,
-            id: UUID().uuidString
+            id: savedPhoto.id ?? UUID().uuidString
         )
         
         // 创建预览页面
         let previewPage = LMGalleryDetailPage(item: galleryItem)
         previewPage.fromCamera = true
+        
         // 如果在 showSuggestion 状态，重置相机状态
         if currentCameraState == .showingSuggestions || currentCameraState == .compositionSelected {
             LMLogger.log("🔄 Resetting camera state from \(currentCameraState) to normal")

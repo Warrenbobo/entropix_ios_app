@@ -64,6 +64,12 @@
 		EA8629B62EB5EEF700F2B00E /* LMSuggestionsCarouselView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629B02EB5EEF700F2B00E /* LMSuggestionsCarouselView.swift */; };
 		EA8629B92EB5F7C000F2B00E /* LMLaunageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629B82EB5F7C000F2B00E /* LMLaunageManager.swift */; };
 		EA8629BB2EB5F85700F2B00E /* LMLaunageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629BA2EB5F85700F2B00E /* LMLaunageModel.swift */; };
+		EA86406A2ED2D24800A0CD43 /* LMPhotoStorageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8640632ED2D24800A0CD43 /* LMPhotoStorageManager.swift */; };
+		EA86406B2ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8640652ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift */; };
+		EA86406C2ED2D24800A0CD43 /* PhotoEntity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8640642ED2D24800A0CD43 /* PhotoEntity+CoreDataClass.swift */; };
+		EA8640702ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86406E2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift */; };
+		EA8640712ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86406D2ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift */; };
+		EA8640722ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */; };
 		EAA37A7B2ED090230008081D /* LMAlertDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA37A7A2ED090230008081D /* LMAlertDialog.swift */; };
 		EACA1CEF2E7E49B600C80883 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */; };
 		EACA1CF02E7E49B600C80883 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE62E7E49B600C80883 /* Assets.xcassets */; };
@@ -184,6 +190,12 @@
 		EA8629B02EB5EEF700F2B00E /* LMSuggestionsCarouselView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSuggestionsCarouselView.swift; sourceTree = "<group>"; };
 		EA8629B82EB5F7C000F2B00E /* LMLaunageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLaunageManager.swift; sourceTree = "<group>"; };
 		EA8629BA2EB5F85700F2B00E /* LMLaunageModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLaunageModel.swift; sourceTree = "<group>"; };
+		EA8640632ED2D24800A0CD43 /* LMPhotoStorageManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPhotoStorageManager.swift; sourceTree = "<group>"; };
+		EA8640642ED2D24800A0CD43 /* PhotoEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PhotoEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
+		EA8640652ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PhotoEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
+		EA86406D2ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMPhotoStorageManager+SavedIdeas.swift"; sourceTree = "<group>"; };
+		EA86406E2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SavedIdeaEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
+		EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SavedIdeaEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		EAA37A7A2ED090230008081D /* LMAlertDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAlertDialog.swift; sourceTree = "<group>"; };
 		EACA1CCC2E7E49B600C80883 /* LMApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApi.swift; sourceTree = "<group>"; };
 		EACA1CCD2E7E49B600C80883 /* LMApiClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiClient.swift; sourceTree = "<group>"; };
@@ -306,6 +318,19 @@
 			path = debug;
 			sourceTree = "<group>";
 		};
+		EA8640672ED2D24800A0CD43 /* storage */ = {
+			isa = PBXGroup;
+			children = (
+				EA86406D2ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift */,
+				EA86406E2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift */,
+				EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */,
+				EA8640632ED2D24800A0CD43 /* LMPhotoStorageManager.swift */,
+				EA8640642ED2D24800A0CD43 /* PhotoEntity+CoreDataClass.swift */,
+				EA8640652ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift */,
+			);
+			path = storage;
+			sourceTree = "<group>";
+		};
 		EACA1BE82E7E408900C80883 = {
 			isa = PBXGroup;
 			children = (
@@ -416,6 +441,7 @@
 		EACA1CDB2E7E49B600C80883 /* classes */ = {
 			isa = PBXGroup;
 			children = (
+				EA8640672ED2D24800A0CD43 /* storage */,
 				EACA1CCF2E7E49B600C80883 /* managers */,
 				EACA1CD12E7E49B600C80883 /* models */,
 				EACA1CD32E7E49B600C80883 /* pages */,
@@ -704,6 +730,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EA8640702ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift in Sources */,
+				EA8640712ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift in Sources */,
+				EA8640722ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift in Sources */,
 				EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */,
 				EAFBACAF2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift in Sources */,
 				EAFBADC42EA36E5900586EC7 /* LMIdeasPageView.swift in Sources */,
@@ -808,6 +837,9 @@
 				EAFBACC62E8F69D100586EC7 /* LMUserProfileModel.swift in Sources */,
 				EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */,
 				EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */,
+				EA86406A2ED2D24800A0CD43 /* LMPhotoStorageManager.swift in Sources */,
+				EA86406B2ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift in Sources */,
+				EA86406C2ED2D24800A0CD43 /* PhotoEntity+CoreDataClass.swift in Sources */,
 				EA6019392EC877620067F2F7 /* LMSessionManager.swift in Sources */,
 				EA6019422EC8778B0067F2F7 /* TaskStatus.swift in Sources */,
 				EACA1D042E7E4B0A00C80883 /* LMLaunchSplashPage.swift in Sources */,

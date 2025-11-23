@@ -232,7 +232,90 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
         
         // 转换为 LMCompositionSuggestion 用于 delegate 回调
         let compositionSuggestion = convertToCompositionSuggestion(suggestion)
+        
+        // 保存或删除 Saved Idea
+        if isFavorite {
+            saveSuggestionAsIdea(suggestion: compositionSuggestion, displayModel: suggestion)
+        } else {
+            removeSavedIdea(suggestionId: compositionSuggestion.id)
+        }
+        
         delegate?.suggestionsCarouselView(self, didToggleFavorite: compositionSuggestion, at: index)
+    }
+    
+    /// 保存构图方案为 Saved Idea
+    private func saveSuggestionAsIdea(suggestion: LMCompositionSuggestion, displayModel: SuggestionDisplayModel) {
+        // 使用 LMPhotoStorageManager 保存
+        let manager = LMPhotoStorageManager.shared
+        
+        // 如果有图片，使用图片；否则尝试从 URL 下载
+        if let image = displayModel.image {
+            manager.saveSuggestionAsIdea(suggestion: suggestion, image: image)
+            LMLogger.log("💾 Saved idea with image: \(suggestion.id)")
+        } else if let imageURL = displayModel.imageURL {
+            // 异步下载图片并保存
+            downloadAndSaveIdea(suggestion: suggestion, imageURL: imageURL)
+        } else {
+            // 没有图片，只保存元数据
+            manager.saveSuggestionAsIdea(suggestion: suggestion, image: nil)
+            LMLogger.log("💾 Saved idea without image: \(suggestion.id)")
+        }
+        
+        // 显示成功提示
+        showSaveSuccessToast()
+    }
+    
+    /// 下载图片并保存 Idea
+    private func downloadAndSaveIdea(suggestion: LMCompositionSuggestion, imageURL: String) {
+        guard let url = URL(string: imageURL) else { return }
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            guard let data = data, let image = UIImage(data: data) else {
+                LMLogger.log("❌ Failed to download idea image: \(error?.localizedDescription ?? "Unknown error")")
+                // 即使下载失败，也保存元数据
+                DispatchQueue.main.async {
+                    LMPhotoStorageManager.shared.saveSuggestionAsIdea(suggestion: suggestion, image: nil)
+                }
+                return
+            }
+            
+            DispatchQueue.main.async {
+                LMPhotoStorageManager.shared.saveSuggestionAsIdea(suggestion: suggestion, image: image)
+                LMLogger.log("💾 Saved idea with downloaded image: \(suggestion.id)")
+            }
+        }.resume()
+    }
+    
+    /// 删除已保存的 Idea
+    private func removeSavedIdea(suggestionId: String) {
+        let manager = LMPhotoStorageManager.shared
+        manager.deleteSavedIdea(byId: suggestionId)
+        LMLogger.log("🗑️ Removed saved idea: \(suggestionId)")
+        
+        // 显示删除提示
+        showRemoveSuccessToast()
+    }
+    
+    /// 显示保存成功提示
+    private func showSaveSuccessToast() {
+//        if let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) {
+//            LMToastWrapper.showToast(
+//                message: LMLaunageManager.manager.localizedString(forKey: "Saved to your collection"),
+//                in: window,
+//                style: .success
+//            )
+//        }
+    }
+    
+    /// 显示删除成功提示
+    private func showRemoveSuccessToast() {
+//        if let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) {
+//            LMToastWrapper.showToast(
+//                message: LMLaunageManager.manager.localizedString(forKey: "Removed from collection"),
+//                in: window,
+//                style: .info
+//            )
+//        }
     }
     
     func suggestionCardView(_ cardView: LMSuggestionCardView, didSwipeUp suggestion: SuggestionDisplayModel) {

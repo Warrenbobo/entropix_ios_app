@@ -241,12 +241,12 @@ extension LMCameraPage {
             height: Double(whiteFrameHeight)
         )
         
-        // 计算重叠比例
+        // 计算重叠比例（使用IoU方式）
         let overlapRatio = calculateOverlapRatio(rect1: whiteFrameRect, rect2: blueFrameRect)
-        LMLogger.log("📐 Overlap ratio: \(String(format: "%.1f", overlapRatio * 100))%")
+        LMLogger.log("📐 Overlap ratio: \(String(format: "%.1f", overlapRatio * 100))% (threshold: 90%)")
         
-        // 检查重叠比例，如果超过90%则显示对齐成功提示
-        if overlapRatio >= 0.9 {
+        // 检查重叠比例，如果达到90%则显示对齐成功提示
+        if overlapRatio >= 0.90 {
             // 隐藏两个校准框和连线
             cameraPreviewView.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.isHidden = true
             cameraPreviewView.viewWithTag(ViewTag.personDetectionFrame.rawValue)?.isHidden = true

@@ -14,11 +14,17 @@ struct PersonDetectionResult {
     /// 检测到的人物边界框（归一化坐标 0-1）
     let boundingBox: BoundingBox
     
+    /// 人脸边界框（归一化坐标 0-1），如果检测到人脸
+    let faceBoundingBox: BoundingBox?
+    
     /// 置信度 (0-1)
     let confidence: Float
     
     /// 检测时间戳
     let timestamp: Date
+    
+    /// 人体宽度是否超过屏幕的2/3
+    let isBodyWidthExceedingThreshold: Bool
 }
 
 /// 人物检测管理器代理
@@ -203,57 +209,89 @@ class LMPersonDetectionManager {
             return
         }
         
-        // 检查是否检测到人脸
-        guard hasFaceInRegion(firstPerson.boundingBox) else {
-            // 检测到人体但没有人脸，视为未检测到有效人物
-            LMLogger.log("👤 Person detected but no face found - treating as no person")
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                self.delegate?.personDetectionManagerDidNotDetectPerson(self)
-            }
-            return
-        }
-        
-        // 转换边界框坐标
+        // 转换人体边界框坐标
         let visionBox = firstPerson.boundingBox
         
         // Vision 框架的坐标系统：原点在左下角
         // 需要转换为标准坐标系统：原点在左上角
-        let boundingBox = BoundingBox(
+        let bodyBoundingBox = BoundingBox(
             x: Double(visionBox.origin.x),
             y: Double(1.0 - visionBox.origin.y - visionBox.height), // 翻转 Y 坐标
             width: Double(visionBox.size.width),
             height: Double(visionBox.size.height)
         )
         
-        let result = PersonDetectionResult(
-            boundingBox: boundingBox,
-            confidence: firstPerson.confidence,
-            timestamp: Date()
-        )
+        // 检查人体宽度是否超过屏幕的2/3
+        let isBodyWidthExceedingThreshold = bodyBoundingBox.width > (2.0 / 3.0)
         
-        // 回到主线程通知代理
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.delegate?.personDetectionManager(self, didDetectPerson: result)
+        LMLogger.log("👤 Person body width: \(String(format: "%.2f", bodyBoundingBox.width * 100))% of screen, threshold: 66.7%")
+        
+        // 检测人脸
+        let faceBox = detectFaceInRegion(firstPerson.boundingBox)
+        
+        // 如果人体宽度超过2/3，必须检测到人脸
+        if isBodyWidthExceedingThreshold {
+            guard let detectedFaceBox = faceBox else {
+                // 人体宽度超过2/3但没有检测到人脸，视为未检测到有效人物
+                LMLogger.log("⚠️ Body width exceeds 2/3 but no face detected - treating as no person")
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    self.delegate?.personDetectionManagerDidNotDetectPerson(self)
+                }
+                return
+            }
+            
+            // 使用人脸位置作为蓝色框的位置
+            let result = PersonDetectionResult(
+                boundingBox: detectedFaceBox,
+                faceBoundingBox: detectedFaceBox,
+                confidence: firstPerson.confidence,
+                timestamp: Date(),
+                isBodyWidthExceedingThreshold: true
+            )
+            
+            LMLogger.log("✅ Body width exceeds 2/3, using face position for blue frame")
+            
+            // 回到主线程通知代理
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.personDetectionManager(self, didDetectPerson: result)
+            }
+        } else {
+            // 人体宽度未超过2/3，使用人体位置
+            let result = PersonDetectionResult(
+                boundingBox: bodyBoundingBox,
+                faceBoundingBox: faceBox,
+                confidence: firstPerson.confidence,
+                timestamp: Date(),
+                isBodyWidthExceedingThreshold: false
+            )
+            
+            LMLogger.log("✅ Body width within threshold, using body position for blue frame")
+            
+            // 回到主线程通知代理
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.personDetectionManager(self, didDetectPerson: result)
+            }
         }
     }
     
-    /// 检查指定区域内是否有人脸
+    /// 检测指定区域内的人脸并返回人脸边界框
     /// - Parameter personBox: 人体检测的边界框
-    /// - Returns: 是否检测到人脸
-    private func hasFaceInRegion(_ personBox: CGRect) -> Bool {
+    /// - Returns: 人脸边界框（归一化坐标），如果未检测到则返回nil
+    private func detectFaceInRegion(_ personBox: CGRect) -> BoundingBox? {
         // 获取人脸检测结果
         guard let faceObservations = faceDetectionRequest.results as? [VNFaceObservation] else {
-            return false
+            return nil
         }
         
-        // 如果没有检测到任何人脸，返回 false
+        // 如果没有检测到任何人脸，返回 nil
         guard !faceObservations.isEmpty else {
-            return false
+            return nil
         }
         
-        // 检查是否有人脸在人体区域内
+        // 查找在人体区域内的人脸
         // 人脸应该在人体框的上半部分
         for face in faceObservations {
             let faceBox = face.boundingBox
@@ -265,7 +303,16 @@ class LMPersonDetectionManager {
             // 检查人脸中心点是否在人体框内
             if personBox.contains(CGPoint(x: faceCenterX, y: faceCenterY)) {
                 LMLogger.log("✅ Face detected within person bounding box")
-                return true
+                
+                // 转换人脸边界框坐标（Vision坐标系转换为标准坐标系）
+                let faceBoundingBox = BoundingBox(
+                    x: Double(faceBox.origin.x),
+                    y: Double(1.0 - faceBox.origin.y - faceBox.height), // 翻转 Y 坐标
+                    width: Double(faceBox.size.width),
+                    height: Double(faceBox.size.height)
+                )
+                
+                return faceBoundingBox
             }
             
             // 也检查人脸框是否与人体框有重叠
@@ -278,13 +325,22 @@ class LMPersonDetectionManager {
                 // 如果重叠面积超过人脸面积的30%，认为人脸在人体区域内
                 if intersectionArea / faceArea > 0.3 {
                     LMLogger.log("✅ Face detected with \(String(format: "%.1f", (intersectionArea / faceArea) * 100))% overlap")
-                    return true
+                    
+                    // 转换人脸边界框坐标
+                    let faceBoundingBox = BoundingBox(
+                        x: Double(faceBox.origin.x),
+                        y: Double(1.0 - faceBox.origin.y - faceBox.height), // 翻转 Y 坐标
+                        width: Double(faceBox.size.width),
+                        height: Double(faceBox.size.height)
+                    )
+                    
+                    return faceBoundingBox
                 }
             }
         }
         
         LMLogger.log("❌ No face found in person bounding box")
-        return false
+        return nil
     }
 }
 

@@ -57,15 +57,26 @@ class LMIdeasPageView: UIView {
     }
     
     private func loadSampleData() {
-        // 加载Saved Ideas示例数据
-        savedIdeasImages = [
-            GalleryItem(image: createSampleImage(color: .systemCyan), title: "Saved Idea 1", id: "saved_1"),
-            GalleryItem(image: createSampleImage(color: .systemYellow), title: "Saved Idea 2", id: "saved_2"),
-            GalleryItem(image: createSampleImage(color: .systemMint), title: "Saved Idea 3", id: "saved_3"),
-            GalleryItem(image: createSampleImage(color: .systemBrown), title: "Saved Idea 4", id: "saved_4"),
-            GalleryItem(image: createSampleImage(color: .systemPink), title: "Saved Idea 5", id: "saved_5"),
-            GalleryItem(image: createSampleImage(color: .systemIndigo), title: "Saved Idea 6", id: "saved_6")
-        ]
+        // 从 LMPhotoStorageManager 加载真实的 Saved Ideas 数据
+        loadRealSavedIdeas()
+    }
+    
+    /// 从存储加载真实的 Saved Ideas
+    private func loadRealSavedIdeas() {
+        let manager = LMPhotoStorageManager.shared
+        let savedIdeas = manager.fetchAllSavedIdeas()
+        
+        // 转换为 GalleryItem
+        savedIdeasImages = savedIdeas.compactMap { $0.toGalleryItem() }
+        
+        LMLogger.log("💡 Loaded \(savedIdeasImages.count) saved ideas")
+        
+        // 如果没有数据，显示空状态
+        if savedIdeasImages.isEmpty {
+            showEmptyState(message: "No saved ideas yet")
+        } else {
+            hideEmptyState()
+        }
     }
     
     private func createSampleImage(color: UIColor) -> UIImage {
@@ -156,19 +167,16 @@ extension LMIdeasPageView {
         
         let totalHeight = CGFloat(rows) * itemHeight + CGFloat(max(0, rows - 1)) * 8 + 32 // 行高 + 行间距 + 上下边距
         
-        return totalHeight
+        // 确保最小高度为 360
+        return max(totalHeight, 360)
     }
     
     // MARK: - Public Methods
     
     /// 重新加载数据
     func reloadData() {
-        // TODO: 从后端或本地缓存加载真实的Saved Ideas数据
-        // 目前使用示例数据
-        loadSampleData()
-        
-        // 隐藏空状态提示
-        hideEmptyState()
+        // 从存储加载真实的 Saved Ideas 数据
+        loadRealSavedIdeas()
         
         // 刷新集合视图
         collectionView.reloadData()
@@ -197,22 +205,43 @@ extension LMIdeasPageView {
         emptyStateView.tag = 999
         emptyStateView.backgroundColor = .clear
         
+        // 创建占位图片
+        let placeholderImageView = UIImageView()
+        placeholderImageView.image = UIImage(named: "multi_image_gray")
+        placeholderImageView.contentMode = .scaleAspectFit
+        placeholderImageView.tintColor = UIColor.systemGray3
+        
+        // 创建提示文本
         let messageLabel = UILabel()
         messageLabel.text = message
         messageLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         messageLabel.textColor = UIColor.systemGray
         messageLabel.textAlignment = .center
+        messageLabel.numberOfLines = 0
         
+        // 添加到容器
+        emptyStateView.addSubview(placeholderImageView)
         emptyStateView.addSubview(messageLabel)
         addSubview(emptyStateView)
         
+        // 布局约束
         emptyStateView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
         
-        messageLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+        placeholderImageView.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.centerY.equalToSuperview().offset(-40)
+            make.width.height.equalTo(80)
         }
+        
+        messageLabel.snp.makeConstraints { make in
+            make.top.equalTo(placeholderImageView.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview().inset(40)
+            make.centerX.equalToSuperview()
+        }
+        
+        LMLogger.log("💡 Saved Ideas empty state shown: \(message)")
     }
     
     /// 隐藏空状态提示
