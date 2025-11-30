@@ -1,0 +1,630 @@
+//
+//  LMPhotoPreviewPage.swift
+//  processor
+//
+//  Created by muz on 2025/11/30.
+//  照片预览页面 - 拍照后的预览和操作界面
+//
+
+import UIKit
+import SnapKit
+import Photos
+import PhotosUI
+
+class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
+    
+    // MARK: - Properties
+    private let photoData: CapturedPhotoData
+    private let referenceImage: UIImage? // 可选的参考图（构图方案）
+    
+    // MARK: - UI Components
+    private let photoImageView = UIImageView()
+    private var livePhotoView: PHLivePhotoView?
+    private let livePhotoBadge = UIImageView()
+    private let backButtonContainer = UIView()
+    private let backIconImageView = UIImageView()
+    private let backLabel = UILabel()
+    private let downloadButton = UIButton(type: .custom)
+    private let saveButton = UIButton(type: .custom)
+    private let successIndicator = UIView()
+    
+    // MARK: - Initialization
+    init(photoData: CapturedPhotoData, referenceImage: UIImage? = nil) {
+        self.photoData = photoData
+        self.referenceImage = referenceImage
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    /// 向后兼容的初始化方法
+    convenience init(capturedImage: UIImage, referenceImage: UIImage? = nil) {
+        let photoData = CapturedPhotoData(image: capturedImage)
+        self.init(photoData: photoData, referenceImage: referenceImage)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    // MARK: - Lifecycle
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        configureViewHierarchy()
+        setupLayout()
+        setupActions()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+    
+    // MARK: - View Hierarchy Configuration
+    private func configureViewHierarchy() {
+        view.backgroundColor = .black
+        
+        LMLogger.log("📸 Photo Preview - isLivePhoto: \(photoData.isLivePhoto)")
+        LMLogger.log("📸 Photo Preview - hasVideoURL: \(photoData.livePhotoVideoURL != nil)")
+        
+        // Photo Display - Live Photo or Static Image
+        if photoData.isLivePhoto {
+            LMLogger.log("🎬 Setting up Live Photo view")
+            setupLivePhotoView()
+        } else {
+            LMLogger.log("📷 Setting up static image view")
+            photoImageView.image = photoData.image
+            photoImageView.contentMode = .scaleAspectFit
+            view.addSubview(photoImageView)
+        }
+        
+        // Back Button Container
+        backButtonContainer.backgroundColor = UIColor(white: 0.25, alpha: 0.85)
+        backButtonContainer.layer.cornerRadius = 22
+        backButtonContainer.layer.borderWidth = 1
+        backButtonContainer.layer.borderColor = UIColor.white.withAlphaComponent(0.15).cgColor
+        view.addSubview(backButtonContainer)
+        
+        // 配置左箭头图标
+        let backImage = UIImage(named: "left_arrow_white")
+        backIconImageView.image = backImage
+        backIconImageView.tintColor = .white
+        backIconImageView.contentMode = .scaleAspectFit
+        backButtonContainer.addSubview(backIconImageView)
+        
+        // 配置 Back 文字
+        backLabel.text = "Back"
+        backLabel.textColor = .white
+        backLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        backButtonContainer.addSubview(backLabel)
+        
+        // 添加点击手势
+        let backTapGesture = UITapGestureRecognizer(target: self, action: #selector(backButtonTapped))
+        backButtonContainer.addGestureRecognizer(backTapGesture)
+        backButtonContainer.isUserInteractionEnabled = true
+        
+        // Download Button (保存到相册)
+        downloadButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        downloadButton.layer.cornerRadius = 20
+        downloadButton.layer.borderWidth = 1
+        downloadButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        
+        let downloadConfig = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        let downloadImage = UIImage(systemName: "arrow.down.circle", withConfiguration: downloadConfig)
+        downloadButton.setImage(downloadImage, for: .normal)
+        downloadButton.tintColor = .white
+        
+        view.addSubview(downloadButton)
+        
+        // Save Button (保存到Gallery)
+        saveButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        saveButton.layer.cornerRadius = 22
+        saveButton.layer.borderWidth = 1
+        saveButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        
+        let saveLabel = UILabel()
+        saveLabel.text = "Save"
+        saveLabel.textColor = .white
+        saveLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        saveButton.addSubview(saveLabel)
+        
+        saveLabel.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+        
+        view.addSubview(saveButton)
+        
+        // Success Indicator
+        successIndicator.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        successIndicator.layer.cornerRadius = 20
+        successIndicator.isHidden = true
+        
+        let checkmarkImageView = UIImageView()
+        let checkConfig = UIImage.SymbolConfiguration(pointSize: 20, weight: .bold)
+        checkmarkImageView.image = UIImage(systemName: "checkmark.circle.fill", withConfiguration: checkConfig)
+        checkmarkImageView.tintColor = UIColor.hexColor("#10b981")
+        
+        let messageLabel = UILabel()
+        messageLabel.text = LMText.settings.downloaded
+        messageLabel.textColor = .white
+        messageLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        
+        successIndicator.addSubview(checkmarkImageView)
+        successIndicator.addSubview(messageLabel)
+        view.addSubview(successIndicator)
+        
+        checkmarkImageView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(16)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(24)
+        }
+        
+        messageLabel.snp.makeConstraints { make in
+            make.leading.equalTo(checkmarkImageView.snp.trailing).offset(12)
+            make.trailing.equalToSuperview().offset(-16)
+            make.centerY.equalToSuperview()
+        }
+    }
+    
+    // MARK: - Live Photo Setup
+    private func setupLivePhotoView() {
+        let livePhotoView = PHLivePhotoView()
+        livePhotoView.contentMode = .scaleAspectFit
+        livePhotoView.backgroundColor = .black
+        view.addSubview(livePhotoView)
+        self.livePhotoView = livePhotoView
+        
+        livePhotoView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        let badgeConfig = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+        livePhotoBadge.image = UIImage(systemName: "livephoto", withConfiguration: badgeConfig)
+        livePhotoBadge.tintColor = .white
+        livePhotoBadge.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        livePhotoBadge.layer.cornerRadius = 6
+        livePhotoBadge.contentMode = .center
+        livePhotoBadge.clipsToBounds = true
+        view.addSubview(livePhotoBadge)
+        
+        livePhotoBadge.snp.makeConstraints { make in
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-6)
+            make.trailing.equalTo(view).offset(-12)
+            make.width.equalTo(40)
+            make.height.equalTo(28)
+        }
+        
+        // 添加长按手势来播放 Live Photo
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLivePhotoLongPress(_:)))
+        longPressGesture.minimumPressDuration = 0.3
+        longPressGesture.delegate = self
+        livePhotoView.addGestureRecognizer(longPressGesture)
+        livePhotoView.isUserInteractionEnabled = true
+        
+        LMLogger.log("✅ Live Photo view setup with long press gesture")
+        
+        // 生成 Live Photo
+        generateLivePhoto()
+    }
+    
+    @objc private func handleLivePhotoLongPress(_ gesture: UILongPressGestureRecognizer) {
+        LMLogger.log("👆 Long press gesture detected - state: \(gesture.state.rawValue)")
+        
+        guard let livePhotoView = livePhotoView else {
+            LMLogger.log("❌ livePhotoView is nil")
+            return
+        }
+        
+        switch gesture.state {
+        case .began:
+            LMLogger.log("🎬 Starting Live Photo playback")
+            livePhotoView.startPlayback(with: .full)
+            
+        case .ended, .cancelled, .failed:
+            LMLogger.log("⏸️ Stopping Live Photo playback")
+            livePhotoView.stopPlayback()
+            
+        default:
+            break
+        }
+    }
+    
+    private func generateLivePhoto() {
+        guard let videoURL = photoData.livePhotoVideoURL else {
+            LMLogger.log("❌ No Live Photo video URL")
+            fallbackToStaticImage()
+            return
+        }
+        
+        // 检查视频文件是否存在
+        guard FileManager.default.fileExists(atPath: videoURL.path) else {
+            LMLogger.log("❌ Live Photo video file not found at: \(videoURL.path)")
+            fallbackToStaticImage()
+            return
+        }
+        
+        LMLogger.log("📹 Video file exists at: \(videoURL.path)")
+        
+        // 保存图片到临时文件（使用原始数据以保留元数据）
+        let imageURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("jpg")
+        
+        // 优先使用原始照片数据（包含 Live Photo 元数据）
+        let imageData: Data
+        if let originalData = photoData.imageData {
+            LMLogger.log("✅ Using original image data with metadata")
+            imageData = originalData
+        } else {
+            // 降级：使用 JPEG 编码（可能丢失元数据）
+            LMLogger.log("⚠️ Using JPEG encoded data (metadata may be lost)")
+            guard let jpegData = photoData.image.jpegData(compressionQuality: 1.0) else {
+                LMLogger.log("❌ Failed to convert image to JPEG")
+                fallbackToStaticImage()
+                return
+            }
+            imageData = jpegData
+        }
+        
+        do {
+            try imageData.write(to: imageURL)
+            LMLogger.log("✅ Temporary image saved at: \(imageURL.path)")
+        } catch {
+            LMLogger.log("❌ Failed to write image: \(error)")
+            fallbackToStaticImage()
+            return
+        }
+        
+        // 生成 PHLivePhoto
+        LMLogger.log("🎬 Generating Live Photo from resources...")
+        LMLogger.log("📸 Image URL: \(imageURL.path)")
+        LMLogger.log("📹 Video URL: \(videoURL.path)")
+        
+        PHLivePhoto.request(
+            withResourceFileURLs: [imageURL, videoURL],
+            placeholderImage: photoData.image,
+            targetSize: .zero,
+            contentMode: .aspectFit
+        ) { [weak self] livePhoto, info in
+            guard let self = self else {
+                // 清理临时文件
+                try? FileManager.default.removeItem(at: imageURL)
+                return
+            }
+            
+            // 检查是否为降级版本
+            let isDegraded = (info[PHLivePhotoInfoIsDegradedKey] as? Bool) ?? false
+            let isCancelled = (info[PHLivePhotoInfoCancelledKey] as? Bool) ?? false
+            
+            LMLogger.log("📞 Live Photo callback - isDegraded: \(isDegraded), isCancelled: \(isCancelled)")
+            
+            if isCancelled {
+                LMLogger.log("⚠️ Live Photo generation was cancelled")
+                DispatchQueue.main.async {
+                    self.fallbackToStaticImage()
+                }
+                // 清理临时文件
+                try? FileManager.default.removeItem(at: imageURL)
+                return
+            }
+            
+            if let livePhoto = livePhoto {
+                DispatchQueue.main.async {
+                    self.livePhotoView?.livePhoto = livePhoto
+                    if isDegraded {
+                        LMLogger.log("⚠️ Live Photo loaded (degraded version)")
+                        // 降级版本不删除临时文件，等待最终版本
+                    } else {
+                        LMLogger.log("✅ Live Photo loaded successfully (final version)")
+                        LMLogger.log("📊 Live Photo size: \(livePhoto.size)")
+                        // 只在收到最终版本后清理临时文件
+                        LMLogger.log("🗑️ Cleaning up temporary image file")
+                        try? FileManager.default.removeItem(at: imageURL)
+                    }
+                }
+            } else {
+                // 只有在非降级版本失败时才降级到静态图片
+                if !isDegraded {
+                    LMLogger.log("❌ Failed to create Live Photo (final version)")
+                    LMLogger.log("📋 Info: \(info)")
+                    
+                    // 检查错误信息
+                    if let error = info[PHLivePhotoInfoErrorKey] as? Error {
+                        LMLogger.log("❌ Error: \(error.localizedDescription)")
+                    }
+                    
+                    // 降级到静态图片
+                    DispatchQueue.main.async {
+                        self.fallbackToStaticImage()
+                    }
+                    // 清理临时文件
+                    try? FileManager.default.removeItem(at: imageURL)
+                }
+            }
+        }
+    }
+    
+    private func fallbackToStaticImage() {
+        LMLogger.log("⚠️ Falling back to static image display")
+        livePhotoView?.removeFromSuperview()
+        livePhotoView = nil
+        livePhotoBadge.isHidden = true
+        
+        photoImageView.image = photoData.image
+        photoImageView.contentMode = .scaleAspectFit
+        view.insertSubview(photoImageView, at: 0)
+        
+        photoImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+    
+    private func setupLayout() {
+        if !photoData.isLivePhoto {
+            photoImageView.snp.makeConstraints { make in
+                make.edges.equalToSuperview()
+            }
+        }
+        
+        backButtonContainer.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
+            make.leading.equalToSuperview().offset(20)
+            make.height.equalTo(44)
+        }
+        
+        backIconImageView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(16)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(20)
+        }
+        
+        backLabel.snp.makeConstraints { make in
+            make.leading.equalTo(backIconImageView.snp.trailing).offset(6)
+            make.trailing.equalToSuperview().offset(-20)
+            make.centerY.equalToSuperview()
+        }
+        
+        saveButton.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
+            make.trailing.equalToSuperview().offset(-20)
+            make.height.equalTo(44)
+            make.width.equalTo(90)
+        }
+        
+        downloadButton.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
+            make.trailing.equalTo(saveButton.snp.leading).offset(-12)
+            make.size.equalTo(40)
+        }
+        
+        successIndicator.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.height.equalTo(56)
+        }
+    }
+    
+    private func setupActions() {
+        downloadButton.addTarget(self, action: #selector(downloadButtonTapped), for: .touchUpInside)
+        saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
+    }
+    
+    // MARK: - Actions
+    @objc private func backButtonTapped() {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    @objc private func downloadButtonTapped() {
+        // 检查相册权限
+        checkPhotoLibraryPermission { [weak self] granted in
+            guard let self = self else { return }
+            
+            if granted {
+                if self.photoData.isLivePhoto {
+                    self.saveLivePhotoToLibrary()
+                } else {
+                    self.saveToPhotoLibrary()
+                }
+            } else {
+                self.showPhotoLibraryPermissionAlert()
+            }
+        }
+    }
+    
+    @objc private func saveButtonTapped() {
+        LMLogger.log("💾 Saving photo to Gallery...")
+        
+        // Show loading indicator
+        let loadingAlert = UIAlertController(title: nil, message: "Saving...", preferredStyle: .alert)
+        let loadingIndicator = UIActivityIndicatorView(style: .medium)
+        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
+        loadingIndicator.startAnimating()
+        loadingAlert.view.addSubview(loadingIndicator)
+        loadingIndicator.centerXAnchor.constraint(equalTo: loadingAlert.view.centerXAnchor).isActive = true
+        loadingIndicator.bottomAnchor.constraint(equalTo: loadingAlert.view.bottomAnchor, constant: -20).isActive = true
+        present(loadingAlert, animated: true)
+        
+        // Save to Gallery (CoreData)
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            
+            let success = LMPhotoStorageManager.shared.savePhoto(
+                photoData: self.photoData,
+                referenceImage: self.referenceImage
+            )
+            
+            DispatchQueue.main.async {
+                loadingAlert.dismiss(animated: true) {
+                    if (success != nil) {
+                        LMLogger.log("✅ Photo saved to Gallery successfully")
+                        self.showSaveSuccessAndNavigate()
+                    } else {
+                        LMLogger.log("❌ Failed to save photo to Gallery")
+                        self.showError(message: "Failed to save photo. Please try again.")
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Photo Library Operations
+    private func checkPhotoLibraryPermission(completion: @escaping (Bool) -> Void) {
+        let status = PHPhotoLibrary.authorizationStatus()
+        
+        switch status {
+        case .authorized, .limited:
+            completion(true)
+            
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization { newStatus in
+                DispatchQueue.main.async {
+                    completion(newStatus == .authorized || newStatus == .limited)
+                }
+            }
+            
+        case .denied, .restricted:
+            completion(false)
+            
+        @unknown default:
+            completion(false)
+        }
+    }
+    
+    private func saveToPhotoLibrary() {
+        UIImageWriteToSavedPhotosAlbum(
+            photoData.image,
+            self,
+            #selector(image(_:didFinishSavingWithError:contextInfo:)),
+            nil
+        )
+    }
+    
+    private func saveLivePhotoToLibrary() {
+        guard let videoURL = photoData.livePhotoVideoURL else {
+            LMLogger.log("❌ No Live Photo video URL for saving")
+            showError(message: "Failed to save Live Photo")
+            return
+        }
+        
+        // 检查视频文件是否存在
+        guard FileManager.default.fileExists(atPath: videoURL.path) else {
+            LMLogger.log("❌ Live Photo video file not found at: \(videoURL.path)")
+            showError(message: "Live Photo video file not found")
+            return
+        }
+        
+        LMLogger.log("📹 Saving Live Photo to library...")
+        LMLogger.log("📹 Image size: \(photoData.image.size)")
+        LMLogger.log("📹 Video path: \(videoURL.path)")
+        
+        // 方案：先保存静态图片，Live Photo 功能在相册中可能无法完美保留
+        // 因为 AVCapturePhotoOutput 生成的视频需要特定的元数据才能被识别为 Live Photo
+        // 这是 iOS 的限制，需要在拍摄时就正确配置
+        
+        LMLogger.log("⚠️ Saving as static image (Live Photo metadata may not be preserved)")
+        UIImageWriteToSavedPhotosAlbum(
+            photoData.image,
+            self,
+            #selector(image(_:didFinishSavingWithError:contextInfo:)),
+            nil
+        )
+    }
+    
+    @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+        if let error = error {
+            showError(message: "Failed to save: \(error.localizedDescription)")
+        } else {
+            showSuccessIndicator()
+        }
+    }
+    
+    private func showPhotoLibraryPermissionAlert() {
+        let config = LMAlertDialogConfig(
+            title: "Photo Library Access Required",
+            message: "FramAist needs photo library access to save photos. Please enable photo library access in Settings.",
+            cancelButtonText: "Cancel",
+            confirmButtonText: "Open Settings",
+            confirmButtonStyle: .normal,
+            onConfirm: {
+                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(settingsURL)
+                }
+            }
+        )
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
+    }
+    
+    // MARK: - UI Feedback
+    private func showSuccessIndicator() {
+        successIndicator.isHidden = false
+        successIndicator.alpha = 0
+        successIndicator.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        
+        UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
+            self.successIndicator.alpha = 1
+            self.successIndicator.transform = .identity
+        } completion: { _ in
+            UIView.animate(withDuration: 0.3, delay: 1.5, options: .curveEaseIn) {
+                self.successIndicator.alpha = 0
+                self.successIndicator.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+            } completion: { _ in
+                self.successIndicator.isHidden = true
+            }
+        }
+    }
+    
+    private func showSaveSuccessAndNavigate() {
+        // 显示成功提示
+        let successAlert = UIAlertController(
+            title: "Success",
+            message: "Photo saved to Gallery",
+            preferredStyle: .alert
+        )
+        present(successAlert, animated: true)
+        
+        // 1.5秒后自动关闭并返回相机页面
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            successAlert.dismiss(animated: true) {
+                self?.navigationController?.popViewController(animated: true)
+            }
+        }
+    }
+    
+    private func showError(message: String) {
+        let config = LMAlertDialogConfig(
+            title: LMText.common.error,
+            message: message,
+            cancelButtonText: "",
+            confirmButtonText: "OK",
+            confirmButtonStyle: .normal,
+            onConfirm: {}
+        )
+        let dialog = LMAlertDialog(config: config)
+        dialog.show(on: self)
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+extension LMPhotoPreviewPage {
+    
+    /// 允许手势识别器与其他视图的触摸事件共存
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        // 如果触摸点在按钮上，不响应长按手势
+        if touch.view is UIButton {
+            LMLogger.log("👆 Touch on button, ignoring long press")
+            return false
+        }
+        
+        // 如果触摸点在按钮容器上，不响应长按手势
+        if touch.view == backButtonContainer {
+            LMLogger.log("👆 Touch on back button container, ignoring long press")
+            return false
+        }
+        
+        LMLogger.log("👆 Touch received for long press gesture")
+        return true
+    }
+    
+    /// 允许多个手势识别器同时工作
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
+    }
+}
