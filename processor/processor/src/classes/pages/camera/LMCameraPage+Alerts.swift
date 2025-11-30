@@ -75,9 +75,9 @@ extension LMCameraPage {
     /// 显示离开 Show Suggestions 确认对话框
     func showLeaveConfirmation(completion: @escaping (Bool) -> Void) {
         let config = LMAlertDialogConfig(
-            image: UIImage(systemName: "exclamationmark.triangle.fill"),
-            title: "Leave Suggestions?",
-            message: "You will lose these suggestions if you go back.",
+            image: UIImage(named: "exclamation_triangle_orange"),
+            title: "Give Up Inspires?",
+            message: "You will return to the camera. This action cannot be undone.",
             cancelButtonText: LMLaunageManager.shared.common.cancel,
             confirmButtonText: "Leave",
             confirmButtonStyle: .destructive,
@@ -86,22 +86,6 @@ extension LMCameraPage {
         )
         let customDialog = LMAlertDialog(config: config)
         customDialog.show(on: self)
-    }
-    
-    /// 显示离开 Composition Selected 确认对话框
-    func showLeaveCompositionConfirmation(completion: @escaping (Bool) -> Void) {
-        let config = LMAlertDialogConfig(
-            image: UIImage(systemName: "exclamationmark.triangle.fill"),
-            title: "Leave Composition?",
-            message: "You will lose the current composition guidance.",
-            cancelButtonText: LMLaunageManager.shared.common.cancel,
-            confirmButtonText: "Leave",
-            confirmButtonStyle: .destructive,
-            onCancel: { completion(false) },
-            onConfirm: { completion(true) }
-        )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
     }
 }
 

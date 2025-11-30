@@ -25,6 +25,9 @@ extension LMCameraPage {
         // 切换底部控制栏为紧凑模式
         cameraBottomControlsView.setLayoutMode(.compact, animated: true)
         
+        // Show Suggestions 状态下，AR Guidance 保持不可用（灰色）
+        cameraBottomControlsView.resetARGuidance()
+        
         // 显示构图轮播
         showSuggestionsCarousel()
         
@@ -42,7 +45,7 @@ extension LMCameraPage {
             self.view.layoutIfNeeded()
         }
         
-        LMLogger.log("📐 Entered Show Suggestions state - Task ID: \(taskId), Suggestions: \(suggestions.count)")
+        LMLogger.log("📐 Entered Show Suggestions state - Task ID: \(taskId), Suggestions: \(suggestions.count), AR Guidance unavailable")
     }
     
     /// 退出 Show Suggestions 状态
@@ -66,6 +69,12 @@ extension LMCameraPage {
         // 切换底部控制栏为正常模式
         cameraBottomControlsView.setLayoutMode(.normal, animated: true)
         
+        // 重置 AR Guidance 状态
+        cameraBottomControlsView.resetARGuidance()
+        if isARGuidanceActive {
+            configureARGuidanceFeatures(false)
+        }
+        
         // 清理数据
         currentTaskId = nil
         currentSuggestions.removeAll()
@@ -81,7 +90,7 @@ extension LMCameraPage {
             self.view.layoutIfNeeded()
         }
         
-        LMLogger.log("📐 Exited Show Suggestions state")
+        LMLogger.log("📐 Exited Show Suggestions state, AR Guidance reset to unavailable")
     }
 }
 
@@ -90,47 +99,25 @@ extension LMCameraPage {
     
     /// 显示构图轮播视图
     func showSuggestionsCarousel() {
-        // 创建容器视图
-        let containerView = UIView()
-        containerView.backgroundColor = UIColor.clear
-        containerView.tag = ViewTag.suggestionsContainer.rawValue
-        view.addSubview(containerView)
-        
-        let carouselHeight: CGFloat = 200
-        containerView.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview()
-            make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-16)
-            make.height.equalTo(carouselHeight)
-        }
-        
         // 创建轮播视图
-        let carouselView = LMSuggestionsCarouselView()
-        carouselView.delegate = self
-        containerView.addSubview(carouselView)
-        
-        carouselView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+        if self.suggestionsCarouselView != nil {
+            self.suggestionsCarouselView?.isHidden = false
+        } else {
+            let carouselView = LMSuggestionsCarouselView()
+            carouselView.delegate = self
+            view.addSubview(carouselView)
+            carouselView.snp.makeConstraints { make in
+                make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-20)
+                make.leading.trailing.equalToSuperview()
+                make.height.equalTo(170)
+            }
+            self.suggestionsCarouselView = carouselView
         }
-        // 保存引用
-        self.suggestionsContainerView = containerView
-        self.suggestionsCarouselView = carouselView
     }
     
     /// 隐藏构图轮播视图
     func hideSuggestionsCarousel() {
-        guard let containerView = view.viewWithTag(ViewTag.suggestionsContainer.rawValue) else {
-            return
-        }
-        
-        // 淡出动画
-        UIView.animate(withDuration: 0.3, animations: {
-            containerView.alpha = 0
-        }) { _ in
-            containerView.removeFromSuperview()
-            self.suggestionsContainerView = nil
-            self.suggestionsCarouselView = nil
-        }
-        
+        self.suggestionsCarouselView?.isHidden = true
         LMLogger.log("✅ Suggestions carousel hidden")
     }
 }
@@ -272,7 +259,7 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
 // MARK: - Composition Selected State
 extension LMCameraPage {
     
-    /// 进入 Camera with Composition Selected 状态
+    /// 进入 Camera with Composition Selected 状态（从 Show Suggestions 进入）
     func enterCompositionSelectedState(with suggestion: LMCompositionSuggestion) {
         guard currentCameraState == .showingSuggestions else { return }
         
@@ -291,6 +278,10 @@ extension LMCameraPage {
         // 显示参考图在左下角
         showReferenceImageInCorner(suggestion: suggestion)
         
+        // 自动开启 AR Guidance
+        cameraBottomControlsView.setARGuidanceActive(true)
+        configureARGuidanceFeatures(true)
+        
         // 应用布局变化
         UIView.animate(
             withDuration: 0.35,
@@ -302,118 +293,318 @@ extension LMCameraPage {
             self.view.layoutIfNeeded()
         }
         
-        LMLogger.log("📐 Entered Composition Selected state - Suggestion ID: \(suggestion.id)")
+        LMLogger.log("📐 Entered Composition Selected state - Suggestion ID: \(suggestion.id), AR Guidance auto-enabled")
     }
     
-    /// 在左下角显示参考图
-    func showReferenceImageInCorner(suggestion: LMCompositionSuggestion) {
-        // 创建参考图容器
-        let referenceImageView = UIImageView()
-        referenceImageView.tag = ViewTag.referenceImageView.rawValue
-        referenceImageView.contentMode = .scaleAspectFill
-        referenceImageView.isUserInteractionEnabled = true
-        referenceImageView.clipsToBounds = true
-        referenceImageView.layer.cornerRadius = 12
-        referenceImageView.layer.borderWidth = 2
-        referenceImageView.layer.borderColor = UIColor.white.cgColor
-        referenceImageView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+    /// 进入 Camera with Composition Selected 状态（从 Saved Idea 进入）
+    func enterCompositionSelectedStateFromSavedIdea(item: GalleryItem) {
+        // 直接进入 Composition Selected 状态，跳过 Show Suggestions
+        currentCameraState = .compositionSelected
         
-        // 添加关闭按钮
+        // 隐藏 Inspire Me 按钮
+        inspireMeButtonView.isHidden = true
+        
+        // 设置 AR Guidance 为可用并自动开启
+        cameraBottomControlsView.setARGuidanceActive(true)
+        configureARGuidanceFeatures(true)
+        
+        // 显示参考图在左下角（使用 Saved Idea 的图片）
+        showReferenceImageFromSavedIdea(item: item)
+        
+        LMLogger.log("📐 Entered Composition Selected state from Saved Idea - ID: \(item.id), AR Guidance auto-enabled")
+    }
+    
+    /// 初始化参考图组件（在页面加载时调用一次，长期持有）
+    func setupReferenceImageComponent() {
+        // 创建容器视图
+        let containerView = UIView()
+        containerView.backgroundColor = .clear
+        containerView.isHidden = true // 默认隐藏
+        containerView.isUserInteractionEnabled = true
+        view.addSubview(containerView)
+        
+        // 创建参考图 ImageView
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 12
+        imageView.layer.borderWidth = 2
+        imageView.layer.borderColor = UIColor.white.cgColor
+        imageView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        containerView.addSubview(imageView)
+        
+        // 创建关闭按钮
         let closeButton = UIButton(type: .system)
         closeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
         closeButton.tintColor = .white
         closeButton.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        closeButton.layer.cornerRadius = 15
+        closeButton.layer.cornerRadius = 13
         closeButton.addTarget(self, action: #selector(closeReferenceImage), for: .touchUpInside)
+        containerView.addSubview(closeButton)
         
-        view.addSubview(referenceImageView)
-        referenceImageView.addSubview(closeButton)
+        // 设置约束（初始尺寸，后续会根据图片宽高比更新）
+        let defaultWidth: CGFloat = 100
+        let defaultHeight: CGFloat = 133 // 默认 3:4 比例
         
-        // 设置约束
-        let referenceSize = CGSize(width: 120, height: 160)
-        referenceImageView.snp.makeConstraints { make in
+        containerView.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(20)
             make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-20)
-            make.width.equalTo(referenceSize.width)
-            make.height.equalTo(referenceSize.height)
+            make.width.equalTo(defaultWidth)
+            make.height.equalTo(defaultHeight)
+        }
+        
+        imageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
         
         closeButton.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(8)
             make.trailing.equalToSuperview().offset(-8)
-            make.width.height.equalTo(30)
+            make.width.height.equalTo(26)
+        }
+        
+        // 添加双击手势（放大/缩小）
+        let doubleTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleReferenceImageDoubleTap(_:)))
+        doubleTapGesture.numberOfTapsRequired = 2
+        containerView.addGestureRecognizer(doubleTapGesture)
+        
+        // 添加拖动手势
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handleReferenceImagePan(_:)))
+        containerView.addGestureRecognizer(panGesture)
+        
+        // 保存引用
+        self.referenceImageContainerView = containerView
+        self.referenceImageView = imageView
+        self.referenceCloseButton = closeButton
+        
+        LMLogger.log("✅ Reference image component initialized and hidden by default")
+    }
+    
+    /// 显示参考图并更新数据（从 Show Suggestions 进入）
+    func showReferenceImageInCorner(suggestion: LMCompositionSuggestion) {
+        guard let containerView = referenceImageContainerView,
+              let imageView = referenceImageView else {
+            LMLogger.log("❌ Reference image component not initialized")
+            return
+        }
+        
+        // 根据图片宽高比计算尺寸（最大边长为100）
+        let aspectRatio = suggestion.getAspectRatio()
+        let defaultMaxEdge: CGFloat = 100
+        let newSize = calculateReferenceImageSize(maxEdge: defaultMaxEdge, aspectRatio: aspectRatio)
+        
+        // 保存原始宽高比到容器的 tag（用于双击放大/缩小时使用）
+        // 将 Double 转换为 Int 存储（乘以 10000 保留 4 位小数精度）
+        containerView.tag = Int(aspectRatio * 10000)
+        
+        // 更新容器尺寸
+        containerView.snp.updateConstraints { make in
+            make.width.equalTo(newSize.width)
+            make.height.equalTo(newSize.height)
         }
         
         // 加载图片
         if let imageUrl = suggestion.imageUrl, let url = URL(string: imageUrl) {
             // TODO: 使用图片加载库加载图片
             // 临时使用占位图
-            referenceImageView.image = UIImage(systemName: "photo")
-            LMLogger.log("📷 Loading reference image from: \(imageUrl)")
+            imageView.image = UIImage(systemName: "photo")
+            LMLogger.log("📷 Loading reference image from: \(imageUrl), aspect ratio: \(aspectRatio)")
         } else {
-            referenceImageView.image = UIImage(systemName: "photo")
+            imageView.image = UIImage(systemName: "photo")
+        }
+        // 显示容器
+        containerView.isHidden = false
+        // 将参考图置于最上层
+        view.bringSubviewToFront(containerView)
+        LMLogger.log("✅ Reference image displayed - Size: \(newSize), Aspect Ratio: \(aspectRatio)")
+    }
+    
+    /// 显示参考图（从 Saved Idea 进入）
+    func showReferenceImageFromSavedIdea(item: GalleryItem) {
+        guard let containerView = referenceImageContainerView,
+              let imageView = referenceImageView else {
+            LMLogger.log("❌ Reference image component not initialized")
+            return
         }
         
-        // 添加拖动手势
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handleReferenceImagePan(_:)))
-        referenceImageView.addGestureRecognizer(panGesture)
-        
-        // 将参考图置于最上层，确保在对焦指示器之上
-        view.bringSubviewToFront(referenceImageView)
-        
-        // 淡入动画
-        referenceImageView.alpha = 0
-        referenceImageView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5) {
-            referenceImageView.alpha = 1
-            referenceImageView.transform = .identity
+        // 使用 Saved Idea 的图片
+        guard let image = item.image else {
+            LMLogger.log("❌ Saved Idea image is nil")
+            return
         }
         
-        LMLogger.log("✅ Reference image displayed in corner")
+        // 计算图片宽高比
+        let aspectRatio = image.size.width / image.size.height
+        let defaultMaxEdge: CGFloat = 100
+        let newSize = calculateReferenceImageSize(maxEdge: defaultMaxEdge, aspectRatio: aspectRatio)
+        
+        // 保存原始宽高比到容器的 tag（用于双击放大/缩小时使用）
+        // 将 Double 转换为 Int 存储（乘以 10000 保留 4 位小数精度）
+        containerView.tag = Int(aspectRatio * 10000)
+        
+        // 更新容器尺寸
+        containerView.snp.updateConstraints { make in
+            make.width.equalTo(newSize.width)
+            make.height.equalTo(newSize.height)
+        }
+        
+        // 设置图片
+        imageView.image = image
+        
+        // 显示容器
+        containerView.isHidden = false
+        // 将参考图置于最上层
+        view.bringSubviewToFront(containerView)
+        
+        LMLogger.log("✅ Reference image displayed from Saved Idea - Size: \(newSize), Aspect Ratio: \(aspectRatio)")
+    }
+    
+    /// 计算参考图尺寸（根据最大边长和宽高比）
+    /// - Parameters:
+    ///   - maxEdge: 最大边的长度（100 或 160）
+    ///   - aspectRatio: 宽高比（width/height）
+    /// - Returns: 计算后的尺寸
+    private func calculateReferenceImageSize(maxEdge: CGFloat, aspectRatio: CGFloat) -> CGSize {
+        if aspectRatio > 1.0 {
+            // 横向图片：宽度是最大边
+            let width = maxEdge
+            let height = width / aspectRatio
+            return CGSize(width: width, height: height)
+        } else {
+            // 纵向图片：高度是最大边
+            let height = maxEdge
+            let width = height * aspectRatio
+            return CGSize(width: width, height: height)
+        }
+    }
+    
+    /// 处理参考图双击（放大/缩小）
+    @objc func handleReferenceImageDoubleTap(_ gesture: UITapGestureRecognizer) {
+        guard let containerView = referenceImageContainerView else {
+            LMLogger.log("⚠️ Reference image double tap failed - missing container")
+            return
+        }
+        
+        // 从容器的 tag 中恢复原始宽高比（除以 10000）
+        let aspectRatio = Double(containerView.tag) / 10000.0
+        
+        // 如果 tag 为 0（未设置），使用默认值 3:4
+        let finalAspectRatio = aspectRatio > 0 ? aspectRatio : 0.75
+        
+        let defaultMaxEdge: CGFloat = 100
+        let enlargedMaxEdge: CGFloat = 160
+        
+        // 获取当前容器尺寸
+        let currentWidth = containerView.bounds.width
+        let currentHeight = containerView.bounds.height
+        
+        // 获取当前最大边长（根据宽高比判断）
+        let currentMaxEdge = finalAspectRatio > 1.0 ? currentWidth : currentHeight
+        
+        // 判断当前是否为放大状态（使用更宽松的阈值）
+        let isEnlarged = abs(currentMaxEdge - enlargedMaxEdge) < 5.0
+        let targetMaxEdge = isEnlarged ? defaultMaxEdge : enlargedMaxEdge
+        
+        // 计算新尺寸（保持原始宽高比）
+        let newSize = calculateReferenceImageSize(maxEdge: targetMaxEdge, aspectRatio: finalAspectRatio)
+        
+        LMLogger.log("🔍 Double tap - Current: \(String(format: "%.1f", currentWidth))x\(String(format: "%.1f", currentHeight)), AspectRatio: \(String(format: "%.2f", finalAspectRatio)), CurrentMaxEdge: \(String(format: "%.1f", currentMaxEdge)), IsEnlarged: \(isEnlarged), Target: \(String(format: "%.1f", targetMaxEdge)), NewSize: \(String(format: "%.1f", newSize.width))x\(String(format: "%.1f", newSize.height))")
+        
+        // 更新约束并动画
+        containerView.snp.updateConstraints { make in
+            make.width.equalTo(newSize.width)
+            make.height.equalTo(newSize.height)
+        }
+        
+        UIView.animate(
+            withDuration: 0.35,
+            delay: 0,
+            usingSpringWithDamping: 0.75,
+            initialSpringVelocity: 0.5,
+            options: [.curveEaseInOut, .allowUserInteraction]
+        ) {
+            self.view.layoutIfNeeded()
+        }
+        
+        LMLogger.log("✅ Reference image \(isEnlarged ? "shrunk" : "enlarged") to \(String(format: "%.1f", newSize.width))x\(String(format: "%.1f", newSize.height))")
     }
     
     /// 关闭参考图
     @objc func closeReferenceImage() {
-        guard let referenceImageView = view.viewWithTag(ViewTag.referenceImageView.rawValue) else {
+        guard let containerView = referenceImageContainerView else {
             return
         }
         
-        // 淡出动画
-        UIView.animate(withDuration: 0.3, animations: {
-            referenceImageView.alpha = 0
-            referenceImageView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        }) { _ in
-            referenceImageView.removeFromSuperview()
+        // 判断导航来源
+        switch navigationSource {
+        case .savedIdea:
+            // 从 Saved Idea 进入，关闭参考图应该回到相机初始状态
+            containerView.isHidden = true
+            currentCameraState = .normal
+            currentSuggestion = nil
+            
+            // 显示 Inspire Me 按钮
+            inspireMeButtonView.isHidden = false
+            
+            // 重置 AR Guidance 为不可用状态
+            cameraBottomControlsView.resetARGuidance()
+            
+            // 如果 AR Guidance 正在运行，停止它
+            if isARGuidanceActive {
+                configureARGuidanceFeatures(false)
+            }
+            
+            LMLogger.log("✅ Reference image hidden, returned to camera initial state (from Saved Idea), AR Guidance reset to unavailable")
+            
+        case .normal:
+            // 从 Show Suggestions 进入，返回 Show Suggestions 状态
+            containerView.isHidden = true
+            currentCameraState = .showingSuggestions
+            
+            // 保存当前选中的构图索引（用于恢复选中状态）
+            let previouslySelectedIndex = currentSuggestions.firstIndex { $0.id == currentSuggestion?.id } ?? -1
+            
+            currentSuggestion = nil
+            
+            // 重置 AR Guidance 为不可用状态（灰色）
+            cameraBottomControlsView.resetARGuidance()
+            
+            // 如果 AR Guidance 正在运行，停止它
+            if isARGuidanceActive {
+                configureARGuidanceFeatures(false)
+            }
+            
+            // 显示构图轮播
+            showSuggestionsCarousel()
+            
+            // 更新轮播视图的数据
+            if let carouselView = suggestionsCarouselView {
+                let displayModels = currentSuggestions.map { SuggestionDisplayModel(from: $0) }
+                carouselView.updateSuggestions(displayModels)
+                
+                // 如果之前有选中的构图，恢复选中状态
+                if previouslySelectedIndex >= 0 && previouslySelectedIndex < displayModels.count {
+                    // 延迟一点执行，确保轮播视图已经完成布局
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        carouselView.selectSuggestion(at: previouslySelectedIndex, animated: true)
+                        LMLogger.log("📐 Restored selection to index: \(previouslySelectedIndex)")
+                    }
+                }
+                
+                LMLogger.log("📐 Updated carousel with \(displayModels.count) suggestions")
+            }
+            
+            // 调整底部控制栏
+            bottomControlsHeightConstraint?.update(offset: 44)
+            cameraBottomControlsView.setLayoutMode(.compact, animated: true)
+            
+            LMLogger.log("✅ Reference image hidden, returned to Show Suggestions state, AR Guidance reset to unavailable")
         }
-        
-        // 返回 Show Suggestions 状态
-        currentCameraState = .showingSuggestions
-        currentSuggestion = nil
-        
-        // 显示构图轮播
-        showSuggestionsCarousel()
-        
-        // 更新轮播视图的数据
-        if let carouselView = suggestionsCarouselView {
-            let displayModels = currentSuggestions.map { SuggestionDisplayModel(from: $0) }
-            carouselView.updateSuggestions(displayModels)
-            LMLogger.log("📐 Updated carousel with \(displayModels.count) suggestions")
-        }
-        
-        // 调整底部控制栏
-        bottomControlsHeightConstraint?.update(offset: 44)
-        cameraBottomControlsView.setLayoutMode(.compact, animated: true)
-        
-        UIView.animate(withDuration: 0.35) {
-            self.view.layoutIfNeeded()
-        }
-        
-        LMLogger.log("✅ Reference image closed, returned to Show Suggestions state")
     }
     
     /// 处理参考图拖动
     @objc func handleReferenceImagePan(_ gesture: UIPanGestureRecognizer) {
-        guard let referenceImageView = view.viewWithTag(ViewTag.referenceImageView.rawValue) else {
+        guard let containerView = referenceImageContainerView else {
             return
         }
         
@@ -423,34 +614,34 @@ extension LMCameraPage {
         case .changed:
             // 计算新的中心点
             var newCenter = CGPoint(
-                x: referenceImageView.center.x + translation.x,
-                y: referenceImageView.center.y + translation.y
+                x: containerView.center.x + translation.x,
+                y: containerView.center.y + translation.y
             )
             
-            // 获取边界约束
-            let imageHalfWidth = referenceImageView.bounds.width / 2
-            let imageHalfHeight = referenceImageView.bounds.height / 2
+            // 获取边界约束（使用实时的 bounds，支持动态尺寸变化）
+            let imageHalfWidth = containerView.bounds.width / 2
+            let imageHalfHeight = containerView.bounds.height / 2
             
-            // 顶部边界：状态栏底部
-            let topBoundary = view.safeAreaInsets.top + 44 + imageHalfHeight
+            // 顶部边界：状态栏底部 + 安全距离
+            let topBoundary = view.safeAreaInsets.top + 44 + imageHalfHeight + 10
             
-            // 底部边界：底部控制栏顶部
-            let bottomBoundary = cameraBottomControlsView.frame.minY - imageHalfHeight - 30
+            // 底部边界：底部控制栏顶部 - 安全距离
+            let bottomBoundary = cameraBottomControlsView.frame.minY - imageHalfHeight - 20
             
-            // 左右边界：屏幕边缘
-            let leftBoundary = imageHalfWidth
-            let rightBoundary = view.bounds.width - imageHalfWidth
+            // 左右边界：屏幕边缘 + 安全距离
+            let leftBoundary = imageHalfWidth + 10
+            let rightBoundary = view.bounds.width - imageHalfWidth - 10
             
             // 应用边界约束
             newCenter.x = max(leftBoundary, min(newCenter.x, rightBoundary))
             newCenter.y = max(topBoundary, min(newCenter.y, bottomBoundary))
             
             // 更新位置
-            referenceImageView.center = newCenter
+            containerView.center = newCenter
             gesture.setTranslation(.zero, in: view)
             
         case .ended:
-            LMLogger.log("📷 Reference image moved to: \(referenceImageView.center)")
+            LMLogger.log("📷 Reference image moved to: \(containerView.center), size: \(containerView.bounds.size)")
             
         default:
             break

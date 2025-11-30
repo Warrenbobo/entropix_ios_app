@@ -2,7 +2,7 @@
 //  LMTestDataManager.swift
 //  processor
 //
-//  Created by Kiro on 2025-01-XX.
+//  Created by muz on 2025-01-XX.
 //  Copyright © 2025 processor. All rights reserved.
 //
 
@@ -147,6 +147,10 @@ class LMTestDataManager {
         // 生成16个相似构图建议
         var suggestions: [LMCompositionSuggestion] = []
         for i in 1...16 {
+            // 随机生成横向或纵向图片
+            let isLandscape = i % 3 == 0 // 每3张图有1张横向
+            let aspectRatio = isLandscape ? 1.33 : 0.75 // 横向 4:3，纵向 3:4
+            
             suggestions.append(LMCompositionSuggestion(
                 id: "test_suggestion_\(i)",
                 sceneType: "outdoor",
@@ -162,7 +166,8 @@ class LMTestDataManager {
                     y: 0.2,
                     width: 0.4,
                     height: 0.6
-                )
+                ),
+                aspectRatio: aspectRatio
             ))
         }
         
@@ -180,7 +185,8 @@ class LMTestDataManager {
                     rank: position + 1,
                     score: nil,
                     modelVersion: "v1.0",
-                    personBoundingBox: nil
+                    personBoundingBox: nil,
+                    aspectRatio: 0.75 // 默认 3:4
                 ), at: position)
             }
         }
@@ -219,7 +225,8 @@ class LMTestDataManager {
                     y: 0.15,
                     width: 0.5,
                     height: 0.7
-                )
+                ),
+                aspectRatio: 0.75 // 3:4 纵向
             ),
             LMCompositionSuggestion(
                 id: "test_aigc_2",
@@ -236,7 +243,8 @@ class LMTestDataManager {
                     y: 0.2,
                     width: 0.4,
                     height: 0.6
-                )
+                ),
+                aspectRatio: 1.33 // 4:3 横向
             ),
             LMCompositionSuggestion(
                 id: "test_aigc_3",
@@ -253,7 +261,8 @@ class LMTestDataManager {
                     y: 0.25,
                     width: 0.3,
                     height: 0.5
-                )
+                ),
+                aspectRatio: 1
             )
         ]
     }

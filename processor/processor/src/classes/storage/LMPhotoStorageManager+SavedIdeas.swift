@@ -69,6 +69,7 @@ extension LMPhotoStorageManager {
         ideaEntity.personBoundingBoxData = boundingBoxString
         ideaEntity.rank = Int32(suggestion.rank)
         ideaEntity.confidence = suggestion.score ?? 0.0
+//        ideaEntity.aspectRatio = suggestion.getAspectRatio()
         ideaEntity.savedDate = timestamp
         ideaEntity.isSynced = false
         ideaEntity.isMarkedDeleted = false

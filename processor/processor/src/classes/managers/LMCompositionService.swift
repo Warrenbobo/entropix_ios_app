@@ -2,7 +2,7 @@
 //  LMCompositionService.swift
 //  processor
 //
-//  Created by Kiro on 2025/11/9.
+//  Created by muz on 2025/11/9.
 //  Updated to use unified API service
 //
 

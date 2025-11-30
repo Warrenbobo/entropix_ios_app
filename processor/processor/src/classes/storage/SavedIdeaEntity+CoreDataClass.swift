@@ -34,7 +34,9 @@ public class SavedIdeaEntity: NSManagedObject {
         return GalleryItem(
             image: image,
             title: self.sceneType,
-            id: id
+            id: id,
+            isLivePhoto: false,  // Saved ideas are not Live Photos
+            livePhotoVideoPath: nil
         )
     }
     
@@ -63,7 +65,8 @@ public class SavedIdeaEntity: NSManagedObject {
             rank: Int(self.rank),
             score: self.confidence,
             modelVersion: "",
-            personBoundingBox: boundingBox
+            personBoundingBox: boundingBox,
+            aspectRatio: 1
         )
     }
 }

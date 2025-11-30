@@ -22,6 +22,13 @@ extension LMCameraPage {
     }
     
     func startARGuidanceSession() {
+        // 检查参考图和取景方向是否匹配
+        guard checkOrientationMatch() else {
+            LMLogger.log("⚠️ AR guidance disabled - Reference image and camera orientation mismatch")
+            isARGuidanceActive = false
+            return
+        }
+        
         // 初始化人物检测管理器
         if personDetectionManager == nil {
             personDetectionManager = LMPersonDetectionManager()
@@ -37,6 +44,33 @@ extension LMCameraPage {
         LMLogger.log("✅ AR guidance session started - White center frame (80x120) and green dynamic frame ready")
     }
     
+    /// 检查参考图和取景方向是否匹配
+    /// - Returns: true 表示方向匹配，false 表示方向不匹配
+    func checkOrientationMatch() -> Bool {
+        // 获取参考图容器视图（使用 referenceImageContainerView 属性）
+        guard let containerView = referenceImageContainerView,
+              let imageView = containerView.subviews.first as? UIImageView,
+              let referenceImage = imageView.image else {
+            LMLogger.log("⚠️ No reference image found for orientation check")
+            return false
+        }
+        
+        let referenceWidth = referenceImage.size.width
+        let referenceHeight = referenceImage.size.height
+        let referenceIsLandscape = referenceWidth > referenceHeight
+        
+        // 获取当前相机预览的方向
+        let previewBounds = cameraPreviewView.bounds
+        let previewIsLandscape = previewBounds.width > previewBounds.height
+        
+        // 判断方向是否匹配
+        let isMatch = referenceIsLandscape == previewIsLandscape
+        
+        LMLogger.log("📐 Orientation check - Reference: \(referenceIsLandscape ? "Landscape" : "Portrait") (\(referenceWidth)x\(referenceHeight)), Preview: \(previewIsLandscape ? "Landscape" : "Portrait") (\(previewBounds.width)x\(previewBounds.height)), Match: \(isMatch)")
+        
+        return isMatch
+    }
+    
 
     func stopARGuidanceSession() {
         personDetectionManager?.stopDetection()
@@ -48,8 +82,8 @@ extension LMCameraPage {
     }
     
     func showARGuidanceOverlay() {
-        // 检查是否已存在白色固定参考框
-        if let existingFrame = cameraPreviewView.viewWithTag(ViewTag.arGuidanceFrame.rawValue) {
+        // 检查是否已存在白色固定参考框（在主视图中查找）
+        if let existingFrame = view.viewWithTag(ViewTag.arGuidanceFrame.rawValue) {
             // 已存在，只需显示
             existingFrame.isHidden = false
             LMLogger.log("📐 Showing existing white center reference frame")
@@ -59,17 +93,19 @@ extension LMCameraPage {
         }
     }
     
-    /// 添加白色固定参考框（位于屏幕中心，宽为屏幕宽度的2/5，高为宽度的1.2倍）
+    /// 添加白色固定参考框（位于屏幕正中央，宽为屏幕宽度的2/5，高为宽度的1.1倍）
     func addCenterReferenceFrame() {
-        let previewBounds = cameraPreviewView.bounds
+        // 使用整个屏幕的尺寸，而不是 cameraPreviewView 的尺寸
+        let screenBounds = view.bounds
         
         // 宽度为屏幕宽度的2/5
-        let frameWidth: CGFloat = previewBounds.width * 2.0 / 5.0
+        let frameWidth: CGFloat = screenBounds.width * 2.0 / 5.0
         // 高度为宽度的1.1倍
         let frameHeight: CGFloat = frameWidth * 1.1
         
-        let centerX = previewBounds.width / 2
-        let centerY = previewBounds.height / 2
+        // 计算屏幕正中央的位置
+        let centerX = screenBounds.width / 2
+        let centerY = screenBounds.height / 2
         
         // 创建白色固定参考框容器
         let centerFrame = UIView()
@@ -102,7 +138,8 @@ extension LMCameraPage {
         crosshairLayer.path = crosshairPath.cgPath
         centerFrame.layer.addSublayer(crosshairLayer)
         
-        cameraPreviewView.addSubview(centerFrame)
+        // 添加到主视图（而不是 cameraPreviewView），确保始终在屏幕中心
+        view.addSubview(centerFrame)
         
         LMLogger.log("📐 Added white center reference frame at (\(String(format: "%.1f", centerX)), \(String(format: "%.1f", centerY))) size: \(String(format: "%.1f", frameWidth))x\(String(format: "%.1f", frameHeight))")
     }
@@ -192,12 +229,12 @@ extension LMCameraPage {
     
 
     func hideARGuidanceOverlay() {
-        // 隐藏白色固定参考框（不移除，只隐藏）
-        cameraPreviewView.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.isHidden = true
-        cameraPreviewView.viewWithTag(ViewTag.arHintLabel.rawValue)?.isHidden = true
-        // 移除绿色动态检测框
+        // 隐藏白色固定参考框（在主视图中查找，不移除，只隐藏）
+        view.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.isHidden = true
+        view.viewWithTag(ViewTag.arHintLabel.rawValue)?.isHidden = true
+        // 移除蓝色动态检测框（在 cameraPreviewView 中）
         cameraPreviewView.viewWithTag(ViewTag.personDetectionFrame.rawValue)?.removeFromSuperview()
-        // 移除连线
+        // 移除连线（在 cameraPreviewView 中）
         cameraPreviewView.viewWithTag(ViewTag.arGuidanceLine.rawValue)?.removeFromSuperview()
     }
 
@@ -248,7 +285,7 @@ extension LMCameraPage {
         // 检查重叠比例，如果达到90%则显示对齐成功提示
         if overlapRatio >= 0.90 {
             // 隐藏两个校准框和连线
-            cameraPreviewView.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.isHidden = true
+            view.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.isHidden = true
             cameraPreviewView.viewWithTag(ViewTag.personDetectionFrame.rawValue)?.isHidden = true
             cameraPreviewView.viewWithTag(ViewTag.arGuidanceLine.rawValue)?.isHidden = true
             
@@ -259,7 +296,7 @@ extension LMCameraPage {
             return
         } else {
             // 确保校准框可见
-            cameraPreviewView.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.isHidden = false
+            view.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.isHidden = false
             cameraPreviewView.viewWithTag(ViewTag.arGuidanceLine.rawValue)?.isHidden = false
         }
         
@@ -341,7 +378,7 @@ extension LMCameraPage {
         return Double(intersectionArea / smallerArea)
     }
     
-    /// 显示对齐成功指示器（绿色对勾）并停止AR引导
+    /// 显示对齐成功指示器（绿色校准框 + 中间对勾）并停止AR引导
     func showAlignmentSuccessIndicator() {
         // 检查是否已经显示
         let indicatorTag = 9999
@@ -351,49 +388,64 @@ extension LMCameraPage {
         
         // 停止AR引导检测
         personDetectionManager?.stopDetection()
+        isARGuidanceActive = false
         
-        // 创建指示器容器
-        let indicatorView = UIView()
-        indicatorView.tag = indicatorTag
-        indicatorView.backgroundColor = .clear
+        // 更新 AR Guidance 按钮状态为 available（可用但关闭）
+        cameraBottomControlsView.setARGuidanceActive(false)
         
-        // 创建绿色对勾图片视图
-        let checkImageView = UIImageView()
-        checkImageView.image = UIImage(named: "check_circle_green")
-        checkImageView.tintColor = .systemGreen
-        checkImageView.contentMode = .scaleAspectFit
+        // 获取白色框的位置和大小（绿色框与白色框大小一致）
+        let screenBounds = view.bounds
+        let whiteFrameWidth = screenBounds.width * 2.0 / 5.0
+        let whiteFrameHeight = whiteFrameWidth * 1.1
         
-        // 设置大小和位置（屏幕中心）
-        let size: CGFloat = 36
-        let centerX = cameraPreviewView.bounds.width / 2
-        let centerY = cameraPreviewView.bounds.height / 2
+        // 使用整个屏幕的中心位置
+        let screenCenterX = screenBounds.width / 2
+        let screenCenterY = screenBounds.height / 2
         
-        indicatorView.frame = CGRect(
-            x: centerX - size / 2,
-            y: centerY - size / 2,
-            width: size,
-            height: size
+        // 创建绿色校准框容器（与白色框大小一致）
+        let greenFrame = UIView()
+        greenFrame.tag = indicatorTag
+        greenFrame.backgroundColor = .clear
+        greenFrame.frame = CGRect(
+            x: screenCenterX - whiteFrameWidth / 2,
+            y: screenCenterY - whiteFrameHeight / 2,
+            width: whiteFrameWidth,
+            height: whiteFrameHeight
         )
         
-        checkImageView.frame = indicatorView.bounds
-        indicatorView.addSubview(checkImageView)
+        // 使用 BezierPath 绘制绿色校准框（只有四个圆角，不绘制准星）
+        let greenCornerLayer = CAShapeLayer()
+        greenCornerLayer.fillColor = UIColor.clear.cgColor
+        greenCornerLayer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.9).cgColor
+        greenCornerLayer.lineWidth = 3
         
-        // 添加到预览视图
-        cameraPreviewView.addSubview(indicatorView)
+        let greenCornerPath = createCornerPath(in: CGRect(origin: .zero, size: greenFrame.bounds.size))
+        greenCornerLayer.path = greenCornerPath.cgPath
+        greenFrame.layer.addSublayer(greenCornerLayer)
         
-        // 添加缩放动画
-        indicatorView.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
-        indicatorView.alpha = 0
+        // 创建绿色对勾图片视图（放在中间）
+        let checkImageView = UIImageView()
+        checkImageView.image = UIImage(named: "check_circle_green")
         
-        UIView.animate(withDuration: 0.3, animations: {
-            indicatorView.transform = CGAffineTransform(scaleX: 1.0, y: 1.0)
-            indicatorView.alpha = 1.0
-        }) { _ in
-            // 3秒后消失
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                indicatorView.alpha = 0
-                indicatorView.removeFromSuperview()
-                LMLogger.log("✅ AR guidance stopped after alignment success")
+        // 对勾图标大小为框宽度的1/4
+        let checkSize: CGFloat = whiteFrameWidth / 4
+        checkImageView.frame = CGRect(
+            x: (whiteFrameWidth - checkSize) / 2,
+            y: (whiteFrameHeight - checkSize) / 2,
+            width: checkSize,
+            height: checkSize
+        )
+        greenFrame.addSubview(checkImageView)
+        
+        // 添加到主视图（而不是 cameraPreviewView），确保在屏幕中心
+        view.addSubview(greenFrame)
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            UIView.animate(withDuration: 0.3, animations: {
+                greenFrame.alpha = 0
+            }) { _ in
+                greenFrame.removeFromSuperview()
+                LMLogger.log("✅ Green alignment frame removed after 3 seconds")
             }
         }
         
@@ -401,7 +453,7 @@ extension LMCameraPage {
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
         
-        LMLogger.log("✅ Alignment success indicator shown, AR guidance stopped")
+        LMLogger.log("✅ Green alignment frame shown at center with checkmark, size: \(whiteFrameWidth)x\(whiteFrameHeight) (same as white frame), AR Guidance auto-disabled")
     }
     
 
@@ -457,10 +509,10 @@ extension LMCameraPage {
         generator.impactOccurred()
         
         UIView.animate(withDuration: 0.2, animations: {
-            self.cameraPreviewView.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.alpha = 0.5
+            self.view.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.alpha = 0.5
         }) { _ in
             UIView.animate(withDuration: 0.2) {
-                self.cameraPreviewView.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.alpha = 1.0
+                self.view.viewWithTag(ViewTag.arGuidanceFrame.rawValue)?.alpha = 1.0
             }
         }
     }

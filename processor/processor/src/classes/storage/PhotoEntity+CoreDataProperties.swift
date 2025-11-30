@@ -26,6 +26,8 @@ extension PhotoEntity {
     @NSManaged public var capturedDate: Date?
     @NSManaged public var isSynced: Bool
     @NSManaged public var isMarkedDeleted: Bool
+    @NSManaged public var isLivePhoto: Bool
+    @NSManaged public var livePhotoVideoPath: String?
 }
 
 extension PhotoEntity: Identifiable {

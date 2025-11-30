@@ -2,7 +2,7 @@
 //  LMCameraPreviewManager.swift
 //  processor
 //
-//  Created by Kiro on 2025/11/1.
+//  Created by muz on 2025/11/1.
 //
 
 import UIKit

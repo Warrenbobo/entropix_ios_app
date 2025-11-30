@@ -25,7 +25,14 @@ class LMFloatingCameraButton: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        // 设置渐变背景
+        setupGradientBackground()
         setupTheFloatCameraButtonViews()
+        // 添加阴影
+        layer.shadowColor = UIColor.black.cgColor
+        layer.shadowOffset = CGSize(width: 0, height: 2)
+        layer.shadowRadius = 8
+        layer.shadowOpacity = 0.2
     }
     
     required init?(coder: NSCoder) {
@@ -35,20 +42,33 @@ class LMFloatingCameraButton: UIView {
     private func setupTheFloatCameraButtonViews() {
         addSubview(cameraButton)
         
-        cameraButton.backgroundColor = UIColor.systemBlue
-        cameraButton.layer.cornerRadius = 25
-        cameraButton.setImage(UIImage(systemName: "camera.fill"), for: .normal)
+        // 设置相机图标
+        cameraButton.setImage(UIImage(named: "camera_solid_white"), for: .normal)
         cameraButton.tintColor = UIColor.white
         cameraButton.addTarget(self, action: #selector(cameraButtonTapped), for: .touchUpInside)
+        cameraButton.imageEdgeInsets = UIEdgeInsets(top: 13, left: 13, bottom: 13, right: 13)
+        cameraButton.adjustsImageWhenHighlighted = false
         
-        // 添加阴影
-        cameraButton.layer.shadowColor = UIColor.black.cgColor
-        cameraButton.layer.shadowOffset = CGSize(width: 0, height: 2)
-        cameraButton.layer.shadowRadius = 8
-        cameraButton.layer.shadowOpacity = 0.2
+        cameraButton.layer.cornerRadius = 20
+        cameraButton.layer.borderColor = UIColor.white.cgColor
+        cameraButton.layer.borderWidth = 2
+        cameraButton.layer.masksToBounds = true
         
         // 添加约束
         cameraButton.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+    
+    private func setupGradientBackground() {
+        let gradientImageView = UIImageView()
+        let gradientImage = UIImage.gradientImage(size: CGSize(width: 60, height: 60),
+                                                  colors: [UIColor.hexColor("#6680E6").cgColor,
+                                                           UIColor.hexColor("#9966E6").cgColor],
+                                                  cornerRadius: 20)
+        gradientImageView.image = gradientImage
+        addSubview(gradientImageView)
+        gradientImageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
     }

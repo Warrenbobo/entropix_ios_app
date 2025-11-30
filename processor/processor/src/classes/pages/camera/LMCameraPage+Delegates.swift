@@ -114,9 +114,30 @@ extension LMCameraPage: LMCameraControlsViewDelegate {
 extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     
     func cameraBottomControlsViewDidTapARGuidanceButton() {
-        let isEnabled = cameraBottomControlsView.getCurrentARGuidanceStatus()
-        LMLogger.log("🎯 AR Guidance: \(isEnabled ? "ON" : "OFF")")
-        configureARGuidanceFeatures(isEnabled)
+        let isActive = cameraBottomControlsView.isARGuidanceActive()
+        LMLogger.log("🎯 AR Guidance: \(isActive ? "ON" : "OFF")")
+        
+        // 如果在 Show Suggestions 状态下开启 AR Guidance，需要先显示 Reference Image
+        if isActive && currentCameraState == .showingSuggestions {
+            // 检查是否有选中的构图
+            guard let selectedSuggestion = suggestionsCarouselView?.getSelectedSuggestion() else {
+                LMLogger.log("⚠️ No suggestion selected, cannot enable AR Guidance")
+                // 将 AR Guidance 状态改回 available（关闭状态）
+                cameraBottomControlsView.setARGuidanceAvailable(true)
+                showToast("Please select a composition first")
+                return
+            }
+            
+            // 进入 Composition Selected 状态并显示 Reference Image
+            enterCompositionSelectedState(with: selectedSuggestion)
+        }
+        
+        configureARGuidanceFeatures(isActive)
+    }
+    
+    func cameraBottomControlsViewDidTapUnavailableARGuidance() {
+        LMLogger.log("⚠️ User tapped unavailable AR Guidance button")
+        showToast("AR Guidance is only available after using Inspire Me")
     }
     
     func cameraBottomControlsViewDidTapCaptureButton() {

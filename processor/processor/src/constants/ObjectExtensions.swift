@@ -8,6 +8,33 @@
 import Foundation
 import UIKit
 
+/// 渐变方向枚举（常见方向，可按需扩展）
+enum GradientDirection {
+    case horizontal          // 水平（左→右）
+    case vertical            // 垂直（上→下）
+    case topLeftToBottomRight// 左上→右下
+    case topRightToBottomLeft// 右上→左下
+    
+    // 对应的 startPoint 和 endPoint（CAGradientLayer 的坐标体系：(0,0) 左上，(1,1) 右下）
+    var startPoint: CGPoint {
+        switch self {
+        case .horizontal: return CGPoint(x: 0, y: 0.5)
+        case .vertical: return CGPoint(x: 0.5, y: 0)
+        case .topLeftToBottomRight: return CGPoint(x: 0, y: 0)
+        case .topRightToBottomLeft: return CGPoint(x: 1, y: 0)
+        }
+    }
+    
+    var endPoint: CGPoint {
+        switch self {
+        case .horizontal: return CGPoint(x: 1, y: 0.5)
+        case .vertical: return CGPoint(x: 0.5, y: 1)
+        case .topLeftToBottomRight: return CGPoint(x: 1, y: 1)
+        case .topRightToBottomLeft: return CGPoint(x: 0, y: 1)
+        }
+    }
+}
+
 extension UIColor {
     
     
@@ -68,9 +95,6 @@ extension UIView {
             layer.render(in: context.cgContext)
         }
     }
-}
-
-extension UIView {
     
     func findViewController() -> UIViewController? {
         var responder: UIResponder? = self
@@ -81,6 +105,39 @@ extension UIView {
             responder = responder?.next
         }
         return nil
+    }
+}
+
+extension UIImage {
+    /// 生成渐变色图片
+    /// - Parameters:
+    ///   - size: 图片尺寸（默认屏幕尺寸）
+    ///   - colors: 渐变颜色数组（需传入 CGColor）
+    ///   - direction: 渐变方向（默认水平从左到右）
+    ///   - cornerRadius: 圆角半径（默认 0，无圆角）
+    ///   - locations: 渐变位置（默认 nil，均匀分布）
+    /// - Returns: 生成的渐变色 UIImage
+    static func gradientImage(
+        size: CGSize = UIScreen.main.bounds.size,
+        colors: [CGColor],
+        direction: GradientDirection = .horizontal,
+        cornerRadius: CGFloat = 0,
+        locations: [NSNumber]? = nil
+    ) -> UIImage {
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = colors
+        gradientLayer.locations = locations
+        gradientLayer.frame = CGRect(origin: .zero, size: size)
+        gradientLayer.cornerRadius = cornerRadius
+        gradientLayer.masksToBounds = true // 圆角生效
+        
+        gradientLayer.startPoint = direction.startPoint
+        gradientLayer.endPoint = direction.endPoint
+        
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            gradientLayer.render(in: context.cgContext)
+        }
     }
 }
 
@@ -376,6 +433,13 @@ extension UIButton {
         }
         self.titleEdgeInsets = titleInsets
         self.imageEdgeInsets = imageInsets
+    }
+}
+
+extension UIEdgeInsets {
+    
+    static func all(_ value: CGFloat) -> UIEdgeInsets {
+        return UIEdgeInsets(top: value, left: value, bottom: value, right: value)
     }
 }
 

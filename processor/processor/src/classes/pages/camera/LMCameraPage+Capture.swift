@@ -7,31 +7,49 @@
 
 import UIKit
 import AVFoundation
-import Toast_Swift
 
 // MARK: - Photo Capture
 extension LMCameraPage {
     
+    // MARK: - Live Photo Video URL Storage
+    /// 临时存储 Live Photo 视频 URL
+    private static var capturedLivePhotoVideoURL: URL?
+    
+    /// 临时存储捕获的照片，等待 Live Photo 视频处理完成
+    private static var capturedPhotoImage: UIImage?
+    
+    /// 临时存储原始照片数据（包含元数据）
+    private static var capturedPhotoImageData: Data?
+    
+    /// 标记是否正在等待 Live Photo 视频处理
+    private static var isWaitingForLivePhotoVideo = false
+    
+    /// 拍照方法
     func capturePhoto() {
-        guard validateCameraState() else { return }
-        guard let photoOutput = photoOutput else { return }
-        
-        let photoSettings = AVCapturePhotoSettings()
-        
-        // 配置闪光灯
-        let currentFlashMode = cameraControlsView.getCurrentFlashMode()
-        switch currentFlashMode {
-        case .auto:
-            photoSettings.flashMode = .auto
-        case .on:
-            photoSettings.flashMode = .on
-        case .off:
-            photoSettings.flashMode = .off
+        guard let photoOutput = photoOutput else {
+            LMLogger.log("❌ Photo output not available")
+            return
         }
         
-        // 配置 Live Photos
-        if cameraControlsView.getCurrentLivePhotoStatus() && photoOutput.isLivePhotoCaptureSupported {
-            photoSettings.livePhotoMovieFileURL = createLivePhotoMovieURL()
+        let photoSettings = AVCapturePhotoSettings()
+        let flashMode = cameraControlsView.getCurrentFlashMode()
+        if photoOutput.supportedFlashModes.contains(flashMode.avFlashMode) && !isUsingFrontCamera {
+            photoSettings.flashMode = flashMode.avFlashMode
+        }
+        
+        // 检查并设置 Live Photo
+        let isLivePhotoEnabled = photoOutput.isLivePhotoCaptureSupported && cameraControlsView.getCurrentLivePhotoStatus()
+        if isLivePhotoEnabled {
+            let livePhotoMovieFileName = UUID().uuidString
+            let livePhotoMovieFilePath = (NSTemporaryDirectory() as NSString).appendingPathComponent((livePhotoMovieFileName as NSString).appendingPathExtension("mov")!)
+            photoSettings.livePhotoMovieFileURL = URL(fileURLWithPath: livePhotoMovieFilePath)
+            
+            // 设置等待标志
+            Self.isWaitingForLivePhotoVideo = true
+            LMLogger.log("📸 Live Photo enabled for this capture")
+        } else {
+            Self.isWaitingForLivePhotoVideo = false
+            LMLogger.log("📸 Static photo capture")
         }
         
         photoOutput.capturePhoto(with: photoSettings, delegate: self)
@@ -39,78 +57,80 @@ extension LMCameraPage {
         LMLogger.log("📸 Photo capture initiated")
     }
     
-    func validateCameraState() -> Bool {
-        let cameraAuthStatus = AVCaptureDevice.authorizationStatus(for: .video)
-        guard cameraAuthStatus == .authorized else {
-            LMLogger.log("❌ Camera permission not granted: \(cameraAuthStatus.rawValue)")
-            showPermissionSettingsAlert()
-            return false
-        }
-        
-        guard AVCaptureDevice.default(for: .video) != nil else {
-            LMLogger.log("❌ No camera device available")
-            showAlert("Camera not available on this device", style: .error)
-            return false
-        }
-        
-        guard photoOutput != nil else {
-            LMLogger.log("❌ Photo output not initialized")
-            showAlert("Camera not ready. Please try again.", style: .error)
-            return false
-        }
-        
-        guard let captureSession = captureSession, captureSession.isRunning else {
-            LMLogger.log("❌ Capture session not running")
-            showAlert("Camera session not active. Please restart the camera.", style: .error)
-            return false
-        }
-        
-        return true
-    }
-    
-    func createLivePhotoMovieURL() -> URL {
-        let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        let fileName = "LivePhoto_\(Date().timeIntervalSince1970).mov"
-        return documentsDirectory.appendingPathComponent(fileName)
-    }
-    
+    /// 显示倒计时定时器
     func showCountdownTimer(duration: Int, completion: @escaping () -> Void) {
+        // 创建倒计时标签
         let countdownLabel = UILabel()
-        countdownLabel.font = UIFont.systemFont(ofSize: 60, weight: .bold)
-        countdownLabel.textColor = UIColor.white
+        countdownLabel.font = UIFont.systemFont(ofSize: 80, weight: .bold)
+        countdownLabel.textColor = .white
         countdownLabel.textAlignment = .center
-        countdownLabel.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        countdownLabel.layer.cornerRadius = 50
-        countdownLabel.clipsToBounds = true
+        countdownLabel.tag = 7777 // 用于后续移除
         
         view.addSubview(countdownLabel)
         countdownLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.size.equalTo(100)
         }
         
         var remainingTime = duration
         countdownLabel.text = "\(remainingTime)"
         
-        let timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+        // 添加缩放动画
+        countdownLabel.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.6, initialSpringVelocity: 0.5) {
+            countdownLabel.transform = .identity
+        }
+        
+        // 创建定时器
+        var timer: Timer?
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             remainingTime -= 1
             
             if remainingTime > 0 {
                 countdownLabel.text = "\(remainingTime)"
                 
-                UIView.animate(withDuration: 0.3) {
-                    countdownLabel.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
-                } completion: { _ in
-                    UIView.animate(withDuration: 0.3) {
-                        countdownLabel.transform = CGAffineTransform.identity
-                    }
+                // 每次更新时添加缩放动画
+                countdownLabel.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
+                UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.6, initialSpringVelocity: 0.5) {
+                    countdownLabel.transform = .identity
                 }
             } else {
-                timer.invalidate()
-                countdownLabel.removeFromSuperview()
+                // 倒计时结束
+                timer?.invalidate()
+                
+                // 移除倒计时标签
+                UIView.animate(withDuration: 0.2, animations: {
+                    countdownLabel.alpha = 0
+                    countdownLabel.transform = CGAffineTransform(scaleX: 1.5, y: 1.5)
+                }) { _ in
+                    countdownLabel.removeFromSuperview()
+                }
+                
+                // 执行拍照
                 completion()
             }
         }
+    }
+    
+    /// 获取当前参考图（如果有）
+    func getCurrentReferenceImage() -> UIImage? {
+        // 如果在 Composition Selected 状态，返回参考图
+        if currentCameraState == .compositionSelected,
+           let referenceImageView = referenceImageView,
+           let image = referenceImageView.image {
+            return image
+        }
+        return nil
+    }
+    
+    /// 水平翻转图片（用于前摄照片去镜像）
+    private func flipImageHorizontally(_ image: UIImage) -> UIImage {
+        guard let cgImage = image.cgImage else { return image }
+        let flippedImage = UIImage(
+            cgImage: cgImage,
+            scale: image.scale,
+            orientation: .leftMirrored
+        )
+        return flippedImage
     }
 }
 
@@ -119,256 +139,122 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
     
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if let error = error {
-            LMLogger.log("❌ Error capturing photo: \(error)")
+            LMLogger.log("❌ Photo capture error: \(error.localizedDescription)")
+            showAlert("Failed to capture photo: \(error.localizedDescription)", style: .error)
             return
         }
         
         guard let imageData = photo.fileDataRepresentation(),
-              let capturedImage = UIImage(data: imageData) else {
-            LMLogger.log("❌ Error processing photo data")
-            return
-        }
-        // 根据当前选择的宽高比裁剪照片
-        let croppedImage = cropImageToAspectRatio(capturedImage, ratio: currentAspectRatio)
-        // 进入照片预览
-        showPhotoPreview(image: croppedImage)
-    }
-    
-    // MARK: - Live Photo Delegate Method
-    func photoOutput(_ output: AVCapturePhotoOutput, 
-                     didFinishProcessingLivePhotoToMovieFileAt outputFileURL: URL, 
-                     duration: CMTime, 
-                     photoDisplayTime: CMTime, 
-                     resolvedSettings: AVCaptureResolvedPhotoSettings, 
-                     error: Error?) {
-        if let error = error {
-            LMLogger.log("❌ Error processing Live Photo movie: \(error)")
+              var capturedImage = UIImage(data: imageData) else {
+            LMLogger.log("❌ Failed to convert photo data to image")
+            showAlert("Failed to process captured photo", style: .error)
             return
         }
         
-        LMLogger.log("✅ Live Photo movie processed successfully at: \(outputFileURL.path)")
-        
-        // 这里可以选择保存Live Photo视频到相册
-        // 目前只记录日志，不做额外处理
-        // 如果需要保存，可以使用 PHPhotoLibrary 来保存 Live Photo
-    }
-    
-    /// 根据宽高比裁剪图片
-    private func cropImageToAspectRatio(_ image: UIImage, ratio: LMAspectRatio) -> UIImage {
-        guard let cgImage = image.cgImage else { return image }
-        
-        let imageWidth = CGFloat(cgImage.width)
-        let imageHeight = CGFloat(cgImage.height)
-        
-        var targetWidth: CGFloat
-        var targetHeight: CGFloat
-        
-        switch ratio {
-        case .ratio3_4:
-            // 3:4 比例
-            if imageWidth / imageHeight > 3.0 / 4.0 {
-                // 图片太宽，裁剪宽度
-                targetHeight = imageHeight
-                targetWidth = targetHeight * 3.0 / 4.0
-            } else {
-                // 图片太高，裁剪高度
-                targetWidth = imageWidth
-                targetHeight = targetWidth * 4.0 / 3.0
-            }
-            
-        case .ratio1_1:
-            // 1:1 比例（正方形）
-            let size = min(imageWidth, imageHeight)
-            targetWidth = size
-            targetHeight = size
-            
-        case .ratio9_16:
-            // 9:16 比例
-            if imageWidth / imageHeight > 9.0 / 16.0 {
-                // 图片太宽，裁剪宽度
-                targetHeight = imageHeight
-                targetWidth = targetHeight * 9.0 / 16.0
-            } else {
-                // 图片太高，裁剪高度
-                targetWidth = imageWidth
-                targetHeight = targetWidth * 16.0 / 9.0
-            }
+        // 如果是前摄拍摄，需要去除镜像效果（水平翻转）
+        if isUsingFrontCamera {
+            capturedImage = flipImageHorizontally(capturedImage)
+            LMLogger.log("🔄 Front camera photo flipped horizontally")
         }
         
-        // 计算裁剪区域（居中裁剪）
-        let x = (imageWidth - targetWidth) / 2.0
-        let y = (imageHeight - targetHeight) / 2.0
-        let cropRect = CGRect(x: x, y: y, width: targetWidth, height: targetHeight)
+        LMLogger.log("✅ Photo captured successfully, size: \(capturedImage.size)")
         
-        // 执行裁剪
-        if let croppedCGImage = cgImage.cropping(to: cropRect) {
-            let croppedImage = UIImage(cgImage: croppedCGImage, scale: image.scale, orientation: image.imageOrientation)
-            LMLogger.log("✂️ Image cropped to \(ratio.displayName) - Original: \(imageWidth)x\(imageHeight), Cropped: \(targetWidth)x\(targetHeight)")
-            return croppedImage
-        }
-        
-        LMLogger.log("⚠️ Failed to crop image, returning original")
-        return image
-    }
-    
-    @objc func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
-        if let error = error {
-            LMLogger.log("❌ Error saving photo: \(error)")
-            showPhotoSaveErrorAlert()
+        // 检查是否正在等待 Live Photo 视频处理
+        if Self.isWaitingForLivePhotoVideo {
+            // Live Photo 拍摄：保存照片和原始数据，等待视频处理完成
+            view.makeToastActivity(.center)
+            LMLogger.log("⏳ Live Photo capture - waiting for video processing...")
+            Self.capturedPhotoImage = capturedImage
+            Self.capturedPhotoImageData = imageData  // 保存原始数据（包含元数据）
         } else {
-            LMLogger.log("✅ Photo saved successfully")
-            showPhotoSavedConfirmation()
-        }
-    }
-    
-    func showPhotoSaveErrorAlert() {
-        showToast("Unable to save photo to your photo library.")
-    }
-    
-    func showPhotoSavedConfirmation() {
-        let checkmarkView = UIImageView(image: UIImage(systemName: "checkmark.circle.fill"))
-        checkmarkView.tintColor = UIColor.systemGreen
-        checkmarkView.backgroundColor = UIColor.white
-        checkmarkView.layer.cornerRadius = 25
-        checkmarkView.clipsToBounds = true
-        
-        view.addSubview(checkmarkView)
-        checkmarkView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.size.equalTo(50)
-        }
-        
-        checkmarkView.alpha = 0
-        checkmarkView.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
-        
-        UIView.animate(withDuration: 0.3, animations: {
-            checkmarkView.alpha = 1
-            checkmarkView.transform = CGAffineTransform.identity
-        }) { _ in
-            UIView.animate(withDuration: 0.3, delay: 1.0, animations: {
-                checkmarkView.alpha = 0
-                checkmarkView.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
-            }) { _ in
-                checkmarkView.removeFromSuperview()
+            // 普通照片拍摄：直接跳转预览
+            LMLogger.log("📷 Static photo capture - navigating to preview")
+            let photoData = CapturedPhotoData(image: capturedImage)
+            let referenceImage = getCurrentReferenceImage()
+            
+            DispatchQueue.main.async { [weak self] in
+                self?.navigateToPhotoPreview(photoData: photoData, referenceImage: referenceImage)
             }
         }
     }
     
-    // MARK: - Photo Preview
-    
-    /// 显示照片预览页面
-    func showPhotoPreview(image: UIImage) {
-        LMLogger.log("📸 Showing photo preview")
-        
-        // 保存到本地存储
-        guard let savedPhoto = LMPhotoStorageManager.shared.savePhoto(
-            image: image,
-            referenceImage: nil,
-            title: nil
-        ) else {
-            LMLogger.log("❌ Failed to save photo to storage")
-            showToast("Failed to save photo. Please try again.")
-            return
-        }
-        
-        LMLogger.log("✅ Photo saved to Gallery with ID: \(savedPhoto.id ?? "unknown")")
-        
-        // 创建 GalleryItem
-        let galleryItem = GalleryItem(
-            image: image,
-            title: nil,
-            id: savedPhoto.id ?? UUID().uuidString
-        )
-        
-        // 创建预览页面
-        let previewPage = LMGalleryDetailPage(item: galleryItem)
-        previewPage.fromCamera = true
-        
-        // 如果在 showSuggestion 状态，重置相机状态
-        if currentCameraState == .showingSuggestions || currentCameraState == .compositionSelected {
-            LMLogger.log("🔄 Resetting camera state from \(currentCameraState) to normal")
-            resetCameraToNormalState()
-        }
-        
-        // 推送到预览页面
-        navigationController?.pushViewController(previewPage, animated: true)
-        
-        LMLogger.log("✅ Navigated to photo preview page")
+    func photoOutput(_ output: AVCapturePhotoOutput, willCapturePhotoFor resolvedSettings: AVCaptureResolvedPhotoSettings) {
+        // 播放快门音效
+        AudioServicesPlaySystemSound(1108)
     }
     
-    /// 重置相机到初始状态
-    func resetCameraToNormalState() {
-        LMLogger.log("🔄 Starting camera state reset...")
-        
-        // 清理 Show Suggestions 相关视图
-        if let suggestionsContainer = view.viewWithTag(ViewTag.suggestionsContainer.rawValue) {
-            suggestionsContainer.removeFromSuperview()
-            LMLogger.log("  ✓ Removed suggestions container")
+    // MARK: - Live Photo Delegate Methods
+    
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishRecordingLivePhotoMovieForEventualFileAt outputFileURL: URL, resolvedSettings: AVCaptureResolvedPhotoSettings) {
+        LMLogger.log("📹 Live Photo movie recording finished")
+    }
+    
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingLivePhotoToMovieFileAt outputFileURL: URL, duration: CMTime, photoDisplayTime: CMTime, resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
+        if let error = error {
+            LMLogger.log("❌ Live Photo processing error: \(error.localizedDescription)")
+            view.hideToastActivity()
+            Self.capturedLivePhotoVideoURL = nil
+            
+            // 如果正在等待视频，使用静态照片继续
+            if Self.isWaitingForLivePhotoVideo, let capturedImage = Self.capturedPhotoImage {
+                LMLogger.log("⚠️ Live Photo video failed, using static image")
+                let photoData = CapturedPhotoData(image: capturedImage)
+                let referenceImage = getCurrentReferenceImage()
+                
+                DispatchQueue.main.async { [weak self] in
+                    self?.navigateToPhotoPreview(photoData: photoData, referenceImage: referenceImage)
+                }
+                
+                // 清理状态
+                Self.capturedPhotoImage = nil
+                Self.isWaitingForLivePhotoVideo = false
+            }
+        } else {
+            LMLogger.log("✅ Live Photo movie processed successfully at: \(outputFileURL.path)")
+            Self.capturedLivePhotoVideoURL = outputFileURL
+            view.hideToastActivity()
+            // 如果正在等待视频，现在可以创建完整的 Live Photo 数据并跳转
+            if Self.isWaitingForLivePhotoVideo, let capturedImage = Self.capturedPhotoImage {
+                LMLogger.log("🎬 Creating Live Photo data with video and original image data")
+                
+                let photoData = CapturedPhotoData(
+                    image: capturedImage,
+                    imageData: Self.capturedPhotoImageData,  // 传递原始数据
+                    livePhotoVideoURL: outputFileURL,
+                    isLivePhoto: true
+                )
+                
+                let referenceImage = getCurrentReferenceImage()
+                
+                DispatchQueue.main.async { [weak self] in
+                    self?.navigateToPhotoPreview(photoData: photoData, referenceImage: referenceImage)
+                }
+                
+                // 清理状态
+                Self.capturedPhotoImage = nil
+                Self.capturedPhotoImageData = nil
+                Self.isWaitingForLivePhotoVideo = false
+            }
         }
-        suggestionsCarouselView = nil
-        suggestionsContainerView = nil
-        
-        // 停止轮询
-        pollTimer?.invalidate()
-        pollTimer = nil
-        LMLogger.log("  ✓ Stopped polling timer")
-        
-        // 清理参考图
-        if let referenceImageView = view.viewWithTag(ViewTag.referenceImageView.rawValue) {
-            referenceImageView.removeFromSuperview()
-            LMLogger.log("  ✓ Removed reference image")
+    }
+    
+    /// 跳转到照片预览页面
+    private func navigateToPhotoPreview(photoData: CapturedPhotoData, referenceImage: UIImage?) {
+        let previewPage = LMPhotoPreviewPage(photoData: photoData, referenceImage: referenceImage)
+        navigationController?.pushViewController(previewPage, animated: true)
+    }
+}
+
+// MARK: - Flash Mode Extension
+extension LMFlashMode {
+    var avFlashMode: AVCaptureDevice.FlashMode {
+        switch self {
+        case .off:
+            return .off
+        case .auto:
+            return .auto
+        case .on:
+            return .on
         }
-        
-        // 清理 AR 引导相关视图
-        if let arFrame = view.viewWithTag(ViewTag.arGuidanceFrame.rawValue) {
-            arFrame.removeFromSuperview()
-        }
-        if let personFrame = view.viewWithTag(ViewTag.personDetectionFrame.rawValue) {
-            personFrame.removeFromSuperview()
-        }
-        if let arLine = view.viewWithTag(ViewTag.arGuidanceLine.rawValue) {
-            arLine.removeFromSuperview()
-        }
-        if let arHint = view.viewWithTag(ViewTag.arHintLabel.rawValue) {
-            arHint.removeFromSuperview()
-        }
-        LMLogger.log("  ✓ Removed AR guidance views")
-        
-        // 重置状态变量
-        currentCameraState = .normal
-        currentTaskId = nil
-        currentSuggestions = []
-        currentSuggestion = nil
-        isARGuidanceActive = false
-        LMLogger.log("  ✓ Reset state variables")
-        
-        // 恢复 Inspire Me 按钮显示
-        inspireMeButtonView.isHidden = false
-        LMLogger.log("  ✓ Restored Inspire Me button visibility")
-        
-        // 恢复底部控制栏高度约束
-        bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
-        LMLogger.log("  ✓ Restored bottom controls height constraint to \(LMCameraConstants.bottomControlsHeight)")
-        
-        // 恢复快门按钮到正常尺寸（切换到 normal 布局模式）
-        cameraBottomControlsView.setLayoutMode(.normal, animated: true)
-        LMLogger.log("  ✓ Restored shutter button size (normal layout mode)")
-        
-        // 关闭 AR 引导按钮
-        cameraBottomControlsView.setARGuidanceEnabled(false)
-        LMLogger.log("  ✓ Disabled AR guidance button")
-        
-        // 应用布局变化（使用动画）
-        UIView.animate(
-            withDuration: 0.35,
-            delay: 0,
-            usingSpringWithDamping: 0.85,
-            initialSpringVelocity: 0.5,
-            options: [.curveEaseInOut, .allowUserInteraction]
-        ) {
-            self.view.layoutIfNeeded()
-        }
-        
-        LMLogger.log("✅ Camera state reset to normal completed")
     }
 }

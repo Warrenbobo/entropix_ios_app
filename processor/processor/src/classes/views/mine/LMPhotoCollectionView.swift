@@ -17,6 +17,8 @@ struct GalleryItem {
     let image: UIImage?
     let title: String?
     let id: String
+    let isLivePhoto: Bool
+    let livePhotoVideoPath: String?
 }
 
 class LMPhotoCollectionView: UIView {

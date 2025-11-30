@@ -12,6 +12,31 @@ import AVFoundation
 // MARK: - Inspire Me Feature
 extension LMCameraPage {
     
+    /// 验证相机状态是否可以使用 Inspire Me 功能
+    private func validateCameraState() -> Bool {
+        // 检查是否正在使用后置摄像头
+        guard !isUsingFrontCamera else {
+            LMLogger.log("⚠️ Cannot use Inspire Me with front camera")
+            showAlert("Inspire Me is only available with back camera", style: .toast)
+            return false
+        }
+        
+        // 检查相机会话是否正在运行
+        guard let captureSession = captureSession, captureSession.isRunning else {
+            LMLogger.log("⚠️ Camera session is not running")
+            showAlert("Camera is not ready. Please try again.", style: .toast)
+            return false
+        }
+        
+        // 检查是否已经在处理中
+        guard !isInspireMeCapture else {
+            LMLogger.log("⚠️ Inspire Me is already processing")
+            return false
+        }
+        
+        return true
+    }
+    
     func handleInspireMeFeature() {
         LMLogger.log("🎯 Starting Inspire Me feature...")
         

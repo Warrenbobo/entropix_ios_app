@@ -191,7 +191,7 @@ class LMMinePage: LMPageWrapper {
         floatingButton.snp.makeConstraints { make in
             make.bottom.equalTo(-(AppTheme.Screen.safeAreaBottom + 30))
             make.trailing.equalTo(-20)
-            make.size.equalTo(80)
+            make.size.equalTo(60)
         }
     }
     

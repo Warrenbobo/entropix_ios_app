@@ -18,6 +18,7 @@ struct LMCompositionSuggestion: Codable {
     let score: Double?
     let modelVersion: String
     let personBoundingBox: BoundingBox?
+    let aspectRatio: Double?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -30,6 +31,12 @@ struct LMCompositionSuggestion: Codable {
         case score
         case modelVersion = "model_version"
         case personBoundingBox = "person_bounding_box"
+        case aspectRatio = "aspect_ratio"
+    }
+    
+    /// 获取宽高比，如果后端没有返回则使用默认值 3:4
+    func getAspectRatio() -> Double {
+        return aspectRatio ?? 0.75 // 默认 3:4 = 0.75
     }
 }
 

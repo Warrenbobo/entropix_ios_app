@@ -2,7 +2,7 @@
 //  LMPersonDetectionManager.swift
 //  processor
 //
-//  Created by Kiro on 2025/11/9.
+//  Created by muz on 2025/11/9.
 //
 
 import UIKit

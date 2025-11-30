@@ -2,7 +2,7 @@
 //  LMSavedIdeaDetailPage.swift
 //  processor
 //
-//  Created by Kiro on 2025/11/9.
+//  Created by muz on 2025/11/9.
 //
 
 import UIKit
@@ -179,8 +179,8 @@ class LMSavedIdeaDetailPage: UIViewController {
         // Navigate to camera page with this idea as reference
         LMLogger.log("📸 Go Shot with idea: \(savedIdea.id)")
         
-        let cameraPage = LMCameraPage()
-        // TODO: Pass the saved idea to camera page for AR guidance
+        // 使用便利初始化方法，传递 Saved Idea 数据
+        let cameraPage = LMCameraPage(fromSavedIdea: savedIdea)
         navigationController?.pushViewController(cameraPage, animated: true)
     }
     

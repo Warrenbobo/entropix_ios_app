@@ -68,10 +68,21 @@ class LMCameraPage: LMPageWrapper {
     
     // MARK: - Show Suggestions Properties
     var suggestionsCarouselView: LMSuggestionsCarouselView?
-    var suggestionsContainerView: UIView?
     var currentTaskId: String?
     var currentSuggestions: [LMCompositionSuggestion] = []
     var pollTimer: Timer?
+    
+    // MARK: - Reference Image Properties
+    var referenceImageContainerView: UIView? // 持久化的参考图容器
+    var referenceImageView: UIImageView? // 参考图
+    var referenceCloseButton: UIButton? // 关闭按钮
+    
+    // MARK: - Navigation Source Tracking
+    enum NavigationSource {
+        case normal              // 从普通入口进入（Menu Bar）
+        case savedIdea(GalleryItem) // 从 Saved Idea Detail 的 Go Shot 进入
+    }
+    var navigationSource: NavigationSource = .normal
     
     // MARK: - View Tags
     enum ViewTag: Int {
@@ -80,8 +91,16 @@ class LMCameraPage: LMPageWrapper {
         case arHintLabel = 8889
         case personDetectionFrame = 8890
         case arGuidanceLine = 8891 // 中点连线
-        case suggestionsContainer = 8892 // Show Suggestions 容器
         case referenceImageView = 8893 // 参考图（左下角）
+    }
+    
+    // MARK: - Initialization
+    
+    /// 便利初始化方法：从 Saved Idea 进入
+    convenience init(fromSavedIdea item: GalleryItem) {
+        self.init()
+        self.navigationSource = .savedIdea(item)
+        LMLogger.log("📸 Camera initialized from Saved Idea: \(item.id)")
     }
     
     // MARK: - Lifecycle
@@ -91,6 +110,9 @@ class LMCameraPage: LMPageWrapper {
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
         checkCameraPermissionAndSetup()
+        
+        // 如果是从 Saved Idea 进入，自动进入 Composition Selected 状态
+        handleNavigationSource()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -114,6 +136,7 @@ class LMCameraPage: LMPageWrapper {
         setupCameraControlsComponent()
         setupCameraBottomControlsComponent()
         setupInspireMeButtonComponent()
+        setupReferenceImageComponent() // 初始化参考图组件（长期持有，默认隐藏）
     }
     
     private func setupTopStatusBarComponents() {
@@ -122,7 +145,7 @@ class LMCameraPage: LMPageWrapper {
         
         backButton.setImage(UIImage(named: "left_arrow_white"), for: .normal)
         backButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
-        backButton.addTarget(self, action: #selector(handleUserProfileButtonTapped), for: .touchUpInside)
+        backButton.addTarget(self, action: #selector(handleGiveUpAndBackButtonTapped), for: .touchUpInside)
     }
     
     private func setupCameraPreviewComponent() {
@@ -176,8 +199,8 @@ class LMCameraPage: LMPageWrapper {
         }
         inspireMeButtonView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-20)
-            make.width.equalTo(240)
+            make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-10)
+            make.width.equalTo(130)
             make.height.equalTo(70)
         }
         
@@ -392,12 +415,13 @@ class LMCameraPage: LMPageWrapper {
 
     
     // MARK: - Actions
-    @objc func handleUserProfileButtonTapped() {
+    @objc func handleGiveUpAndBackButtonTapped() {
         LMLogger.log("🔙 Back button tapped")
         
         // 根据当前状态决定返回行为
         switch currentCameraState {
         case .showingSuggestions:
+            // 在 Show Suggestions 状态，点击返回需要确认是否退出
             showLeaveConfirmation { [weak self] shouldLeave in
                 if shouldLeave {
                     self?.exitShowSuggestionsState()
@@ -406,11 +430,17 @@ class LMCameraPage: LMPageWrapper {
             }
             
         case .compositionSelected:
-            showLeaveCompositionConfirmation { [weak self] shouldLeave in
-                if shouldLeave {
-                    // TODO: 退出 Composition Selected 状态
-                    self?.navigateBack()
-                }
+            // 判断导航来源
+            switch navigationSource {
+            case .savedIdea:
+                // 从 Saved Idea 进入，点击返回应该返回到 Saved Idea Detail 页面
+                navigateBack()
+                LMLogger.log("🔙 Returned to Saved Idea Detail from Composition Selected")
+                
+            case .normal:
+                // 从 Show Suggestions 进入，点击返回应该返回到 Show Suggestions 列表
+                closeReferenceImage()
+                LMLogger.log("🔙 Returned to Show Suggestions from Composition Selected")
             }
             
         default:
@@ -418,8 +448,26 @@ class LMCameraPage: LMPageWrapper {
         }
     }
     
+    // MARK: - Navigation Source Handling
+    
+    /// 处理导航来源，自动进入对应状态
+    private func handleNavigationSource() {
+        switch navigationSource {
+        case .savedIdea(let item):
+            // 从 Saved Idea 进入，自动进入 Composition Selected 状态
+            // 延迟执行，确保相机会话已启动
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.enterCompositionSelectedStateFromSavedIdea(item: item)
+            }
+            
+        case .normal:
+            // 正常进入，不做特殊处理
+            break
+        }
+    }
+    
     // MARK: - Navigation
-    private func navigateBack() {
+    func navigateBack() {
         navigationController?.popViewController(animated: true)
     }
 }

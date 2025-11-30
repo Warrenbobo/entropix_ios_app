@@ -62,6 +62,14 @@ extension LMCameraPage {
         
         if let photoOutput = photoOutput, captureSession.canAddOutput(photoOutput) {
             captureSession.addOutput(photoOutput)
+            
+            // 启用 Live Photo 捕获功能（如果设备支持）
+            if photoOutput.isLivePhotoCaptureSupported {
+                photoOutput.isLivePhotoCaptureEnabled = true
+                LMLogger.log("✅ Live Photo capture enabled")
+            } else {
+                LMLogger.log("⚠️ Live Photo capture not supported on this device")
+            }
         }
         
         setupVideoDataOutput()

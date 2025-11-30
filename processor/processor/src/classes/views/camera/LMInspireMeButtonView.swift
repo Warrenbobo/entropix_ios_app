@@ -2,7 +2,7 @@
 //  LMInspireMeButtonView.swift
 //  processor
 //
-//  Created by Kiro on 2025/1/15.
+//  Created by muz on 2025/1/15.
 //
 
 import UIKit
@@ -16,9 +16,16 @@ protocol LMInspireMeButtonViewDelegate: AnyObject {
 
 class LMInspireMeButtonView: UIView {
     
-    // Inspire Me 按钮
+    // 背景按钮
     private let inspireButton = UIButton()
-    private let inspirePointsLabel = UILabel()
+    
+    // 顶部标题
+    private let titleLabel = UILabel()
+    
+    // 底部信息栏（星星 + 次数 + 问号）
+    private let bottomStackView = UIStackView()
+    private let starImageView = UIImageView()
+    private let pointsLabel = UILabel()
     private let questionButton = UIButton()
     
     weak var delegate: LMInspireMeButtonViewDelegate?
@@ -32,113 +39,102 @@ class LMInspireMeButtonView: UIView {
         configureDefaultStyles()
     }
     
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        // 根据当前状态设置渐变
-        if isEnabledForCamera {
-            setupInspireButtonGradient()
-        } else {
-            setupDisabledGradient()
-        }
-    }
-    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func setupInspireButtonGradient() {
-        // 移除现有的渐变层
-        inspireButton.layer.sublayers?.removeAll { $0 is CAGradientLayer }
-        // 添加新的渐变背景 - 紫色渐变
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.colors = [
-            UIColor(red: 130/255, green: 140/255, blue: 220/255, alpha: 1).cgColor,
-            UIColor(red: 110/255, green: 110/255, blue: 200/255, alpha: 1).cgColor
-        ]
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        gradientLayer.cornerRadius = 35
-        gradientLayer.frame = inspireButton.bounds
-        inspireButton.layer.insertSublayer(gradientLayer, at: 0)
-    }
 }
 
 extension LMInspireMeButtonView {
     
     private func setupComponents() {
+        setupBackgroundButton()
+        setupTitleLabel()
+        setupBottomInfoBar()
+    }
+    
+    private func setupBackgroundButton() {
         addSubview(inspireButton)
         
-        // Inspire按钮设置 - 渐变背景
-        inspireButton.layer.cornerRadius = 35
-        inspireButton.clipsToBounds = false
+        // 设置渐变背景
+        layer.cornerRadius = 20
+        layer.masksToBounds = true
+        let gradientImage = UIImage.gradientImage(
+            size: CGSize(width: AppTheme.Screen.width, height: 120),
+            colors: [UIColor.hexColor("#6680E6").cgColor,
+                    UIColor.hexColor("#9966E6").cgColor],
+            direction: .vertical
+        )
+        inspireButton.setBackgroundImage(gradientImage, for: .normal)
+        inspireButton.adjustsImageWhenHighlighted = false
         inspireButton.addTarget(self, action: #selector(handleInspireButtonTapped), for: .touchUpInside)
+    }
+    
+    private func setupTitleLabel() {
+        titleLabel.text = "Inspire Me"
+        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        titleLabel.textColor = UIColor.white
+        titleLabel.textAlignment = .center
+        titleLabel.isUserInteractionEnabled = false
+        addSubview(titleLabel)
+    }
+    
+    private func setupBottomInfoBar() {
+        // 配置 StackView
+        bottomStackView.axis = .horizontal
+        bottomStackView.alignment = .center
+        bottomStackView.spacing = 6
+        bottomStackView.isUserInteractionEnabled = true
+        addSubview(bottomStackView)
         
-        // 添加发光阴影效果
-        inspireButton.layer.shadowColor = UIColor(red: 102/255, green: 126/255, blue: 234/255, alpha: 0.6).cgColor
-        inspireButton.layer.shadowOffset = CGSize(width: 0, height: 8)
-        inspireButton.layer.shadowRadius = 20
-        inspireButton.layer.shadowOpacity = 1.0
+        // 星星图标
+        starImageView.image = UIImage(named: "star_fill")
+        starImageView.isUserInteractionEnabled = false
+        bottomStackView.addArrangedSubview(starImageView)
         
-        // 创建第一行容器（Inspire Me + 问号）
-        let firstLineContainer = UIView()
-        firstLineContainer.isUserInteractionEnabled = false // 不拦截点击事件
-        inspireButton.addSubview(firstLineContainer)
-        
-        // Inspire Me 文字标签
-        let inspireMeLabel = UILabel()
-        inspireMeLabel.text = "Inspire Me"
-        inspireMeLabel.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
-        inspireMeLabel.textColor = UIColor.white
-        inspireMeLabel.textAlignment = .center
-        inspireMeLabel.isUserInteractionEnabled = false // 不拦截点击事件
-        firstLineContainer.addSubview(inspireMeLabel)
+        // 次数文字
+        pointsLabel.text = "-\(inspirePoints)"
+        pointsLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        pointsLabel.textColor = UIColor.white
+        pointsLabel.textAlignment = .center
+        pointsLabel.isUserInteractionEnabled = false
+        bottomStackView.addArrangedSubview(pointsLabel)
         
         // 问号按钮
         questionButton.setImage(UIImage(systemName: "questionmark.circle"), for: .normal)
         questionButton.tintColor = UIColor.white
+        questionButton.isUserInteractionEnabled = true
         questionButton.addTarget(self, action: #selector(handleQuestionButtonTapped), for: .touchUpInside)
-        firstLineContainer.addSubview(questionButton)
+        bottomStackView.addArrangedSubview(questionButton)
         
-        // 第二行：Inspire Point -1
-        inspirePointsLabel.text = "Inspire Point -\(inspirePoints)"
-        inspirePointsLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        inspirePointsLabel.textColor = UIColor.white.withAlphaComponent(0.9)
-        inspirePointsLabel.textAlignment = .center
-        inspirePointsLabel.isUserInteractionEnabled = false // 不拦截点击事件
-        inspireButton.addSubview(inspirePointsLabel)
-        
-        // 布局第一行容器
-        firstLineContainer.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(12)
-            make.centerX.equalToSuperview()
-            make.height.equalTo(28)
+        // 设置星星图标尺寸
+        starImageView.snp.makeConstraints { make in
+            make.width.height.equalTo(18)
         }
         
-        // 布局 Inspire Me 文字
-        inspireMeLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview()
-            make.centerY.equalToSuperview()
-        }
-        
-        // 布局问号按钮
+        // 设置问号按钮尺寸（增加触摸区域）
         questionButton.snp.makeConstraints { make in
-            make.leading.equalTo(inspireMeLabel.snp.trailing).offset(8)
-            make.trailing.equalToSuperview()
-            make.centerY.equalToSuperview()
-            make.size.equalTo(24)
-        }
-        
-        // 布局第二行文字
-        inspirePointsLabel.snp.makeConstraints { make in
-            make.top.equalTo(firstLineContainer.snp.bottom).offset(4)
-            make.centerX.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(16)
+            make.width.height.equalTo(32)
         }
     }
     
     private func configureLayoutConstraints() {
+        // 背景按钮填充整个视图
         inspireButton.snp.makeConstraints { make in
             make.edges.equalToSuperview()
+        }
+        
+        // 顶部标题
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(12)
+            make.centerX.equalToSuperview()
+            make.leading.trailing.equalToSuperview().inset(16)
+        }
+        
+        // 底部信息栏
+        bottomStackView.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(1)
+            make.centerX.equalToSuperview().offset(6)
         }
     }
     
@@ -148,12 +144,14 @@ extension LMInspireMeButtonView {
     }
     
     private func updateInspireButtonAppearance() {
-        inspirePointsLabel.text = "Inspire Point -\(inspirePoints)"
-        // 根据点数和相机状态更新按钮状态
+        pointsLabel.text = "-\(inspirePoints > 99 ? "99+" : "\(inspirePoints)")"
         let hasPoints = inspirePoints > 0
         let shouldEnable = hasPoints && isEnabledForCamera
-        inspireButton.isEnabled = shouldEnable
-        inspireButton.alpha = shouldEnable ? 1.0 : 0.6
+        if shouldEnable {
+            self.isHidden = false
+        } else {
+            self.isHidden = true
+        }
     }
 }
 
@@ -167,16 +165,6 @@ extension LMInspireMeButtonView {
         }
         
         guard inspirePoints > 0 else { return }
-        
-        // 添加点击动画
-        UIView.animate(withDuration: 0.1, animations: {
-            self.inspireButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                self.inspireButton.transform = CGAffineTransform.identity
-            }
-        }
-        
         delegate?.inspireMeButtonViewDidTapButton()
     }
     
@@ -207,46 +195,6 @@ extension LMInspireMeButtonView {
     /// - Parameter enabled: true 启用（后摄），false 禁用（前摄）
     func setInspireMeButtonEnabled(_ enabled: Bool) {
         isEnabledForCamera = enabled
-        
-        // 保持按钮可交互，以便显示提示信息
-        isUserInteractionEnabled = true
-        
-        // 更新按钮外观
         updateInspireButtonAppearance()
-        
-        if !enabled {
-            // 禁用状态：使用去饱和的渐变 + 半透明
-            setupDisabledGradient()
-            
-            // 减弱阴影效果
-            inspireButton.layer.shadowOpacity = 0.3
-            inspireButton.layer.shadowColor = UIColor.gray.withAlphaComponent(0.3).cgColor
-        } else {
-            // 启用状态：恢复正常渐变背景
-            inspireButton.backgroundColor = UIColor.clear
-            setupInspireButtonGradient()
-            
-            // 恢复阴影效果
-            inspireButton.layer.shadowOpacity = 1.0
-            inspireButton.layer.shadowColor = UIColor(red: 102/255, green: 126/255, blue: 234/255, alpha: 0.6).cgColor
-        }
-    }
-    
-    /// 设置禁用状态的渐变背景（去饱和的紫色）
-    private func setupDisabledGradient() {
-        // 移除现有的渐变层
-        inspireButton.layer.sublayers?.removeAll { $0 is CAGradientLayer }
-        
-        // 添加去饱和的渐变背景 - 灰紫色渐变
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.colors = [
-            UIColor(red: 150/255, green: 150/255, blue: 160/255, alpha: 0.6).cgColor,
-            UIColor(red: 130/255, green: 130/255, blue: 140/255, alpha: 0.6).cgColor
-        ]
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        gradientLayer.cornerRadius = 35
-        gradientLayer.frame = inspireButton.bounds
-        inspireButton.layer.insertSublayer(gradientLayer, at: 0)
     }
 }

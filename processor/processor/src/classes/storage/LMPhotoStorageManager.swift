@@ -74,21 +74,40 @@ class LMPhotoStorageManager {
     
     // MARK: - Save Photo
     
-    /// Save a photo to local storage
+    /// Save a photo to local storage (with Live Photo support)
     /// - Parameters:
-    ///   - image: The captured photo
+    ///   - photoData: The captured photo data (including Live Photo info)
     ///   - referenceImage: Optional reference composition image
     ///   - title: Optional title
     /// - Returns: The saved PhotoEntity or nil if failed
     @discardableResult
-    func savePhoto(image: UIImage, referenceImage: UIImage? = nil, title: String? = nil) -> PhotoEntity? {
+    func savePhoto(photoData: CapturedPhotoData, referenceImage: UIImage? = nil, title: String? = nil) -> PhotoEntity? {
         let photoId = UUID().uuidString
         let timestamp = Date()
         
-        // Save main image to file
-        guard let imagePath = saveImageToFile(image: image, photoId: photoId, isReference: false) else {
+        // Save main image to file (with metadata for Live Photo)
+        let imagePath: String?
+        if photoData.isLivePhoto, let imageData = photoData.imageData {
+            // For Live Photo, use original data to preserve metadata
+            imagePath = saveImageDataToFile(imageData: imageData, photoId: photoId, isReference: false)
+            LMLogger.log("✅ Saved Live Photo image with metadata")
+        } else {
+            // For regular photo, use JPEG compression
+            imagePath = saveImageToFile(image: photoData.image, photoId: photoId, isReference: false)
+        }
+        
+        guard imagePath != nil else {
             LMLogger.log("❌ Failed to save main image to file")
             return nil
+        }
+        
+        // Save Live Photo video if available
+        var livePhotoVideoPath: String?
+        if photoData.isLivePhoto, let videoURL = photoData.livePhotoVideoURL {
+            livePhotoVideoPath = saveLivePhotoVideo(from: videoURL, photoId: photoId)
+            if livePhotoVideoPath != nil {
+                LMLogger.log("✅ Live Photo video saved")
+            }
         }
         
         // Save reference image if provided
@@ -98,7 +117,7 @@ class LMPhotoStorageManager {
         }
         
         // Generate thumbnail
-        let thumbnail = generateThumbnail(from: image)
+        let thumbnail = generateThumbnail(from: photoData.image)
         let thumbnailData = thumbnail?.jpegData(compressionQuality: 0.7)
         
         // Create Core Data entity
@@ -112,14 +131,48 @@ class LMPhotoStorageManager {
         photoEntity.capturedDate = timestamp
         photoEntity.isSynced = false
         photoEntity.isMarkedDeleted = false
+        photoEntity.isLivePhoto = photoData.isLivePhoto
+        photoEntity.livePhotoVideoPath = livePhotoVideoPath
         
         // Save context
         do {
             try context.save()
-            LMLogger.log("✅ Photo saved successfully with ID: \(photoId)")
+            LMLogger.log("✅ Photo saved successfully with ID: \(photoId), isLivePhoto: \(photoData.isLivePhoto)")
             return photoEntity
         } catch {
             LMLogger.log("❌ Failed to save photo to Core Data: \(error.localizedDescription)")
+            return nil
+        }
+    }
+    
+    /// Save a photo to local storage (backward compatibility)
+    /// - Parameters:
+    ///   - image: The captured photo
+    ///   - referenceImage: Optional reference composition image
+    ///   - title: Optional title
+    /// - Returns: The saved PhotoEntity or nil if failed
+    @discardableResult
+    func savePhoto(image: UIImage, referenceImage: UIImage? = nil, title: String? = nil) -> PhotoEntity? {
+        let photoData = CapturedPhotoData(image: image)
+        return savePhoto(photoData: photoData, referenceImage: referenceImage, title: title)
+    }
+    
+    /// Save Live Photo video file
+    /// - Parameters:
+    ///   - sourceURL: Source video URL (temporary location)
+    ///   - photoId: Photo ID
+    /// - Returns: Saved video file path or nil if failed
+    private func saveLivePhotoVideo(from sourceURL: URL, photoId: String) -> String? {
+        let fileName = "\(photoId)_live.mov"
+        let destinationURL = photosDirectory.appendingPathComponent(fileName)
+        
+        do {
+            // 复制视频文件到 Photos 目录
+            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+            LMLogger.log("✅ Live Photo video saved to: \(destinationURL.path)")
+            return destinationURL.path
+        } catch {
+            LMLogger.log("❌ Failed to save Live Photo video: \(error.localizedDescription)")
             return nil
         }
     }
@@ -209,6 +262,12 @@ class LMPhotoStorageManager {
             deleteFile(at: referencePath)
         }
         
+        // Delete Live Photo video file
+        if let videoPath = photo.livePhotoVideoPath {
+            deleteFile(at: videoPath)
+            LMLogger.log("🗑️ Live Photo video file deleted")
+        }
+        
         // Delete from Core Data
         context.delete(photo)
         
@@ -239,6 +298,26 @@ class LMPhotoStorageManager {
             return filePath.path
         } catch {
             LMLogger.log("❌ Failed to save image to file: \(error.localizedDescription)")
+            return nil
+        }
+    }
+    
+    /// Save image data to file (preserves metadata)
+    /// - Parameters:
+    ///   - imageData: Raw image data with metadata
+    ///   - photoId: Photo ID
+    ///   - isReference: Whether this is a reference image
+    /// - Returns: File path or nil if failed
+    private func saveImageDataToFile(imageData: Data, photoId: String, isReference: Bool) -> String? {
+        let fileName = isReference ? "\(photoId)_ref.jpg" : "\(photoId).jpg"
+        let filePath = photosDirectory.appendingPathComponent(fileName)
+        
+        do {
+            try imageData.write(to: filePath)
+            LMLogger.log("✅ Image data saved to: \(filePath.path)")
+            return filePath.path
+        } catch {
+            LMLogger.log("❌ Failed to save image data to file: \(error.localizedDescription)")
             return nil
         }
     }
