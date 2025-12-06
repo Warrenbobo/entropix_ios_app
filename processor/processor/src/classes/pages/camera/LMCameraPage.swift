@@ -10,6 +10,7 @@ import AVFoundation
 import SnapKit
 import MetalPerformanceShaders
 import CoreML
+import CoreMotion
 
 struct LMCameraConstants {
     
@@ -51,9 +52,22 @@ class LMCameraPage: LMPageWrapper {
     var isARGuidanceActive = false
     var shouldCaptureNextFrame = false // 标志：是否应该捕获下一帧用于Inspire Me
     
-    // MARK: - AR Guidance
+    // MARK: - AR Guidance (New Architecture)
+    var arGuidanceView: LMARGuidanceView!
+    var referenceImageDetectionManager: LMReferenceImageDetectionManager!
+    var cameraStreamDetectionManager: LMCameraStreamDetectionManager!
+    var arGuidanceState: LMARGuidanceState = .disabled {
+        didSet {
+            handleARGuidanceStateChange(from: oldValue, to: arGuidanceState)
+        }
+    }
+    var currentReferenceImage: UIImage?
+    var currentReferenceBbox: CGRect?
+    var referenceImageInitialOrientation: UIDeviceOrientation? // 保存referenceImage的初始方向
+    
+    // MARK: - AR Guidance (Legacy - 保留兼容)
     var personDetectionManager: LMPersonDetectionManager?
-    var currentSuggestion: LMSuggestion?
+    var currentSuggestion: LMCompositionSuggestion?
     var lastARGuidanceProcessTime: TimeInterval? // 上次处理AR引导帧的时间戳
     
     // MARK: - Camera State
@@ -89,9 +103,6 @@ class LMCameraPage: LMPageWrapper {
         case processingOverlay = 9999
         case arGuidanceFrame = 8888
         case arHintLabel = 8889
-        case personDetectionFrame = 8890
-        case arGuidanceLine = 8891 // 中点连线
-        case referenceImageView = 8893 // 参考图（左下角）
     }
     
     // MARK: - Initialization
@@ -109,7 +120,14 @@ class LMCameraPage: LMPageWrapper {
         setupCameraPageComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
+        
+        // 初始化AR引导功能（必须在相机设置之前）
+        setupARGuidance()
+        
         checkCameraPermissionAndSetup()
+        
+        // 确保视图层级正确
+        ensureCorrectViewHierarchy()
         
         // 如果是从 Saved Idea 进入，自动进入 Composition Selected 状态
         handleNavigationSource()
@@ -118,15 +136,60 @@ class LMCameraPage: LMPageWrapper {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        
+        // 启动设备方向检测
+        LMDeviceOrientationManager.shared.startMonitoring()
+        
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         if status == .authorized {
             startCameraSession()
+        }
+        
+        // 如果当前处于 compositionSelected 状态（有参考图），延迟1秒后恢复 AR 引导 UI
+        if currentCameraState == .compositionSelected {
+            LMLogger.log("📸 Returning to camera with reference image")
+            LMLogger.log("📸 Current reference image exists: \(currentReferenceImage != nil)")
+            LMLogger.log("📸 AR button state: \(cameraBottomControlsView.isARGuidanceActive())")
+            LMLogger.log("📸 isARGuidanceActive: \(isARGuidanceActive)")
+            LMLogger.log("📸 arGuidanceState: \(arGuidanceState)")
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self = self else { return }
+                
+                // 检查状态是否保持
+                if self.currentCameraState == .compositionSelected,
+                   self.currentReferenceImage != nil,
+                   self.isARGuidanceActive,
+                   self.arGuidanceState == .activeGuidance {
+                    
+                    LMLogger.log("🎯 Resuming AR guidance UI after preview return")
+                    
+                    // 只需要显示 UI，检测会自动继续（因为状态保持）
+                    self.arGuidanceView.hideOrShowAllGuidance(false)
+                    
+                    LMLogger.log("✅ AR guidance UI restored")
+                } else {
+                    LMLogger.log("⚠️ AR guidance state changed - state: \(self.currentCameraState), hasImage: \(self.currentReferenceImage != nil), isActive: \(self.isARGuidanceActive), arState: \(self.arGuidanceState)")
+                }
+            }
         }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         stopCameraSession()
+        
+        // 只是临时暂停 AR 引导，不完全清理（用户可能从预览页返回）
+        cleanupARGuidance()
+        
+        // 停止设备方向检测
+        LMDeviceOrientationManager.shared.stopMonitoring()
+    }
+    
+    deinit {
+        // 页面真正销毁时，完全清理 AR 引导资源
+        fullCleanupARGuidance()
+        LMLogger.log("🗑️ LMCameraPage deinit")
     }
     
     // MARK: - Setup
@@ -137,6 +200,39 @@ class LMCameraPage: LMPageWrapper {
         setupCameraBottomControlsComponent()
         setupInspireMeButtonComponent()
         setupReferenceImageComponent() // 初始化参考图组件（长期持有，默认隐藏）
+    }
+    
+    /// 确保视图层级正确
+    /// 层级顺序（从下到上）：
+    /// 1. previewCanvasView（相机画面）
+    ///    - cameraPreviewView（对焦层，在previewCanvasView内部）
+    ///    - arGuidanceView（AR校准框，在previewCanvasView内部）
+    /// 2. referenceImageContainerView（参考图，在主视图）
+    /// 3. cameraControlsView（右侧按钮，始终最顶层）
+    func ensureCorrectViewHierarchy() {
+        // 1. previewCanvasView 已经是最底层（在setupCameraPreviewComponent中添加）
+        
+        // 2. previewCanvasView 内部的视图层级
+        if let arGuidanceView = arGuidanceView {
+            // arGuidanceView 在 previewCanvasView 内部，确保在 cameraPreviewView 之上
+            previewCanvasView.bringSubviewToFront(arGuidanceView)
+        }
+        
+        // 3. 主视图层级
+        // Reference Image Container（如果存在）
+        if let referenceImageContainerView = referenceImageContainerView {
+            view.bringSubviewToFront(referenceImageContainerView)
+        }
+        
+        // Camera Controls View（右侧按钮，始终最顶层）
+        view.bringSubviewToFront(cameraControlsView)
+        
+        // 其他顶层UI元素
+        view.bringSubviewToFront(topStatusBarView)
+        view.bringSubviewToFront(cameraBottomControlsView)
+        view.bringSubviewToFront(inspireMeButtonView)
+        
+        LMLogger.log("✅ 视图层级已调整：Preview(Camera + AR Guidance) → Reference Image → Controls")
     }
     
     private func setupTopStatusBarComponents() {

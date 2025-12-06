@@ -16,57 +16,6 @@ protocol LMSuggestionsCarouselViewDelegate: AnyObject {
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpSuggestion suggestion: LMCompositionSuggestion, at index: Int)
 }
 
-// MARK: - Suggestion Display Model
-struct SuggestionDisplayModel {
-    let id: String
-    let title: String?
-    let description: String?
-    let imageURL: String?
-    let image: UIImage?
-    let personBoundingBox: BoundingBox?
-    let confidence: Double?
-    let isFavorite: Bool
-    let isGenerating: Bool
-    let aspectRatio: Double? // 添加宽高比字段
-    
-    init(id: String, 
-         title: String? = nil,
-         description: String? = nil,
-         imageURL: String? = nil, 
-         image: UIImage? = nil,
-         personBoundingBox: BoundingBox? = nil,
-         confidence: Double? = nil,
-         isFavorite: Bool = false, 
-         isGenerating: Bool = false,
-         aspectRatio: Double? = nil) {
-        self.id = id
-        self.title = title
-        self.description = description
-        self.imageURL = imageURL
-        self.image = image
-        self.personBoundingBox = personBoundingBox
-        self.confidence = confidence
-        self.isFavorite = isFavorite
-        self.isGenerating = isGenerating
-        self.aspectRatio = aspectRatio
-    }
-    
-    /// 从 LMCompositionSuggestion 创建
-    init(from suggestion: LMCompositionSuggestion) {
-        self.init(
-            id: suggestion.id,
-            title: suggestion.sceneType,
-            description: "Rank: \(suggestion.rank), Score: \(String(format: "%.2f", suggestion.score ?? 0))",
-            imageURL: suggestion.imageUrl,
-            personBoundingBox: suggestion.personBoundingBox,
-            confidence: suggestion.score,
-            isFavorite: false,
-            isGenerating: !suggestion.ready,
-            aspectRatio: suggestion.aspectRatio
-        )
-    }
-}
-
 class LMSuggestionsCarouselView: UIView {
     
     // MARK: - UI Components
@@ -76,7 +25,8 @@ class LMSuggestionsCarouselView: UIView {
     
     // MARK: - Properties
     weak var delegate: LMSuggestionsCarouselViewDelegate?
-    private var suggestions: [SuggestionDisplayModel] = []
+    private var suggestions: [LMCompositionSuggestion] = []
+    private var favoriteSuggestionIds: Set<String> = [] // 收藏的构图方案ID集合
     private var selectedIndex: Int = -1 // -1 表示未选中任何卡片
     
     // MARK: - Constants
@@ -137,7 +87,7 @@ class LMSuggestionsCarouselView: UIView {
     }
     
     // MARK: - Public Methods
-    func updateSuggestions(_ suggestions: [SuggestionDisplayModel]) {
+    func updateSuggestions(_ suggestions: [LMCompositionSuggestion]) {
         self.suggestions = suggestions
         
         // 清除旧的 card views
@@ -158,13 +108,9 @@ class LMSuggestionsCarouselView: UIView {
                 
                 // 触发 delegate 回调
                 let firstSuggestion = suggestions[0]
-                let compositionSuggestion = self.convertToCompositionSuggestion(
-                    firstSuggestion,
-                    aspectRatio: 3/4
-                )
                 self.delegate?.suggestionsCarouselView(
                     self,
-                    didSelectSuggestion: compositionSuggestion,
+                    didSelectSuggestion: firstSuggestion,
                     at: 0
                 )
             }
@@ -209,9 +155,18 @@ class LMSuggestionsCarouselView: UIView {
     }
     
     func addGeneratingCard() {
-        let generatingSuggestion = SuggestionDisplayModel(
+        let generatingSuggestion = LMCompositionSuggestion(
             id: UUID().uuidString,
-            isGenerating: true
+            sceneType: "",
+            source: "aigc",
+            ready: false,
+            imageUrl: nil,
+            similarImageUrl: nil,
+            rank: suggestions.count + 1,
+            score: nil,
+            modelVersion: "v1.0",
+            personBoundingBox: nil,
+            aspectRatio: nil
         )
         suggestions.append(generatingSuggestion)
         
@@ -228,7 +183,7 @@ class LMSuggestionsCarouselView: UIView {
     /// - Parameters:
     ///   - suggestion: 新的构图方案数据
     ///   - index: 要更新的索引位置
-    func updateSuggestion(_ suggestion: SuggestionDisplayModel, at index: Int) {
+    func updateSuggestion(_ suggestion: LMCompositionSuggestion, at index: Int) {
         guard index >= 0 && index < suggestions.count && index < cardViews.count else {
             LMLogger.log("⚠️ Invalid index for updating suggestion: \(index)")
             return
@@ -239,7 +194,8 @@ class LMSuggestionsCarouselView: UIView {
         
         // 更新对应的 card view
         let cardView = cardViews[index]
-        cardView.configure(with: suggestion)
+        let isFavorite = favoriteSuggestionIds.contains(suggestion.id)
+        cardView.configure(with: suggestion, isFavorite: isFavorite)
         
         // 如果是当前选中的卡片，可能需要重新布局以更新边框等样式
         if index == selectedIndex {
@@ -253,7 +209,7 @@ class LMSuggestionsCarouselView: UIView {
     
     /// 批量更新多个构图方案
     /// - Parameter updates: 字典，key为索引，value为新的构图方案数据
-    func updateSuggestions(_ updates: [Int: SuggestionDisplayModel]) {
+    func updateSuggestions(_ updates: [Int: LMCompositionSuggestion]) {
         var needsLayout = false
         
         for (index, suggestion) in updates {
@@ -267,7 +223,8 @@ class LMSuggestionsCarouselView: UIView {
             
             // 更新对应的 card view
             let cardView = cardViews[index]
-            cardView.configure(with: suggestion)
+            let isFavorite = favoriteSuggestionIds.contains(suggestion.id)
+            cardView.configure(with: suggestion, isFavorite: isFavorite)
             
             // 如果更新了选中的卡片，标记需要重新布局
             if index == selectedIndex {
@@ -295,9 +252,10 @@ class LMSuggestionsCarouselView: UIView {
         }
     }
     
-    private func createCardView(for suggestion: SuggestionDisplayModel, at index: Int) -> LMSuggestionCardView {
+    private func createCardView(for suggestion: LMCompositionSuggestion, at index: Int) -> LMSuggestionCardView {
         let cardView = LMSuggestionCardView(frame: .zero)
-        cardView.configure(with: suggestion)
+        let isFavorite = favoriteSuggestionIds.contains(suggestion.id)
+        cardView.configure(with: suggestion, isFavorite: isFavorite)
         cardView.delegate = self
         cardView.tag = index
         
@@ -398,8 +356,7 @@ class LMSuggestionsCarouselView: UIView {
             
             // 触发 delegate 回调
             let suggestion = suggestions[index]
-            let compositionSuggestion = convertToCompositionSuggestion(suggestion)
-            delegate?.suggestionsCarouselView(self, didSelectSuggestion: compositionSuggestion, at: index)
+            delegate?.suggestionsCarouselView(self, didSelectSuggestion: suggestion, at: index)
         }
     }
     
@@ -470,10 +427,9 @@ class LMSuggestionsCarouselView: UIView {
                         // 触发上划回调
                         self.selectedIndex = index
                         let suggestion = self.suggestions[index]
-                        let compositionSuggestion = self.convertToCompositionSuggestion(suggestion)
                         self.delegate?.suggestionsCarouselView(
                             self,
-                            didSwipeUpSuggestion: compositionSuggestion,
+                            didSwipeUpSuggestion: suggestion,
                             at: index
                         )
                         
@@ -519,24 +475,6 @@ class LMSuggestionsCarouselView: UIView {
         }
     }
     
-    // MARK: - Helper Methods
-    /// 将 SuggestionDisplayModel 转换为 LMCompositionSuggestion
-    private func convertToCompositionSuggestion(_ displayModel: SuggestionDisplayModel, aspectRatio: Double? = nil) -> LMCompositionSuggestion {
-        return LMCompositionSuggestion(
-            id: displayModel.id,
-            sceneType: displayModel.title ?? "",
-            source: "",
-            ready: !displayModel.isGenerating,
-            imageUrl: displayModel.imageURL,
-            similarImageUrl: nil,
-            rank: 0,
-            score: displayModel.confidence,
-            modelVersion: "",
-            personBoundingBox: displayModel.personBoundingBox,
-            aspectRatio: aspectRatio ?? displayModel.aspectRatio // 优先使用传入的 aspectRatio，否则使用 displayModel 中的
-        )
-    }
-    
     // MARK: - Public Methods
     
     /// 获取当前选中的构图方案
@@ -546,24 +484,7 @@ class LMSuggestionsCarouselView: UIView {
             return nil
         }
         
-        let selectedModel = suggestions[selectedIndex]
-        
-        // 将 SuggestionDisplayModel 转换为 LMCompositionSuggestion
-        let suggestion = LMCompositionSuggestion(
-            id: selectedModel.id,
-            sceneType: selectedModel.title ?? "Unknown",
-            source: "carousel_selection",
-            ready: !selectedModel.isGenerating,
-            imageUrl: selectedModel.imageURL,
-            similarImageUrl: nil,
-            rank: selectedIndex + 1,
-            score: selectedModel.confidence,
-            modelVersion: "v1.0",
-            personBoundingBox: selectedModel.personBoundingBox,
-            aspectRatio: nil
-        )
-        
-        return suggestion
+        return suggestions[selectedIndex]
     }
     
     /// 获取当前选中的索引
@@ -631,43 +552,27 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
         
         guard index >= 0 && index < suggestions.count else { return }
         
-        var suggestion = suggestions[index]
-        suggestion = SuggestionDisplayModel(
-            id: suggestion.id,
-            title: suggestion.title,
-            description: suggestion.description,
-            imageURL: suggestion.imageURL,
-            image: suggestion.image,
-            personBoundingBox: suggestion.personBoundingBox,
-            confidence: suggestion.confidence,
-            isFavorite: isFavorite,
-            isGenerating: suggestion.isGenerating
-        )
-        suggestions[index] = suggestion
+        let suggestion = suggestions[index]
         
-        // 转换为 LMCompositionSuggestion 用于 delegate 回调
-        let compositionSuggestion = convertToCompositionSuggestion(suggestion)
-        
-        // 保存或删除 Saved Idea
+        // 更新收藏状态
         if isFavorite {
-            saveSuggestionAsIdea(suggestion: compositionSuggestion, displayModel: suggestion)
+            favoriteSuggestionIds.insert(suggestion.id)
+            saveSuggestionAsIdea(suggestion: suggestion)
         } else {
-            removeSavedIdea(suggestionId: compositionSuggestion.id)
+            favoriteSuggestionIds.remove(suggestion.id)
+            removeSavedIdea(suggestionId: suggestion.id)
         }
         
-        delegate?.suggestionsCarouselView(self, didToggleFavorite: compositionSuggestion, at: index)
+        delegate?.suggestionsCarouselView(self, didToggleFavorite: suggestion, at: index)
     }
     
     /// 保存构图方案为 Saved Idea
-    private func saveSuggestionAsIdea(suggestion: LMCompositionSuggestion, displayModel: SuggestionDisplayModel) {
+    private func saveSuggestionAsIdea(suggestion: LMCompositionSuggestion) {
         // 使用 LMPhotoStorageManager 保存
         let manager = LMPhotoStorageManager.shared
         
-        // 如果有图片，使用图片；否则尝试从 URL 下载
-        if let image = displayModel.image {
-            manager.saveSuggestionAsIdea(suggestion: suggestion, image: image)
-            LMLogger.log("💾 Saved idea with image: \(suggestion.id)")
-        } else if let imageURL = displayModel.imageURL {
+        // 优先使用 similarImageUrl，然后使用 imageUrl
+        if let imageURL = suggestion.similarImageUrl ?? suggestion.imageUrl {
             // 异步下载图片并保存
             downloadAndSaveIdea(suggestion: suggestion, imageURL: imageURL)
         } else {

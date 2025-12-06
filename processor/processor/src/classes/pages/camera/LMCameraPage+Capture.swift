@@ -132,6 +132,50 @@ extension LMCameraPage {
         )
         return flippedImage
     }
+    
+    /// 根据设备方向旋转图片
+    /// - Parameters:
+    ///   - image: 原始图片
+    ///   - deviceOrientation: 设备方向
+    /// - Returns: 旋转后的图片
+    private func rotateImage(_ image: UIImage, forDeviceOrientation deviceOrientation: UIDeviceOrientation) -> UIImage {
+        guard let cgImage = image.cgImage else { return image }
+        
+        // 根据设备方向确定图片方向
+        let imageOrientation: UIImage.Orientation
+        
+        switch deviceOrientation {
+        case .portrait:
+            // 竖屏正向：不需要旋转
+            imageOrientation = .right
+            
+        case .landscapeLeft:
+            // 横屏左（Home键在右）：顺时针旋转90度
+            imageOrientation = .up
+            
+        case .landscapeRight:
+            // 横屏右（Home键在左）：逆时针旋转90度
+            imageOrientation = .down
+            
+        case .portraitUpsideDown:
+            // 竖屏倒置：旋转180度
+            imageOrientation = .left
+            
+        default:
+            // 其他情况（FaceUp, FaceDown, Unknown）：保持原样
+            imageOrientation = .right
+        }
+        
+        let rotatedImage = UIImage(
+            cgImage: cgImage,
+            scale: image.scale,
+            orientation: imageOrientation
+        )
+        
+        LMLogger.log("🔄 Image rotated for device orientation: \(deviceOrientation.rawValue) -> \(imageOrientation.rawValue)")
+        
+        return rotatedImage
+    }
 }
 
 // MARK: - AVCapturePhotoCaptureDelegate
@@ -150,6 +194,13 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
             showAlert("Failed to process captured photo", style: .error)
             return
         }
+        
+        // 获取当前设备方向
+        let deviceOrientation = LMDeviceOrientationManager.shared.currentOrientation
+        LMLogger.log("📱 Current device orientation: \(deviceOrientation.rawValue)")
+        
+        // 根据设备方向旋转图片
+        capturedImage = rotateImage(capturedImage, forDeviceOrientation: deviceOrientation)
         
         // 如果是前摄拍摄，需要去除镜像效果（水平翻转）
         if isUsingFrontCamera {

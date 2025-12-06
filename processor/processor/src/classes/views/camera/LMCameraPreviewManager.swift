@@ -115,9 +115,7 @@ class LMCameraPreviewManager: NSObject {
         self.suggestions = suggestions
         currentState = .suggestions
         
-        // 转换为 SuggestionDisplayModel
-        let displayModels = suggestions.map { SuggestionDisplayModel(from: $0) }
-        suggestionsCarousel.updateSuggestions(displayModels)
+        suggestionsCarousel.updateSuggestions(suggestions)
         updateViewVisibility()
     }
     

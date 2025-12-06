@@ -16,6 +16,13 @@
 		EA0A47422EBF8F19002CBB80 /* LMSubscriptionHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47392EBF8F19002CBB80 /* LMSubscriptionHeroView.swift */; };
 		EA0A47442EBF8F3C002CBB80 /* SubscriptionPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47432EBF8F3C002CBB80 /* SubscriptionPlan.swift */; };
 		EA0A47462EBF995C002CBB80 /* LMStoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47452EBF995C002CBB80 /* LMStoreManager.swift */; };
+		EA3F16682EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F16652EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift */; };
+		EA3F16692EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F16662EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift */; };
+		EA3F166A2EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F16672EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift */; };
+		EA3F166C2EE3DDCC00B24DA8 /* LMARGuidanceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F166B2EE3DDCC00B24DA8 /* LMARGuidanceView.swift */; };
+		EA3F16702EE3DFA800B24DA8 /* LMOrientationMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F166E2EE3DFA800B24DA8 /* LMOrientationMatcher.swift */; };
+		EA3F16732EE41D8500B24DA8 /* LMDeviceOrientationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F16722EE41D8500B24DA8 /* LMDeviceOrientationManager.swift */; };
+		EA4032A22EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA4032A12EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift */; };
 		EA54E1DB2EBEED04000DB5EE /* LMSubscriptionPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA54E1DA2EBEED04000DB5EE /* LMSubscriptionPage.swift */; };
 		EA56DD972EC02B23000AB522 /* LMPopularTagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DD962EC02B23000AB522 /* LMPopularTagView.swift */; };
 		EA56DD9A2EC076B6000AB522 /* LMSavedIdeaDetailPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DD992EC076B6000AB522 /* LMSavedIdeaDetailPage.swift */; };
@@ -143,6 +150,13 @@
 		EA0A473B2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionProgressView.swift; sourceTree = "<group>"; };
 		EA0A47432EBF8F3C002CBB80 /* SubscriptionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionPlan.swift; sourceTree = "<group>"; };
 		EA0A47452EBF995C002CBB80 /* LMStoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMStoreManager.swift; sourceTree = "<group>"; };
+		EA3F16652EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraStreamDetectionManager.swift; sourceTree = "<group>"; };
+		EA3F16662EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPersonDetectionProtocol.swift; sourceTree = "<group>"; };
+		EA3F16672EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMReferenceImageDetectionManager.swift; sourceTree = "<group>"; };
+		EA3F166B2EE3DDCC00B24DA8 /* LMARGuidanceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceView.swift; sourceTree = "<group>"; };
+		EA3F166E2EE3DFA800B24DA8 /* LMOrientationMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMOrientationMatcher.swift; sourceTree = "<group>"; };
+		EA3F16722EE41D8500B24DA8 /* LMDeviceOrientationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDeviceOrientationManager.swift; sourceTree = "<group>"; };
+		EA4032A12EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSuggestionBoundBoxManager.swift; sourceTree = "<group>"; };
 		EA54E1DA2EBEED04000DB5EE /* LMSubscriptionPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionPage.swift; sourceTree = "<group>"; };
 		EA54E1DC2EBF19F5000DB5EE /* processor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = processor.entitlements; sourceTree = "<group>"; };
 		EA56DD962EC02B23000AB522 /* LMPopularTagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPopularTagView.swift; sourceTree = "<group>"; };
@@ -303,6 +317,14 @@
 			path = subscription;
 			sourceTree = "<group>";
 		};
+		EA3F166F2EE3DFA800B24DA8 /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				EA3F166E2EE3DFA800B24DA8 /* LMOrientationMatcher.swift */,
+			);
+			path = utils;
+			sourceTree = "<group>";
+		};
 		EA56DDE92EC0B379000AB522 /* api */ = {
 			isa = PBXGroup;
 			children = (
@@ -356,12 +378,17 @@
 		EACA1CCF2E7E49B600C80883 /* managers */ = {
 			isa = PBXGroup;
 			children = (
+				EA3F16722EE41D8500B24DA8 /* LMDeviceOrientationManager.swift */,
+				EA3F16652EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift */,
+				EA3F16662EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift */,
+				EA3F16672EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift */,
 				EA5835472EC999330013E531 /* LMTestDataManager.swift */,
 				EA5835482EC999330013E531 /* LMTestModeConfig.swift */,
 				EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */,
 				EA6019372EC877620067F2F7 /* LMSessionManager.swift */,
 				EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */,
 				EA56DDA02EC08078000AB522 /* LMPersonDetectionManager.swift */,
+				EA4032A12EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift */,
 				EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */,
 				EACA1D052E7E4C7C00C80883 /* LMPackageManager.swift */,
 				EACA1D092E7E4EE900C80883 /* LMLogger.swift */,
@@ -446,6 +473,7 @@
 		EACA1CDB2E7E49B600C80883 /* classes */ = {
 			isa = PBXGroup;
 			children = (
+				EA3F166F2EE3DFA800B24DA8 /* utils */,
 				EA8640672ED2D24800A0CD43 /* storage */,
 				EACA1CCF2E7E49B600C80883 /* managers */,
 				EACA1CD12E7E49B600C80883 /* models */,
@@ -606,6 +634,7 @@
 		EAFBACBE2E7E8DB200586EC7 /* camera */ = {
 			isa = PBXGroup;
 			children = (
+				EA3F166B2EE3DDCC00B24DA8 /* LMARGuidanceView.swift */,
 				EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */,
 				EA8629AC2EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift */,
 				EA8629AE2EB5EEF700F2B00E /* LMCameraPreviewManager.swift */,
@@ -738,6 +767,7 @@
 			files = (
 				EA8640702ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift in Sources */,
 				EACB2E7C2EDC22B700983697 /* LMPhotoPreviewPage.swift in Sources */,
+				EA3F166C2EE3DDCC00B24DA8 /* LMARGuidanceView.swift in Sources */,
 				EA8640712ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift in Sources */,
 				EA8640722ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift in Sources */,
 				EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */,
@@ -793,6 +823,7 @@
 				EACA1CFA2E7E49B600C80883 /* LMVersionUpdateDialog.swift in Sources */,
 				EAFBACC12E87DE4E00586EC7 /* LMCameraGridOverlayView.swift in Sources */,
 				EACB2E7E2EDC422700983697 /* LMCapturedPhotoData.swift in Sources */,
+				EA4032A22EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift in Sources */,
 				EACA1CFB2E7E49B600C80883 /* AppConfigs.swift in Sources */,
 				EAFBAC992E7E5A0800586EC7 /* LMMineUserInfoView.swift in Sources */,
 				EA6019462EC877C20067F2F7 /* LMEmailVerificationPage.swift in Sources */,
@@ -800,6 +831,7 @@
 				EA56DDD42EC091B1000AB522 /* LMRefreshTokenResponse.swift in Sources */,
 				EA56DDD52EC091B1000AB522 /* LMConfirmSuggestionResponse.swift in Sources */,
 				EA56DDD72EC091B1000AB522 /* LMCompositionResult.swift in Sources */,
+				EA3F16732EE41D8500B24DA8 /* LMDeviceOrientationManager.swift in Sources */,
 				EA56DDD82EC091B1000AB522 /* LMCompositionResultsResponse.swift in Sources */,
 				EA56DDDA2EC091B1000AB522 /* BoundingBox.swift in Sources */,
 				EA56DDDB2EC091B1000AB522 /* LMLoginResponse.swift in Sources */,
@@ -825,6 +857,10 @@
 				EA0A47422EBF8F19002CBB80 /* LMSubscriptionHeroView.swift in Sources */,
 				EAFBAD7B2E936ABD00586EC7 /* LMNavigationTitleView.swift in Sources */,
 				EA5835442EC976200013E531 /* LMCameraPage+ShowSuggestions.swift in Sources */,
+				EA3F16702EE3DFA800B24DA8 /* LMOrientationMatcher.swift in Sources */,
+				EA3F16682EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift in Sources */,
+				EA3F16692EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift in Sources */,
+				EA3F166A2EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift in Sources */,
 				EA8629B22EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift in Sources */,
 				EA8629B42EB5EEF700F2B00E /* LMSuggestionCardView.swift in Sources */,
 				EA8629B52EB5EEF700F2B00E /* LMCameraPreviewManager.swift in Sources */,
@@ -884,6 +920,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = processor/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Entropix;
+				INFOPLIST_KEY_NSCameraUsageDescription = "";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -920,6 +959,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = processor/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Entropix;
+				INFOPLIST_KEY_NSCameraUsageDescription = "";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

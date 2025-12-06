@@ -16,7 +16,13 @@ protocol LMSuggestionCardViewDelegate: AnyObject {
 class LMSuggestionCardView: UIView {
     
     // MARK: - UI Components
-    private let imageView = UIImageView()
+    private let backgroundImageView = UIImageView() // 底层：拉伸填充
+    private let blurEffectView: UIVisualEffectView = {
+        // 使用毛玻璃样式的模糊效果 - regular 提供经典的毛玻璃质感
+        let blurEffect = UIBlurEffect(style: .regular)
+        return UIVisualEffectView(effect: blurEffect)
+    }() // 中层：模糊蒙层
+    private let imageView = UIImageView() // 顶层：等比例显示
     private let heartButton = UIButton()
     private let loadingView = UIView()
     private let loadingSpinner = UIActivityIndicatorView(style: .medium)
@@ -24,7 +30,8 @@ class LMSuggestionCardView: UIView {
     
     // MARK: - Properties
     weak var delegate: LMSuggestionCardViewDelegate?
-    private var suggestion: SuggestionDisplayModel?
+    private var suggestion: LMCompositionSuggestion?
+    private var isFavorite: Bool = false
     
     // MARK: - Initialization
     override init(frame: CGRect) {
@@ -45,8 +52,13 @@ class LMSuggestionCardView: UIView {
         layer.borderColor = UIColor.clear.cgColor
         layer.borderWidth = 0
         
-        // 图片视图设置
-        imageView.contentMode = .scaleAspectFill
+        // 底层：背景图片视图（拉伸填充）
+        backgroundImageView.contentMode = .scaleAspectFill
+        backgroundImageView.clipsToBounds = true
+        
+        // 顶层：图片视图（等比例显示，不拉伸）
+        imageView.contentMode = .scaleAspectFit
+        imageView.clipsToBounds = true
         
         // 心形按钮设置
         heartButton.setImage(UIImage(systemName: "heart"), for: .normal)
@@ -68,8 +80,10 @@ class LMSuggestionCardView: UIView {
         loadingLabel.textColor = UIColor.white
         loadingLabel.textAlignment = .center
         
-        // 添加子视图到 contentView
-        addSubview(imageView)
+        // 按层级添加子视图
+        addSubview(backgroundImageView)  // 底层：拉伸背景
+        addSubview(blurEffectView)       // 中层：模糊蒙层
+        addSubview(imageView)            // 顶层：等比例图片
         addSubview(heartButton)
         addSubview(loadingView)
         loadingView.addSubview(loadingSpinner)
@@ -80,7 +94,17 @@ class LMSuggestionCardView: UIView {
     }
     
     private func setupConstraints() {
-        // 图片视图约束
+        // 底层：背景图片视图（填充整个卡片）
+        backgroundImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        // 中层：模糊效果蒙层（覆盖背景图）
+        blurEffectView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        // 顶层：图片视图（等比例显示，居中）
         imageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
@@ -111,25 +135,25 @@ class LMSuggestionCardView: UIView {
     }
     
     // MARK: - Public Methods
-    func configure(with suggestion: SuggestionDisplayModel) {
+    func configure(with suggestion: LMCompositionSuggestion, isFavorite: Bool = false) {
         self.suggestion = suggestion
+        self.isFavorite = isFavorite
         
-        if suggestion.isGenerating {
+        if !suggestion.ready {
             showLoadingState()
         } else {
             hideLoadingState()
             
-            // 设置图片
-            if let image = suggestion.image {
-                imageView.image = image
-            } else if let imageURL = suggestion.imageURL {
-                // 这里可以添加网络图片加载逻辑
-                loadImageFromURL(imageURL)
+            // 设置图片 - 优先使用 similarImageUrl（相似构图），然后使用 imageUrl（AIGC构图）
+            if let similarImageUrl = suggestion.similarImageUrl {
+                loadImageFromURL(similarImageUrl)
+            } else if let imageUrl = suggestion.imageUrl {
+                loadImageFromURL(imageUrl)
             }
             
             // 设置收藏状态
-            heartButton.isSelected = suggestion.isFavorite
-            heartButton.tintColor = suggestion.isFavorite ? UIColor.systemRed : UIColor.white
+            heartButton.isSelected = isFavorite
+            heartButton.tintColor = isFavorite ? UIColor.systemRed : UIColor.white
         }
     }
     
@@ -177,19 +201,36 @@ class LMSuggestionCardView: UIView {
     }
     
     private func loadImageFromURL(_ urlString: String) {
-        // 这里应该实现网络图片加载逻辑
-        // 为了演示，我们使用占位图片
-        imageView.image = UIImage(systemName: "photo")
-        imageView.tintColor = UIColor.systemGray3
+        // 从 Assets.xcassets 加载本地图片
+        if let image = UIImage(named: urlString) {
+            // 设置三层结构：
+            // 1. 底层：拉伸填充的背景图
+            backgroundImageView.image = image
+            
+            // 2. 中层：模糊蒙层（已在 configureSubviews 中设置）
+            
+            // 3. 顶层：等比例显示的图片
+            imageView.image = image
+            
+            LMLogger.log("✅ Loaded local sample image with layered style: \(urlString)")
+        } else {
+            // 如果找不到图片，使用占位图
+            let placeholderImage = UIImage(systemName: "photo")
+            backgroundImageView.image = placeholderImage
+            imageView.image = placeholderImage
+            imageView.tintColor = UIColor.systemGray3
+            LMLogger.log("⚠️ Sample image not found: \(urlString)")
+        }
     }
     
     // MARK: - Actions
     @objc private func heartButtonTapped() {
-        guard let suggestion = suggestion, !suggestion.isGenerating else { return }
+        guard let suggestion = suggestion, suggestion.ready else { return }
         
         let newFavoriteState = !heartButton.isSelected
         heartButton.isSelected = newFavoriteState
         heartButton.tintColor = newFavoriteState ? UIColor.systemRed : UIColor.white
+        self.isFavorite = newFavoriteState
         
         // 添加心跳动画
         if newFavoriteState {

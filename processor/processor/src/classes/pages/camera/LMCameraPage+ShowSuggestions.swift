@@ -5,6 +5,69 @@
 
 import UIKit
 
+// MARK: - Device Orientation Handling
+extension LMCameraPage {
+    
+    /// 开始监听设备方向变化（订阅通知）
+    func startObservingDeviceOrientation() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDeviceOrientationChangeNotification(_:)),
+            name: .devicePhysicalOrientationDidChange,
+            object: nil
+        )
+        
+        // 立即应用当前方向
+        updateReferenceImageRotation()
+        
+        LMLogger.log("📱 Started observing device orientation notifications")
+    }
+    
+    /// 停止监听设备方向变化（取消订阅通知）
+    func stopObservingDeviceOrientation() {
+        NotificationCenter.default.removeObserver(
+            self,
+            name: .devicePhysicalOrientationDidChange,
+            object: nil
+        )
+        LMLogger.log("📱 Stopped observing device orientation notifications")
+    }
+    
+    /// 处理设备方向变化通知
+    @objc private func handleDeviceOrientationChangeNotification(_ notification: Notification) {
+        updateReferenceImageRotation()
+    }
+    
+    /// 更新参考图旋转
+    private func updateReferenceImageRotation() {
+        guard let containerView = referenceImageContainerView,
+              !containerView.isHidden else {
+            return
+        }
+        
+        let orientation = LMDeviceOrientationManager.shared.currentOrientation
+        
+        // 只处理有效的方向（排除 FaceUp、FaceDown、Unknown）
+        guard orientation.isValidInterfaceOrientation else {
+            return
+        }
+        
+        // 获取旋转角度
+        let rotationAngle = LMDeviceOrientationManager.shared.getCurrentRotationAngle()
+        
+        // 应用旋转变换（以容器中心为轴心）
+        UIView.animate(
+            withDuration: 0.3,
+            delay: 0,
+            options: [.curveEaseInOut, .allowUserInteraction]
+        ) {
+            containerView.transform = CGAffineTransform(rotationAngle: rotationAngle)
+        }
+        
+        LMLogger.log("📱 Reference image rotated to \(orientation.rawValue), angle: \(rotationAngle * 180 / .pi)°")
+    }
+}
+
 // MARK: - Show Suggestions State Management
 extension LMCameraPage {
     
@@ -187,10 +250,7 @@ extension LMCameraPage {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
-            let displayModels = self.currentSuggestions.map { SuggestionDisplayModel(from: $0) }
-            self.suggestionsCarouselView?.updateSuggestions(displayModels)
-            
-            LMLogger.log("🔄 Updated suggestions - Total: \(displayModels.count), Ready: \(displayModels.filter { !$0.isGenerating }.count)")
+            self.suggestionsCarouselView?.updateSuggestions(self.currentSuggestions)
         }
         
         // 检查是否所有构图都已生成
@@ -261,7 +321,12 @@ extension LMCameraPage {
     
     /// 进入 Camera with Composition Selected 状态（从 Show Suggestions 进入）
     func enterCompositionSelectedState(with suggestion: LMCompositionSuggestion) {
-        guard currentCameraState == .showingSuggestions else { return }
+        guard currentCameraState == .showingSuggestions else {
+            LMLogger.log("⚠️ [Composition Selected] Cannot enter - current state is not showingSuggestions")
+            return
+        }
+        
+        LMLogger.log("🎯 [Composition Selected] Entering state with suggestion: \(suggestion.id)")
         
         currentCameraState = .compositionSelected
         currentSuggestion = suggestion
@@ -278,8 +343,17 @@ extension LMCameraPage {
         // 显示参考图在左下角
         showReferenceImageInCorner(suggestion: suggestion)
         
+        // 加载Reference Image用于AR Guidance
+        if let image = UIImage(named: suggestion.similarImageUrl ?? "") {
+            currentReferenceImage = image
+            LMLogger.log("✅ [Composition Selected] Reference image loaded for AR Guidance")
+        } else {
+            LMLogger.log("❌ [Composition Selected] Failed to load reference image")
+        }
+        
         // 自动开启 AR Guidance
         cameraBottomControlsView.setARGuidanceActive(true)
+        LMLogger.log("🎯 [Composition Selected] Calling configureARGuidanceFeatures(true)...")
         configureARGuidanceFeatures(true)
         
         // 应用布局变化
@@ -293,7 +367,7 @@ extension LMCameraPage {
             self.view.layoutIfNeeded()
         }
         
-        LMLogger.log("📐 Entered Composition Selected state - Suggestion ID: \(suggestion.id), AR Guidance auto-enabled")
+        LMLogger.log("📐 [Composition Selected] State entered - AR Guidance should be starting")
     }
     
     /// 进入 Camera with Composition Selected 状态（从 Saved Idea 进入）
@@ -325,7 +399,7 @@ extension LMCameraPage {
         
         // 创建参考图 ImageView
         let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
+        imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 12
         imageView.layer.borderWidth = 2
@@ -336,8 +410,8 @@ extension LMCameraPage {
         // 创建关闭按钮
         let closeButton = UIButton(type: .system)
         closeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-        closeButton.tintColor = .white
-        closeButton.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        closeButton.tintColor = UIColor.black.withAlphaComponent(0.5)
+//        closeButton.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         closeButton.layer.cornerRadius = 13
         closeButton.addTarget(self, action: #selector(closeReferenceImage), for: .touchUpInside)
         containerView.addSubview(closeButton)
@@ -377,6 +451,9 @@ extension LMCameraPage {
         self.referenceImageView = imageView
         self.referenceCloseButton = closeButton
         
+        // 开始监听设备方向变化
+        startObservingDeviceOrientation()
+        
         LMLogger.log("✅ Reference image component initialized and hidden by default")
     }
     
@@ -404,18 +481,20 @@ extension LMCameraPage {
         }
         
         // 加载图片
-        if let imageUrl = suggestion.imageUrl, let url = URL(string: imageUrl) {
-            // TODO: 使用图片加载库加载图片
-            // 临时使用占位图
-            imageView.image = UIImage(systemName: "photo")
-            LMLogger.log("📷 Loading reference image from: \(imageUrl), aspect ratio: \(aspectRatio)")
-        } else {
-            imageView.image = UIImage(systemName: "photo")
-        }
+//        if let imageUrl = suggestion.imageUrl, let url = URL(string: imageUrl) {
+//            // TODO: 使用图片加载库加载图片
+//            // 临时使用占位图
+//            imageView.image = UIImage(systemName: "photo")
+//            LMLogger.log("📷 Loading reference image from: \(imageUrl), aspect ratio: \(aspectRatio)")
+//        } else {
+            imageView.image = UIImage(named: suggestion.similarImageUrl ?? "")
+//        }
         // 显示容器
         containerView.isHidden = false
-        // 将参考图置于最上层
-        view.bringSubviewToFront(containerView)
+        
+        // 确保视图层级正确：Preview → AR Guidance → Reference Image → Controls
+        ensureCorrectViewHierarchy()
+        
         LMLogger.log("✅ Reference image displayed - Size: \(newSize), Aspect Ratio: \(aspectRatio)")
     }
     
@@ -453,8 +532,9 @@ extension LMCameraPage {
         
         // 显示容器
         containerView.isHidden = false
-        // 将参考图置于最上层
-        view.bringSubviewToFront(containerView)
+        
+        // 确保视图层级正确
+        ensureCorrectViewHierarchy()
         
         LMLogger.log("✅ Reference image displayed from Saved Idea - Size: \(newSize), Aspect Ratio: \(aspectRatio)")
     }
@@ -535,6 +615,9 @@ extension LMCameraPage {
             return
         }
         
+        // 重置旋转变换
+        containerView.transform = .identity
+        
         // 判断导航来源
         switch navigationSource {
         case .savedIdea:
@@ -579,19 +662,16 @@ extension LMCameraPage {
             
             // 更新轮播视图的数据
             if let carouselView = suggestionsCarouselView {
-                let displayModels = currentSuggestions.map { SuggestionDisplayModel(from: $0) }
-                carouselView.updateSuggestions(displayModels)
+                carouselView.updateSuggestions(currentSuggestions)
                 
                 // 如果之前有选中的构图，恢复选中状态
-                if previouslySelectedIndex >= 0 && previouslySelectedIndex < displayModels.count {
+                if previouslySelectedIndex >= 0 && previouslySelectedIndex < currentSuggestions.count {
                     // 延迟一点执行，确保轮播视图已经完成布局
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         carouselView.selectSuggestion(at: previouslySelectedIndex, animated: true)
                         LMLogger.log("📐 Restored selection to index: \(previouslySelectedIndex)")
                     }
                 }
-                
-                LMLogger.log("📐 Updated carousel with \(displayModels.count) suggestions")
             }
             
             // 调整底部控制栏

@@ -144,29 +144,30 @@ class LMTestDataManager {
     func testCompositionTaskResponse() -> LMCompositionTaskResponse {
         let taskId = "test_task_\(UUID().uuidString)"
         
+        // 从 Assets.xcassets/sample 文件夹获取测试图片
+        let sampleImages = loadSampleImages()
+        
         // 生成16个相似构图建议
         var suggestions: [LMCompositionSuggestion] = []
         for i in 1...16 {
-            // 随机生成横向或纵向图片
-            let isLandscape = i % 3 == 0 // 每3张图有1张横向
-            let aspectRatio = isLandscape ? 1.33 : 0.75 // 横向 4:3，纵向 3:4
+            // 循环使用 sample 图片
+            let imageIndex = (i - 1) % sampleImages.count
+            let sampleImage = sampleImages[imageIndex]
+            
+            // 根据图片实际尺寸计算宽高比
+            let aspectRatio = sampleImage.size.width / sampleImage.size.height
             
             suggestions.append(LMCompositionSuggestion(
                 id: "test_suggestion_\(i)",
                 sceneType: "outdoor",
                 source: "similar",
                 ready: true,
-                imageUrl: "https://picsum.photos/1080/1440?random=\(i)",
-                similarImageUrl: "https://picsum.photos/1080/1440?random=\(i)",
+                imageUrl: "sample_\(imageIndex + 1)", // 使用图片名称作为标识
+                similarImageUrl: sampleImageNames[imageIndex],
                 rank: i,
                 score: Double.random(in: 0.7...0.95),
                 modelVersion: "v1.0",
-                personBoundingBox: BoundingBox(
-                    x: 0.3,
-                    y: 0.2,
-                    width: 0.4,
-                    height: 0.6
-                ),
+                personBoundingBox: generateRandomPersonBoundingBox(),
                 aspectRatio: aspectRatio
             ))
         }
@@ -175,6 +176,11 @@ class LMTestDataManager {
         let aigcPositions = [3, 7, 11]
         for (index, position) in aigcPositions.enumerated() {
             if position < suggestions.count {
+                // 为 AIGC 构图也使用 sample 图片的宽高比
+                let imageIndex = index % sampleImages.count
+                let sampleImage = sampleImages[imageIndex]
+                let aspectRatio = sampleImage.size.width / sampleImage.size.height
+                
                 suggestions.insert(LMCompositionSuggestion(
                     id: "test_aigc_\(index + 1)",
                     sceneType: "outdoor",
@@ -186,7 +192,7 @@ class LMTestDataManager {
                     score: nil,
                     modelVersion: "v1.0",
                     personBoundingBox: nil,
-                    aspectRatio: 0.75 // 默认 3:4
+                    aspectRatio: aspectRatio
                 ), at: position)
             }
         }
@@ -196,6 +202,77 @@ class LMTestDataManager {
             status: "processing",
             suggestions: suggestions
         )
+    }
+    
+    // MARK: - Helper Methods for Test Data
+    
+    /// 随机生成 PersonBoundingBox
+    /// - Returns: 随机的 BoundingBox，确保在合理范围内
+    private func generateRandomPersonBoundingBox() -> BoundingBox {
+        // x: 人物中心点的 x 坐标（0.2 - 0.8，避免太靠边）
+        let x = Double.random(in: 0.2...0.8)
+        
+        // y: 人物中心点的 y 坐标（0.2 - 0.7，避免太靠上或太靠下）
+        let y = Double.random(in: 0.2...0.7)
+        
+        // width: 人物宽度（0.25 - 0.5，占画面的 25%-50%）
+        let width = Double.random(in: 0.25...0.5)
+        
+        // height: 人物高度（0.4 - 0.7，占画面的 40%-70%）
+        let height = Double.random(in: 0.4...0.7)
+        
+        return BoundingBox(x: x, y: y, width: width, height: height)
+    }
+    
+    // MARK: - Sample Image Names
+    
+    /// Sample 文件夹内的图片名称数组
+    private let sampleImageNames: [String] = [
+        "suggest_00000450",
+        "suggest_00000082",
+        "suggest_00000573",
+        "suggest_00000574",
+        "suggest_00000575",
+        "suggest_00000582",
+        "suggest_00000583",
+        "suggest_00000584",
+        "suggest_sample_1",
+        "suggest_sample_2",
+    ]
+    
+    /// 从 Assets.xcassets/sample 文件夹加载测试图片
+    private func loadSampleImages() -> [UIImage] {
+        var images: [UIImage] = []
+        
+        // 遍历图片名称数组加载图片
+        for imageName in sampleImageNames {
+            if let image = UIImage(named: imageName) {
+                images.append(image)
+                LMLogger.log("✅ Loaded sample image: \(imageName), size: \(image.size), aspect ratio: \(String(format: "%.2f", image.size.width / image.size.height))")
+            }
+        }
+        
+        // 如果没有找到任何图片，使用系统占位图
+        if images.isEmpty {
+            LMLogger.log("⚠️ No sample images found in Assets.xcassets/sample folder, using placeholder")
+            if let placeholder = UIImage(systemName: "photo") {
+                images.append(placeholder)
+            }
+        } else {
+            LMLogger.log("✅ Loaded \(images.count) sample images from Assets.xcassets/sample folder")
+        }
+        
+        return images
+    }
+    
+    /// 获取 sample 图片名称数组
+    func getSampleImageNames() -> [String] {
+        return sampleImageNames
+    }
+    
+    /// 根据图片名称获取 sample 图片
+    func getSampleImage(named name: String) -> UIImage? {
+        return UIImage(named: name)
     }
     
     /// 测试构图建议响应
@@ -209,62 +286,33 @@ class LMTestDataManager {
     
     /// 测试AIGC构图更新（模拟AIGC构图准备完成）
     func testAIGCCompositionsReady() -> [LMCompositionSuggestion] {
-        return [
-            LMCompositionSuggestion(
-                id: "test_aigc_1",
+        // 从 Assets.xcassets/sample 文件夹获取测试图片
+        let sampleImages = loadSampleImages()
+        
+        var aigcSuggestions: [LMCompositionSuggestion] = []
+        
+        // 生成3个AIGC构图
+        for i in 1...3 {
+            let imageIndex = (i - 1) % sampleImages.count
+            let sampleImage = sampleImages[imageIndex]
+            let aspectRatio = sampleImage.size.width / sampleImage.size.height
+            
+            aigcSuggestions.append(LMCompositionSuggestion(
+                id: "test_aigc_\(i)",
                 sceneType: "outdoor",
                 source: "aigc",
                 ready: true,
-                imageUrl: "https://picsum.photos/1080/1440?random=aigc1",
+                imageUrl: "sample_\(imageIndex + 1)", // 使用图片名称作为标识
                 similarImageUrl: nil,
-                rank: 4,
-                score: 0.92,
+                rank: i * 4, // 4, 8, 12
+                score: Double.random(in: 0.85...0.95),
                 modelVersion: "v1.0",
-                personBoundingBox: BoundingBox(
-                    x: 0.25,
-                    y: 0.15,
-                    width: 0.5,
-                    height: 0.7
-                ),
-                aspectRatio: 0.75 // 3:4 纵向
-            ),
-            LMCompositionSuggestion(
-                id: "test_aigc_2",
-                sceneType: "outdoor",
-                source: "aigc",
-                ready: true,
-                imageUrl: "https://picsum.photos/1080/1440?random=aigc2",
-                similarImageUrl: nil,
-                rank: 8,
-                score: 0.89,
-                modelVersion: "v1.0",
-                personBoundingBox: BoundingBox(
-                    x: 0.3,
-                    y: 0.2,
-                    width: 0.4,
-                    height: 0.6
-                ),
-                aspectRatio: 1.33 // 4:3 横向
-            ),
-            LMCompositionSuggestion(
-                id: "test_aigc_3",
-                sceneType: "outdoor",
-                source: "aigc",
-                ready: true,
-                imageUrl: "https://picsum.photos/1080/1440?random=aigc3",
-                similarImageUrl: nil,
-                rank: 12,
-                score: 0.87,
-                modelVersion: "v1.0",
-                personBoundingBox: BoundingBox(
-                    x: 0.35,
-                    y: 0.25,
-                    width: 0.3,
-                    height: 0.5
-                ),
-                aspectRatio: 1
-            )
-        ]
+                personBoundingBox: generateRandomPersonBoundingBox(),
+                aspectRatio: aspectRatio
+            ))
+        }
+        
+        return aigcSuggestions
     }
     
     /// 测试确认建议响应

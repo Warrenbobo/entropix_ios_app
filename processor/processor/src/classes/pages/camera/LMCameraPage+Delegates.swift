@@ -129,10 +129,37 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
             }
             
             // 进入 Composition Selected 状态并显示 Reference Image
-            enterCompositionSelectedState(with: selectedSuggestion)
+            enterCompositionSelectedStateFromSuggestion(with: selectedSuggestion)
         }
         
         configureARGuidanceFeatures(isActive)
+    }
+    
+    /// 从Show Suggestions进入Composition Selected状态
+    private func enterCompositionSelectedStateFromSuggestion(with suggestion: LMCompositionSuggestion) {
+        guard let image = UIImage(named: suggestion.similarImageUrl ?? "") else {
+            LMLogger.log("❌ Suggestion没有图片")
+            showToast("Failed to load reference image")
+            return
+        }
+        
+        // 设置当前Reference Image
+        currentReferenceImage = image
+        currentSuggestion = suggestion
+        
+        // 更新状态
+        currentCameraState = .compositionSelected
+        
+        // 隐藏Suggestions轮播
+        suggestionsCarouselView?.isHidden = true
+        
+        // 显示Reference Image（左下角）
+        // TODO: 实现Reference Image显示逻辑
+        
+        // 检测人物并显示AR引导
+        detectPersonAndShowGuidance(in: image)
+        
+        LMLogger.log("✅ 从Show Suggestions进入Composition Selected状态")
     }
     
     func cameraBottomControlsViewDidTapUnavailableARGuidance() {
