@@ -44,6 +44,13 @@ class LMCameraStreamDetectionManager: LMPersonDetectionManagerDelegate {
     
     // MARK: - Public Methods
     
+    /// 设置摄像头位置
+    /// - Parameter position: 摄像头位置（前置/后置）
+    func setCameraPosition(_ position: AVCaptureDevice.Position) {
+        personDetectionManager.currentCameraPosition = position
+        print("[Camera Stream Detection] 摄像头位置: \(position == .front ? "前置" : "后置")")
+    }
+    
     /// 设置方向匹配状态
     /// - Parameter matched: 是否匹配
     func setOrientationMatched(_ matched: Bool) {
@@ -59,6 +66,7 @@ class LMCameraStreamDetectionManager: LMPersonDetectionManagerDelegate {
     func startRealtimeDetection(from sampleBuffer: CMSampleBuffer) {
         // 检查方向是否匹配
         guard isOrientationMatched else {
+            // print("[Camera Stream Detection] ⚠️ 方向不匹配，跳过检测")
             return
         }
         
@@ -74,10 +82,12 @@ class LMCameraStreamDetectionManager: LMPersonDetectionManagerDelegate {
         if !isDetecting {
             personDetectionManager.startDetection()
             isDetecting = true
+            print("[Camera Stream Detection] ✅ 首次启动实时检测")
         }
         
         // 处理视频帧
         personDetectionManager.processVideoFrame(sampleBuffer)
+        // print("[Camera Stream Detection] 🎬 处理视频帧")
     }
     
     /// 停止实时检测

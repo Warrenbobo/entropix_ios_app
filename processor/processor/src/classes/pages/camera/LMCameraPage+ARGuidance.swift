@@ -147,6 +147,11 @@ extension LMCameraPage {
         LMLogger.log("🎯 [AR Guidance] Current arGuidanceState: \(arGuidanceState)")
         LMLogger.log("🎯 [AR Guidance] isARGuidanceActive: \(isARGuidanceActive)")
         
+        // 更新相机流检测管理器的摄像头位置
+        let cameraPosition: AVCaptureDevice.Position = isUsingFrontCamera ? .front : .back
+        cameraStreamDetectionManager.setCameraPosition(cameraPosition)
+        LMLogger.log("📷 [AR Guidance] Camera position set to: \(cameraPosition == .front ? "front" : "back")")
+        
         // 检查AR Guidance View是否存在
         guard let arGuidanceView = arGuidanceView else {
             LMLogger.log("❌ [AR Guidance] arGuidanceView is nil!")
@@ -467,6 +472,12 @@ extension LMCameraPage {
         let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
         
         LMLogger.log("📱 设备方向变化 - 当前: \(currentOrientation.rawValue), 匹配: \(isMatched)")
+        
+        // 忽略 faceUp 和 faceDown 方向（这些是不稳定的中间状态）
+        if currentOrientation == .faceUp || currentOrientation == .faceDown {
+            LMLogger.log("📱 忽略不稳定的方向: \(currentOrientation.rawValue)")
+            return
+        }
         
         // 更新 ARGuidanceView 的旋转
         updateARGuidanceViewRotation(for: currentOrientation)

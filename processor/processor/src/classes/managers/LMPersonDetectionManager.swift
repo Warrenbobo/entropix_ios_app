@@ -55,6 +55,9 @@ class LMPersonDetectionManager {
     private var lastDetectionTime: Date?
     private let detectionInterval: TimeInterval = 0.1 // 每100ms检测一次
     
+    /// 当前使用的摄像头位置（用于方向计算）
+    var currentCameraPosition: AVCaptureDevice.Position = .back
+    
     // Vision 请求
     private lazy var personDetectionRequest: VNDetectHumanRectanglesRequest = {
         let request = VNDetectHumanRectanglesRequest { [weak self] request, error in
@@ -129,11 +132,18 @@ class LMPersonDetectionManager {
     
     /// 执行检测（CVPixelBuffer）
     private func performDetection(on pixelBuffer: CVPixelBuffer) {
-        // 对于实时视频流，不设置方向信息
-        // 让 Vision 框架使用视频流的原始方向
-        // 这样检测结果的坐标系统会与相机预览层保持一致
+        // 获取设备方向并转换为 CGImagePropertyOrientation
+        let deviceOrientation = LMDeviceOrientationManager.shared.currentOrientation
+        let imageOrientation = getImageOrientation(from: deviceOrientation)
+        
+        LMLogger.log("📱 [Video Detection] Device orientation: \(deviceOrientation.rawValue)")
+        LMLogger.log("📱 [Video Detection] Image orientation: \(imageOrientation.rawValue)")
+        
+        // 为视频流设置正确的方向信息
+        // 这样 Vision 框架会根据设备方向调整检测结果的坐标系统
         let handler = VNImageRequestHandler(
             cvPixelBuffer: pixelBuffer,
+            orientation: imageOrientation,
             options: [:]
         )
         
@@ -144,6 +154,45 @@ class LMPersonDetectionManager {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.personDetectionManager(self, didFailWithError: error)
+            }
+        }
+    }
+    
+    /// 根据设备方向和摄像头位置获取图像方向
+    /// - Parameter deviceOrientation: 设备方向
+    /// - Returns: CGImagePropertyOrientation
+    private func getImageOrientation(from deviceOrientation: UIDeviceOrientation) -> CGImagePropertyOrientation {
+        // 根据摄像头位置选择不同的方向映射
+        if currentCameraPosition == .front {
+            // 前置摄像头的方向映射
+            // 前置摄像头是镜像的，需要特殊处理
+            switch deviceOrientation {
+            case .portrait:
+                return .leftMirrored
+            case .portraitUpsideDown:
+                return .rightMirrored
+            case .landscapeLeft:
+                return .downMirrored
+            case .landscapeRight:
+                return .upMirrored
+            default:
+                // 默认使用竖屏方向（镜像）
+                return .leftMirrored
+            }
+        } else {
+            // 后置摄像头的方向映射
+            switch deviceOrientation {
+            case .portrait:
+                return .right
+            case .portraitUpsideDown:
+                return .left
+            case .landscapeLeft:
+                return .up
+            case .landscapeRight:
+                return .down
+            default:
+                // 默认使用竖屏方向
+                return .right
             }
         }
     }
