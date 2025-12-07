@@ -37,6 +37,7 @@ struct LMUserModel: Codable {
     var subscriptionType: SubscriptionType
     var inspirePoints: Int
     var subscriptionExpiryDate: Date?
+    var isGuest: Bool? // Guest 用户标识
     
     // 计算到期天数
     var subscriptionExpiryDays: Int? {
@@ -62,6 +63,7 @@ struct LMUserModel: Codable {
         case inspirePoints = "inspire_points"
         case subscriptionExpiryDate = "subscription_expiry_date"
         case avatarData = "avatar_data"
+        case isGuest = "is_guest"
     }
     
     init(from decoder: Decoder) throws {
@@ -73,6 +75,7 @@ struct LMUserModel: Codable {
         subscriptionType = try container.decode(SubscriptionType.self, forKey: .subscriptionType)
         inspirePoints = try container.decode(Int.self, forKey: .inspirePoints)
         subscriptionExpiryDate = try container.decodeIfPresent(Date.self, forKey: .subscriptionExpiryDate)
+        isGuest = try container.decode(Bool.self, forKey: .isGuest)
         
         // 解码avatar
         if let avatarData = try container.decodeIfPresent(Data.self, forKey: .avatarData) {
@@ -89,7 +92,7 @@ struct LMUserModel: Codable {
         try container.encode(subscriptionType, forKey: .subscriptionType)
         try container.encode(inspirePoints, forKey: .inspirePoints)
         try container.encodeIfPresent(subscriptionExpiryDate, forKey: .subscriptionExpiryDate)
-        
+        try container.encode(isGuest, forKey: .isGuest)
         // 编码avatar
         if let avatar = avatar,
            let avatarData = avatar.pngData() {
@@ -106,7 +109,8 @@ struct LMUserModel: Codable {
         avatar: UIImage? = nil,
         subscriptionType: SubscriptionType = .free,
         inspirePoints: Int = 0,
-        subscriptionExpiryDate: Date? = nil
+        subscriptionExpiryDate: Date? = nil,
+        isGuest: Bool = true
     ) {
         self.userId = userId
         self.username = username
@@ -116,6 +120,7 @@ struct LMUserModel: Codable {
         self.subscriptionType = subscriptionType
         self.inspirePoints = inspirePoints
         self.subscriptionExpiryDate = subscriptionExpiryDate
+        self.isGuest = isGuest
     }
     
     // 从LMUserInfo转换
@@ -128,6 +133,7 @@ struct LMUserModel: Codable {
         self.subscriptionType = subscriptionType
         self.inspirePoints = inspirePoints
         self.subscriptionExpiryDate = nil
+        self.isGuest = userInfo.isGuest
     }
 }
 
@@ -139,6 +145,7 @@ struct LMUserInfo: Codable {
     let email: String
     let subscription: String?
     let membership: String?
+    let isGuest: Bool? // Guest 用户标识
     
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
@@ -146,6 +153,7 @@ struct LMUserInfo: Codable {
         case email
         case subscription
         case membership
+        case isGuest = "is_guest"
     }
     
     // 转换为LMUserModel

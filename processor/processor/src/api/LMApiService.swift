@@ -27,7 +27,8 @@ class LMApiService {
                     username: username,
                     email: email,
                     subscription: nil,
-                    membership: nil
+                    membership: nil,
+                    isGuest: false
                 )
                 var apiResponse = LMApiResponseModel<LMUserInfo>()
                 apiResponse.code = 0
@@ -282,6 +283,73 @@ class LMApiService {
             LMApi.Auth.logout,
             method: .delete,  // ✅ 使用 DELETE 方法
             type: LMEmptyModel.self,
+            completeHandler: completion
+        )
+    }
+    
+    // MARK: - Guest User APIs
+    
+    /// Guest 用户注册
+    /// - Parameters:
+    ///   - deviceId: 设备唯一标识
+    ///   - language: 语言偏好（可选）
+    ///   - completion: 完成回调
+    func registerGuest(deviceId: String, language: String? = nil, completion: @escaping (LMApiResponseModel<LMUserRegisterResponse>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testRegisterResponse = LMTestDataManager.shared.testRegisterResponse()
+                var apiResponse = LMApiResponseModel<LMUserRegisterResponse>()
+                apiResponse.code = 0
+                apiResponse.value = testRegisterResponse
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
+        var params: [String: Any] = [
+            "device_id": deviceId
+        ]
+        
+        if let language = language {
+            params["language"] = language
+        }
+        
+        LMApiClient.request(
+            LMApi.Auth.guestRegister,
+            method: .post,
+            params: params,
+            type: LMUserRegisterResponse.self,
+            completeHandler: completion
+        )
+    }
+    
+    /// Guest 用户登录
+    /// - Parameters:
+    ///   - deviceId: 设备唯一标识
+    ///   - completion: 完成回调
+    func loginGuest(deviceId: String, completion: @escaping (LMApiResponseModel<LMLoginResponse>) -> Void) {
+        // 🧪 Test Mode
+        if LMTestDataManager.shared.isTestModeEnabled {
+            LMTestDataManager.shared.executeWithDelay({ _ in
+                let testLoginResponse = LMTestDataManager.shared.testLoginResponse()
+                var apiResponse = LMApiResponseModel<LMLoginResponse>()
+                apiResponse.code = 0
+                apiResponse.value = testLoginResponse
+                completion(apiResponse)
+            }, data: ())
+            return
+        }
+        
+        let params: [String: Any] = [
+            "device_id": deviceId
+        ]
+        
+        LMApiClient.request(
+            LMApi.Auth.guestLogin,
+            method: .post,
+            params: params,
+            type: LMLoginResponse.self,
             completeHandler: completion
         )
     }

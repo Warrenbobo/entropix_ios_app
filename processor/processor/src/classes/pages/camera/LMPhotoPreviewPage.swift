@@ -404,6 +404,11 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     }
     
     @objc private func downloadButtonTapped() {
+        // 检查登录状态
+        guard requireLogin(action: "download photo to album") else {
+            return
+        }
+        
         // 检查相册权限
         checkPhotoLibraryPermission { [weak self] granted in
             guard let self = self else { return }
@@ -422,6 +427,11 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     
     @objc private func saveButtonTapped() {
         LMLogger.log("💾 Saving photo to Gallery...")
+        
+        // 检查登录状态
+        guard requireLogin(action: "save photo to Gallery") else {
+            return
+        }
         
         // Show loading indicator
         let loadingAlert = UIAlertController(title: nil, message: "Saving...", preferredStyle: .alert)

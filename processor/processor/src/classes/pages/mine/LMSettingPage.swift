@@ -239,12 +239,22 @@ extension LMSettingPage {
     }
     
     private func handleAccountProfileTapped() {
+        // 检查登录状态
+        guard requireLogin(action: "view account profile") else {
+            return
+        }
+        
         // 导航到账户资料页面
         let accountProfilePage = LMAccountProfilePage()
         navigationController?.pushViewController(accountProfilePage, animated: true)
     }
     
     private func handleNotificationTapped() {
+        // 检查登录状态
+        guard requireLogin(action: "view notifications") else {
+            return
+        }
+        
         // 导航到通知设置页面
         let notifications = LMNotificationsPage()
         navigationController?.pushViewController(notifications,

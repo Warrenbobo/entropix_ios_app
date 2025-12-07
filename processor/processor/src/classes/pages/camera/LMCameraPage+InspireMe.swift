@@ -40,6 +40,11 @@ extension LMCameraPage {
     func handleInspireMeFeature() {
         LMLogger.log("🎯 Starting Inspire Me feature...")
         
+        // 检查登录状态
+        guard requireLogin(action: "use Inspire Me feature") else {
+            return
+        }
+        
         guard validateCameraState() else {
             return
         }

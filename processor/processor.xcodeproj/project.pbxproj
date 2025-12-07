@@ -23,6 +23,7 @@
 		EA3F16702EE3DFA800B24DA8 /* LMOrientationMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F166E2EE3DFA800B24DA8 /* LMOrientationMatcher.swift */; };
 		EA3F16732EE41D8500B24DA8 /* LMDeviceOrientationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F16722EE41D8500B24DA8 /* LMDeviceOrientationManager.swift */; };
 		EA4032A22EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA4032A12EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift */; };
+		EA53553C2EE57BF100610950 /* LMAuthGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA53553B2EE57BF100610950 /* LMAuthGuard.swift */; };
 		EA54E1DB2EBEED04000DB5EE /* LMSubscriptionPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA54E1DA2EBEED04000DB5EE /* LMSubscriptionPage.swift */; };
 		EA56DD972EC02B23000AB522 /* LMPopularTagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DD962EC02B23000AB522 /* LMPopularTagView.swift */; };
 		EA56DD9A2EC076B6000AB522 /* LMSavedIdeaDetailPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DD992EC076B6000AB522 /* LMSavedIdeaDetailPage.swift */; };
@@ -157,6 +158,7 @@
 		EA3F166E2EE3DFA800B24DA8 /* LMOrientationMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMOrientationMatcher.swift; sourceTree = "<group>"; };
 		EA3F16722EE41D8500B24DA8 /* LMDeviceOrientationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDeviceOrientationManager.swift; sourceTree = "<group>"; };
 		EA4032A12EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSuggestionBoundBoxManager.swift; sourceTree = "<group>"; };
+		EA53553B2EE57BF100610950 /* LMAuthGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAuthGuard.swift; sourceTree = "<group>"; };
 		EA54E1DA2EBEED04000DB5EE /* LMSubscriptionPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionPage.swift; sourceTree = "<group>"; };
 		EA54E1DC2EBF19F5000DB5EE /* processor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = processor.entitlements; sourceTree = "<group>"; };
 		EA56DD962EC02B23000AB522 /* LMPopularTagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPopularTagView.swift; sourceTree = "<group>"; };
@@ -371,6 +373,7 @@
 		EACA1CCF2E7E49B600C80883 /* managers */ = {
 			isa = PBXGroup;
 			children = (
+				EA53553B2EE57BF100610950 /* LMAuthGuard.swift */,
 				EA3F16722EE41D8500B24DA8 /* LMDeviceOrientationManager.swift */,
 				EA3F16652EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift */,
 				EA3F16662EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift */,
@@ -873,6 +876,7 @@
 				EAFBACC62E8F69D100586EC7 /* LMUserProfileModel.swift in Sources */,
 				EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */,
 				EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */,
+				EA53553C2EE57BF100610950 /* LMAuthGuard.swift in Sources */,
 				EA86406A2ED2D24800A0CD43 /* LMPhotoStorageManager.swift in Sources */,
 				EA86406B2ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift in Sources */,
 				EA86406C2ED2D24800A0CD43 /* PhotoEntity+CoreDataClass.swift in Sources */,

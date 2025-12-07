@@ -35,6 +35,12 @@ struct LMApi {
         
         /// 用户登出
         static let logout = "/v1/auth/tokens"
+        
+        /// Guest 用户注册
+        static let guestRegister = "/v1/auth/guest/users"
+        
+        /// Guest 用户登录
+        static let guestLogin = "/v1/auth/guest/tokens"
     }
     
     // MARK: - Composition APIs

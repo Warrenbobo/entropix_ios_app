@@ -201,6 +201,11 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func avatarTapped() {
+        // 检查登录状态
+        guard requireLogin(action: "view account profile") else {
+            return
+        }
+        
         let profilePage = LMAccountProfilePage()
         navigationController?.pushViewController(profilePage, animated: true)
     }
@@ -254,6 +259,11 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func upgradeButtonTapped() {
+        // 检查登录状态
+        guard requireLogin(action: "upgrade subscription") else {
+            return
+        }
+        
         let subscription = LMSubscriptionPage()
         navigationController?.pushViewController(subscription,
                                                  animated: true)

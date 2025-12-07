@@ -37,7 +37,8 @@ class LMTestDataManager {
             username: "freeuser",
             email: "free@test.com",
             subscription: nil,
-            membership: nil
+            membership: nil,
+            isGuest: false
         )
     }
     
@@ -48,7 +49,8 @@ class LMTestDataManager {
             username: "plususer",
             email: "plus@test.com",
             subscription: "plus",
-            membership: "plus"
+            membership: "plus",
+            isGuest: false
         )
     }
     
@@ -59,7 +61,8 @@ class LMTestDataManager {
             username: "lifelonguser",
             email: "lifelong@test.com",
             subscription: "lifelong",
-            membership: "lifelong"
+            membership: "lifelong",
+            isGuest: false
         )
     }
     
