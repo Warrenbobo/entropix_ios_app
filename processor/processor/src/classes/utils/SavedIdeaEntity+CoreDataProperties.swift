@@ -23,7 +23,6 @@ extension SavedIdeaEntity {
     @NSManaged public var imagePath: String?
     @NSManaged public var imageData: Data?
     @NSManaged public var thumbnailData: Data?
-    @NSManaged public var personBoundingBoxData: String?
     @NSManaged public var rank: Int32
     @NSManaged public var confidence: Double
     @NSManaged public var savedDate: Date?

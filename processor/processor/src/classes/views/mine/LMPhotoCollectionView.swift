@@ -19,6 +19,7 @@ struct GalleryItem {
     let id: String
     let isLivePhoto: Bool
     let livePhotoVideoPath: String?
+    let imagePath: String? // 原始图片文件路径（包含元数据）
 }
 
 class LMPhotoCollectionView: UIView {

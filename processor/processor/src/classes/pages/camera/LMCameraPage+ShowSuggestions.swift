@@ -372,19 +372,11 @@ extension LMCameraPage {
     
     /// 进入 Camera with Composition Selected 状态（从 Saved Idea 进入）
     func enterCompositionSelectedStateFromSavedIdea(item: GalleryItem) {
-        // 直接进入 Composition Selected 状态，跳过 Show Suggestions
         currentCameraState = .compositionSelected
-        
-        // 隐藏 Inspire Me 按钮
         inspireMeButtonView.isHidden = true
-        
-        // 设置 AR Guidance 为可用并自动开启
+        showReferenceImageFromSavedIdea(item: item)
         cameraBottomControlsView.setARGuidanceActive(true)
         configureARGuidanceFeatures(true)
-        
-        // 显示参考图在左下角（使用 Saved Idea 的图片）
-        showReferenceImageFromSavedIdea(item: item)
-        
         LMLogger.log("📐 Entered Composition Selected state from Saved Idea - ID: \(item.id), AR Guidance auto-enabled")
     }
     
@@ -499,6 +491,7 @@ extension LMCameraPage {
     }
     
     /// 显示参考图（从 Saved Idea 进入）
+    /// 从go shrt 进入时
     func showReferenceImageFromSavedIdea(item: GalleryItem) {
         guard let containerView = referenceImageContainerView,
               let imageView = referenceImageView else {
@@ -511,6 +504,10 @@ extension LMCameraPage {
             LMLogger.log("❌ Saved Idea image is nil")
             return
         }
+        
+        // 保存当前参考图（用于 AR 引导）
+        currentReferenceImage = image
+        LMLogger.log("✅ Current reference image set from Saved Idea")
         
         // 计算图片宽高比
         let aspectRatio = image.size.width / image.size.height
@@ -621,13 +618,13 @@ extension LMCameraPage {
         // 判断导航来源
         switch navigationSource {
         case .savedIdea:
-            // 从 Saved Idea 进入，关闭参考图应该回到相机初始状态
+            // 从 Saved Idea 进入，关闭参考图应该返回到 Saved Idea 页面
+            LMLogger.log("🔙 Closing reference image from Saved Idea - navigating back")
+            
+            // 清理状态
             containerView.isHidden = true
             currentCameraState = .normal
             currentSuggestion = nil
-            
-            // 显示 Inspire Me 按钮
-            inspireMeButtonView.isHidden = false
             
             // 重置 AR Guidance 为不可用状态
             cameraBottomControlsView.resetARGuidance()
@@ -637,7 +634,15 @@ extension LMCameraPage {
                 configureARGuidanceFeatures(false)
             }
             
-            LMLogger.log("✅ Reference image hidden, returned to camera initial state (from Saved Idea), AR Guidance reset to unavailable")
+            // 清除参考图相关数据
+            referenceImageInitialOrientation = nil
+            currentReferenceImage = nil
+            currentReferenceBbox = nil
+            
+            // 返回到 Saved Idea 页面
+            navigationController?.popViewController(animated: true)
+            
+            LMLogger.log("✅ Navigated back to Saved Idea page")
             
         case .normal:
             // 从 Show Suggestions 进入，返回 Show Suggestions 状态
@@ -656,6 +661,11 @@ extension LMCameraPage {
             if isARGuidanceActive {
                 configureARGuidanceFeatures(false)
             }
+            
+            // 清除参考图初始方向（防止旋转手机时误触发AR引导）
+            referenceImageInitialOrientation = nil
+            currentReferenceImage = nil
+            currentReferenceBbox = nil
             
             // 显示构图轮播
             showSuggestionsCarousel()

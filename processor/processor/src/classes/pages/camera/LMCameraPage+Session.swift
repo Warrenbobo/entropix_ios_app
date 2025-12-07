@@ -145,6 +145,9 @@ extension LMCameraPage {
                         self.isUsingFrontCamera.toggle()
                         self.updateInspireMeButtonState()
                         
+                        // 处理AR引导状态
+                        self.handleARGuidanceOnCameraSwitch()
+                        
                         LMLogger.log("✅ Camera switched to \(self.isUsingFrontCamera ? "front" : "back")")
                     }
                 } else {

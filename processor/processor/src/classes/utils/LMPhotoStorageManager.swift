@@ -117,8 +117,8 @@ class LMPhotoStorageManager {
         }
         
         // Generate thumbnail
-        let thumbnail = generateThumbnail(from: photoData.image)
-        let thumbnailData = thumbnail?.jpegData(compressionQuality: 0.7)
+        let thumbnail = photoData.image
+        let thumbnailData = thumbnail.jpegData(compressionQuality: 0.7)
         
         // Create Core Data entity
         let photoEntity = PhotoEntity(context: context)
@@ -331,13 +331,6 @@ class LMPhotoStorageManager {
             } catch {
                 LMLogger.log("❌ Failed to delete file: \(error.localizedDescription)")
             }
-        }
-    }
-    
-    func generateThumbnail(from image: UIImage, size: CGSize = CGSize(width: 200, height: 200)) -> UIImage? {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
         }
     }
     

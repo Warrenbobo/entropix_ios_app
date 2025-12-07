@@ -169,7 +169,7 @@ extension LMCameraPage {
         // 根据图片宽高比判断初始方向
         let imageWidth = referenceImage.size.width
         let imageHeight = referenceImage.size.height
-        let isImagePortrait = imageHeight > imageWidth
+        let isImagePortrait = imageHeight >= imageWidth
         
         // 保存referenceImage的初始方向（基于图片宽高比）
         if isImagePortrait {
@@ -222,7 +222,6 @@ extension LMCameraPage {
     /// 处理AR引导状态变化
     func handleARGuidanceStateChange(from oldState: LMARGuidanceState, to newState: LMARGuidanceState) {
         LMLogger.log("📊 AR Guidance状态变化: \(oldState) -> \(newState)")
-        
         switch newState {
         case .disabled:
             stopRealtimePersonDetection()
@@ -239,6 +238,7 @@ extension LMCameraPage {
             LMLogger.log("✅ Reference检测完成，bbox: \(bbox)")
             
         case .activeGuidance:
+            isARGuidanceActive = true
             startRealtimePersonDetection()
             arGuidanceView.hideOrShowAllGuidance(false)
             
@@ -318,38 +318,13 @@ extension LMCameraPage {
             let maxCanvasSize = self.getMaxCanvasSize()
             LMLogger.log("📏 [AR Guidance] Max canvas size: \(maxCanvasSize)")
             
-            // 转换bbox坐标到画布坐标（始终使用竖向画布）
+            // 转换bbox坐标到画布坐标
+            // 注意：横向图片已在识别前旋转到竖屏方向，bbox坐标直接对应竖屏显示
             let canvasBbox = self.convertBboxToCanvas(bbox: bbox, imageSize: image.size)
             LMLogger.log("📐 [AR Guidance] Canvas bbox (body): \(canvasBbox)")
             
-            // 判断是否需要旋转（横向参考图）
-            // 注意：需要考虑图片的 EXIF 方向信息
-            let isImageLandscape: Bool
-            let imageOrientation = image.imageOrientation
-            
-            LMLogger.log("🔍 [AR Guidance] Image orientation check:")
-            LMLogger.log("  - Image width: \(image.size.width)")
-            LMLogger.log("  - Image height: \(image.size.height)")
-            LMLogger.log("  - Image orientation: \(imageOrientation.rawValue)")
-            
-            // 根据 EXIF 方向判断实际的宽高
-            switch imageOrientation {
-            case .left, .right, .leftMirrored, .rightMirrored:
-                // 图片被旋转了90度或270度，宽高需要交换
-                isImageLandscape = image.size.height > image.size.width
-                LMLogger.log("  - Orientation rotated 90°/270°, swapping width/height")
-            default:
-                // 正常方向或上下翻转
-                isImageLandscape = image.size.width > image.size.height
-            }
-            
-            LMLogger.log("  - Is landscape (final): \(isImageLandscape)")
-            
             // 使用完整的 bbox 设置白色框（位置和尺寸）
-            // 注意：对于横向图片，坐标已经在 convertBboxToCanvas 中旋转过了
             self.arGuidanceView.setReferenceBoxBounds(bbox: canvasBbox)
-            
-            LMLogger.log("ℹ️ [AR Guidance] Bbox coordinates already rotated in convertBboxToCanvas for landscape images")
             
             // 显示白色框
             self.arGuidanceView.showReferenceBox()
@@ -357,7 +332,6 @@ extension LMCameraPage {
             LMLogger.log("📍 [AR Guidance] Reference box set with bbox: \(canvasBbox)")
             LMLogger.log("📍 [AR Guidance] Center: (\(canvasBbox.midX), \(canvasBbox.midY))")
             LMLogger.log("📍 [AR Guidance] Size: (\(canvasBbox.width), \(canvasBbox.height))")
-            LMLogger.log("📍 [AR Guidance] Is landscape: \(isImageLandscape)")
             
             LMLogger.log("✅ [AR Guidance] White reference box should now be visible")
             
@@ -383,7 +357,7 @@ extension LMCameraPage {
         cameraStreamDetectionManager.setOrientationMatched(isMatched)
         
         let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
-        LMLogger.log("✅ 开始实时人物检测，方向匹配: \(isMatched) (当前: \(currentOrientation.rawValue))")
+        LMLogger.log("✅ 开始实时人物检测，方向匹配: \(isMatched) (当前: \(currentOrientation.rawValue)")
     }
     
     /// 停止实时人物检测
@@ -409,42 +383,35 @@ extension LMCameraPage {
         
         // 详细的坐标转换日志
         let maxCanvasSize = getMaxCanvasSize()
-        LMLogger.log("🔵 [Live Detection] ===== 开始坐标转换 =====")
-        LMLogger.log("🔵 [Live Detection] Vision bbox (原始): x=\(bbox.origin.x), y=\(bbox.origin.y), w=\(bbox.width), h=\(bbox.height)")
-        LMLogger.log("🔵 [Live Detection] Max canvas size: \(maxCanvasSize)")
+        var canvasBbox = convertBboxToCanvas(bbox: bbox, imageSize: CGSize.zero)
         
-        // 使用统一的坐标转换方法（包含 Y 轴翻转）
-        let canvasBbox = convertBboxToCanvas(bbox: bbox, imageSize: CGSize.zero)
+        // 应用最小尺寸限制，防止蓝色框变形
+        let minSize: CGFloat = 30.0
+        var adjustedBbox = canvasBbox
         
-        LMLogger.log("🔵 [Live Detection] Canvas bbox (转换后): x=\(canvasBbox.origin.x), y=\(canvasBbox.origin.y), w=\(canvasBbox.width), h=\(canvasBbox.height)")
-        LMLogger.log("🔵 [Live Detection] ===== 坐标转换完成 =====")
+        if canvasBbox.width < minSize {
+            // 宽度小于最小值，调整宽度并居中
+            let widthDiff = minSize - canvasBbox.width
+            adjustedBbox.origin.x = max(0, canvasBbox.origin.x - widthDiff / 2)
+            adjustedBbox.size.width = minSize
+            LMLogger.log("🔵 [Live Detection] Width adjusted: \(canvasBbox.width) -> \(minSize)")
+        }
         
-        // 判断是否需要旋转（横向参考图）
-        let isImageLandscape: Bool
-        if let referenceImage = currentReferenceImage {
-            isImageLandscape = referenceImage.size.width > referenceImage.size.height
-        } else if let initialOrientation = referenceImageInitialOrientation {
-            isImageLandscape = (initialOrientation == .landscapeLeft || initialOrientation == .landscapeRight)
-        } else {
-            isImageLandscape = false
+        if canvasBbox.height < minSize {
+            // 高度小于最小值，调整高度并居中
+            let heightDiff = minSize - canvasBbox.height
+            adjustedBbox.origin.y = max(0, canvasBbox.origin.y - heightDiff / 2)
+            adjustedBbox.size.height = minSize
+            LMLogger.log("🔵 [Live Detection] Height adjusted: \(canvasBbox.height) -> \(minSize)")
         }
         
         // 首次显示时设置位置和尺寸，后续直接更新
         if arGuidanceView.livePersonBox.isHidden {
-            // 使用完整的 bbox 设置蓝色框（位置和尺寸）
-            arGuidanceView.setLiveBoxBounds(bbox: canvasBbox)
-            
-            // 如果是横向参考图，旋转蓝色框90度
-            if isImageLandscape {
-                arGuidanceView.rotateLiveBox(angle: .pi / 2)
-                LMLogger.log("🔄 [Live Detection] Blue box rotated 90° for landscape image")
-            }
-            
+            arGuidanceView.setLiveBoxBounds(bbox: adjustedBbox)
             arGuidanceView.showLiveBox()
-            LMLogger.log("🔵 [Live Detection] Blue box shown for first time with bounds: \(canvasBbox)")
+            LMLogger.log("🔵 [Live Detection] Blue box shown for first time with bounds: \(adjustedBbox)")
         } else {
-            // 更新蓝色框的位置和尺寸
-            arGuidanceView.updateLiveBoxBounds(bbox: canvasBbox)
+            arGuidanceView.updateLiveBoxBounds(bbox: adjustedBbox)
         }
         
         // 检查对齐状态（80%重叠率）
@@ -473,51 +440,80 @@ extension LMCameraPage {
         
         LMLogger.log("📱 设备方向变化 - 当前: \(currentOrientation.rawValue), 匹配: \(isMatched)")
         
-        // 忽略 faceUp 和 faceDown 方向（这些是不稳定的中间状态）
-        if currentOrientation == .faceUp || currentOrientation == .faceDown {
-            LMLogger.log("📱 忽略不稳定的方向: \(currentOrientation.rawValue)")
-            return
-        }
-        
         // 更新 ARGuidanceView 的旋转
-        updateARGuidanceViewRotation(for: currentOrientation)
+        updateARGuidanceViewRotation(for: currentOrientation, isMatched: isMatched)
         
         handleOrientationMatchChange(isMatched: isMatched)
     }
     
     /// 根据设备方向更新 ARGuidanceView 的旋转
-    private func updateARGuidanceViewRotation(for orientation: UIDeviceOrientation) {
-        guard let referenceImage = currentReferenceImage else { return }
+    private func updateARGuidanceViewRotation(for orientation: UIDeviceOrientation, isMatched: Bool) {
+        guard isMatched else {
+            return
+        }
+        switch orientation {
+        case .landscapeRight:
+            arGuidanceView.transform = CGAffineTransform(rotationAngle: -.pi)
+        case .landscapeLeft:
+            arGuidanceView.transform = .identity
+        case .portraitUpsideDown:
+            arGuidanceView.transform = CGAffineTransform(rotationAngle: .pi)
+        case .portrait:
+            arGuidanceView.transform = .identity
+        default:
+            break
+        }
+    }
+    
+    /// 处理相机切换时的AR引导状态
+    func handleARGuidanceOnCameraSwitch() {
+        // 检查是否处于AR引导状态
+        guard arGuidanceState == .activeGuidance || arGuidanceState == .orientationMismatch else {
+            return
+        }
         
-        let isImageLandscape = referenceImage.size.width > referenceImage.size.height
-        
-        if isImageLandscape {
-            // 横向参考图
-            switch orientation {
-            case .landscapeRight:
-                // 旋转 180 度
-                LMLogger.log("🔄 [AR Guidance] Rotating ARGuidanceView 180° for landscapeRight")
-                arGuidanceView.transform = .identity
-            case .landscapeLeft:
-                // 清除 transform
-                LMLogger.log("🔄 [AR Guidance] Clearing ARGuidanceView transform for landscapeLeft")
-                arGuidanceView.transform = CGAffineTransform(rotationAngle: .pi)
-            default:
-                break
-            }
+        if isUsingFrontCamera {
+            // 切换到前置摄像头：立即隐藏AR引导
+            arGuidanceState = .orientationMismatch
+            arGuidanceView.setOrientationMatched(false)
+            stopRealtimePersonDetection()
+            arGuidanceView.hideOrShowAllGuidance(true)
+            LMLogger.log("📷 [AR Guidance] Switched to front camera - hiding AR guidance")
         } else {
-            // 竖向参考图
-            switch orientation {
-            case .portraitUpsideDown:
-                // 旋转 180 度
-                LMLogger.log("🔄 [AR Guidance] Rotating ARGuidanceView 180° for portraitUpsideDown")
-                arGuidanceView.transform = CGAffineTransform(rotationAngle: .pi)
-            case .portrait:
-                // 清除 transform
-                LMLogger.log("🔄 [AR Guidance] Clearing ARGuidanceView transform for portrait")
-                arGuidanceView.transform = .identity
-            default:
-                break
+            // 切换回后置摄像头：延迟1秒后恢复AR引导（复用方向匹配逻辑）
+            LMLogger.log("📷 [AR Guidance] Switched to back camera - will restore AR guidance in 1s")
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self = self else { return }
+                
+                // 检查是否仍然处于后置摄像头
+                guard !self.isUsingFrontCamera else {
+                    LMLogger.log("⚠️ Camera switched again, canceling AR guidance restore")
+                    return
+                }
+                
+                // 检查方向是否匹配
+                let isMatched = self.isCurrentOrientationMatched()
+                guard isMatched else {
+                    LMLogger.log("⚠️ Orientation mismatch, not restoring AR guidance")
+                    return
+                }
+                
+                // 恢复AR引导
+                if self.currentReferenceBbox != nil {
+                    // 已经检测到人物，恢复到activeGuidance状态
+                    self.arGuidanceState = .activeGuidance
+                    self.arGuidanceView.setOrientationMatched(true)
+                    self.arGuidanceView.hideOrShowAllGuidance(false)
+                    LMLogger.log("✅ [AR Guidance] Restored AR guidance after camera switch")
+                } else {
+                    // 还没有检测到人物，需要触发人物检测
+                    self.arGuidanceView.setOrientationMatched(true)
+                    LMLogger.log("✅ [AR Guidance] Starting person detection after camera switch")
+                    if let referenceImage = self.currentReferenceImage {
+                        self.detectPersonAndShowGuidance(in: referenceImage)
+                    }
+                }
             }
         }
     }
@@ -638,7 +634,7 @@ extension LMCameraPage {
     
     /// 计算最大画布尺寸（基于 reference image 的宽高比）
     /// 返回画布尺寸（始终以屏幕宽度为基准）
-    /// 参考图（无论横向还是竖向）都以图片宽度对齐屏幕宽度进行等比拉伸
+    /// 注意：横向图片已在识别前旋转到竖屏方向，因此这里的宽高比已经是旋转后的
     private func getMaxCanvasSize() -> CGSize {
         let topOffset = AppTheme.Screen.safeAreaTop + LMCameraConstants.topStatusBarHeight
         let bottomOffset = LMCameraConstants.bottomControlsHeight
@@ -677,18 +673,13 @@ extension LMCameraPage {
     }
     
     /// 将bbox坐标转换到画布坐标
-    /// 对于横向图片，需要进行坐标旋转以正确显示为垂直方向
-    /// 注意：输入的 bbox 使用 Vision 坐标系统（原点在左下角，Y轴向上）
+    /// 注意：横向图片已在识别前旋转到竖屏方向，因此bbox坐标无需旋转，直接转换即可
+    /// 输入的 bbox 使用 Vision 坐标系统（原点在左下角，Y轴向上）
     private func convertBboxToCanvas(bbox: CGRect, imageSize: CGSize) -> CGRect {
         // 使用实际画布尺寸（已根据图片宽高比计算）
         let canvasSize = getMaxCanvasSize()
         
-        // 判断是否为横向图片
-        let isImageLandscape = imageSize.width > imageSize.height
-        
         LMLogger.log("📐 [Coordinate] Converting bbox")
-        LMLogger.log("  - Image size: \(imageSize)")
-        LMLogger.log("  - Is landscape: \(isImageLandscape)")
         LMLogger.log("  - Canvas size: \(canvasSize)")
         LMLogger.log("  - Input bbox (Vision coords): \(bbox)")
         
@@ -704,31 +695,11 @@ extension LMCameraPage {
         let canvasBboxWidth = bbox.width * canvasSize.width
         let canvasBboxHeight = bbox.height * canvasSize.height
         
-        if isImageLandscape {
-            // 横向图片：需要旋转坐标使其显示为垂直
-            // 旋转90度逆时针（因为图片是横向的，需要转成竖向）
-            // 旋转公式（90度逆时针）：
-            // newX = y
-            // newY = canvasWidth - x - width
-            // newWidth = height
-            // newHeight = width
-            
-            let rotatedX = canvasY
-            let rotatedY = canvasSize.width - canvasX - canvasBboxWidth
-            let rotatedWidth = canvasBboxHeight
-            let rotatedHeight = canvasBboxWidth
-            
-            let result = CGRect(x: rotatedX, y: rotatedY, width: rotatedWidth, height: rotatedHeight)
-            LMLogger.log("📐 [Coordinate] Landscape - rotated bbox: \(result)")
-            
-            return result
-        } else {
-            // 竖向图片：正常转换
-            let result = CGRect(x: canvasX, y: canvasY, width: canvasBboxWidth, height: canvasBboxHeight)
-            LMLogger.log("📐 [Coordinate] Portrait bbox: \(result)")
-            
-            return result
-        }
+        // 横向图片已在识别前旋转，bbox坐标直接对应竖屏显示，无需旋转
+        let result = CGRect(x: canvasX, y: canvasY, width: canvasBboxWidth, height: canvasBboxHeight)
+        LMLogger.log("📐 [Coordinate] Canvas bbox: \(result)")
+        
+        return result
     }
 
     

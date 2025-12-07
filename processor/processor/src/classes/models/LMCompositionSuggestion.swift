@@ -17,7 +17,6 @@ struct LMCompositionSuggestion: Codable {
     let rank: Int
     let score: Double?
     let modelVersion: String
-    let personBoundingBox: BoundingBox?
     let aspectRatio: Double?
     
     enum CodingKeys: String, CodingKey {
@@ -30,7 +29,6 @@ struct LMCompositionSuggestion: Codable {
         case rank
         case score
         case modelVersion = "model_version"
-        case personBoundingBox = "person_bounding_box"
         case aspectRatio = "aspect_ratio"
     }
     

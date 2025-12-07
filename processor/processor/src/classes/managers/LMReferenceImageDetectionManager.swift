@@ -54,6 +54,12 @@ class LMReferenceImageDetectionManager: LMPersonDetectionManagerDelegate {
         
         print("[Reference Detection] 开始检测Reference Image中的人物")
         
+        // 判断是否为横向图片
+        let isLandscape = image.size.width > image.size.height
+        if isLandscape {
+            print("[Reference Detection] 横向图片，将旋转到竖屏方向后再识别")
+        }
+        
         // 保存完成回调和imageId
         currentCompletion = { [weak self] bbox in
             // 缓存结果
@@ -70,8 +76,9 @@ class LMReferenceImageDetectionManager: LMPersonDetectionManagerDelegate {
         }
         
         // 启动检测并处理图片
+        // 对于横向图片，先旋转到竖屏方向（home键在右侧）再识别
         personDetectionManager.startDetection()
-        personDetectionManager.processImage(image)
+        personDetectionManager.processImage(image, shouldRotateToPortrait: isLandscape)
     }
     
     /// 缓存检测结果

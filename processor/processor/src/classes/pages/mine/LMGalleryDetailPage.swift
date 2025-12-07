@@ -174,19 +174,50 @@ class LMGalleryDetailPage: UIViewController {
             make.height.equalTo(28)
         }
         
+        // 添加长按手势来播放 Live Photo
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLivePhotoLongPress(_:)))
+        longPressGesture.minimumPressDuration = 0.3
+        livePhotoView.addGestureRecognizer(longPressGesture)
+        livePhotoView.isUserInteractionEnabled = true
+        
+        LMLogger.log("✅ Live Photo view setup with long press gesture (Gallery)")
+        
         // 加载 Live Photo
         loadLivePhoto()
     }
     
+    @objc private func handleLivePhotoLongPress(_ gesture: UILongPressGestureRecognizer) {
+        LMLogger.log("👆 Long press gesture detected (Gallery) - state: \(gesture.state.rawValue)")
+        
+        guard let livePhotoView = livePhotoView else {
+            LMLogger.log("❌ livePhotoView is nil (Gallery)")
+            return
+        }
+        
+        switch gesture.state {
+        case .began:
+            LMLogger.log("🎬 Starting Live Photo playback (Gallery)")
+            livePhotoView.startPlayback(with: .full)
+            
+        case .ended, .cancelled, .failed:
+            LMLogger.log("⏸️ Stopping Live Photo playback (Gallery)")
+            livePhotoView.stopPlayback()
+            
+        default:
+            break
+        }
+    }
+    
     private func loadLivePhoto() {
         guard let videoPath = galleryItem.livePhotoVideoPath,
-              let image = galleryItem.image else {
-            LMLogger.log("❌ Missing Live Photo data")
+              let imagePath = galleryItem.imagePath else {
+            LMLogger.log("❌ Missing Live Photo data (videoPath or imagePath)")
             fallbackToStaticImage()
             return
         }
         
         let videoURL = URL(fileURLWithPath: videoPath)
+        let imageURL = URL(fileURLWithPath: imagePath)
         
         // 检查视频文件是否存在
         guard FileManager.default.fileExists(atPath: videoPath) else {
@@ -195,38 +226,25 @@ class LMGalleryDetailPage: UIViewController {
             return
         }
         
-        // 保存图片到临时文件
-        let imageURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension("jpg")
-        
-        guard let imageData = image.jpegData(compressionQuality: 1.0) else {
-            LMLogger.log("❌ Failed to convert image to JPEG")
+        // 检查图片文件是否存在
+        guard FileManager.default.fileExists(atPath: imagePath) else {
+            LMLogger.log("❌ Live Photo image file not found at: \(imagePath)")
             fallbackToStaticImage()
             return
         }
         
-        do {
-            try imageData.write(to: imageURL)
-        } catch {
-            LMLogger.log("❌ Failed to write image: \(error)")
-            fallbackToStaticImage()
-            return
-        }
-        
-        // 生成 PHLivePhoto
+        // 生成 PHLivePhoto（直接使用原始文件，保留元数据）
         LMLogger.log("🎬 Loading Live Photo from Gallery...")
+        LMLogger.log("📸 Image path: \(imagePath)")
+        LMLogger.log("📹 Video path: \(videoPath)")
+        
         PHLivePhoto.request(
             withResourceFileURLs: [imageURL, videoURL],
-            placeholderImage: image,
+            placeholderImage: galleryItem.image,
             targetSize: .zero,
             contentMode: .aspectFit
         ) { [weak self] livePhoto, info in
-            guard let self = self else {
-                // 清理临时文件
-                try? FileManager.default.removeItem(at: imageURL)
-                return
-            }
+            guard let self = self else { return }
             
             // 检查是否为降级版本
             let isDegraded = (info[PHLivePhotoInfoIsDegradedKey] as? Bool) ?? false
@@ -239,8 +257,6 @@ class LMGalleryDetailPage: UIViewController {
                 DispatchQueue.main.async {
                     self.fallbackToStaticImage()
                 }
-                // 清理临时文件
-                try? FileManager.default.removeItem(at: imageURL)
                 return
             }
             
@@ -249,13 +265,9 @@ class LMGalleryDetailPage: UIViewController {
                     self.livePhotoView?.livePhoto = livePhoto
                     if isDegraded {
                         LMLogger.log("⚠️ Live Photo loaded in Gallery (degraded version)")
-                        // 降级版本不删除临时文件，等待最终版本
                     } else {
                         LMLogger.log("✅ Live Photo loaded in Gallery (final version)")
                         LMLogger.log("📊 Live Photo size: \(livePhoto.size)")
-                        // 只在收到最终版本后清理临时文件
-                        LMLogger.log("🗑️ Cleaning up temporary image file in Gallery")
-                        try? FileManager.default.removeItem(at: imageURL)
                     }
                 }
             } else {
@@ -272,8 +284,6 @@ class LMGalleryDetailPage: UIViewController {
                     DispatchQueue.main.async {
                         self.fallbackToStaticImage()
                     }
-                    // 清理临时文件
-                    try? FileManager.default.removeItem(at: imageURL)
                 }
             }
         }
@@ -363,34 +373,47 @@ class LMGalleryDetailPage: UIViewController {
     }
     
     private func saveLivePhotoToLibrary() {
-        guard let livePhoto = livePhotoView?.livePhoto else {
-            LMLogger.log("❌ Live Photo not loaded for saving")
-            showError(message: "Live Photo not loaded")
-            return
-        }
-        
-        guard let videoPath = galleryItem.livePhotoVideoPath else {
-            LMLogger.log("❌ No video path for Live Photo")
-            showError(message: "Live Photo video not found")
+        guard let videoPath = galleryItem.livePhotoVideoPath,
+              let imagePath = galleryItem.imagePath else {
+            LMLogger.log("❌ Missing Live Photo data for saving")
+            showError(message: "Live Photo data not found")
             return
         }
         
         let videoURL = URL(fileURLWithPath: videoPath)
+        let imageURL = URL(fileURLWithPath: imagePath)
+        
+        // 检查文件是否存在
+        guard FileManager.default.fileExists(atPath: videoPath) else {
+            LMLogger.log("❌ Live Photo video file not found at: \(videoPath)")
+            showError(message: "Live Photo video not found")
+            return
+        }
+        
+        guard FileManager.default.fileExists(atPath: imagePath) else {
+            LMLogger.log("❌ Live Photo image file not found at: \(imagePath)")
+            showError(message: "Live Photo image not found")
+            return
+        }
         
         LMLogger.log("📹 Saving Live Photo to library from Gallery...")
+        LMLogger.log("📸 Image path: \(imagePath)")
+        LMLogger.log("📹 Video path: \(videoPath)")
         
         PHPhotoLibrary.shared().performChanges({
             let creationRequest = PHAssetCreationRequest.forAsset()
             
-            // 添加图片资源
-            if let imageData = self.galleryItem.image?.jpegData(compressionQuality: 1.0) {
-                creationRequest.addResource(with: .photo, data: imageData, options: nil)
-            }
+            // 使用原始图片文件（包含 Live Photo 元数据）
+            let imageOptions = PHAssetResourceCreationOptions()
+            imageOptions.shouldMoveFile = false
+            creationRequest.addResource(with: .photo, fileURL: imageURL, options: imageOptions)
             
-            // 添加视频资源
+            // 添加配对视频资源
             let videoOptions = PHAssetResourceCreationOptions()
             videoOptions.shouldMoveFile = false
             creationRequest.addResource(with: .pairedVideo, fileURL: videoURL, options: videoOptions)
+            
+            LMLogger.log("✅ Live Photo resources added to creation request")
             
         }) { [weak self] success, error in
             DispatchQueue.main.async {
@@ -398,7 +421,10 @@ class LMGalleryDetailPage: UIViewController {
                     LMLogger.log("✅ Live Photo saved to library successfully")
                     self?.showSuccessIndicator()
                 } else if let error = error {
+                    let nsError = error as NSError
                     LMLogger.log("❌ Failed to save Live Photo: \(error.localizedDescription)")
+                    LMLogger.log("❌ Error code: \(nsError.code), domain: \(nsError.domain)")
+                    LMLogger.log("❌ Error info: \(nsError.userInfo)")
                     self?.showError(message: "Failed to save: \(error.localizedDescription)")
                 }
             }

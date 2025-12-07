@@ -503,17 +503,40 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
         LMLogger.log("📹 Image size: \(photoData.image.size)")
         LMLogger.log("📹 Video path: \(videoURL.path)")
         
-        // 方案：先保存静态图片，Live Photo 功能在相册中可能无法完美保留
-        // 因为 AVCapturePhotoOutput 生成的视频需要特定的元数据才能被识别为 Live Photo
-        // 这是 iOS 的限制，需要在拍摄时就正确配置
-        
-        LMLogger.log("⚠️ Saving as static image (Live Photo metadata may not be preserved)")
-        UIImageWriteToSavedPhotosAlbum(
-            photoData.image,
-            self,
-            #selector(image(_:didFinishSavingWithError:contextInfo:)),
-            nil
-        )
+        // 使用 PHAssetCreationRequest 保存 Live Photo
+        PHPhotoLibrary.shared().performChanges({
+            let creationRequest = PHAssetCreationRequest.forAsset()
+            
+            // 添加图片资源（优先使用原始数据以保留元数据）
+            if let imageData = self.photoData.imageData {
+                creationRequest.addResource(with: .photo, data: imageData, options: nil)
+                LMLogger.log("✅ Using original image data with metadata")
+            } else if let imageData = self.photoData.image.jpegData(compressionQuality: 1.0) {
+                creationRequest.addResource(with: .photo, data: imageData, options: nil)
+                LMLogger.log("⚠️ Using JPEG encoded data (metadata may be lost)")
+            }
+            
+            // 添加配对视频资源
+            let videoOptions = PHAssetResourceCreationOptions()
+            videoOptions.shouldMoveFile = false
+            creationRequest.addResource(with: .pairedVideo, fileURL: videoURL, options: videoOptions)
+            
+            LMLogger.log("📹 Adding paired video resource")
+            
+        }) { [weak self] success, error in
+            DispatchQueue.main.async {
+                if success {
+                    LMLogger.log("✅ Live Photo saved to library successfully")
+                    self?.showSuccessIndicator()
+                } else if let error = error {
+                    LMLogger.log("❌ Failed to save Live Photo: \(error.localizedDescription)")
+                    self?.showError(message: "Failed to save: \(error.localizedDescription)")
+                } else {
+                    LMLogger.log("❌ Failed to save Live Photo: Unknown error")
+                    self?.showError(message: "Failed to save Live Photo")
+                }
+            }
+        }
     }
     
     @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {

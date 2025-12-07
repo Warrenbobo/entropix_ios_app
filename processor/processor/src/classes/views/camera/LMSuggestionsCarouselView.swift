@@ -90,6 +90,9 @@ class LMSuggestionsCarouselView: UIView {
     func updateSuggestions(_ suggestions: [LMCompositionSuggestion]) {
         self.suggestions = suggestions
         
+        // 加载已保存的 Saved Ideas ID 集合
+        loadSavedIdeaIds()
+        
         // 清除旧的 card views
         cardViews.forEach { $0.removeFromSuperview() }
         cardViews.removeAll()
@@ -115,6 +118,13 @@ class LMSuggestionsCarouselView: UIView {
                 )
             }
         }
+    }
+    
+    /// 加载已保存的 Saved Ideas ID 集合
+    private func loadSavedIdeaIds() {
+        let savedIdeas = LMPhotoStorageManager.shared.fetchAllSavedIdeas()
+        favoriteSuggestionIds = Set(savedIdeas.compactMap { $0.id })
+        LMLogger.log("💡 Loaded \(favoriteSuggestionIds.count) saved idea IDs")
     }
     
     func selectSuggestion(at index: Int, animated: Bool = true) {
@@ -165,7 +175,6 @@ class LMSuggestionsCarouselView: UIView {
             rank: suggestions.count + 1,
             score: nil,
             modelVersion: "v1.0",
-            personBoundingBox: nil,
             aspectRatio: nil
         )
         suggestions.append(generatingSuggestion)
@@ -513,19 +522,14 @@ extension LMSuggestionsCarouselView: UIGestureRecognizerDelegate {
         // Pan 手势：只在卡片上生效
         if let panGesture = gestureRecognizer as? UIPanGestureRecognizer {
             guard gestureRecognizer.view is LMSuggestionCardView else { return false }
-            
             // 检查是否为向上的拖动
             let velocity = panGesture.velocity(in: self)
-            let translation = panGesture.translation(in: self)
-            
             // 如果是明显的横向滑动，不触发（让 scrollView 处理）
             if abs(velocity.x) > abs(velocity.y) * 2 {
                 return false
             }
-            
             return true
         }
-        
         // Tap 手势：总是允许
         if gestureRecognizer is UITapGestureRecognizer {
             return true
@@ -549,15 +553,12 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
     func suggestionCardView(_ cardView: LMSuggestionCardView, didToggleFavorite isFavorite: Bool) {
         // 通过 tag 获取 index
         let index = cardView.tag
-        
         guard index >= 0 && index < suggestions.count else { return }
-        
         let suggestion = suggestions[index]
-        
         // 更新收藏状态
         if isFavorite {
             favoriteSuggestionIds.insert(suggestion.id)
-            saveSuggestionAsIdea(suggestion: suggestion)
+            saveSuggestionAsIdea(suggestion: suggestion, image: cardView.displayedImage)
         } else {
             favoriteSuggestionIds.remove(suggestion.id)
             removeSavedIdea(suggestionId: suggestion.id)
@@ -567,68 +568,15 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
     }
     
     /// 保存构图方案为 Saved Idea
-    private func saveSuggestionAsIdea(suggestion: LMCompositionSuggestion) {
-        // 使用 LMPhotoStorageManager 保存
-        let manager = LMPhotoStorageManager.shared
-        
-        // 优先使用 similarImageUrl，然后使用 imageUrl
-        if let imageURL = suggestion.similarImageUrl ?? suggestion.imageUrl {
-            // 异步下载图片并保存
-            downloadAndSaveIdea(suggestion: suggestion, imageURL: imageURL)
-        } else {
-            // 没有图片，只保存元数据
-            manager.saveSuggestionAsIdea(suggestion: suggestion, image: nil)
-            LMLogger.log("💾 Saved idea without image: \(suggestion.id)")
-        }
-        
-        // 显示成功提示
-        showSaveSuccessToast()
-    }
-    
-    /// 下载图片并保存 Idea
-    private func downloadAndSaveIdea(suggestion: LMCompositionSuggestion, imageURL: String) {
-        guard let url = URL(string: imageURL) else { return }
-        
-        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-            guard let data = data, let image = UIImage(data: data) else {
-                LMLogger.log("❌ Failed to download idea image: \(error?.localizedDescription ?? "Unknown error")")
-                // 即使下载失败，也保存元数据
-                DispatchQueue.main.async {
-                    LMPhotoStorageManager.shared.saveSuggestionAsIdea(suggestion: suggestion, image: nil)
-                }
-                return
-            }
-            
-            DispatchQueue.main.async {
-                LMPhotoStorageManager.shared.saveSuggestionAsIdea(suggestion: suggestion, image: image)
-                LMLogger.log("💾 Saved idea with downloaded image: \(suggestion.id)")
-            }
-        }.resume()
+    private func saveSuggestionAsIdea(suggestion: LMCompositionSuggestion, image: UIImage? = nil) {
+        LMPhotoStorageManager.shared.saveSuggestionAsIdea(suggestion: suggestion, image: image)
+        LMLogger.log("💾 Saved idea without image: \(suggestion.id)")
     }
     
     /// 删除已保存的 Idea
     private func removeSavedIdea(suggestionId: String) {
-        let manager = LMPhotoStorageManager.shared
-        manager.deleteSavedIdea(byId: suggestionId)
+        LMPhotoStorageManager.shared.deleteSavedIdea(byId: suggestionId)
         LMLogger.log("🗑️ Removed saved idea: \(suggestionId)")
-        
-        // 显示删除提示
-        showRemoveSuccessToast()
     }
-    
-    /// 显示保存成功提示
-    private func showSaveSuccessToast() {
-        if let window = LMPackageManager.window {
-            window.makeToast("Saved to your collection", position: .center)
-        }
-    }
-    
-    /// 显示删除成功提示
-    private func showRemoveSuccessToast() {
-        if let window = LMPackageManager.window {
-            window.makeToast("Removed from collection", position: .center)
-        }
-    }
-    
 
 }

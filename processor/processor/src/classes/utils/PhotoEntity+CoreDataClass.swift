@@ -48,7 +48,8 @@ public class PhotoEntity: NSManagedObject {
             title: title,
             id: id,
             isLivePhoto: isLivePhoto,
-            livePhotoVideoPath: livePhotoVideoPath
+            livePhotoVideoPath: livePhotoVideoPath,
+            imagePath: imagePath
         )
     }
 }

@@ -38,23 +38,7 @@ extension LMPhotoStorageManager {
         // Generate thumbnail
         var thumbnailData: Data?
         if let img = image {
-            let thumbnail = generateThumbnail(from: img)
-            thumbnailData = thumbnail?.jpegData(compressionQuality: 0.7)
-        }
-        
-        // Convert bounding box to JSON string
-        var boundingBoxString: String?
-        if let bbox = suggestion.personBoundingBox {
-            let dict: [String: Any] = [
-                "x": bbox.x,
-                "y": bbox.y,
-                "width": bbox.width,
-                "height": bbox.height
-            ]
-            if let jsonData = try? JSONSerialization.data(withJSONObject: dict),
-               let jsonString = String(data: jsonData, encoding: .utf8) {
-                boundingBoxString = jsonString
-            }
+            thumbnailData = img.jpegData(compressionQuality: 1)
         }
         
         // Create Core Data entity
@@ -66,10 +50,8 @@ extension LMPhotoStorageManager {
         ideaEntity.imageUrl = suggestion.imageUrl
         ideaEntity.imagePath = imagePath
         ideaEntity.thumbnailData = thumbnailData
-        ideaEntity.personBoundingBoxData = boundingBoxString
         ideaEntity.rank = Int32(suggestion.rank)
         ideaEntity.confidence = suggestion.score ?? 0.0
-//        ideaEntity.aspectRatio = suggestion.getAspectRatio()
         ideaEntity.savedDate = timestamp
         ideaEntity.isSynced = false
         ideaEntity.isMarkedDeleted = false

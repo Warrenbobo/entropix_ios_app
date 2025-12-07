@@ -52,10 +52,14 @@ class LMCameraStreamDetectionManager: LMPersonDetectionManagerDelegate {
     }
     
     /// 设置方向匹配状态
-    /// - Parameter matched: 是否匹配
+    /// - Parameters:
+    ///   - matched: 是否匹配
+    ///   - isLandscapeReference: 是否为横向引导图模式
     func setOrientationMatched(_ matched: Bool) {
         isOrientationMatched = matched
-        if !matched {
+        if matched {
+            restartRealtimeDetection()
+        } else {
             stopRealtimeDetection()
         }
         print("[Camera Stream Detection] 方向匹配状态: \(matched)")
@@ -86,6 +90,7 @@ class LMCameraStreamDetectionManager: LMPersonDetectionManagerDelegate {
         }
         
         // 处理视频帧
+        // 如果是横向引导图模式，强制使用竖屏方向，使bbox坐标与白色框一致
         personDetectionManager.processVideoFrame(sampleBuffer)
         // print("[Camera Stream Detection] 🎬 处理视频帧")
     }
@@ -97,7 +102,14 @@ class LMCameraStreamDetectionManager: LMPersonDetectionManagerDelegate {
             isDetecting = false
         }
         lastDetectionTime = 0
-        print("[Camera Stream Detection] 停止实时检测")
+        LMLogger.log("[Camera Stream Detection] 停止实时检测")
+    }
+    
+    func restartRealtimeDetection() {
+        if !isDetecting {
+            personDetectionManager.startDetection()
+        }
+        LMLogger.log("[Camera Stream Detection] 恢复实时检测")
     }
     
     /// 重置检测状态

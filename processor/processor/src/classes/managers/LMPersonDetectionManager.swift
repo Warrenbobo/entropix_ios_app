@@ -90,7 +90,8 @@ class LMPersonDetectionManager {
     }
     
     /// 处理视频帧进行人物检测
-    /// - Parameter sampleBuffer: 视频帧
+    /// - Parameters:
+    ///   - sampleBuffer: 视频帧
     func processVideoFrame(_ sampleBuffer: CMSampleBuffer) {
         guard isDetecting else { return }
         
@@ -114,8 +115,10 @@ class LMPersonDetectionManager {
     }
     
     /// 处理静态图像进行人物检测
-    /// - Parameter image: 待检测的图像
-    func processImage(_ image: UIImage) {
+    /// - Parameters:
+    ///   - image: 待检测的图像
+    ///   - shouldRotateToPortrait: 是否需要将横向图片旋转到竖屏方向（home键在右侧）
+    func processImage(_ image: UIImage, shouldRotateToPortrait: Bool = false) {
         guard isDetecting else { return }
         
         guard let cgImage = image.cgImage else {
@@ -124,8 +127,78 @@ class LMPersonDetectionManager {
         }
         
         detectionQueue.async { [weak self] in
+            if shouldRotateToPortrait {
+                // 检查是否为横向图片
+                let isLandscape = image.size.width > image.size.height
+                if isLandscape {
+                    LMLogger.log("🔄 [Image Detection] Landscape image detected, rotating to portrait (home button on right)")
+                    // 旋转图片到竖屏方向（逆时针90度，home键在右侧）
+                    if let rotatedImage = self?.rotateImageToPortrait(cgImage) {
+                        self?.performDetection(on: rotatedImage)
+                        return
+                    }
+                }
+            }
+            
+            // 不需要旋转或旋转失败，使用原图
             self?.performDetection(on: cgImage)
         }
+    }
+    
+    /// 将横向图片旋转到竖屏方向（逆时针90度，home键在右侧）
+    /// - Parameter cgImage: 原始CGImage
+    /// - Returns: 旋转后的CGImage
+    private func rotateImageToPortrait(_ cgImage: CGImage) -> CGImage? {
+        let width = cgImage.width
+        let height = cgImage.height
+        
+        // 创建旋转后的尺寸（宽高互换）
+        let rotatedWidth = height
+        let rotatedHeight = width
+        
+        // 创建位图上下文
+        let colorSpace = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = cgImage.bitmapInfo.rawValue
+        
+        guard let context = CGContext(
+            data: nil,
+            width: rotatedWidth,
+            height: rotatedHeight,
+            bitsPerComponent: cgImage.bitsPerComponent,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo
+        ) else {
+            LMLogger.log("❌ Failed to create CGContext for rotation")
+            return nil
+        }
+        
+        // 移动到中心点
+        context.translateBy(x: CGFloat(rotatedWidth) / 2, y: CGFloat(rotatedHeight) / 2)
+        
+        // 逆时针旋转90度（-π/2）
+        context.rotate(by: -.pi / 2)
+        
+        // 绘制图片（从中心点偏移）
+        context.draw(
+            cgImage,
+            in: CGRect(
+                x: -CGFloat(width) / 2,
+                y: -CGFloat(height) / 2,
+                width: CGFloat(width),
+                height: CGFloat(height)
+            )
+        )
+        
+        // 获取旋转后的图片
+        guard let rotatedCGImage = context.makeImage() else {
+            LMLogger.log("❌ Failed to create rotated CGImage")
+            return nil
+        }
+        
+        LMLogger.log("✅ [Image Detection] Image rotated: \(width)x\(height) -> \(rotatedWidth)x\(rotatedHeight)")
+        
+        return rotatedCGImage
     }
     
     // MARK: - Private Methods
@@ -134,21 +207,18 @@ class LMPersonDetectionManager {
     private func performDetection(on pixelBuffer: CVPixelBuffer) {
         // 获取设备方向并转换为 CGImagePropertyOrientation
         let deviceOrientation = LMDeviceOrientationManager.shared.currentOrientation
-        let imageOrientation = getImageOrientation(from: deviceOrientation)
-        
-        LMLogger.log("📱 [Video Detection] Device orientation: \(deviceOrientation.rawValue)")
-        LMLogger.log("📱 [Video Detection] Image orientation: \(imageOrientation.rawValue)")
-        
-        // 为视频流设置正确的方向信息
-        // 这样 Vision 框架会根据设备方向调整检测结果的坐标系统
+        let imageOrientation: CGImagePropertyOrientation
+        guard deviceOrientation != .faceDown && deviceOrientation != .faceDown && deviceOrientation != .unknown else {
+            // 过滤其他方向，防止出现识别错误
+            return
+        }
+        imageOrientation = getImageOrientation(from: deviceOrientation)
         let handler = VNImageRequestHandler(
             cvPixelBuffer: pixelBuffer,
             orientation: imageOrientation,
             options: [:]
         )
-        
         do {
-            // 仅执行人体检测（人脸检测已禁用）
             try handler.perform([personDetectionRequest])
         } catch {
             DispatchQueue.main.async { [weak self] in
@@ -162,36 +232,30 @@ class LMPersonDetectionManager {
     /// - Parameter deviceOrientation: 设备方向
     /// - Returns: CGImagePropertyOrientation
     private func getImageOrientation(from deviceOrientation: UIDeviceOrientation) -> CGImagePropertyOrientation {
-        // 根据摄像头位置选择不同的方向映射
         if currentCameraPosition == .front {
-            // 前置摄像头的方向映射
-            // 前置摄像头是镜像的，需要特殊处理
             switch deviceOrientation {
             case .portrait:
                 return .leftMirrored
             case .portraitUpsideDown:
                 return .rightMirrored
             case .landscapeLeft:
-                return .downMirrored
-            case .landscapeRight:
                 return .upMirrored
+            case .landscapeRight:
+                return .downMirrored
             default:
-                // 默认使用竖屏方向（镜像）
                 return .leftMirrored
             }
         } else {
-            // 后置摄像头的方向映射
             switch deviceOrientation {
             case .portrait:
                 return .right
             case .portraitUpsideDown:
                 return .left
             case .landscapeLeft:
-                return .up
+                return .right
             case .landscapeRight:
-                return .down
+                return .left
             default:
-                // 默认使用竖屏方向
                 return .right
             }
         }

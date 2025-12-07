@@ -167,7 +167,6 @@ class LMTestDataManager {
                 rank: i,
                 score: Double.random(in: 0.7...0.95),
                 modelVersion: "v1.0",
-                personBoundingBox: generateRandomPersonBoundingBox(),
                 aspectRatio: aspectRatio
             ))
         }
@@ -191,7 +190,6 @@ class LMTestDataManager {
                     rank: position + 1,
                     score: nil,
                     modelVersion: "v1.0",
-                    personBoundingBox: nil,
                     aspectRatio: aspectRatio
                 ), at: position)
             }
@@ -307,7 +305,6 @@ class LMTestDataManager {
                 rank: i * 4, // 4, 8, 12
                 score: Double.random(in: 0.85...0.95),
                 modelVersion: "v1.0",
-                personBoundingBox: generateRandomPersonBoundingBox(),
                 aspectRatio: aspectRatio
             ))
         }

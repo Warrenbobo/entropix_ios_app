@@ -15,6 +15,10 @@ protocol LMSuggestionCardViewDelegate: AnyObject {
 
 class LMSuggestionCardView: UIView {
     
+    public var displayedImage: UIImage? {
+        return imageView.image
+    }
+    
     // MARK: - UI Components
     private let backgroundImageView = UIImageView() // 底层：拉伸填充
     private let blurEffectView: UIVisualEffectView = {

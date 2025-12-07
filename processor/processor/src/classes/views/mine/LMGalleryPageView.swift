@@ -267,6 +267,7 @@ class LMGalleryCollectionViewCell: UICollectionViewCell {
         contentView.addSubview(imageView)
         contentView.addSubview(overlayView)
         
+        
         // Image View Setup
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true

@@ -320,6 +320,12 @@
 		EA3F166F2EE3DFA800B24DA8 /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				EA86406D2ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift */,
+				EA86406E2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift */,
+				EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */,
+				EA8640632ED2D24800A0CD43 /* LMPhotoStorageManager.swift */,
+				EA8640642ED2D24800A0CD43 /* PhotoEntity+CoreDataClass.swift */,
+				EA8640652ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift */,
 				EA3F166E2EE3DFA800B24DA8 /* LMOrientationMatcher.swift */,
 			);
 			path = utils;
@@ -342,19 +348,6 @@
 				EA58354C2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift */,
 			);
 			path = debug;
-			sourceTree = "<group>";
-		};
-		EA8640672ED2D24800A0CD43 /* storage */ = {
-			isa = PBXGroup;
-			children = (
-				EA86406D2ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift */,
-				EA86406E2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift */,
-				EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */,
-				EA8640632ED2D24800A0CD43 /* LMPhotoStorageManager.swift */,
-				EA8640642ED2D24800A0CD43 /* PhotoEntity+CoreDataClass.swift */,
-				EA8640652ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift */,
-			);
-			path = storage;
 			sourceTree = "<group>";
 		};
 		EACA1BE82E7E408900C80883 = {
@@ -474,7 +467,6 @@
 			isa = PBXGroup;
 			children = (
 				EA3F166F2EE3DFA800B24DA8 /* utils */,
-				EA8640672ED2D24800A0CD43 /* storage */,
 				EACA1CCF2E7E49B600C80883 /* managers */,
 				EACA1CD12E7E49B600C80883 /* models */,
 				EACA1CD32E7E49B600C80883 /* pages */,
