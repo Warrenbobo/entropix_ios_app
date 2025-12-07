@@ -147,6 +147,7 @@ class LMMembershipCardView: UIView {
         watchAdsButton.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         watchAdsButton.layer.cornerRadius = 16
         watchAdsButton.addTarget(self, action: #selector(watchAdsButtonTapped), for: .touchUpInside)
+        watchAdsButton.isHidden = true
         
         // Add shadow to card
         layer.shadowColor = UIColor.black.cgColor

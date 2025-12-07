@@ -144,34 +144,17 @@ class LMCameraPage: LMPageWrapper {
         if status == .authorized {
             startCameraSession()
         }
-        
         // 如果当前处于 compositionSelected 状态（有参考图），延迟1秒后恢复 AR 引导 UI
-        if currentCameraState == .compositionSelected {
+        if arGuidanceState == .paused {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                self.arGuidanceState = .activeGuidance
+                LMLogger.log("🎯 Resuming AR guidance UI after preview return (already in activeGuidance)")
+            }
             LMLogger.log("📸 Returning to camera with reference image")
             LMLogger.log("📸 Current reference image exists: \(currentReferenceImage != nil)")
             LMLogger.log("📸 AR button state: \(cameraBottomControlsView.isARGuidanceActive())")
             LMLogger.log("📸 isARGuidanceActive: \(isARGuidanceActive)")
             LMLogger.log("📸 arGuidanceState: \(arGuidanceState)")
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                guard let self = self else { return }
-                
-                // 检查状态是否保持
-                if self.currentCameraState == .compositionSelected,
-                   self.currentReferenceImage != nil,
-                   self.isARGuidanceActive,
-                   self.arGuidanceState == .activeGuidance {
-                    
-                    LMLogger.log("🎯 Resuming AR guidance UI after preview return")
-                    
-                    // 只需要显示 UI，检测会自动继续（因为状态保持）
-                    self.arGuidanceView.hideOrShowAllGuidance(false)
-                    
-                    LMLogger.log("✅ AR guidance UI restored")
-                } else {
-                    LMLogger.log("⚠️ AR guidance state changed - state: \(self.currentCameraState), hasImage: \(self.currentReferenceImage != nil), isActive: \(self.isARGuidanceActive), arState: \(self.arGuidanceState)")
-                }
-            }
         }
     }
     
@@ -180,7 +163,7 @@ class LMCameraPage: LMPageWrapper {
         stopCameraSession()
         
         // 只是临时暂停 AR 引导，不完全清理（用户可能从预览页返回）
-        cleanupARGuidance()
+        pauseARGuidance()
         
         // 停止设备方向检测
         LMDeviceOrientationManager.shared.stopMonitoring()

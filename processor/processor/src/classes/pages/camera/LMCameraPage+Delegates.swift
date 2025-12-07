@@ -242,23 +242,8 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
     
     /// 根据设备方向和相机位置获取正确的图片方向
     private func getImageOrientation() -> UIImage.Orientation {
-        let deviceOrientation = UIDevice.current.orientation
         let isFrontCamera = isUsingFrontCamera
-        
-        // 根据设备方向和相机位置确定图片方向
-        switch deviceOrientation {
-        case .portrait:
-            return isFrontCamera ? .leftMirrored : .right
-        case .portraitUpsideDown:
-            return isFrontCamera ? .rightMirrored : .left
-        case .landscapeLeft:
-            return isFrontCamera ? .downMirrored : .up
-        case .landscapeRight:
-            return isFrontCamera ? .upMirrored : .down
-        default:
-            // 默认竖屏方向
-            return isFrontCamera ? .leftMirrored : .right
-        }
+        return isFrontCamera ? .leftMirrored : .right
     }
     
     func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {

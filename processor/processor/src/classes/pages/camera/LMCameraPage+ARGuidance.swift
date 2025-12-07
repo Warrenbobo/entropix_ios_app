@@ -13,10 +13,11 @@ import Vision
 
 /// AR引导状态
 enum LMARGuidanceState: Equatable {
-    case disabled                          // 未启用
+    case disabled                          // 未启用（未进入 compositionSelected 状态）
     case waitingForReferenceDetection      // 等待Reference Image检测
     case referenceDetected(bbox: CGRect)   // Reference Image检测完成
     case activeGuidance                    // AR引导激活中
+    case paused                            // 暂停状态（用户进入预览页等场景，保留所有状态以便恢复）
     case orientationMismatch               // 方向不匹配
     case error(Error)                      // 错误状态
     
@@ -30,6 +31,8 @@ enum LMARGuidanceState: Equatable {
         case (.referenceDetected(let bbox1), .referenceDetected(let bbox2)):
             return bbox1 == bbox2
         case (.activeGuidance, .activeGuidance):
+            return true
+        case (.paused, .paused):
             return true
         case (.orientationMismatch, .orientationMismatch):
             return true
@@ -72,7 +75,6 @@ extension LMCameraPage {
         // 创建AR引导视图
         if arGuidanceView == nil {
             arGuidanceView = LMARGuidanceView(frame: .zero)
-            // 直接添加到 previewCanvasView，确保坐标系统一致
             previewCanvasView.addSubview(arGuidanceView)
             
             LMLogger.log("✅ AR Guidance View已添加到 previewCanvasView")
@@ -80,14 +82,12 @@ extension LMCameraPage {
         
         // 创建检测管理器（每个管理器使用独立的 PersonDetectionManager 实例）
         if referenceImageDetectionManager == nil {
-            // 为 Reference Image 检测创建独立的 PersonDetectionManager
             let referenceDetector = LMPersonDetectionManager()
             referenceImageDetectionManager = LMReferenceImageDetectionManager(personDetectionManager: referenceDetector)
             LMLogger.log("✅ Reference Image Detection Manager 已创建（独立实例）")
         }
         
         if cameraStreamDetectionManager == nil {
-            // 为实时流检测创建独立的 PersonDetectionManager
             let streamDetector = LMPersonDetectionManager()
             cameraStreamDetectionManager = LMCameraStreamDetectionManager(personDetectionManager: streamDetector)
             
@@ -222,10 +222,8 @@ extension LMCameraPage {
         case .disabled:
             stopRealtimePersonDetection()
             arGuidanceView.hideOrShowAllGuidance(true)
-            // 注意：不清除 currentReferenceImage 和 currentReferenceBbox
-            // 因为用户可能从预览页返回，需要保持这些引用以便恢复 AR 引导
-            // currentReferenceImage = nil
-            // currentReferenceBbox = nil
+            currentReferenceImage = nil
+            currentReferenceBbox = nil
             
         case .waitingForReferenceDetection:
             // TODO: 显示检测中的提示（使用Toast或加载动画）
@@ -237,6 +235,13 @@ extension LMCameraPage {
             
         case .activeGuidance:
             startRealtimePersonDetection()
+            arGuidanceView.hideOrShowAllGuidance(false)
+            
+        case .paused:
+            // 暂停状态：隐藏UI，但保留所有状态和检测器
+            stopRealtimePersonDetection()
+            arGuidanceView.hideOrShowAllGuidance(true)
+            LMLogger.log("⏸️ AR引导已暂停（保留所有状态）")
             
         case .orientationMismatch:
             stopRealtimePersonDetection()
@@ -406,13 +411,7 @@ extension LMCameraPage {
         // 使用统一的坐标转换方法（包含 Y 轴翻转）
         let canvasBbox = convertBboxToCanvas(bbox: bbox, imageSize: CGSize.zero)
         
-        // 计算中心点位置
-        let centerX = canvasBbox.midX
-        let centerY = canvasBbox.midY
-        let position = CGPoint(x: centerX, y: centerY)
-        
         LMLogger.log("🔵 [Live Detection] Canvas bbox (转换后): x=\(canvasBbox.origin.x), y=\(canvasBbox.origin.y), w=\(canvasBbox.width), h=\(canvasBbox.height)")
-        LMLogger.log("🔵 [Live Detection] Center position: x=\(position.x), y=\(position.y)")
         LMLogger.log("🔵 [Live Detection] ===== 坐标转换完成 =====")
         
         // 判断是否需要旋转（横向参考图）
@@ -425,9 +424,10 @@ extension LMCameraPage {
             isImageLandscape = false
         }
         
-        // 首次显示时设置位置，后续直接更新center
+        // 首次显示时设置位置和尺寸，后续直接更新
         if arGuidanceView.livePersonBox.isHidden {
-            arGuidanceView.setLiveBoxPosition(position: position)
+            // 使用完整的 bbox 设置蓝色框（位置和尺寸）
+            arGuidanceView.setLiveBoxBounds(bbox: canvasBbox)
             
             // 如果是横向参考图，旋转蓝色框90度
             if isImageLandscape {
@@ -436,9 +436,10 @@ extension LMCameraPage {
             }
             
             arGuidanceView.showLiveBox()
-            LMLogger.log("🔵 [Live Detection] Blue box shown for first time")
+            LMLogger.log("🔵 [Live Detection] Blue box shown for first time with bounds: \(canvasBbox)")
         } else {
-            arGuidanceView.moveLiveBoxToPosition(position: position)
+            // 更新蓝色框的位置和尺寸
+            arGuidanceView.updateLiveBoxBounds(bbox: canvasBbox)
         }
         
         // 检查对齐状态（80%重叠率）
@@ -518,9 +519,7 @@ extension LMCameraPage {
                 LMLogger.log("✅ 方向匹配 - 将在1秒后恢复AR引导")
                 
                 // 延迟1秒后恢复
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                    guard let self = self else { return }
-                    
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                     // 再次检查方向是否仍然匹配（避免快速旋转导致的误恢复）
                     let stillMatched = self.isCurrentOrientationMatched()
                     guard stillMatched else {
@@ -539,7 +538,6 @@ extension LMCameraPage {
                         // 还没有检测到人物，需要触发人物检测
                         self.arGuidanceView.setOrientationMatched(true)
                         LMLogger.log("✅ 方向匹配恢复 - 开始人物检测")
-                        
                         // 触发人物检测
                         if let referenceImage = self.currentReferenceImage {
                             self.detectPersonAndShowGuidance(in: referenceImage)
@@ -782,24 +780,26 @@ extension LMCameraPage {
     
     // MARK: - Cleanup
     
-    /// 清理AR引导资源（临时暂停，不清除状态）
-    func cleanupARGuidance() {
-        // 注意：这是临时暂停，不是完全停止
-        // 保留所有状态和回调，以便从预览页返回时能快速恢复
-        
-        // 只隐藏UI，不停止检测，不改变任何状态
-        // 这样当相机会话恢复时，检测会自动继续
+    /// 暂停AR引导资源
+    func pauseARGuidance() {
+        if arGuidanceState == .activeGuidance || arGuidanceState == .orientationMismatch {
+            arGuidanceState = .paused
+            LMLogger.log("⏸️ AR引导状态从 referenceDetected 切换到 paused")
+        } else if case .referenceDetected = arGuidanceState {
+            arGuidanceState = .paused
+            LMLogger.log("⏸️ AR引导状态从 referenceDetected 切换到 paused")
+        }
+        // 隐藏所有UI元素
         arGuidanceView.hideOrShowAllGuidance(true)
-        
-        // 不调用以下方法，保持所有状态：
-        // - stopRealtimePersonDetection()（会停止检测）
+        stopRealtimePersonDetection()
+       
         // - reset()（会清除回调）
         // - stopARGuidanceSession()（会清除 isARGuidanceActive）
         
         // 保留以下内容：
         // - currentReferenceImage（参考图）
         // - currentReferenceBbox（参考框位置）
-        // - arGuidanceState（AR引导状态，保持 .activeGuidance）
+        // - arGuidanceState（AR引导状态，设置为 .paused）
         // - isARGuidanceActive（AR激活标志，保持 true）
         // - referenceImageInitialOrientation（初始方向）
         // - onDetectionResult 回调
@@ -823,7 +823,7 @@ extension LMCameraPage {
         
         NotificationCenter.default.removeObserver(
             self,
-            name: UIDevice.orientationDidChangeNotification,
+            name: .devicePhysicalOrientationDidChange,
             object: nil
         )
         

@@ -111,69 +111,52 @@ extension LMCameraPage {
         }
     }
     
-    /// 获取当前参考图（如果有）
-    func getCurrentReferenceImage() -> UIImage? {
-        // 如果在 Composition Selected 状态，返回参考图
-        if currentCameraState == .compositionSelected,
-           let referenceImageView = referenceImageView,
-           let image = referenceImageView.image {
-            return image
-        }
-        return nil
-    }
-    
-    /// 水平翻转图片（用于前摄照片去镜像）
-    private func flipImageHorizontally(_ image: UIImage) -> UIImage {
-        guard let cgImage = image.cgImage else { return image }
-        let flippedImage = UIImage(
-            cgImage: cgImage,
-            scale: image.scale,
-            orientation: .leftMirrored
-        )
-        return flippedImage
-    }
-    
+
     /// 根据设备方向旋转图片
     /// - Parameters:
     ///   - image: 原始图片
     ///   - deviceOrientation: 设备方向
+    ///   - isFrontCamera: 是否为前摄
     /// - Returns: 旋转后的图片
-    private func rotateImage(_ image: UIImage, forDeviceOrientation deviceOrientation: UIDeviceOrientation) -> UIImage {
+    private func rotateImage(_ image: UIImage, forDeviceOrientation deviceOrientation: UIDeviceOrientation, isFrontCamera: Bool = false) -> UIImage {
         guard let cgImage = image.cgImage else { return image }
         
         // 根据设备方向确定图片方向
         let imageOrientation: UIImage.Orientation
-        
-        switch deviceOrientation {
-        case .portrait:
-            // 竖屏正向：不需要旋转
-            imageOrientation = .right
-            
-        case .landscapeLeft:
-            // 横屏左（Home键在右）：顺时针旋转90度
-            imageOrientation = .up
-            
-        case .landscapeRight:
-            // 横屏右（Home键在左）：逆时针旋转90度
-            imageOrientation = .down
-            
-        case .portraitUpsideDown:
-            // 竖屏倒置：旋转180度
-            imageOrientation = .left
-            
-        default:
-            // 其他情况（FaceUp, FaceDown, Unknown）：保持原样
-            imageOrientation = .right
+        if isFrontCamera {
+            switch deviceOrientation {
+            case .portrait:
+                imageOrientation = .leftMirrored
+            case .landscapeLeft:
+                imageOrientation = .downMirrored
+            case .landscapeRight:
+                imageOrientation = .upMirrored
+            case .portraitUpsideDown:
+                imageOrientation = .rightMirrored
+            default:
+                imageOrientation = .leftMirrored
+            }
+            LMLogger.log("🔄 Front camera image rotated for device orientation: \(deviceOrientation.rawValue) -> \(imageOrientation.rawValue)")
+        } else {
+            switch deviceOrientation {
+            case .portrait:
+                imageOrientation = .right
+            case .landscapeLeft:
+                imageOrientation = .up
+            case .landscapeRight:
+                imageOrientation = .down
+            case .portraitUpsideDown:
+                imageOrientation = .left
+            default:
+                imageOrientation = .right
+            }
+            LMLogger.log("🔄 Back camera image rotated for device orientation: \(deviceOrientation.rawValue) -> \(imageOrientation.rawValue)")
         }
-        
         let rotatedImage = UIImage(
             cgImage: cgImage,
             scale: image.scale,
             orientation: imageOrientation
         )
-        
-        LMLogger.log("🔄 Image rotated for device orientation: \(deviceOrientation.rawValue) -> \(imageOrientation.rawValue)")
-        
         return rotatedImage
     }
 }
@@ -198,15 +181,11 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
         // 获取当前设备方向
         let deviceOrientation = LMDeviceOrientationManager.shared.currentOrientation
         LMLogger.log("📱 Current device orientation: \(deviceOrientation.rawValue)")
+        LMLogger.log("📱 Camera position: \(isUsingFrontCamera ? "Front" : "Back")")
         
-        // 根据设备方向旋转图片
-        capturedImage = rotateImage(capturedImage, forDeviceOrientation: deviceOrientation)
-        
-        // 如果是前摄拍摄，需要去除镜像效果（水平翻转）
-        if isUsingFrontCamera {
-            capturedImage = flipImageHorizontally(capturedImage)
-            LMLogger.log("🔄 Front camera photo flipped horizontally")
-        }
+        // 根据设备方向和相机位置旋转图片
+        // 前摄会自动进行镜像翻转 + 旋转
+        capturedImage = rotateImage(capturedImage, forDeviceOrientation: deviceOrientation, isFrontCamera: isUsingFrontCamera)
         
         LMLogger.log("✅ Photo captured successfully, size: \(capturedImage.size)")
         
@@ -221,10 +200,9 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
             // 普通照片拍摄：直接跳转预览
             LMLogger.log("📷 Static photo capture - navigating to preview")
             let photoData = CapturedPhotoData(image: capturedImage)
-            let referenceImage = getCurrentReferenceImage()
             
             DispatchQueue.main.async { [weak self] in
-                self?.navigateToPhotoPreview(photoData: photoData, referenceImage: referenceImage)
+                self?.navigateToPhotoPreview(photoData: photoData)
             }
         }
     }
@@ -250,10 +228,9 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
             if Self.isWaitingForLivePhotoVideo, let capturedImage = Self.capturedPhotoImage {
                 LMLogger.log("⚠️ Live Photo video failed, using static image")
                 let photoData = CapturedPhotoData(image: capturedImage)
-                let referenceImage = getCurrentReferenceImage()
                 
                 DispatchQueue.main.async { [weak self] in
-                    self?.navigateToPhotoPreview(photoData: photoData, referenceImage: referenceImage)
+                    self?.navigateToPhotoPreview(photoData: photoData)
                 }
                 
                 // 清理状态
@@ -275,10 +252,8 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
                     isLivePhoto: true
                 )
                 
-                let referenceImage = getCurrentReferenceImage()
-                
                 DispatchQueue.main.async { [weak self] in
-                    self?.navigateToPhotoPreview(photoData: photoData, referenceImage: referenceImage)
+                    self?.navigateToPhotoPreview(photoData: photoData)
                 }
                 
                 // 清理状态
@@ -290,8 +265,8 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
     }
     
     /// 跳转到照片预览页面
-    private func navigateToPhotoPreview(photoData: CapturedPhotoData, referenceImage: UIImage?) {
-        let previewPage = LMPhotoPreviewPage(photoData: photoData, referenceImage: referenceImage)
+    private func navigateToPhotoPreview(photoData: CapturedPhotoData) {
+        let previewPage = LMPhotoPreviewPage(photoData: photoData)
         navigationController?.pushViewController(previewPage, animated: true)
     }
 }

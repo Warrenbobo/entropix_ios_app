@@ -15,7 +15,6 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     
     // MARK: - Properties
     private let photoData: CapturedPhotoData
-    private let referenceImage: UIImage? // 可选的参考图（构图方案）
     
     // MARK: - UI Components
     private let photoImageView = UIImageView()
@@ -29,16 +28,9 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     private let successIndicator = UIView()
     
     // MARK: - Initialization
-    init(photoData: CapturedPhotoData, referenceImage: UIImage? = nil) {
+    init(photoData: CapturedPhotoData) {
         self.photoData = photoData
-        self.referenceImage = referenceImage
         super.init(nibName: nil, bundle: nil)
-    }
-    
-    /// 向后兼容的初始化方法
-    convenience init(capturedImage: UIImage, referenceImage: UIImage? = nil) {
-        let photoData = CapturedPhotoData(image: capturedImage)
-        self.init(photoData: photoData, referenceImage: referenceImage)
     }
     
     required init?(coder: NSCoder) {
@@ -445,10 +437,7 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             
-            let success = LMPhotoStorageManager.shared.savePhoto(
-                photoData: self.photoData,
-                referenceImage: self.referenceImage
-            )
+            let success = LMPhotoStorageManager.shared.savePhoto(photoData: self.photoData)
             
             DispatchQueue.main.async {
                 loadingAlert.dismiss(animated: true) {

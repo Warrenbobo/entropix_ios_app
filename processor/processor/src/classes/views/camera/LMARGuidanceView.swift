@@ -246,6 +246,43 @@ class LMARGuidanceView: UIView {
         updateGuidanceLine()
     }
     
+    /// 设置蓝色框的完整 bounds（位置和尺寸）
+    /// - Parameter bbox: 画布坐标系统下的边界框
+    func setLiveBoxBounds(bbox: CGRect) {
+        // 清除之前的图层
+        livePersonBox.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
+        
+        // 设置新的 bounds 和 center
+        livePersonBox.bounds = CGRect(origin: .zero, size: bbox.size)
+        livePersonBox.center = CGPoint(x: bbox.midX, y: bbox.midY)
+        livePersonBox.transform = .identity  // 重置旋转
+        
+        // 重新创建图层（基于新的 bounds）
+        createAndSetupFrameLayers(
+            for: livePersonBox,
+            color: .systemBlue,
+            lineWidth: 2.0,
+            crosshairLength: 6,
+            crosshairWidth: 2
+        )
+        
+        print("[AR Guidance View] 设置蓝色框 bbox - frame: \(livePersonBox.frame), bounds: \(livePersonBox.bounds)")
+    }
+    
+    /// 更新蓝色框的 bounds（高频调用，带动画）
+    /// - Parameter bbox: 画布坐标系统下的边界框
+    func updateLiveBoxBounds(bbox: CGRect) {
+        // 保存当前的 transform
+        let currentTransform = self.livePersonBox.transform
+        // 临时重置 transform 以便正确设置 frame
+        self.livePersonBox.transform = .identity
+        // 设置新的 frame
+        self.livePersonBox.frame = bbox
+        // 恢复 transform
+        self.livePersonBox.transform = currentTransform
+        self.updateGuidanceLine()
+    }
+    
     /// 显示蓝色框
     func showLiveBox() {
         livePersonBox.isHidden = false
@@ -442,6 +479,7 @@ class LMARGuidanceView: UIView {
     }
     
     /// 隐藏所有引导元素
+    /// 仅隐藏使用
     func hideOrShowAllGuidance(_ hidden: Bool = false) {
         referencePersonBox.isHidden = hidden
         livePersonBox.isHidden = hidden
