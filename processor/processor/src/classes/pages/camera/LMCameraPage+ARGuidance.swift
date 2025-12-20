@@ -201,6 +201,11 @@ extension LMCameraPage {
         arGuidanceView.setOrientationMatched(true)
         LMLogger.log("✅ [AR Guidance] Orientation matched, starting person detection...")
         
+        // 🔧 修复：在启动 AR Guidance 时，根据当前设备方向初始化 arGuidanceView 的 transform
+        // 这确保了即使设备在进入 AR Guidance 时已经处于非 portrait 方向，transform 也能正确设置
+        updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
+        LMLogger.log("📐 [AR Guidance] Initial transform set for orientation: \(currentOrientation.rawValue), transform: \(arGuidanceView.transform)")
+        
         detectPersonAndShowGuidance(in: referenceImage)
         
         isARGuidanceActive = true
@@ -270,17 +275,37 @@ extension LMCameraPage {
         
         currentReferenceImage = image
         
+        // 根据图片宽高比判断初始方向（如果还没有设置）
+        if referenceImageInitialOrientation == nil {
+            let imageWidth = image.size.width
+            let imageHeight = image.size.height
+            let isImagePortrait = imageHeight >= imageWidth
+            
+            if isImagePortrait {
+                referenceImageInitialOrientation = .portrait
+                LMLogger.log("📱 [AR Guidance] detectPersonAndShowGuidance - Image is portrait, saved initial orientation: portrait")
+            } else {
+                referenceImageInitialOrientation = .landscapeRight
+                LMLogger.log("📱 [AR Guidance] detectPersonAndShowGuidance - Image is landscape, saved initial orientation: landscapeRight")
+            }
+        }
+        
         // 检查方向是否与图片方向类型匹配
         let isMatched = isCurrentOrientationMatched()
+        let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
         
         if !isMatched {
-            let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
             LMLogger.log("📱 [AR Guidance] detectPersonAndShowGuidance - 当前: \(currentOrientation.rawValue), 匹配: \(isMatched)")
             arGuidanceState = .orientationMismatch
             arGuidanceView.setOrientationMatched(false)
             LMLogger.log("⚠️ [AR Guidance] Orientation mismatch in detectPersonAndShowGuidance")
             return
         }
+        
+        // 🔧 修复：在检测人物之前，确保 arGuidanceView 的 transform 正确设置
+        // 这确保了即使直接调用 detectPersonAndShowGuidance（而不是通过 startARGuidanceSession），transform 也能正确设置
+        updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
+        LMLogger.log("📐 [AR Guidance] detectPersonAndShowGuidance - transform set for orientation: \(currentOrientation.rawValue)")
         
         // 方向匹配：检测人物
         arGuidanceState = .waitingForReferenceDetection
@@ -301,7 +326,7 @@ extension LMCameraPage {
             guard let bbox = bbox else {
                 self.arGuidanceState = .error(LMARGuidanceError.noPersonDetected)
                 LMLogger.log("❌ [AR Guidance] No person detected in reference image")
-                self.showToast("No person detected in reference image")
+                AppTheme.Toast.showText("No person detected in reference image")
                 return
             }
             
@@ -504,6 +529,11 @@ extension LMCameraPage {
                     // 已经检测到人物，恢复到activeGuidance状态
                     self.arGuidanceState = .activeGuidance
                     self.arGuidanceView.setOrientationMatched(true)
+                    
+                    // 🔧 修复：恢复时也需要设置正确的 transform
+                    let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
+                    self.updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
+                    
                     self.arGuidanceView.hideOrShowAllGuidance(false)
                     LMLogger.log("✅ [AR Guidance] Restored AR guidance after camera switch")
                 } else {
@@ -539,6 +569,11 @@ extension LMCameraPage {
                         // 已经检测到人物，恢复到activeGuidance状态
                         self.arGuidanceState = .activeGuidance
                         self.arGuidanceView.setOrientationMatched(true)
+                        
+                        // 🔧 修复：恢复时重新设置 transform（因为延迟 1 秒后方向可能已变化）
+                        let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
+                        self.updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
+                        
                         self.arGuidanceView.hideOrShowAllGuidance(false)
                         LMLogger.log("✅ 方向匹配恢复 - 恢复AR引导")
                     } else {

@@ -167,14 +167,14 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if let error = error {
             LMLogger.log("❌ Photo capture error: \(error.localizedDescription)")
-            showAlert("Failed to capture photo: \(error.localizedDescription)", style: .error)
+            AppTheme.Toast.showText("Failed to capture photo: \(error.localizedDescription)")
             return
         }
         
         guard let imageData = photo.fileDataRepresentation(),
               var capturedImage = UIImage(data: imageData) else {
             LMLogger.log("❌ Failed to convert photo data to image")
-            showAlert("Failed to process captured photo", style: .error)
+            AppTheme.Toast.showText("Failed to process captured photo")
             return
         }
         

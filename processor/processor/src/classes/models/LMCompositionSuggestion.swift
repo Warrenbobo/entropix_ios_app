@@ -3,21 +3,21 @@
 //  processor
 //
 //  构图建议模型
+//  Updated: 2025-01-16 - 所有属性改为 optional
 //
 
 import Foundation
 
 struct LMCompositionSuggestion: Codable {
-    let id: String
-    let sceneType: String
-    let source: String
-    let ready: Bool
-    let imageUrl: String?
-    let similarImageUrl: String?
-    let rank: Int
-    let score: Double?
-    let modelVersion: String
-    let aspectRatio: Double?
+    var id: String?
+    var sceneType: String?
+    var source: String?
+    var ready: Bool?
+    var imageUrl: String?
+    var width: Int?
+    var height: Int?
+    var rank: Int?
+    var score: Double?
     
     enum CodingKeys: String, CodingKey {
         case id
@@ -25,16 +25,33 @@ struct LMCompositionSuggestion: Codable {
         case source
         case ready
         case imageUrl = "image_url"
-        case similarImageUrl = "similar_image_url"
+        case width
+        case height
         case rank
         case score
-        case modelVersion = "model_version"
-        case aspectRatio = "aspect_ratio"
     }
     
-    /// 获取宽高比，如果后端没有返回则使用默认值 3:4
+    /// 是否为占位符
+    var isPlaceholder: Bool {
+        return source == "placeholder" || ready == false
+    }
+    
+    /// 是否为检索结果
+    var isRetrieved: Bool {
+        return source == "retrieved"
+    }
+    
+    /// 是否为生成结果
+    var isGenerated: Bool {
+        return source == "generated"
+    }
+    
+    /// 获取宽高比，如果后端没有返回则根据宽高计算
     func getAspectRatio() -> Double {
-        return aspectRatio ?? 0.75 // 默认 3:4 = 0.75
+        if let width = width, let height = height, height > 0 {
+            return Double(width) / Double(height)
+        }
+        return 0.75 // 默认 3:4 = 0.75
     }
 }
 

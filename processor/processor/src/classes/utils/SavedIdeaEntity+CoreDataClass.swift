@@ -49,11 +49,10 @@ public class SavedIdeaEntity: NSManagedObject {
             source: self.source ?? "",
             ready: true,
             imageUrl: self.imageUrl,
-            similarImageUrl: nil,
+            width: nil,
+            height: nil,
             rank: Int(self.rank),
-            score: self.confidence,
-            modelVersion: "",
-            aspectRatio: 1
+            score: self.confidence
         )
     }
 }

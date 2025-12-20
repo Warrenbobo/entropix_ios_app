@@ -25,22 +25,37 @@ struct LMApiResponseModel<T: Codable>: Codable {
         return LMApiResponseModel()
     }
     
-    /// 请求错误响应对象，一般用作请求方式不正确时
-    static func error(of code: Int?,
-                      requestError: AFError) -> LMApiResponseModel {
-        return LMApiResponseModel(code: code ?? -1001,
-                                  message: requestError.localizedDescription)
+    /// 请求错误响应对象（使用 AFError）
+    /// - Parameters:
+    ///   - code: HTTP 状态码
+    ///   - requestError: Alamofire 错误
+    ///   - rawData: 原始响应数据（用于解析服务端 message）
+    static func general(of code: Int?,
+                        rawData: Data? = nil) -> LMApiResponseModel {
+        return LMApiResponseModel(
+            code: code ?? -1001,
+            message: "Service data is wrong",
+            rawData: rawData
+        )
     }
     
     /// 当前请求是否已成功
     var requestSuccess: Bool {
-        if status != nil {
+        if status?.wrappedValue != nil {
             return status?.wrappedValue == 200
         }
         if code != nil {
-            return code == 0
+            return code == 200
         }
         return false
+    }
+    
+    /// 转换为 LMApiError（用于错误处理）
+    var asError: LMApiError? {
+        if !requestSuccess {
+            return LMApiError(content: message ?? "Unkonwn error")
+        }
+        return nil
     }
     
     enum CodingKeys: String, CodingKey {
@@ -74,5 +89,24 @@ struct LMEmptyModel: Codable {
             }
         }
         wrappedValue = resultValue
+    }
+}
+
+
+/// 自定义 API 错误类型
+/// 用于统一处理 API 请求中的各种错误情况
+struct LMApiError: Error, LocalizedError {
+    
+    /// 错误内容（优先使用服务端返回的 message，否则使用 localizedDescription）
+    let content: String?
+    
+    // MARK: - LocalizedError
+    
+    var errorDescription: String? {
+        return content
+    }
+    
+    init(content: String?) {
+        self.content = content
     }
 }

@@ -339,9 +339,7 @@ class LMEmailVerificationPage: UIViewController {
     }
     
     private func showAlert(title: String, message: String, completion: (() -> Void)? = nil) {
-        showToast(message, duration: 2.5) { _ in
-            completion?()
-        }
+        
     }
 }
 

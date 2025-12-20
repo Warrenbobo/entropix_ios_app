@@ -261,7 +261,7 @@ class LMStoreManager {
             productId: transaction.productID,
             purchaseDate: purchaseDate,
             receiptData: receiptData,
-            userId: LMUserManager.shared.currentUser?.userId
+            userId: LMUserManager.userModel?.userId
         )
         
         // Convert to dictionary for API call
@@ -320,20 +320,6 @@ class LMStoreManager {
     private func updateUserSubscription(type: String, expirationDate: String?) {
         LMLogger.log("📝 Updating user subscription: \(type)")
         
-        // Update current user info with new subscription
-        if var currentUser = LMUserManager.shared.currentUser {
-            // 更新订阅类型
-            currentUser.subscriptionType = SubscriptionType(rawValue: type) ?? .free
-            
-            // 更新到期日期
-            if let expirationDateString = expirationDate {
-                let dateFormatter = ISO8601DateFormatter()
-                currentUser.subscriptionExpiryDate = dateFormatter.date(from: expirationDateString)
-            }
-            
-            LMUserManager.shared.updateUser(currentUser)
-            LMLogger.log("✅ User subscription updated in local storage")
-        }
     }
     
     /// Verify transaction

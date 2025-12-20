@@ -72,12 +72,14 @@ extension LMCameraPage {
 extension LMCameraPage {
     
     /// 进入 Show Suggestions 状态
-    func enterShowSuggestionsState(taskId: String, suggestions: [LMCompositionSuggestion]) {
+    func enterShowSuggestionsState(taskId: String, suggestions: [LMCompositionSuggestion]?) {
         guard currentCameraState != .showingSuggestions else { return }
         
         currentCameraState = .showingSuggestions
         currentTaskId = taskId
-        currentSuggestions = suggestions
+        if let suggestionsList = suggestions {
+            currentSuggestions = suggestionsList
+        }
         
         // 隐藏 Inspire Me 按钮
         inspireMeButtonView.isHidden = true
@@ -94,6 +96,12 @@ extension LMCameraPage {
         // 显示构图轮播
         showSuggestionsCarousel()
         
+        // 立即更新轮播视图的数据（如果有初始数据）
+        if !currentSuggestions.isEmpty {
+            suggestionsCarouselView?.updateSuggestions(currentSuggestions)
+            LMLogger.log("✅ Initial suggestions loaded: \(currentSuggestions.count) items")
+        }
+        
         // 开始轮询 AI 生成构图
         startPollingAIGCSuggestions()
         
@@ -108,7 +116,7 @@ extension LMCameraPage {
             self.view.layoutIfNeeded()
         }
         
-        LMLogger.log("📐 Entered Show Suggestions state - Task ID: \(taskId), Suggestions: \(suggestions.count), AR Guidance unavailable")
+        LMLogger.log("📐 Entered Show Suggestions state - Task ID: \(taskId), Suggestions: \(suggestions?.count ?? 0), AR Guidance unavailable")
     }
     
     /// 退出 Show Suggestions 状态
@@ -165,6 +173,7 @@ extension LMCameraPage {
         // 创建轮播视图
         if self.suggestionsCarouselView != nil {
             self.suggestionsCarouselView?.isHidden = false
+            LMLogger.log("✅ Suggestions carousel shown (reused existing view)")
         } else {
             let carouselView = LMSuggestionsCarouselView()
             carouselView.delegate = self
@@ -175,6 +184,7 @@ extension LMCameraPage {
                 make.height.equalTo(170)
             }
             self.suggestionsCarouselView = carouselView
+            LMLogger.log("✅ Suggestions carousel created and shown")
         }
     }
     
@@ -185,89 +195,160 @@ extension LMCameraPage {
     }
 }
 
-// MARK: - AI Generation Polling
+// MARK: - AI Generation Polling (Job-based)
 extension LMCameraPage {
     
-    /// 开始轮询 AI 生成构图
+    /// 开始轮询 AI 生成构图（基于 Job 的新轮询逻辑）
     func startPollingAIGCSuggestions() {
         guard let taskId = currentTaskId else { return }
-        
         stopPollingAIGCSuggestions()
-        var pollCount = 0
-        pollTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] timer in
-            guard let self = self else {
-                timer.invalidate()
-                return
-            }
-            
-            pollCount += 1
-            
-            // 最多轮询 10 次
-            if pollCount > 10 {
-                timer.invalidate()
-                self.handlePollingTimeout()
-                return
-            }
-            
-            self.pollAIGCSuggestions(taskId: taskId)
-        }
-        
-        pollAIGCSuggestions(taskId: taskId)
-        LMLogger.log("🔄 Started polling AIGC suggestions - Task ID: \(taskId)")
+        LMLogger.log("🔄 Started job-based polling - Task ID: \(taskId)")
+        // 2秒后开始第一次轮询
+        scheduleNextPoll(taskId: taskId)
     }
     
     /// 停止轮询
     func stopPollingAIGCSuggestions() {
-        pollTimer?.invalidate()
-        pollTimer = nil
+        isPolling = false
         LMLogger.log("🛑 Stopped polling AIGC suggestions")
     }
     
-    /// 执行单次轮询
-    func pollAIGCSuggestions(taskId: String) {
-        // 在后台线程执行网络请求
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            LMCompositionService.shared.pollTaskStatus(taskId: taskId) { result in
-                guard let self = self else { return }
-                
-                switch result {
-                case .success(let response):
-                    self.handlePollingSuccess(response)
-                    
-                case .failure(let error):
-                    LMLogger.log("❌ Polling failed: \(error.localizedDescription)")
-                }
+    /// 轮询 Job 列表
+    private func pollJobList(taskId: String) {
+        // 如果正在轮询中，跳过本次请求
+        guard !isPolling else {
+            LMLogger.log("⚠️ Polling already in progress, skipping this request")
+            return
+        }
+        isPolling = true
+        // 步骤1: 获取所有 jobs 数据
+        LMApiService.shared.getJobList(taskId: taskId) { [weak self] response in
+            guard let self = self else { return }
+            // 收到服务器响应，重置轮询标志
+            self.isPolling = false
+            if response.requestSuccess, let data = response.value {
+                self.handleJobListResponse(taskId: taskId, response: data)
+            } else {
+                LMLogger.log("❌ Failed to get job list: \(response.message ?? "Unknown error")")
+                // 请求失败，2秒后重试
+                self.scheduleNextPoll(taskId: taskId)
             }
         }
     }
     
-    /// 处理轮询成功
-    func handlePollingSuccess(_ response: LMCompositionService.CompositionStatusResponse) {
-        // 更新构图列表
-        currentSuggestions = response.suggestions
-        
-        // 在主线程更新 UI
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            self.suggestionsCarouselView?.updateSuggestions(self.currentSuggestions)
-        }
-        
-        // 检查是否所有构图都已生成
-        let allReady = response.suggestions.allSatisfy { $0.ready }
-        if allReady || response.status == "completed" {
+    /// 处理 Job 列表响应
+    private func handleJobListResponse(taskId: String, response: LMCompositionJobListResponse) {
+        // 检查 all_completed，如果已完成则停止轮询
+        if response.allCompleted == true {
+            LMLogger.log("✅ All jobs completed - stopping polling")
             stopPollingAIGCSuggestions()
-            LMLogger.log("✅ All suggestions ready - Status: \(response.status)")
+            
+            // 清理无效的占位数据：ready 为 false 且 imageUrl 为 nil 的数据
+            cleanupInvalidSuggestions()
+            return
+        }
+        // 收到 job 列表响应后，立即安排 2 秒后的下一次轮询（与子 job 请求无关）
+        scheduleNextPoll(taskId: taskId)
+        guard let jobIds = response.jobIds, !jobIds.isEmpty else {
+            LMLogger.log("⚠️ No job IDs found in response")
+            return
+        }
+        LMLogger.log("📋 Got \(jobIds.count) jobs, all_completed: \(response.allCompleted ?? false)")
+        // 步骤2: 异步并发请求所有 jobId 对应的建议图
+        for jobId in jobIds {
+            fetchJobDetailAndUpdateImmediately(taskId: taskId, jobId: jobId)
         }
     }
     
-    /// 处理轮询超时
-    func handlePollingTimeout() {
-        LMLogger.log("⏱️ Polling timeout - using available suggestions")
+    /// 获取单个 Job 详情并立即更新列表
+    private func fetchJobDetailAndUpdateImmediately(taskId: String, jobId: String) {
+        LMApiService.shared.getJobDetail(taskId: taskId, jobId: jobId) { [weak self] detailResponse in
+            guard let self = self else { return }
+            
+            if detailResponse.requestSuccess, let data = detailResponse.value {
+                // 当 job 的 status 为 done 且 suggestions 包含数据时，立即更新列表
+                if let job = data.job,
+                   job.status == "done",
+                   let suggestions = data.suggestions,
+                   !suggestions.isEmpty {
+                    LMLogger.log("✅ Job \(jobId) done with \(suggestions.count) suggestions - updating immediately")
+                    
+                    // 在主线程立即更新 UI
+                    DispatchQueue.main.async {
+                        self.updateSuggestionsWithNewData(suggestions)
+                    }
+                } else {
+                    LMLogger.log("⏳ Job \(jobId) status: \(data.job?.status ?? "unknown")")
+                }
+            } else {
+                LMLogger.log("❌ Failed to get job detail for \(jobId): \(detailResponse.message ?? "Unknown error")")
+            }
+        }
+    }
+    
+    /// 根据新数据立即更新建议图列表
+    private func updateSuggestionsWithNewData(_ newSuggestions: [LMCompositionSuggestion]) {
+        guard !newSuggestions.isEmpty else { return }
         
-        // 在主线程显示提示
-        DispatchQueue.main.async { [weak self] in
-            self?.showAlert("Some AI suggestions are still generating. You can use available suggestions.", style: .toast)
+        // 根据 rank 替换现有列表中的占位符或更新已有项
+        for newSuggestion in newSuggestions {
+            guard let rank = newSuggestion.rank else { continue }
+            
+            // 查找现有列表中相同 rank 的项
+            if let existingIndex = currentSuggestions.firstIndex(where: { $0.rank == rank }) {
+                // 替换占位符或更新已有项
+                currentSuggestions[existingIndex] = newSuggestion
+                LMLogger.log("🔄 Updated suggestion at rank \(rank)")
+            } else {
+                // 如果没有找到相同 rank 的项，添加到列表
+                currentSuggestions.append(newSuggestion)
+                LMLogger.log("➕ Added new suggestion at rank \(rank)")
+            }
+        }
+        
+        // 按 rank 排序
+        currentSuggestions.sort { ($0.rank ?? 0) < ($1.rank ?? 0) }
+        
+        // 立即刷新 UI
+        suggestionsCarouselView?.updateSuggestions(currentSuggestions)
+        LMLogger.log("✅ UI updated with \(newSuggestions.count) new suggestions, total: \(currentSuggestions.count)")
+    }
+    
+    /// 安排下一次轮询（在收到 job 列表响应后 2 秒执行）
+    private func scheduleNextPoll(taskId: String) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            guard let self = self,
+                  self.currentCameraState == .showingSuggestions,
+                  self.currentTaskId == taskId else {
+                LMLogger.log("⚠️ Polling cancelled - state changed or task mismatch")
+                return
+            }
+            self.pollJobList(taskId: taskId)
+        }
+    }
+    
+    /// 清理无效的占位数据（ready 为 false 且 imageUrl 为 nil）
+    private func cleanupInvalidSuggestions() {
+        let originalCount = currentSuggestions.count
+        
+        // 过滤掉 ready 为 false 且 imageUrl 为 nil 的数据
+        currentSuggestions = currentSuggestions.filter { suggestion in
+            // 保留条件：ready 为 true，或者 imageUrl 不为空
+            let isReady = suggestion.ready == true
+            let hasImageUrl = suggestion.imageUrl != nil && !suggestion.imageUrl!.isEmpty
+            return isReady || hasImageUrl
+        }
+        
+        let removedCount = originalCount - currentSuggestions.count
+        
+        if removedCount > 0 {
+            LMLogger.log("🧹 Cleaned up \(removedCount) invalid suggestions (ready=false && imageUrl=nil)")
+            
+            // 更新 UI
+            suggestionsCarouselView?.updateSuggestions(currentSuggestions)
+            LMLogger.log("✅ UI updated after cleanup, remaining: \(currentSuggestions.count) suggestions")
+        } else {
+            LMLogger.log("✅ No invalid suggestions to clean up")
         }
     }
 }
@@ -278,7 +359,7 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView,
                                  didSelectSuggestion suggestion: LMCompositionSuggestion,
                                  at index: Int) {
-        LMLogger.log("📱 Selected suggestion at index: \(index), ID: \(suggestion.id)")
+        LMLogger.log("📱 Selected suggestion at index: \(index), ID: \(suggestion.id ?? "unknown")")
         
         // 保存当前选中的构图
         currentSuggestion = suggestion
@@ -289,30 +370,38 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView,
                                  didToggleFavorite suggestion: LMCompositionSuggestion,
                                  at index: Int) {
-        LMLogger.log("❤️ Toggling favorite for suggestion: \(suggestion.id)")
+        LMLogger.log("❤️ Toggling favorite for suggestion: \(suggestion.id ?? "unknown")")
         
         // TODO: 调用 API 保存/取消收藏
         // 暂时只显示反馈
-        showAlert("Suggestion saved to favorites", style: .toast)
+        AppTheme.Toast.showText("Suggestion saved to favorites")
     }
     
     func suggestionsCarouselViewDidRequestMoreSuggestions(_ view: LMSuggestionsCarouselView) {
         LMLogger.log("🔄 Requesting more suggestions")
         
         // TODO: 实现分页或重新生成
-        showAlert("No more suggestions available", style: .toast)
+        AppTheme.Toast.showText("No more suggestions available")
     }
     
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView,
                                  didSwipeUpSuggestion suggestion: LMCompositionSuggestion,
                                  at index: Int) {
-        LMLogger.log("⬆️ Swiped up suggestion at index: \(index), ID: \(suggestion.id)")
+        LMLogger.log("⬆️ Swiped up suggestion at index: \(index), ID: \(suggestion.id ?? "unknown")")
+        
+        // 获取选中的卡片视图和图片
+        guard let cardView = view.getSelectedCardView(),
+              let image = cardView.displayedImage else {
+            LMLogger.log("❌ Cannot enter composition selected state - no image loaded")
+            AppTheme.Toast.showText("Please wait for image to load")
+            return
+        }
         
         // 保存当前选中的构图
         currentSuggestion = suggestion
         
         // 进入 Camera with Composition Selected 状态
-        enterCompositionSelectedState(with: suggestion)
+        enterCompositionSelectedState(with: suggestion, image: image)
     }
 }
 
@@ -320,7 +409,10 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
 extension LMCameraPage {
     
     /// 进入 Camera with Composition Selected 状态（从 Show Suggestions 进入）
-    func enterCompositionSelectedState(with suggestion: LMCompositionSuggestion) {
+    /// - Parameters:
+    ///   - suggestion: 选中的构图方案
+    ///   - image: 从卡片视图获取的已显示图片
+    func enterCompositionSelectedState(with suggestion: LMCompositionSuggestion, image: UIImage) {
         guard currentCameraState == .showingSuggestions else {
             LMLogger.log("⚠️ [Composition Selected] Cannot enter - current state is not showingSuggestions")
             return
@@ -330,6 +422,7 @@ extension LMCameraPage {
         
         currentCameraState = .compositionSelected
         currentSuggestion = suggestion
+        currentReferenceImage = image
         
         // 隐藏构图轮播
         hideSuggestionsCarousel()
@@ -343,13 +436,7 @@ extension LMCameraPage {
         // 显示参考图在左下角
         showReferenceImageInCorner(suggestion: suggestion)
         
-        // 加载Reference Image用于AR Guidance
-        if let image = UIImage(named: suggestion.similarImageUrl ?? "") {
-            currentReferenceImage = image
-            LMLogger.log("✅ [Composition Selected] Reference image loaded for AR Guidance")
-        } else {
-            LMLogger.log("❌ [Composition Selected] Failed to load reference image")
-        }
+        LMLogger.log("✅ [Composition Selected] Reference image loaded for AR Guidance")
         
         // 自动开启 AR Guidance
         cameraBottomControlsView.setARGuidanceActive(true)
@@ -472,15 +559,15 @@ extension LMCameraPage {
             make.height.equalTo(newSize.height)
         }
         
-        // 加载图片
-//        if let imageUrl = suggestion.imageUrl, let url = URL(string: imageUrl) {
-//            // TODO: 使用图片加载库加载图片
-//            // 临时使用占位图
-//            imageView.image = UIImage(systemName: "photo")
-//            LMLogger.log("📷 Loading reference image from: \(imageUrl), aspect ratio: \(aspectRatio)")
-//        } else {
-            imageView.image = UIImage(named: suggestion.similarImageUrl ?? "")
-//        }
+        // 使用已加载的 currentReferenceImage
+        if let referenceImage = currentReferenceImage {
+            imageView.image = referenceImage
+            LMLogger.log("✅ Using currentReferenceImage for display, aspect ratio: \(aspectRatio)")
+        } else {
+            LMLogger.log("❌ currentReferenceImage is nil")
+            return
+        }
+        
         // 显示容器
         containerView.isHidden = false
         

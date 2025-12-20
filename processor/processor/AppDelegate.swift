@@ -20,8 +20,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //        Task {
 //            await LMStoreManager.shared.initialize()
 //        }
-        // 配置测试模式
-        LMTestModeConfig.configure()
         return true
     }
 

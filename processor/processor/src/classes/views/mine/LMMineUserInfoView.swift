@@ -12,12 +12,11 @@ class LMMineUserInfoView: UIView {
     
     var avatarTapAction: (() -> Void)?
     
-    func updateUserInfo(name: String, email: String, avatar: UIImage? = nil) {
-        nameLabel.text = name
+    func updateUserInfo(name: String, email: String, avatar: String? = nil) {
+        nameLabel.text = name.isEmpty ? "-" : name
         emailLabel.text = email
-        if let avatar = avatar {
-            avatarImageView.image = avatar
-        }
+        avatarImageView.kf.setImage(with: URL(string: avatar ?? ""),
+                                    placeholder: UIImage(systemName: "person.circle.fill"))
     }
     
     func setAvatarTapAction(_ action: @escaping () -> Void) {

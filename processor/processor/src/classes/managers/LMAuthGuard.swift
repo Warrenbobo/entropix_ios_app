@@ -18,7 +18,7 @@ class LMAuthGuard {
     
     /// 检查当前用户是否为游客
     var isGuestUser: Bool {
-        guard let user = LMUserManager.shared.currentUser else {
+        guard let user = LMUserManager.userModel else {
             // 没有用户信息，视为游客
             return true
         }

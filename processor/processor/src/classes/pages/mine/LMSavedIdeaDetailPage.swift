@@ -191,7 +191,7 @@ class LMSavedIdeaDetailPage: UIViewController {
         ) { [weak self] in
             self?.performUnlike()
         }
-        dialog.show(on: self)
+        dialog.show()
     }
     
     private func performUnlike() {
@@ -234,16 +234,9 @@ class LMSavedIdeaDetailPage: UIViewController {
     }
     
     private func showError(message: String) {
-        let config = LMAlertDialogConfig(
-            title: LMText.common.error,
-            message: message,
-            cancelButtonText: "",
-            confirmButtonText: "OK",
-            confirmButtonStyle: .normal,
-            onConfirm: {}
-        )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
+        LMAlertDialog.showGeneralAlert(message,
+                                       title: LMText.common.error,
+                                       onConfirm: {})
     }
     
     private func animateLikeButton() {

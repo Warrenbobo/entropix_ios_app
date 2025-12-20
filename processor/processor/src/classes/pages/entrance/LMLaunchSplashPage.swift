@@ -70,61 +70,43 @@ class LMLaunchSplashPage: UIViewController {
     
     /// Guest 用户注册和登录
     private func registerAndLoginAsGuest() {
-        // 获取设备 ID
-        let deviceId = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-        LMLogger.log("📱 Device ID: \(deviceId)")
-        
         // 获取当前语言
         let language = LMLaunageManager.shared.currentLanguage.rawValue
         LMLogger.log("🌐 Language: \(language)")
         
         // 先尝试注册 Guest 用户（如果已存在会返回现有用户）
-        LMApiService.shared.registerGuest(deviceId: deviceId, language: language) { [weak self] response in
+        LMApiService.shared.registerGuest(language: language) { [weak self] response in
             guard let self = self else { return }
             
             if response.requestSuccess {
                 LMLogger.log("✅ Guest user registered successfully")
                 // 注册成功后，进行登录
-                self.performGuestLogin(deviceId: deviceId)
+                self.performGuestLogin()
             } else {
                 LMLogger.log("⚠️ Guest registration response: \(response.message ?? "Unknown")")
                 // 即使注册失败，也尝试登录（可能用户已存在）
-                self.performGuestLogin(deviceId: deviceId)
+                self.performGuestLogin()
             }
         }
     }
     
     /// 执行 Guest 登录
-    private func performGuestLogin(deviceId: String) {
-        LMApiService.shared.loginGuest(deviceId: deviceId) { [weak self] response in
+    private func performGuestLogin() {
+        LMApiService.shared.loginGuest { [weak self] response in
             guard self != nil else { return }
             
             DispatchQueue.main.async {
                 if response.requestSuccess, let loginData = response.value {
                     LMLogger.log("✅ Guest user logged in successfully")
-                    LMLogger.log("👤 Username: \(loginData.user.username)")
-                    LMLogger.log("📊 Is guest: \(loginData.user.isGuest ?? false)")
-                    LMLogger.log("🎯 Inspire points: \(loginData.inspirePoints)")
+                    LMLogger.log("👤 Username: \(loginData.user?.username)")
+                    LMLogger.log("📊 Is guest: \(loginData.user?.isGuest ?? false)")
                     
                     // 保存 Token
                     LMUserManager.shared.accessToken = response.value?.accessToken
                     LMUserManager.shared.refreshToken = response.value?.refreshToken
                     
-                    // 解析订阅类型
-                    let subscriptionType: SubscriptionType
-                    if let subscription = loginData.user.subscription {
-                        subscriptionType = SubscriptionType(rawValue: subscription) ?? .free
-                    } else {
-                        subscriptionType = .free
-                    }
-                    
                     // 保存用户信息
-                    var user = loginData.user.toLMUser(
-                        subscriptionType: subscriptionType,
-                        inspirePoints: loginData.inspirePoints
-                    )
-                    user.isGuest = true
-                    LMUserManager.shared.updateUser(user)
+                    LMUserManager.shared.updateUser(loginData.user)
                     
                     // 进入主页
                     let rootController = LMNavigationWrapper(rootViewController: LMMinePage())

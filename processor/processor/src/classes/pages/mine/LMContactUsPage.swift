@@ -431,10 +431,10 @@ extension LMContactUsPage {
         UIPasteboard.general.string = text
         
         // Show success feedback
-        showToast(message, duration: 2.0)
+        AppTheme.Toast.showText(message)
     }
     
     private func showAlert(title: String, message: String) {
-        showToast(message, duration: 2.5)
+        AppTheme.Toast.showText(message)
     }
 }

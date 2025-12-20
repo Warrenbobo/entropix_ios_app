@@ -25,7 +25,7 @@ class LMSettingPage: LMPageWrapper {
     private let logoutButton = UIButton(type: .custom)
     
     private var isUserLoggedIn: Bool {
-        return true
+        return false // 暂时隐藏退出登录按钮
     }
     
     override func viewDidLoad() {
@@ -292,18 +292,16 @@ extension LMSettingPage {
 extension LMSettingPage {
     
     private func showLogoutConfirmation() {
-        let config = LMAlertDialogConfig(
+        LMAlertDialog.showAlert(
             title: LMText.auth.logOut,
             message: LMText.settings.areYouSureLogout,
-            cancelButtonText: LMText.common.cancel,
-            confirmButtonText: LMText.auth.logOut,
-            confirmButtonStyle: .destructive,
+            cancelText: LMText.common.cancel,
+            confirmText: LMText.auth.logOut,
+            confirmStyle: .destructive,
             onConfirm: { [weak self] in
                 self?.performLogout()
             }
         )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
     }
     
     private func performLogout() {
@@ -328,16 +326,9 @@ extension LMSettingPage {
     }
     
     private func showComingSoonAlert(for feature: String) {
-        let config = LMAlertDialogConfig(
-            title: LMText.settings.comingSoon,
-            message: String(format: LMText.settings.comingSoonMessage, feature),
-            cancelButtonText: "",
-            confirmButtonText: LMText.common.ok,
-            confirmButtonStyle: .normal,
-            onConfirm: {}
-        )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
+        LMAlertDialog.showGeneralAlert(String(format: LMText.settings.comingSoonMessage, feature),
+                                       title: LMText.settings.comingSoon,
+                                       onConfirm: {})
     }
 }
 

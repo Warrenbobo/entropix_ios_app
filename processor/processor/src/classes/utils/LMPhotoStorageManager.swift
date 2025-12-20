@@ -123,7 +123,7 @@ class LMPhotoStorageManager {
         // Create Core Data entity
         let photoEntity = PhotoEntity(context: context)
         photoEntity.id = photoId
-        photoEntity.userId = LMUserManager.shared.currentUser?.userId
+        photoEntity.userId = LMUserManager.userModel?.userId
         photoEntity.title = title
         photoEntity.imagePath = imagePath
         photoEntity.referenceImagePath = referenceImagePath
@@ -187,7 +187,7 @@ class LMPhotoStorageManager {
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "capturedDate", ascending: false)]
         
         // Filter by user if logged in
-        if let userId = LMUserManager.shared.currentUser?.userId {
+        if let userId = LMUserManager.userModel?.userId {
             fetchRequest.predicate = NSPredicate(format: "isMarkedDeleted == NO AND userId == %@", userId)
         }
         

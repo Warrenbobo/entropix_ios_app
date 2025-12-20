@@ -95,18 +95,12 @@ extension LMCameraPage: LMCameraControlsViewDelegate {
     }
     
     func showLivePhotosNotSupportedAlert() {
-        let config = LMAlertDialogConfig(
+        LMAlertDialog.showGeneralAlert("Live Photos is not supported on this device.",
             title: "Live Photos",
-            message: "Live Photos is not supported on this device.",
-            cancelButtonText: "",
-            confirmButtonText: "OK",
-            confirmButtonStyle: .normal,
             onConfirm: { [weak self] in
                 self?.cameraControlsView.updateLivePhotoStatus(false)
             }
         )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
     }
 }
 
@@ -119,30 +113,29 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
         
         // 如果在 Show Suggestions 状态下开启 AR Guidance，需要先显示 Reference Image
         if isActive && currentCameraState == .showingSuggestions {
-            // 检查是否有选中的构图
-            guard let selectedSuggestion = suggestionsCarouselView?.getSelectedSuggestion() else {
-                LMLogger.log("⚠️ No suggestion selected, cannot enable AR Guidance")
+            // 检查是否有选中的构图和对应的卡片视图
+            guard let selectedCardView = suggestionsCarouselView?.getSelectedCardView(),
+                  let selectedSuggestion = suggestionsCarouselView?.getSelectedSuggestion(),
+                  let image = selectedCardView.displayedImage else {
+                LMLogger.log("⚠️ No suggestion selected or image not loaded, cannot enable AR Guidance")
                 // 将 AR Guidance 状态改回 available（关闭状态）
                 cameraBottomControlsView.setARGuidanceAvailable(true)
-                showToast("Please select a composition first")
+                AppTheme.Toast.showText("Please select a composition with loaded image first")
                 return
             }
             
             // 进入 Composition Selected 状态并显示 Reference Image
-            enterCompositionSelectedStateFromSuggestion(with: selectedSuggestion)
+            enterCompositionSelectedStateFromSuggestion(with: selectedSuggestion, image: image)
         }
         
         configureARGuidanceFeatures(isActive)
     }
     
     /// 从Show Suggestions进入Composition Selected状态
-    private func enterCompositionSelectedStateFromSuggestion(with suggestion: LMCompositionSuggestion) {
-        guard let image = UIImage(named: suggestion.similarImageUrl ?? "") else {
-            LMLogger.log("❌ Suggestion没有图片")
-            showToast("Failed to load reference image")
-            return
-        }
-        
+    /// - Parameters:
+    ///   - suggestion: 选中的构图方案
+    ///   - image: 从卡片视图获取的已显示图片
+    private func enterCompositionSelectedStateFromSuggestion(with suggestion: LMCompositionSuggestion, image: UIImage) {
         // 设置当前Reference Image
         currentReferenceImage = image
         currentSuggestion = suggestion
@@ -164,7 +157,7 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     
     func cameraBottomControlsViewDidTapUnavailableARGuidance() {
         LMLogger.log("⚠️ User tapped unavailable AR Guidance button")
-        showToast("AR Guidance is only available after using Inspire Me")
+        AppTheme.Toast.showText("AR Guidance is only available after using Inspire Me")
     }
     
     func cameraBottomControlsViewDidTapCaptureButton() {
@@ -210,7 +203,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
             LMLogger.log("❌ Failed to get image buffer from sample buffer")
             DispatchQueue.main.async { [weak self] in
                 self?.hideProcessingOverlay()
-                self?.showAlert("Failed to capture frame from video stream", style: .error)
+                AppTheme.Toast.showText("Failed to capture frame from video stream")
             }
             return
         }
@@ -223,7 +216,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
             LMLogger.log("❌ Failed to create CGImage from CIImage")
             DispatchQueue.main.async { [weak self] in
                 self?.hideProcessingOverlay()
-                self?.showAlert("Failed to process captured frame", style: .error)
+                AppTheme.Toast.showText("Failed to process captured frame")
             }
             return
         }
@@ -275,13 +268,13 @@ extension LMCameraPage: LMInspireMeButtonViewDelegate {
         LMLogger.log("❓ Inspire Me question button tapped")
         
         // 显示 Inspire Me 功能说明
-        showToast("Tap to get AI-powered composition suggestions for your photo. Each use costs 1 Inspire Point.")
+        AppTheme.Toast.showText("Tap to get AI-powered composition suggestions for your photo. Each use costs 1 Inspire Point.")
     }
     
     func inspireMeButtonViewDidTapDisabledButton() {
         LMLogger.log("⚠️ Inspire Me button tapped while using front camera")
         
         // 显示前摄不可用提示
-        showToast("Inspire Me not available on front camera. Please switch to back camera to use this feature.")
+        AppTheme.Toast.showText("Inspire Me not available on front camera. Please switch to back camera to use this feature.")
     }
 }

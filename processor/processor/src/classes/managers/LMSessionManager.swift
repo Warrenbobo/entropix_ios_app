@@ -32,23 +32,23 @@ class LMSessionManager {
             completion(false, "not_logged_in")
             return
         }
-        
+        guard let refreshToken = LMUserManager.shared.refreshToken else {
+            LMLogger.log("⚠️ No refresh token available")
+            completion(false, "No refresh token available")
+            return
+        }
         isValidating = true
         
-        // 使用 Token 刷新来验证会话有效性
-        LMUserManager.shared.refreshAccessToken { [weak self] result in
-            self?.isValidating = false
-            
-            switch result {
-            case .success:
-                LMLogger.log("✅ Session valid (token refreshed)")
+        LMApiService.shared.refreshToken(refreshToken: refreshToken) { response in
+            if response.requestSuccess, let data = response.value {
+                LMUserManager.shared.updateTokens(
+                    accessToken: data.accessToken ?? "",
+                    refreshToken: data.refreshToken ?? ""
+                )
                 completion(true, nil)
-                
-            case .failure(let error):
-                let nsError = error as NSError
+            } else {
                 let reason: String
-                
-                if nsError.code == 401 {
+                if response.code == 401 {
                     reason = "token_invalid"
                 } else {
                     reason = "token_refresh_failed"

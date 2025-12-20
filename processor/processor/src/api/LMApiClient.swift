@@ -14,6 +14,7 @@ enum MethodType {
     case get
     case post
     case put
+    case patch
     case delete
     
     var value: HTTPMethod {
@@ -24,6 +25,8 @@ enum MethodType {
             return HTTPMethod.post
         case .put:
             return HTTPMethod.put
+        case .patch:
+            return HTTPMethod.patch
         case .delete:
             return HTTPMethod.delete
         }
@@ -37,6 +40,8 @@ enum MethodType {
             return "POST"
         case .put:
             return "PUT"
+        case .patch:
+            return "PATCH"
         case .delete:
             return "DELETE"
         }
@@ -88,97 +93,26 @@ class LMApiClient {
                                       headers: header,
                                       params: params,
                                       response: responseData)
-                if let error: AFError = responseData.error {
-                    LMLogger.log("解析出错 == \(String(describing: responseData.error))")
-                    let statusCode = responseData.response?.statusCode
-                    
-                    // 处理 401 未授权错误 - 尝试刷新 Token
-                    if statusCode == 401 {
-                        LMLogger.log("⚠️ 401 Unauthorized - Attempting to refresh token")
-                        self.handleUnauthorizedError(
-                            url: url,
-                            method: method,
-                            params: params,
-                            type: type,
-                            encoding: encoding,
-                            header: header,
-                            completeHandler: completeHandler
-                        )
-                        return
-                    } else if statusCode == 200 {
-                        if let data = responseData.data,
-                           let object = try? JSONSerialization.jsonObject(with: data,
-                                                                          options: .fragmentsAllowed) as? [String: Any],
-                           let message = object["message"] as? String {
-                            LMLogger.log("⚠️ Status 200 but with error message: \(message)")
+                switch responseData.result {
+                case .success(var responseModel):
+                    responseModel.rawData = responseData.data
+                    DispatchQueue.main.async {
+                        completeHandler(responseModel)
+                        if let message = responseModel.message,
+                           !responseModel.requestSuccess {
+                            // 是否全局显示信息
                         }
                     }
-                    var errorResponse = LMApiResponseModel<T>.error(of: statusCode,
-                                                               requestError: error)
-                    errorResponse.rawData = responseData.data
+                case .failure(_):
+                    LMLogger.log("请求出错 == \(String(describing: responseData.error))")
+                    let statusCode = responseData.response?.statusCode
+                    let errorResponse = LMApiResponseModel<T>.general(of: statusCode,
+                                                                      rawData: responseData.data)
                     DispatchQueue.main.async {
                         completeHandler(errorResponse)
                     }
-                    return
-                }
-                guard var responseValue = responseData.value else {
-                    LMLogger.log("解析出错 == \(String(describing: responseData.error))")
-                    // 解析出错
-                    var emptyResponse = LMApiResponseModel<T>.empty()
-                    emptyResponse.rawData = responseData.data
-                    DispatchQueue.main.async {
-                        completeHandler(emptyResponse)
-                    }
-                    return
-                }
-                responseValue.rawData = responseData.data
-                DispatchQueue.main.async {
-                    completeHandler(responseValue)
-                    if let message = responseValue.message,
-                       !responseValue.requestSuccess {
-                        // 是否全局显示信息
-                    }
                 }
             })
-        }
-    }
-    
-    /// 处理 401 未授权错误 - 尝试刷新 Token 并重试请求
-    private static func handleUnauthorizedError<T: Codable>(
-        url: String,
-        method: MethodType,
-        params: [String: Any]?,
-        type: T.Type,
-        encoding: ParameterEncoding,
-        header: HTTPHeaders?,
-        completeHandler: @escaping ((LMApiResponseModel<T>) -> ())
-    ) {
-        // 尝试刷新 Token
-        LMUserManager.shared.refreshAccessToken { result in
-            switch result {
-            case .success:
-                LMLogger.log("✅ Token refreshed successfully, retrying request")
-                // Token 刷新成功，重试原请求
-                self.requestAndParser(
-                    url,
-                    method: method,
-                    params: params,
-                    type: type,
-                    encoding: encoding,
-                    header: self.defaultHTTPHeaders(), // 使用新的 Token
-                    completeHandler: completeHandler
-                )
-                
-            case .failure(let error):
-                LMLogger.log("❌ Token refresh failed: \(error.localizedDescription)")
-                // Token 刷新失败，返回 401 错误
-                let errorResponse = LMApiResponseModel<T>.error(of: 401, requestError: error as! AFError)
-                DispatchQueue.main.async {
-                    completeHandler(errorResponse)
-                    // 触发自动登出
-                    LMSessionManager.shared.handleAutoLogout(reason: "token_refresh_failed")
-                }
-            }
         }
     }
     

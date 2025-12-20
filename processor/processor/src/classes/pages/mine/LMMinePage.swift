@@ -52,22 +52,6 @@ class LMMinePage: LMPageWrapper {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
         refreshUserData()
-        updateDebugButtonVisibility()
-    }
-    
-    private func updateDebugButtonVisibility() {
-        // 检查是否已存在 Debug 按钮（使用 tag 识别）
-        let existingDebugButton = stackView.viewWithTag(9999)
-        
-        if LMTestDataManager.shared.isTestModeEnabled {
-            // 测试模式开启，如果按钮不存在则创建
-            if existingDebugButton == nil {
-                setupDebugButton()
-            }
-        } else {
-            // 测试模式关闭，移除按钮
-            existingDebugButton?.removeFromSuperview()
-        }
     }
     
     deinit {
@@ -90,36 +74,6 @@ class LMMinePage: LMPageWrapper {
             make.top.leading.trailing.equalToSuperview()
             make.height.equalTo(AppTheme.Screen.safeAreaTop + 44)
         }
-        
-        // 🐛 Debug 模式：添加 Debug 按钮
-        setupDebugButton()
-    }
-    
-    private func setupDebugButton() {
-        // 仅在测试模式下显示 Debug 按钮
-        guard LMTestDataManager.shared.isTestModeEnabled else { return }
-        
-        let debugButton = UIButton(type: .system)
-        debugButton.setTitle("🐛", for: .normal)
-        debugButton.titleLabel?.font = .systemFont(ofSize: 28)
-        debugButton.addTarget(self, action: #selector(debugButtonTapped), for: .touchUpInside)
-        debugButton.tag = 9999 // 用于识别 debug 按钮
-        
-        // 将按钮添加到 profileView 的父视图（stackView）
-        stackView.addSubview(debugButton)
-        debugButton.snp.makeConstraints { make in
-            make.trailing.equalTo(profileView).offset(-8)
-            make.centerY.equalTo(profileView)
-            make.width.height.equalTo(50)
-        }
-        
-        LMLogger.log("🐛 Debug button added to Profile page (right side of user info)")
-    }
-    
-    @objc private func debugButtonTapped() {
-        LMLogger.log("🐛 Debug button tapped - Opening Debug Menu")
-        let debugMenu = LMDebugMenuPage()
-        navigationController?.pushViewController(debugMenu, animated: true)
     }
     
     private func setupScrollView() {
@@ -212,7 +166,7 @@ class LMMinePage: LMPageWrapper {
     
     /// 点击观看广告按钮
     private func watchAdsButtonTapped() {
-        if let user = LMUserManager.shared.currentUser {
+        if let user = LMUserManager.userModel {
             if user.subscriptionType == .plus || user.subscriptionType == .lifelong {
                 showAdWithoutReward()
             } else {
@@ -229,33 +183,10 @@ class LMMinePage: LMPageWrapper {
     
     private func showAdWithoutReward() {
         // TODO: 集成Google AdMob SDK
-        print("Show ad without reward - AdMob integration pending")
-        let config = LMAlertDialogConfig(
-            title: "Thanks for watching!",
-            message: "Your support helps us improve the app",
-            cancelButtonText: "",
-            confirmButtonText: LMText.common.ok,
-            confirmButtonStyle: .normal,
-            onConfirm: {}
-        )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
     }
     
     private func simulateAdRewardSuccess() {
         // 临时模拟：增加5个Inspire Points
-        LMUserManager.shared.addInspirePoints(5)
-        // 显示成功消息
-        let config = LMAlertDialogConfig(
-            title: "Success!",
-            message: "You earned 5 Inspire Points!",
-            cancelButtonText: "",
-            confirmButtonText: LMText.common.ok,
-            confirmButtonStyle: .normal,
-            onConfirm: {}
-        )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
     }
     
     private func upgradeButtonTapped() {
@@ -276,8 +207,7 @@ class LMMinePage: LMPageWrapper {
     
     // MARK: - Data Management
     private func refreshUserData() {
-        let userManager = LMUserManager.shared
-        if let user = userManager.currentUser {
+        if let user = LMUserManager.userModel {
             updateUIForLoggedInUser(user)
         } else {
             updateUIForLoggedOutUser()
@@ -287,18 +217,12 @@ class LMMinePage: LMPageWrapper {
     private func updateUIForLoggedInUser(_ user: LMUserModel) {
         profileView.updateUserInfo(
             name: user.nickname ?? user.username ?? "User",
-            email: user.email ?? "",
+            email: (user.email?.isEmpty ?? true) ? "-" : user.email!,
             avatar: user.avatar
         )
         
         // 计算到期天数
-        var expiryDays: Int?
-        if let expiryDate = user.subscriptionExpiryDate {
-            let calendar = Calendar.current
-            let now = Date()
-            let components = calendar.dateComponents([.day], from: now, to: expiryDate)
-            expiryDays = components.day
-        }
+        let expiryDays: Int = 0
         
         // 更新会员卡片
         let isPlusUser = (user.subscriptionType == .plus || user.subscriptionType == .lifelong)

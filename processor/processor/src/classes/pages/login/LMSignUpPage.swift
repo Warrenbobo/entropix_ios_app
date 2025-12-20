@@ -565,18 +565,16 @@ extension LMSignUpPage {
         let password = passwordInputField.text ?? ""
         updateSignUpButtonEnabledState(false)
         showLoadingIndicator()
-        LMUserManager.shared.register(username: name, email: email, password: password) { [weak self] result in
+        LMUserManager.shared.register(username: name, email: email, password: password) { [weak self] response in
             guard let self = self else { return }
             DispatchQueue.main.async {
                 self.hideLoadingIndicator()
-                switch result {
-                case .success(let registerResponse):
+                if response.requestSuccess, let registerResponse = response.value {
                     LMLogger.log("✅ Registration successful: \(email)")
                     self.handleSuccessfulRegistrationResponse(email: email, registerResponse: registerResponse)
-                    
-                case .failure(let error):
-                    LMLogger.log("❌ Registration failed: \(error.localizedDescription)")
-                    self.handleRegistrationFailure(error: error)
+                } else {
+                    LMLogger.log("❌ Registration failed: \(response.message ?? "Unknown error")")
+                    self.handleRegistrationFailure(errorMessage: response.message ?? "Registration failed")
                 }
             }
         }
@@ -613,7 +611,7 @@ extension LMSignUpPage {
         return isValid
     }
     
-    private func handleSuccessfulRegistrationResponse(email: String, registerResponse: LMUserInfo) {
+    private func handleSuccessfulRegistrationResponse(email: String, registerResponse: LMUserModel) {
 //        LMLogger.log("✅ Registration successful, need email verification: \(registerResponse.needEmailVerification)")
         
         // 重新启用注册按钮
@@ -629,14 +627,11 @@ extension LMSignUpPage {
 //        }
     }
     
-    private func handleRegistrationFailure(error: Error) {
+    private func handleRegistrationFailure(errorMessage: String) {
         // 重新启用注册按钮
         validateFormInputsAndUpdateSignUpButtonState()
         
         // 显示错误提示
-        let nsError = error as NSError
-        let errorMessage = nsError.localizedDescription
-        
         presentRegistrationErrorAlert(message: errorMessage)
     }
     
@@ -683,17 +678,17 @@ extension LMSignUpPage {
     }
     
     private func presentTermsAgreementRequiredAlert() {
-        showToast("Please agree to the terms and conditions to continue.")
+        AppTheme.Toast.showText("Please agree to the terms and conditions to continue.")
     }
     
     private func presentRegistrationSuccessAlert() {
-        showToast("Account created! Please check your email to verify.") { [weak self] _ in
+        AppTheme.Toast.showText("Account created! Please check your email to verify.") { [weak self] _ in
             self?.navigateToLoginViewController()
         }
     }
     
     private func presentRegistrationErrorAlert(message: String) {
-        showToast(message)
+        AppTheme.Toast.showText(message)
     }
 }
 

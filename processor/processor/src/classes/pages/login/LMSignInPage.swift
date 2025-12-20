@@ -466,17 +466,16 @@ extension LMSignInPage {
         let password = passwordInputField.text ?? ""
         updateSignInButtonEnabledState(false)
         showLoadingIndicator()
-        LMUserManager.shared.login(identifier: identifier, password: password) { [weak self] result in
+        LMUserManager.shared.login(identifier: identifier, password: password) { [weak self] response in
             guard let self = self else { return }
             DispatchQueue.main.async {
                 self.hideLoadingIndicator()
-                switch result {
-                case .success(let loginResponse):
-                    LMLogger.log("✅ Login successful: \(loginResponse.user.username)")
+                if response.requestSuccess, let loginResponse = response.value {
+                    LMLogger.log("✅ Login successful: \(loginResponse.user?.username ?? "")")
                     self.handleSuccessfulAuthenticationResponse(loginResponse: loginResponse)
-                case .failure(let error):
-                    LMLogger.log("❌ Login failed: \(error.localizedDescription)")
-                    self.handleAuthenticationFailure(error: error)
+                } else {
+                    LMLogger.log("❌ Login failed: \(response.message ?? "Unknown error")")
+                    self.handleAuthenticationFailure(errorMessage: response.message ?? "Login failed")
                 }
             }
         }
@@ -490,14 +489,11 @@ extension LMSignInPage {
     }
     
     // 登录失败
-    private func handleAuthenticationFailure(error: Error) {
+    private func handleAuthenticationFailure(errorMessage: String) {
         // 重新启用登录按钮
         validateFormInputsAndUpdateSignInButtonState()
         
         // 显示错误提示
-        let nsError = error as NSError
-        let errorMessage = nsError.localizedDescription
-        
         presentAuthenticationErrorAlert(message: errorMessage)
     }
     
@@ -583,11 +579,11 @@ extension LMSignInPage {
     }
     
     private func presentInvalidCredentialsAlert() {
-        showToast("Invalid credentials. Please check your username and password.")
+        AppTheme.Toast.showText("Invalid credentials. Please check your username and password.")
     }
     
     private func presentAuthenticationErrorAlert(message: String) {
-        showToast(message)
+        AppTheme.Toast.showText(message)
     }
 }
 

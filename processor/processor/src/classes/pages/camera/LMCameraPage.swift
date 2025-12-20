@@ -84,7 +84,7 @@ class LMCameraPage: LMPageWrapper {
     var suggestionsCarouselView: LMSuggestionsCarouselView?
     var currentTaskId: String?
     var currentSuggestions: [LMCompositionSuggestion] = []
-    var pollTimer: Timer?
+    var isPolling: Bool = false // 标志：是否正在执行轮询请求
     
     // MARK: - Reference Image Properties
     var referenceImageContainerView: UIView? // 持久化的参考图容器
@@ -431,41 +431,29 @@ class LMCameraPage: LMPageWrapper {
     
     /// 处理权限被拒绝的情况
     private func handlePermissionDenied() {
-        let config = LMAlertDialogConfig(
-            title: "Camera Access Denied",
-            message: "Camera access is required to use this feature.",
-            cancelButtonText: "",
-            confirmButtonText: "OK",
-            confirmButtonStyle: .normal,
-            onConfirm: { [weak self] in
-                // 返回上一页
-                self?.navigationController?.popViewController(animated: true)
-            }
-        )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
+        LMAlertDialog.showAlert(title: "Camera Access Denied",
+                                message: "Camera access is required to use this feature.",
+                                confirmText: "OK") { [weak self] in
+            self?.navigationController?.popViewController(animated: true)
+        }
     }
     
     /// 显示前往设置的提示
     func showPermissionSettingsAlert() {
-        let config = LMAlertDialogConfig(
+        LMAlertDialog.showAlert(
             title: "Camera Access Required",
             message: "FramAist needs camera access to take photos. Please enable camera access in Settings.",
-            cancelButtonText: "Cancel",
-            confirmButtonText: "Open Settings",
-            confirmButtonStyle: .normal,
-            onCancel: { [weak self] in
-                // 返回上一页
-                self?.navigationController?.popViewController(animated: true)
-            },
+            cancelText: "Cancel",
+            confirmText: "Open Settings",
             onConfirm: {
                 if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(settingsURL)
                 }
-            }
-        )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
+            },
+            onCancel: { [weak self] in
+                // 返回上一页
+                self?.navigationController?.popViewController(animated: true)
+            })
     }
     
     /// 公开方法：检查相机权限状态（供外部调用）
@@ -548,6 +536,26 @@ class LMCameraPage: LMPageWrapper {
     // MARK: - Navigation
     func navigateBack() {
         navigationController?.popViewController(animated: true)
+    }
+}
+
+// MARK: - Confirmation Dialogs
+extension LMCameraPage {
+    
+    /// 显示离开 Show Suggestions 确认对话框
+    func showLeaveConfirmation(completion: @escaping (Bool) -> Void) {
+        let config = LMAlertDialogConfig(
+            image: UIImage(named: "exclamation_triangle_orange"),
+            title: "Give Up Inspires?",
+            message: "You will return to the camera. This action cannot be undone.",
+            cancelButtonText: LMLaunageManager.shared.common.cancel,
+            confirmButtonText: "Leave",
+            confirmButtonStyle: .destructive,
+            onCancel: { completion(false) },
+            onConfirm: { completion(true) }
+        )
+        let customDialog = LMAlertDialog(config: config)
+        customDialog.show()
     }
 }
 

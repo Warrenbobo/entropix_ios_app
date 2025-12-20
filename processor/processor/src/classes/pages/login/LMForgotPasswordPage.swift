@@ -323,20 +323,15 @@ extension LMForgotPasswordPage {
         showLoadingIndicator()
         
         // 调用重置密码API
-        LMUserManager.shared.resetPassword(email: email, newPassword: newPassword) { [weak self] result in
-            guard let self = self else { return }
-            
+        LMUserManager.shared.resetPassword(email: email, newPassword: newPassword) { result in
             DispatchQueue.main.async {
                 self.hideLoadingIndicator()
-                
-                switch result {
-                case .success:
+                if result.requestSuccess {
                     LMLogger.log("✅ Password reset successfully for: \(email)")
                     self.showResetPasswordSuccess()
-                    
-                case .failure(let error):
-                    LMLogger.log("❌ Failed to reset password: \(error.localizedDescription)")
-                    self.showResetPasswordError(message: error.localizedDescription)
+                } else {
+                    LMLogger.log("❌ Failed to reset password: \(result.message)")
+                    self.showResetPasswordError(message: result.message ?? "")
                 }
             }
         }
@@ -361,13 +356,13 @@ extension LMForgotPasswordPage {
     }
     
     private func showResetPasswordSuccess() {
-        showToast("Password reset successfully! Please sign in.", duration: 2.5) { [weak self] _ in
+        AppTheme.Toast.showText("Password reset successfully! Please sign in.") { [weak self] _ in
             self?.navigationController?.popViewController(animated: true)
         }
     }
     
     private func showResetPasswordError(message: String) {
-        showToast(message)
+        AppTheme.Toast.showText(message)
     }
 }
 

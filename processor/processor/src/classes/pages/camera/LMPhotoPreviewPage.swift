@@ -558,20 +558,15 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     }
     
     private func showPhotoLibraryPermissionAlert() {
-        let config = LMAlertDialogConfig(
-            title: "Photo Library Access Required",
-            message: "FramAist needs photo library access to save photos. Please enable photo library access in Settings.",
-            cancelButtonText: "Cancel",
-            confirmButtonText: "Open Settings",
-            confirmButtonStyle: .normal,
-            onConfirm: {
-                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(settingsURL)
-                }
+        LMAlertDialog.showAlert(title: "Photo Library Access Required",
+                                message: "FramAist needs photo library access to save photos. Please enable photo library access in Settings.",
+                                cancelText: "Cancel",
+                                confirmText: "Open Settings",
+                                onConfirm: {
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
             }
-        )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
+        })
     }
     
     // MARK: - UI Feedback
@@ -611,16 +606,9 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     }
     
     private func showError(message: String) {
-        let config = LMAlertDialogConfig(
-            title: LMText.common.error,
-            message: message,
-            cancelButtonText: "",
-            confirmButtonText: "OK",
-            confirmButtonStyle: .normal,
-            onConfirm: {}
-        )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
+        LMAlertDialog.showGeneralAlert(message,
+                                       title: LMText.common.error,
+                                       onConfirm: {})
     }
 }
 

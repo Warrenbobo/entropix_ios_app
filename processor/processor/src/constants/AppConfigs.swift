@@ -12,15 +12,12 @@ struct AppConfigs {
     struct Host {
         
         static func path() -> String {
-#if DEBUG
-            return mvpTest
-#else
             return release
-#endif
         }
+        
         static let mvpTest = "http://47.111.152.147:8888"
         
-        static let release = ""
+        static let release = "https://framaist.entropixai.com"
     }
     
     /// 广告位配置

@@ -88,6 +88,8 @@ class LMSuggestionsCarouselView: UIView {
     
     // MARK: - Public Methods
     func updateSuggestions(_ suggestions: [LMCompositionSuggestion]) {
+        LMLogger.log("🔄 Updating suggestions: \(suggestions.count) items")
+        
         self.suggestions = suggestions
         
         // 加载已保存的 Saved Ideas ID 集合
@@ -99,9 +101,11 @@ class LMSuggestionsCarouselView: UIView {
         
         // 创建新的 card views
         createCardViews()
+        LMLogger.log("✅ Created \(cardViews.count) card views")
         
         // 布局 card views
         layoutCardViews()
+        LMLogger.log("✅ Layout completed for \(cardViews.count) cards")
         
         // 第一次刷新数据时，默认选中第一个项目
         if suggestions.count > 0 && selectedIndex < 0 {
@@ -116,6 +120,8 @@ class LMSuggestionsCarouselView: UIView {
                     didSelectSuggestion: firstSuggestion,
                     at: 0
                 )
+                
+                LMLogger.log("✅ Auto-selected first suggestion")
             }
         }
     }
@@ -171,11 +177,10 @@ class LMSuggestionsCarouselView: UIView {
             source: "aigc",
             ready: false,
             imageUrl: nil,
-            similarImageUrl: nil,
+            width: nil,
+            height: nil,
             rank: suggestions.count + 1,
-            score: nil,
-            modelVersion: "v1.0",
-            aspectRatio: nil
+            score: nil
         )
         suggestions.append(generatingSuggestion)
         
@@ -203,7 +208,7 @@ class LMSuggestionsCarouselView: UIView {
         
         // 更新对应的 card view
         let cardView = cardViews[index]
-        let isFavorite = favoriteSuggestionIds.contains(suggestion.id)
+        let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
         cardView.configure(with: suggestion, isFavorite: isFavorite)
         
         // 如果是当前选中的卡片，可能需要重新布局以更新边框等样式
@@ -213,7 +218,7 @@ class LMSuggestionsCarouselView: UIView {
             }
         }
         
-        LMLogger.log("✅ Updated suggestion at index \(index): \(suggestion.id)")
+        LMLogger.log("✅ Updated suggestion at index \(index): \(suggestion.id ?? "unknown")")
     }
     
     /// 批量更新多个构图方案
@@ -232,7 +237,7 @@ class LMSuggestionsCarouselView: UIView {
             
             // 更新对应的 card view
             let cardView = cardViews[index]
-            let isFavorite = favoriteSuggestionIds.contains(suggestion.id)
+            let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
             cardView.configure(with: suggestion, isFavorite: isFavorite)
             
             // 如果更新了选中的卡片，标记需要重新布局
@@ -263,7 +268,7 @@ class LMSuggestionsCarouselView: UIView {
     
     private func createCardView(for suggestion: LMCompositionSuggestion, at index: Int) -> LMSuggestionCardView {
         let cardView = LMSuggestionCardView(frame: .zero)
-        let isFavorite = favoriteSuggestionIds.contains(suggestion.id)
+        let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
         cardView.configure(with: suggestion, isFavorite: isFavorite)
         cardView.delegate = self
         cardView.tag = index
@@ -496,6 +501,16 @@ class LMSuggestionsCarouselView: UIView {
         return suggestions[selectedIndex]
     }
     
+    /// 获取当前选中的卡片视图
+    /// - Returns: 当前选中的 LMSuggestionCardView，如果没有选中则返回 nil
+    func getSelectedCardView() -> LMSuggestionCardView? {
+        guard selectedIndex >= 0 && selectedIndex < cardViews.count else {
+            return nil
+        }
+        
+        return cardViews[selectedIndex]
+    }
+    
     /// 获取当前选中的索引
     /// - Returns: 当前选中的索引，如果没有选中则返回 -1
     func getSelectedIndex() -> Int {
@@ -555,13 +570,20 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
         let index = cardView.tag
         guard index >= 0 && index < suggestions.count else { return }
         let suggestion = suggestions[index]
+        
+        // 确保 suggestion 有有效的 id
+        guard let suggestionId = suggestion.id else {
+            LMLogger.log("⚠️ Cannot toggle favorite: suggestion has no ID")
+            return
+        }
+        
         // 更新收藏状态
         if isFavorite {
-            favoriteSuggestionIds.insert(suggestion.id)
+            favoriteSuggestionIds.insert(suggestionId)
             saveSuggestionAsIdea(suggestion: suggestion, image: cardView.displayedImage)
         } else {
-            favoriteSuggestionIds.remove(suggestion.id)
-            removeSavedIdea(suggestionId: suggestion.id)
+            favoriteSuggestionIds.remove(suggestionId)
+            removeSavedIdea(suggestionId: suggestionId)
         }
         
         delegate?.suggestionsCarouselView(self, didToggleFavorite: suggestion, at: index)
@@ -570,7 +592,7 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
     /// 保存构图方案为 Saved Idea
     private func saveSuggestionAsIdea(suggestion: LMCompositionSuggestion, image: UIImage? = nil) {
         LMPhotoStorageManager.shared.saveSuggestionAsIdea(suggestion: suggestion, image: image)
-        LMLogger.log("💾 Saved idea without image: \(suggestion.id)")
+        LMLogger.log("💾 Saved idea without image: \(suggestion.id ?? "unknown")")
     }
     
     /// 删除已保存的 Idea

@@ -8,9 +8,9 @@
 import Foundation
 
 struct LMCompositionTaskResponse: Codable {
-    let taskId: String
-    let status: String
-    let suggestions: [LMCompositionSuggestion]
+    let taskId: String?
+    let status: String?
+    let suggestions: [LMCompositionSuggestion]?
     
     enum CodingKeys: String, CodingKey {
         case taskId = "task_id"

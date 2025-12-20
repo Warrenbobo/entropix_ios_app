@@ -10,35 +10,14 @@ import SnapKit
 import AVFoundation
 import Photos
 
-// MARK: - User Profile Data Model
-struct UserProfileData {
-    var fullName: String
-    var username: String
-    var emailAddress: String
-    var avatarImage: UIImage?
-    var subscriptionType: String
-    var inspirePoints: String
-    var dateOfBirth: String?
-    
-    static func createDefault() -> UserProfileData {
-        return UserProfileData(
-            fullName: "Alex Johnson",
-            username: "alex.j@email.com",
-            emailAddress: "alex.j@email.com",
-            avatarImage: nil,
-            subscriptionType: "Plus Plan",
-            inspirePoints: "Unlimited",
-            dateOfBirth: nil
-        )
-    }
-}
-
 class LMAccountProfilePage: LMPageWrapper {
     
     // MARK: - Properties
-    private var userProfileData = UserProfileData.createDefault()
+    private var userProfileData = LMUserModel.sample(userId: "")
     private var isEditingMode = false
     private var imagePicker: UIImagePickerController?
+    private var isSaving = false
+    private var isUploadingAvatar = false
     
     // MARK: - UI Components
     private let scrollView = UIScrollView()
@@ -51,14 +30,6 @@ class LMAccountProfilePage: LMPageWrapper {
     private let displayView = LMProfileDisplayView()
     private let editView = LMProfileEditView()
     
-    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
-        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-    }
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         barTitle = LMText.profile.accountProfile
@@ -67,7 +38,7 @@ class LMAccountProfilePage: LMPageWrapper {
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
         setupDelegates()
-        updateViewsWithData()
+        loadUserData()
         showDisplayView()
         
         // 监听语言变化
@@ -75,6 +46,14 @@ class LMAccountProfilePage: LMPageWrapper {
             self,
             selector: #selector(languageDidChange),
             name: LMLaunageManager.languageDidChangeNotification,
+            object: nil
+        )
+        
+        // 监听用户数据变化
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(userDataDidChange),
+            name: LMUserManager.userDataDidChangeNotification,
             object: nil
         )
     }
@@ -107,6 +86,22 @@ class LMAccountProfilePage: LMPageWrapper {
         NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
     }
     
+    override func backButtonItemOnTap() {
+        if isEditingMode {
+            // 如果在编辑模式，检查是否有未保存的修改
+            if editView.hasUnsavedChanges() {
+                // 显示确认弹窗
+                showDiscardChangesAlert()
+            } else {
+                // 没有修改，直接返回显示模式
+                showDisplayView()
+            }
+        } else {
+            // 如果在显示模式，返回上一页
+            navigationController?.popViewController(animated: true)
+        }
+    }
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -120,6 +115,18 @@ class LMAccountProfilePage: LMPageWrapper {
     private func updateTexts() {
         barTitle = LMText.profile.accountProfile
         actionButton.setTitle(LMText.common.save, for: .normal)
+    }
+    
+    @objc private func userDataDidChange() {
+        loadUserData()
+    }
+    
+    /// 从 LMUserManager 加载用户数据
+    private func loadUserData() {
+        if let userModel = LMUserManager.userModel {
+            userProfileData = userModel
+            updateViewsWithData()
+        }
     }
     
     @objc private func keyboardWillShow(_ notification: Notification) {
@@ -156,13 +163,13 @@ extension LMAccountProfilePage {
     private func setupCustomNavigationBar() {
         actionButton.setTitle(LMText.common.save, for: .normal)
         actionButton.contentMode = .right
-        actionButton.frame = CGRect(origin: .zero,
-                                    size: CGSize(width: 50,
-                                                 height: 44))
+        actionButton.frame = CGRect(origin: .zero, size: CGSize(width: 50, height: 44))
         actionButton.setTitleColor(UIColor.systemBlue, for: .normal)
         actionButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         actionButton.addTarget(self, action: #selector(handleSaveButtonTapped), for: .touchUpInside)
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: actionButton)
+        // 初始状态隐藏保存按钮（显示模式下不需要）
+        actionButton.isHidden = true
     }
     
     private func setupUserInterfaceComponents() {
@@ -244,35 +251,67 @@ extension LMAccountProfilePage {
 // MARK: - Action Handlers
 extension LMAccountProfilePage {
     
-    @objc private func handleBackButtonTapped() {
-        if isEditingMode {
-            // 如果在编辑模式，返回到显示模式
-            showDisplayView()
-        } else {
-            // 如果在显示模式，返回上一页
-            navigationController?.popViewController(animated: true)
-        }
+    /// 显示放弃修改确认弹窗
+    private func showDiscardChangesAlert() {
+        LMAlertDialog.showAlert(
+            title: "Discard Changes?",
+            message: "Exiting edit mode will discard all unsaved changes. Are you sure you want to exit?",
+            cancelText: LMText.common.cancel,
+            confirmText: "Discard",
+            onConfirm: { [weak self] in
+                // 用户确认放弃修改，恢复原始数据并返回显示模式
+                self?.editView.updateWithData(self?.userProfileData ?? LMUserModel(userId: ""))
+                self?.showDisplayView()
+            }
+        )
     }
     
     @objc private func handleSaveButtonTapped() {
+        guard !isSaving else { return }
         // 获取编辑视图的数据
         let updatedData = editView.getCurrentData()
+        // 调用后端 API 保存
+        saveProfileToServer(updatedData)
+    }
+    
+    /// 保存用户资料到服务器
+    private func saveProfileToServer(_ data: LMUserModel) {
+        isSaving = true
+        actionButton.isEnabled = false
+        AppTheme.Toast.showText("Saving...")
         
-        // 更新数据模型
-        userProfileData = updatedData
-        
-        // 更新显示视图
-        displayView.updateWithData(userProfileData)
-        
-        // 返回显示模式
-        showDisplayView()
-        
-        // 显示保存成功提示
-        showSaveSuccessAlert()
+        LMApiService.shared.updateProfile(
+            username: data.username,
+            nickname: data.nickname,
+            language: LMLaunageManager.shared.currentLanguage.rawValue,
+            dateOfBirth: data.birthDate
+        ) { [weak self] response in
+            guard let self = self else { return }
+            
+            self.isSaving = false
+            self.actionButton.isEnabled = true
+            
+            if response.requestSuccess, let updatedUser = response.value {
+                // 更新本地用户数据
+                LMUserManager.shared.updateUser(updatedUser)
+                
+                self.userProfileData = updatedUser
+                // 更新显示视图
+                self.displayView.updateWithData(self.userProfileData)
+                // 返回显示模式
+                self.showDisplayView()
+                // 显示保存成功提示
+                self.showSaveSuccessAlert()
+            } else {
+                // 显示错误提示
+                let errorMessage = response.message ?? "Failed to save profile"
+                AppTheme.Toast.showText(errorMessage)
+            }
+        }
     }
     
     private func showSaveSuccessAlert() {
-        showToast(LMText.profile.profileUpdated, duration: 2.0)
+        AppTheme.Toast.showText(LMText.profile.profileUpdated)
     }
 }
 
@@ -300,18 +339,20 @@ extension LMAccountProfilePage: ProfileDisplayViewDelegate {
     
     private func performSubscriptionCancellation() {
         // 更新数据
-        userProfileData.subscriptionType = LMText.profile.freePlan
-        userProfileData.inspirePoints = "3"
-        
+        userProfileData.subscription = LMText.profile.freePlan
         // 更新视图
         updateViewsWithData()
-        
         // 显示确认
-        showToast(LMText.profile.subscriptionCancelled, duration: 2.5)
+        AppTheme.Toast.showText(LMText.profile.subscriptionCancelled)
     }
     
     func profileDisplayViewDidTapEditProfileData(_ view: LMProfileDisplayView) {
         showEditView()
+    }
+    
+    func profileDisplayViewDidTapSubscription(_ view: LMProfileDisplayView) {
+        // TODO: 跳转到订阅页面
+        AppTheme.Toast.showText("Subscription details")
     }
 }
 
@@ -347,27 +388,43 @@ extension LMAccountProfilePage: UIImagePickerControllerDelegate, UINavigationCon
     // MARK: - Image Processing
     
     private func processAndUpdateAvatar(_ image: UIImage) {
+        guard !isUploadingAvatar else { return }
+        
+        isUploadingAvatar = true
+        AppTheme.Toast.showText("Uploading avatar...")
+        
         // 在后台线程处理图片
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             
             // 1. 调整图片大小为 128x128
-            let targetSize = CGSize(width: 128, height: 128)
+            let targetSize = CGSize(width: 300, height: 300)
             let processedImage = self.resizeImage(image, targetSize: targetSize)
             
-            // 2. 裁剪为圆形（可选，因为 UI 会用 cornerRadius 显示）
-            // let circularImage = self.cropToCircle(processedImage)
-            
-            // 回到主线程更新 UI
+            // 回到主线程上传到服务器
             DispatchQueue.main.async {
-                // 更新数据模型
-                self.userProfileData.avatarImage = processedImage
-                
+                self.uploadAvatarToServer(processedImage)
+            }
+        }
+    }
+    
+    /// 上传头像到服务器
+    private func uploadAvatarToServer(_ image: UIImage) {
+        LMApiService.shared.updateAvatar(image: image) { [weak self] response in
+            guard let self = self else { return }
+            self.isUploadingAvatar = false
+            if response.requestSuccess, let updatedUser = response.value {
+                // 更新本地用户数据
+                LMUserManager.shared.updateUser(updatedUser)
+                self.userProfileData = updatedUser
                 // 更新编辑视图的头像
-                self.editView.updateAvatar(processedImage)
-                
+                self.editView.setAvatarImage(image)
                 // 显示成功提示
                 self.showAvatarUpdateSuccess()
+            } else {
+                // 显示错误提示
+                let errorMessage = response.message ?? "Failed to upload avatar"
+                AppTheme.Toast.showText(errorMessage)
             }
         }
     }
@@ -403,42 +460,15 @@ extension LMAccountProfilePage: UIImagePickerControllerDelegate, UINavigationCon
         return resizedImage
     }
     
-    private func cropToCircle(_ image: UIImage) -> UIImage {
-        let size = image.size
-        let minDimension = min(size.width, size.height)
-        
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: minDimension, height: minDimension))
-        let circularImage = renderer.image { context in
-            let rect = CGRect(x: 0, y: 0, width: minDimension, height: minDimension)
-            
-            // 创建圆形路径
-            let path = UIBezierPath(ovalIn: rect)
-            path.addClip()
-            
-            // 绘制图片
-            let drawX = (minDimension - size.width) / 2
-            let drawY = (minDimension - size.height) / 2
-            image.draw(in: CGRect(x: drawX, y: drawY, width: size.width, height: size.height))
-        }
-        
-        return circularImage
-    }
-    
     private func showAvatarUpdateSuccess() {
-        showToast("Avatar updated")
+        AppTheme.Toast.showText("Avatar updated")
     }
     
     private func showImageProcessingError() {
-        let config = LMAlertDialogConfig(
+        LMAlertDialog.showGeneralAlert("Failed to process the selected image. Please try again.",
             title: "Error",
-            message: "Failed to process the selected image. Please try again.",
-            cancelButtonText: "",
-            confirmButtonText: "OK",
-            confirmButtonStyle: .normal,
             onConfirm: {}
         )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
     }
 }
 
@@ -554,19 +584,41 @@ extension LMAccountProfilePage: ProfileEditViewDelegate {
     // MARK: - Permission Denied Alert
     
     private func showPermissionDeniedAlert(for feature: String) {
-        let config = LMAlertDialogConfig(
+        LMAlertDialog.showAlert(
             title: "\(feature) Access Required",
             message: "Please enable \(feature) access in Settings to change your profile photo.",
-            cancelButtonText: LMText.common.cancel,
-            confirmButtonText: "Open Settings",
-            confirmButtonStyle: .normal,
+            cancelText: LMText.common.cancel,
+            confirmText: "Open Settings",
             onConfirm: {
                 if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(settingsURL)
                 }
             }
         )
-        let dialog = LMAlertDialog(config: config)
-        dialog.show(on: self)
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+extension LMAccountProfilePage {
+    
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        // 如果是滑动返回手势
+        if gestureRecognizer == navigationController?.interactivePopGestureRecognizer {
+            if isEditingMode {
+                // 在编辑模式下，检查是否有未保存的修改
+                if editView.hasUnsavedChanges() {
+                    // 有未保存的修改，显示确认弹窗，阻止滑动返回
+                    showDiscardChangesAlert()
+                    return false
+                } else {
+                    // 没有修改，切换到显示模式，阻止滑动返回
+                    showDisplayView()
+                    return false
+                }
+            }
+            // 显示模式下允许滑动返回
+            return true
+        }
+        return true
     }
 }

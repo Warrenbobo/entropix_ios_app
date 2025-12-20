@@ -33,19 +33,15 @@ struct LMUserModel: Codable {
     var username: String?
     var nickname: String?
     var email: String?
-    var avatar: UIImage?
-    var subscriptionType: SubscriptionType
-    var inspirePoints: Int
-    var subscriptionExpiryDate: Date?
+    var avatar: String?
+    var subscription: String?
+    var inspirePoints: Int?
     var isGuest: Bool? // Guest 用户标识
+    var birthDate: String?
+    var language: String?
     
-    // 计算到期天数
-    var subscriptionExpiryDays: Int? {
-        guard let expiryDate = subscriptionExpiryDate else { return nil }
-        let calendar = Calendar.current
-        let now = Date()
-        let components = calendar.dateComponents([.day], from: now, to: expiryDate)
-        return components.day
+    var subscriptionType: SubscriptionType {
+        return SubscriptionType(rawValue: subscription ?? "") ?? .free
     }
     
     // 是否为付费用户
@@ -59,110 +55,30 @@ struct LMUserModel: Codable {
         case username
         case nickname
         case email
-        case subscriptionType = "subscription_type"
-        case inspirePoints = "inspire_points"
-        case subscriptionExpiryDate = "subscription_expiry_date"
-        case avatarData = "avatar_data"
+        case subscription
+        case avatar
+        case inspirePoints
         case isGuest = "is_guest"
-    }
-    
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        userId = try container.decode(String.self, forKey: .userId)
-        username = try container.decodeIfPresent(String.self, forKey: .username)
-        nickname = try container.decodeIfPresent(String.self, forKey: .nickname)
-        email = try container.decodeIfPresent(String.self, forKey: .email)
-        subscriptionType = try container.decode(SubscriptionType.self, forKey: .subscriptionType)
-        inspirePoints = try container.decode(Int.self, forKey: .inspirePoints)
-        subscriptionExpiryDate = try container.decodeIfPresent(Date.self, forKey: .subscriptionExpiryDate)
-        isGuest = try container.decode(Bool.self, forKey: .isGuest)
-        
-        // 解码avatar
-        if let avatarData = try container.decodeIfPresent(Data.self, forKey: .avatarData) {
-            avatar = UIImage(data: avatarData)
-        }
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(userId, forKey: .userId)
-        try container.encodeIfPresent(username, forKey: .username)
-        try container.encodeIfPresent(nickname, forKey: .nickname)
-        try container.encodeIfPresent(email, forKey: .email)
-        try container.encode(subscriptionType, forKey: .subscriptionType)
-        try container.encode(inspirePoints, forKey: .inspirePoints)
-        try container.encodeIfPresent(subscriptionExpiryDate, forKey: .subscriptionExpiryDate)
-        try container.encode(isGuest, forKey: .isGuest)
-        // 编码avatar
-        if let avatar = avatar,
-           let avatarData = avatar.pngData() {
-            try container.encode(avatarData, forKey: .avatarData)
-        }
+        case birthDate = "date_of_birth"
+        case language
     }
     
     // 便捷初始化方法
-    init(
+    static func sample(
         userId: String,
         username: String? = nil,
         nickname: String? = nil,
         email: String? = nil,
-        avatar: UIImage? = nil,
-        subscriptionType: SubscriptionType = .free,
-        inspirePoints: Int = 0,
-        subscriptionExpiryDate: Date? = nil,
+        avatar: String? = nil,
+        subscription: String = "",
         isGuest: Bool = true
-    ) {
-        self.userId = userId
-        self.username = username
-        self.nickname = nickname
-        self.email = email
-        self.avatar = avatar
-        self.subscriptionType = subscriptionType
-        self.inspirePoints = inspirePoints
-        self.subscriptionExpiryDate = subscriptionExpiryDate
-        self.isGuest = isGuest
-    }
-    
-    // 从LMUserInfo转换
-    init(from userInfo: LMUserInfo, subscriptionType: SubscriptionType = .free, inspirePoints: Int = 0) {
-        self.userId = userInfo.userId
-        self.username = userInfo.username
-        self.nickname = nil
-        self.email = userInfo.email
-        self.avatar = nil
-        self.subscriptionType = subscriptionType
-        self.inspirePoints = inspirePoints
-        self.subscriptionExpiryDate = nil
-        self.isGuest = userInfo.isGuest
-    }
-}
-
-// MARK: - LMUserInfo (API响应模型)
-
-struct LMUserInfo: Codable {
-    let userId: String
-    let username: String
-    let email: String
-    let subscription: String?
-    let membership: String?
-    let isGuest: Bool? // Guest 用户标识
-    
-    enum CodingKeys: String, CodingKey {
-        case userId = "user_id"
-        case username
-        case email
-        case subscription
-        case membership
-        case isGuest = "is_guest"
-    }
-    
-    // 转换为LMUserModel
-    func toLMUser(subscriptionType: SubscriptionType = .free,
-                  inspirePoints: Int = 0) -> LMUserModel {
-        return LMUserModel(
-            from: self,
-            subscriptionType: subscriptionType,
-            inspirePoints: inspirePoints
-        )
+    ) -> LMUserModel {
+        return LMUserModel(userId: userId,
+                           username: username,
+                           nickname: nickname,
+                           email: email,
+                           avatar: avatar,
+                           subscription: subscription,
+                           isGuest: isGuest)
     }
 }

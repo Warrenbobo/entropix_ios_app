@@ -73,6 +73,7 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
         let userID = appleIDCredential.user
         let fullName = appleIDCredential.fullName
         let email = appleIDCredential.email
+        
         // 获取 ID Token
         guard let identityTokenData = appleIDCredential.identityToken,
               let identityToken = String(data: identityTokenData, encoding: .utf8) else {
@@ -84,6 +85,7 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
             completion?(.failure(error))
             return
         }
+        
         // 构建完整姓名
         var fullNameString: String?
         if let fullName = fullName {
@@ -92,20 +94,65 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
                 fullNameString = components.joined(separator: " ")
             }
         }
+        
         LMLogger.log("🍎 Apple Sign In success")
         LMLogger.log("   User ID: \(userID)")
         LMLogger.log("   Full Name: \(fullNameString ?? "nil")")
         LMLogger.log("   Email: \(email ?? "nil")")
         
-        // 调用后端 API - 使用新的 loginWithApple 方法
-        LMUserManager.shared.loginWithApple(
+        // ✅ Apple 登录流程：先注册，再登录
+        LMLogger.log("🍎 Step 1: Registering Apple user...")
+        LMApiService.shared.registerWithApple(
             appleUid: userID,
             idToken: identityToken,
-            email: email
-        ) { [weak self] result in
-            DispatchQueue.main.async {
-                self?.completion?(result)
-                self?.completion = nil
+            email: email,
+            fullName: fullNameString,
+            username: LMUserManager.userModel?.username,
+            deviceId: LMPackageManager.package.uuid
+        ) { [weak self] registerResponse in
+            if registerResponse.requestSuccess, let response = registerResponse.value {
+                LMLogger.log("✅ Apple registration successful for user: \(response.user?.username ?? "unknown")")
+                if let userModel = response.user {
+                    LMUserManager.shared.updateUser(userModel)
+                }
+                // 新用户注册成功后，自动领取免费试用（14天）
+                LMLogger.log("🍎 Step 2: Claiming free trial for new user...")
+                self?.claimFreeTrialAfterRegistration { trialResult in
+                    DispatchQueue.main.async {
+                        // 无论免费试用是否成功，都返回登录成功结果
+                        self?.completion?(.success(response))
+                        self?.completion = nil
+                    }
+                }
+            } else {
+                LMLogger.log("❌ Apple registration failed: \(registerResponse.message ?? "Unknown error")")
+                AppTheme.Toast.showText(registerResponse.message)
+            }
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    /// 注册成功后领取免费试用
+    private func claimFreeTrialAfterRegistration(completion: @escaping (Bool) -> Void) {
+        LMUserManager.shared.claimFreeTrial { response in
+            if response.requestSuccess, let data = response.value {
+                if let granted = data.granted, granted {
+                    LMLogger.log("🎉 Free trial claimed successfully!")
+                    if let subscription = data.subscription {
+                        LMLogger.log("   Plan: \(subscription.planType ?? "trial")")
+                        LMLogger.log("   Status: \(subscription.status ?? "active")")
+                        LMLogger.log("   End Date: \(subscription.endDate ?? "N/A")")
+                    }
+                    completion(true)
+                } else {
+                    LMLogger.log("⚠️ Free trial not granted (may already have subscription)")
+                    completion(false)
+                }
+            } else {
+                LMLogger.log("⚠️ Failed to claim free trial: \(response.message ?? "Unknown error")")
+                // 免费试用领取失败不影响登录流程
+                completion(false)
             }
         }
     }

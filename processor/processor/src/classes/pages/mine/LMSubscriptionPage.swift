@@ -439,13 +439,13 @@ extension LMSubscriptionPage: LMSubscriptionDialogViewDelegate {
     }
     
     private func showPurchaseSuccess(plan: SubscriptionPlan) {
-        showToast("🎉 Successfully subscribed to \(plan.title)!", duration: 2.5)
+        AppTheme.Toast.showText("🎉 Successfully subscribed to \(plan.title)!")
     }
     
     private func showPurchaseError(_ error: Error) {
         let errorMessage = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
         
-        showToast(errorMessage)
+        AppTheme.Toast.showText(errorMessage)
     }
     
     private func updateUIForSubscriptionStatus() {

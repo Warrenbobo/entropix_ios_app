@@ -24,7 +24,7 @@ extension LMPhotoStorageManager {
         let timestamp = Date()
         
         // Check if already saved
-        if let existing = fetchSavedIdea(byId: ideaId) {
+        if let existing = fetchSavedIdea(byId: ideaId ?? "") {
             LMLogger.log("💡 Idea already saved with ID: \(ideaId)")
             return existing
         }
@@ -32,7 +32,7 @@ extension LMPhotoStorageManager {
         // Save image to file if provided
         var imagePath: String?
         if let img = image {
-            imagePath = saveIdeaImageToFile(image: img, ideaId: ideaId)
+            imagePath = saveIdeaImageToFile(image: img, ideaId: ideaId ?? "")
         }
         
         // Generate thumbnail
@@ -44,13 +44,13 @@ extension LMPhotoStorageManager {
         // Create Core Data entity
         let ideaEntity = SavedIdeaEntity(context: context)
         ideaEntity.id = ideaId
-        ideaEntity.userId = LMUserManager.shared.currentUser?.userId
+        ideaEntity.userId = LMUserManager.userModel?.userId
         ideaEntity.sceneType = suggestion.sceneType
         ideaEntity.source = suggestion.source
         ideaEntity.imageUrl = suggestion.imageUrl
         ideaEntity.imagePath = imagePath
         ideaEntity.thumbnailData = thumbnailData
-        ideaEntity.rank = Int32(suggestion.rank)
+        ideaEntity.rank = Int32(suggestion.rank ?? 0)
         ideaEntity.confidence = suggestion.score ?? 0.0
         ideaEntity.savedDate = timestamp
         ideaEntity.isSynced = false
@@ -77,7 +77,7 @@ extension LMPhotoStorageManager {
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "savedDate", ascending: false)]
         
         // Filter by user if logged in
-        if let userId = LMUserManager.shared.currentUser?.userId {
+        if let userId = LMUserManager.userModel?.userId {
             fetchRequest.predicate = NSPredicate(format: "isMarkedDeleted == NO AND userId == %@", userId)
         }
         

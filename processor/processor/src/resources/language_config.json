@@ -104,7 +104,11 @@
       "oneTimePayment": "One-time payment, yours forever",
       "autoRenewNotice": "Auto-renewing subscriptions automatically renew unless canceled at least 24 hours before the end of the current period.",
       "termsOfService": "Terms of Service",
-      "privacyPolicy": "Privacy Policy"
+      "privacyPolicy": "Privacy Policy",
+      "trialExpiredTitle": "Trial Expired",
+      "trialExpiredMessage": "Your trial membership has expired. Subscribe to continue using.",
+      "subscribeNow": "Subscribe Now",
+      "gotIt": "Got It"
     },
     "auth": {
       "signIn": "Sign In",
@@ -318,7 +322,11 @@
       "oneTimePayment": "一次性付款，永久拥有",
       "autoRenewNotice": "自动续订订阅将在当前周期结束前至少 24 小时自动续订，除非取消。",
       "termsOfService": "服务条款",
-      "privacyPolicy": "隐私政策"
+      "privacyPolicy": "隐私政策",
+      "trialExpiredTitle": "试用已到期",
+      "trialExpiredMessage": "您的试用会员已到期，续费会员继续使用",
+      "subscribeNow": "开通会员",
+      "gotIt": "知道了"
     },
     "auth": {
       "signIn": "登录",

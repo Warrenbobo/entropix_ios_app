@@ -164,6 +164,12 @@ struct LMSubscriptionTextConfig: Codable {
     var autoRenewNotice: String = "Auto-renewing subscriptions automatically renew unless canceled at least 24 hours before the end of the current period."
     var termsOfService: String = "Terms of Service"
     var privacyPolicy: String = "Privacy Policy"
+    
+    // Trial Expired
+    var trialExpiredTitle: String = "Trial Expired"
+    var trialExpiredMessage: String = "Your trial membership has expired. Subscribe to continue using."
+    var subscribeNow: String = "Subscribe Now"
+    var gotIt: String = "Got It"
 }
 
 // MARK: - Auth Text Config

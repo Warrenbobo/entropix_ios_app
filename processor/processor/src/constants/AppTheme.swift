@@ -161,6 +161,18 @@ struct AppTheme {
             }
         }
     }
+    
+    struct Toast {
+        
+        /// 显示toast提示
+        static func showText(_ message: String?,
+                          duration: TimeInterval = 3.0,
+                          completion: ((Bool) -> Void)? = nil) {
+            guard let windowView = Screen.window() else { return }
+            windowView.hideAllToasts()
+            windowView.makeToast(message, duration: duration, position: .center, completion: completion)
+        }
+    }
 
 }
 

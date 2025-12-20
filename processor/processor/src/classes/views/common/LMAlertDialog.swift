@@ -14,8 +14,8 @@ struct LMAlertDialogConfig {
     let image: UIImage?
     let title: String
     let message: String?
-    let cancelButtonText: String
-    let confirmButtonText: String
+    let cancelButtonText: String?
+    let confirmButtonText: String?
     let confirmButtonStyle: ButtonStyle
     let onCancel: (() -> Void)?
     let onConfirm: (() -> Void)?
@@ -29,8 +29,8 @@ struct LMAlertDialogConfig {
         image: UIImage? = nil,
         title: String,
         message: String? = nil,
-        cancelButtonText: String = "Cancel",
-        confirmButtonText: String,
+        cancelButtonText: String? = nil,
+        confirmButtonText: String? = "OK",
         confirmButtonStyle: ButtonStyle = .destructive,
         onCancel: (() -> Void)? = nil,
         onConfirm: (() -> Void)? = nil
@@ -45,6 +45,67 @@ struct LMAlertDialogConfig {
         self.onConfirm = onConfirm
     }
 }
+
+extension LMAlertDialog {
+    
+    /// 显示自定义弹窗
+    public static func showAlert(title: String,
+                                 message: String,
+                                 cancelText: String? = nil,
+                                 confirmText: String? = nil,
+                                 confirmStyle: LMAlertDialogConfig.ButtonStyle = .normal,
+                                 onConfirm: @escaping (() -> Void),
+                                 onCancel: (() -> Void)? = nil) {
+        let config = LMAlertDialogConfig(
+            title: title,
+            message: message,
+            cancelButtonText: cancelText,
+            confirmButtonText: confirmText,
+            confirmButtonStyle: confirmStyle,
+            onCancel: onCancel,
+            onConfirm: onConfirm
+        )
+        // Hide cancel button by making it invisible
+        let dialog = LMAlertDialog(config: config)
+        dialog.show()
+    }
+    
+    /// 显示提醒弹窗
+    public static func showConfirmAlert(_ message: String,
+                                        onConfirm: (() -> Void)? = nil) {
+        let config = LMAlertDialogConfig(
+            title: "Kind Tips",
+            message: message,
+            confirmButtonText: LMText.common.ok,
+            confirmButtonStyle: .normal,
+            onConfirm: onConfirm
+        )
+        // Hide cancel button by making it invisible
+        let dialog = LMAlertDialog(config: config)
+        dialog.show()
+    }
+    
+    public static func showGeneralAlert(_ message: String,
+                                        title: String = "Kind Tips",
+                                        cancelText: String = LMText.common.cancel,
+                                        confirmText: String = LMText.common.ok,
+                                        onConfirm: @escaping (() -> Void),
+                                        onCancel: (() -> Void)? = nil) {
+        let config = LMAlertDialogConfig(
+            title: title,
+            message: message,
+            cancelButtonText: cancelText,
+            confirmButtonText: confirmText,
+            confirmButtonStyle: .normal,
+            onCancel: onCancel,
+            onConfirm: onConfirm
+        )
+        // Hide cancel button by making it invisible
+        let dialog = LMAlertDialog(config: config)
+        dialog.show()
+    }
+}
+
 
 /// Global alert dialog view with customizable content and actions
 class LMAlertDialog: UIView {
@@ -95,6 +156,7 @@ class LMAlertDialog: UIView {
     private let cancelButton: UIButton = {
         let button = UIButton(type: .system)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.titleLabel?.adjustsFontSizeToFitWidth = true
         button.layer.cornerRadius = 12
         button.layer.masksToBounds = true
         return button
@@ -103,6 +165,7 @@ class LMAlertDialog: UIView {
     private let confirmButton: UIButton = {
         let button = UIButton(type: .system)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        button.titleLabel?.adjustsFontSizeToFitWidth = true
         button.layer.cornerRadius = 12
         button.layer.masksToBounds = true
         return button
@@ -209,7 +272,7 @@ class LMAlertDialog: UIView {
         }
         
         // Configure buttons
-        let showCancelButton = !config.cancelButtonText.isEmpty
+        let showCancelButton = !(config.cancelButtonText?.isEmpty ?? true)
         
         cancelButton.setTitle(config.cancelButtonText, for: .normal)
         cancelButton.backgroundColor = .hexColor("#F2F2F2")
@@ -264,10 +327,10 @@ class LMAlertDialog: UIView {
     // MARK: - Public Methods
     
     /// Show the dialog on the specified view controller
-    func show(on viewController: UIViewController, onDismiss: (() -> Void)? = nil) {
+    func show(onDismiss: (() -> Void)? = nil) {
         self.onDismiss = onDismiss
         
-        guard let window = viewController.view.window else { return }
+        guard let window = AppTheme.Screen.window() else { return }
         
         self.frame = window.bounds
         self.alpha = 0
@@ -276,7 +339,6 @@ class LMAlertDialog: UIView {
         // Animate in
         UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseOut) {
             self.alpha = 1
-
         }
     }
     

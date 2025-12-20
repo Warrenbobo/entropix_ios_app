@@ -3,19 +3,20 @@
 //  processor
 //
 //  构图历史结果模型
+//  Updated: 2025-01-16 - 所有属性改为 optional
 //
 
 import Foundation
 
 struct LMCompositionResult: Codable {
-    let taskId: String
-    let suggestionId: String
-    let imageUrl: String
-    let sceneType: String
-    let rank: Int
-    let score: Double?
-    let modelVersion: String
-    let savedAt: String
+    var taskId: String?
+    var suggestionId: String?
+    var imageUrl: String?
+    var sceneType: String?
+    var rank: Int?
+    var score: Double?
+    var modelVersion: String?
+    var savedAt: String?
     
     enum CodingKeys: String, CodingKey {
         case taskId = "task_id"

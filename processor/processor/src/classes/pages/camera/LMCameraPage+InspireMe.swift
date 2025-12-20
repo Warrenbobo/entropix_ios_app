@@ -17,14 +17,14 @@ extension LMCameraPage {
         // 检查是否正在使用后置摄像头
         guard !isUsingFrontCamera else {
             LMLogger.log("⚠️ Cannot use Inspire Me with front camera")
-            showAlert("Inspire Me is only available with back camera", style: .toast)
+            AppTheme.Toast.showText("Inspire Me is only available with back camera")
             return false
         }
         
         // 检查相机会话是否正在运行
         guard let captureSession = captureSession, captureSession.isRunning else {
             LMLogger.log("⚠️ Camera session is not running")
-            showAlert("Camera is not ready. Please try again.", style: .toast)
+            AppTheme.Toast.showText("Camera is not ready. Please try again.")
             return false
         }
         
@@ -77,9 +77,6 @@ extension LMCameraPage {
         
         let sceneFeature = analyzeSceneWithFastVLM(image)
         
-        // 📝 记录数据到 LMTestDataManager
-        LMTestDataManager.shared.recordInspireMeData(sceneFeature: sceneFeature, image: image)
-        
         processAndUploadImage(image, sceneFeature: sceneFeature)
         syncInspirePointsToBackend()
     }
@@ -114,7 +111,7 @@ extension LMCameraPage {
         // Add a custom action sheet for multiple options
         // For now, we'll use the simpler two-button approach
         // TODO: Consider creating a custom action sheet component for 3+ options
-        dialog.show(on: self)
+        dialog.show()
     }
     
     func navigateToProfile() {

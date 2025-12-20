@@ -202,13 +202,13 @@ extension LMCameraPage {
         
         guard let compressedImage = compressImage(image, maxLongSide: 1080) else {
             hideProcessingOverlay()
-            showAlert("Image compression failed", style: .error)
+            AppTheme.Toast.showText("Image compression failed")
             return
         }
         
         guard let optimizedImage = compressImage(image, maxLongSide: 960) else {
             hideProcessingOverlay()
-            showAlert("Image optimization failed", style: .error)
+            AppTheme.Toast.showText("Image optimization failed")
             return
         }
         
@@ -231,19 +231,64 @@ extension LMCameraPage {
                 
             case .failure(let error):
                 LMLogger.log("❌ Task submission failed: \(error.localizedDescription)")
-                self?.showAlert("Analysis failed: \(error.localizedDescription)", style: .error)
+                
+                // 检查是否为订阅失效错误
+                if self?.isSubscriptionExpiredError(error) == true {
+                    self?.showSubscriptionExpiredAlert()
+                } else {
+                    AppTheme.Toast.showText("Analysis failed: \(error.localizedDescription)")
+                }
             }
         }
     }
     
+    /// 检查是否为订阅失效错误
+    private func isSubscriptionExpiredError(_ error: Error) -> Bool {
+        let nsError = error as NSError
+        let errorMessage = nsError.localizedDescription.lowercased()
+        
+        // 检查错误消息中是否包含订阅相关的关键词
+        let subscriptionKeywords = [
+            "subscription",
+            "trial",
+            "expired",
+            "免费试用",
+            "订阅",
+            "到期",
+            "失效"
+        ]
+        
+        for keyword in subscriptionKeywords {
+            if errorMessage.contains(keyword.lowercased()) {
+                return true
+            }
+        }
+        
+        return false
+    }
+    
+    /// 显示订阅过期弹窗
+    private func showSubscriptionExpiredAlert() {
+        LMAlertDialog.showAlert(
+            title: LMText.subscription.trialExpiredTitle,
+            message: LMText.subscription.trialExpiredMessage,
+            cancelText: LMText.subscription.gotIt,
+            confirmText: LMText.subscription.subscribeNow,
+            confirmStyle: .destructive,
+            onConfirm: { [weak self] in
+                self?.navigateToSubscription()
+            }
+        )
+    }
+    
     func navigateToShowSuggestions(_ response: CompositionTaskResponse) {
         LMLogger.log("✅ Composition analysis completed")
-        LMLogger.log("📊 Received \(response.suggestions.count) suggestions")
+        LMLogger.log("📊 Received \(response.suggestions?.count) suggestions")
         
         // PRD 3.14: 在 Camera 页面内展示构图建议，不跳转到独立页面
         DispatchQueue.main.async { [weak self] in
             self?.enterShowSuggestionsState(
-                taskId: response.taskId,
+                taskId: response.taskId ?? "",
                 suggestions: response.suggestions
             )
         }

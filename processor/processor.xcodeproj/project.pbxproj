@@ -49,11 +49,6 @@
 		EA56DDE02EC091B1000AB522 /* LMCompositionTaskResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC72EC091B1000AB522 /* LMCompositionTaskResponse.swift */; };
 		EA56DDE72EC091BD000AB522 /* LMApiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDE32EC091BD000AB522 /* LMApiService.swift */; };
 		EA5835442EC976200013E531 /* LMCameraPage+ShowSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */; };
-		EA5835462EC979830013E531 /* LMCameraPage+Alerts.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835452EC979830013E531 /* LMCameraPage+Alerts.swift */; };
-		EA5835492EC999330013E531 /* LMTestModeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835482EC999330013E531 /* LMTestModeConfig.swift */; };
-		EA58354A2EC999330013E531 /* LMTestDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835472EC999330013E531 /* LMTestDataManager.swift */; };
-		EA58354E2EC99E0D0013E531 /* LMDebugMenuPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA58354B2EC99E0D0013E531 /* LMDebugMenuPage.swift */; };
-		EA58354F2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA58354C2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift */; };
 		EA5835512EC99E1F0013E531 /* LMInspireMeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */; };
 		EA5835562EC9DBC70013E531 /* language_config.json in Resources */ = {isa = PBXBuildFile; fileRef = EA5835552EC9DBC70013E531 /* language_config.json */; };
 		EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */; };
@@ -104,6 +99,11 @@
 		EACA1D112E7E519100C80883 /* LMMinePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1D102E7E519100C80883 /* LMMinePage.swift */; };
 		EACB2E7C2EDC22B700983697 /* LMPhotoPreviewPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB2E7B2EDC22B700983697 /* LMPhotoPreviewPage.swift */; };
 		EACB2E7E2EDC422700983697 /* LMCapturedPhotoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB2E7D2EDC422700983697 /* LMCapturedPhotoData.swift */; };
+		EACB30E92EF63E3500EC643C /* LMCompositionJobDetailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30E52EF63E3500EC643C /* LMCompositionJobDetailResponse.swift */; };
+		EACB30EA2EF63E3500EC643C /* LMCompositionJobListResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30E62EF63E3500EC643C /* LMCompositionJobListResponse.swift */; };
+		EACB30EB2EF63E3500EC643C /* LMFreeTrialResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30E82EF63E3500EC643C /* LMFreeTrialResponse.swift */; };
+		EACB30EC2EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30E72EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift */; };
+		EACB30F02EF6B53E00EC643C /* LMProfileItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30EF2EF6B53E00EC643C /* LMProfileItemView.swift */; };
 		EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC942E7E548A00586EC7 /* LMSignInPage.swift */; };
 		EAFBAC992E7E5A0800586EC7 /* LMMineUserInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC982E7E5A0800586EC7 /* LMMineUserInfoView.swift */; };
 		EAFBAC9F2E7E65B000586EC7 /* LMProcessorTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC9E2E7E65B000586EC7 /* LMProcessorTopBar.swift */; };
@@ -185,11 +185,6 @@
 		EA56DDCF2EC091B1000AB522 /* LMUserRegisterResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserRegisterResponse.swift; sourceTree = "<group>"; };
 		EA56DDE32EC091BD000AB522 /* LMApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiService.swift; sourceTree = "<group>"; };
 		EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+ShowSuggestions.swift"; sourceTree = "<group>"; };
-		EA5835452EC979830013E531 /* LMCameraPage+Alerts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+Alerts.swift"; sourceTree = "<group>"; };
-		EA5835472EC999330013E531 /* LMTestDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMTestDataManager.swift; sourceTree = "<group>"; };
-		EA5835482EC999330013E531 /* LMTestModeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMTestModeConfig.swift; sourceTree = "<group>"; };
-		EA58354B2EC99E0D0013E531 /* LMDebugMenuPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDebugMenuPage.swift; sourceTree = "<group>"; };
-		EA58354C2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeRecordsPage.swift; sourceTree = "<group>"; };
 		EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeRecord.swift; sourceTree = "<group>"; };
 		EA5835552EC9DBC70013E531 /* language_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = language_config.json; sourceTree = "<group>"; };
 		EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeButtonView.swift; sourceTree = "<group>"; };
@@ -241,6 +236,11 @@
 		EACA1D102E7E519100C80883 /* LMMinePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMMinePage.swift; sourceTree = "<group>"; };
 		EACB2E7B2EDC22B700983697 /* LMPhotoPreviewPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPhotoPreviewPage.swift; sourceTree = "<group>"; };
 		EACB2E7D2EDC422700983697 /* LMCapturedPhotoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCapturedPhotoData.swift; sourceTree = "<group>"; };
+		EACB30E52EF63E3500EC643C /* LMCompositionJobDetailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionJobDetailResponse.swift; sourceTree = "<group>"; };
+		EACB30E62EF63E3500EC643C /* LMCompositionJobListResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionJobListResponse.swift; sourceTree = "<group>"; };
+		EACB30E72EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionTaskDetailResponse.swift; sourceTree = "<group>"; };
+		EACB30E82EF63E3500EC643C /* LMFreeTrialResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFreeTrialResponse.swift; sourceTree = "<group>"; };
+		EACB30EF2EF6B53E00EC643C /* LMProfileItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileItemView.swift; sourceTree = "<group>"; };
 		EAFBAC922E7E540D00586EC7 /* processor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = processor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EAFBAC942E7E548A00586EC7 /* LMSignInPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSignInPage.swift; sourceTree = "<group>"; };
 		EAFBAC982E7E5A0800586EC7 /* LMMineUserInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMMineUserInfoView.swift; sourceTree = "<group>"; };
@@ -343,15 +343,6 @@
 			path = api;
 			sourceTree = "<group>";
 		};
-		EA58354D2EC99E0D0013E531 /* debug */ = {
-			isa = PBXGroup;
-			children = (
-				EA58354B2EC99E0D0013E531 /* LMDebugMenuPage.swift */,
-				EA58354C2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift */,
-			);
-			path = debug;
-			sourceTree = "<group>";
-		};
 		EACA1BE82E7E408900C80883 = {
 			isa = PBXGroup;
 			children = (
@@ -378,8 +369,6 @@
 				EA3F16652EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift */,
 				EA3F16662EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift */,
 				EA3F16672EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift */,
-				EA5835472EC999330013E531 /* LMTestDataManager.swift */,
-				EA5835482EC999330013E531 /* LMTestModeConfig.swift */,
 				EA6019352EC877620067F2F7 /* LMAppleAuthManager.swift */,
 				EA6019372EC877620067F2F7 /* LMSessionManager.swift */,
 				EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */,
@@ -398,6 +387,10 @@
 		EACA1CD12E7E49B600C80883 /* models */ = {
 			isa = PBXGroup;
 			children = (
+				EACB30E52EF63E3500EC643C /* LMCompositionJobDetailResponse.swift */,
+				EACB30E62EF63E3500EC643C /* LMCompositionJobListResponse.swift */,
+				EACB30E72EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift */,
+				EACB30E82EF63E3500EC643C /* LMFreeTrialResponse.swift */,
 				EACB2E7D2EDC422700983697 /* LMCapturedPhotoData.swift */,
 				EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */,
 				EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */,
@@ -425,7 +418,6 @@
 		EACA1CD32E7E49B600C80883 /* pages */ = {
 			isa = PBXGroup;
 			children = (
-				EA58354D2EC99E0D0013E531 /* debug */,
 				EACA1D022E7E4ADD00C80883 /* entrance */,
 				EACA1D0E2E7E517400C80883 /* camera */,
 				EACA1D0F2E7E517B00C80883 /* mine */,
@@ -555,7 +547,6 @@
 				EA56DDAF2EC08E1D000AB522 /* LMCameraPage+ImageProcessing.swift */,
 				EA56DDB02EC08E1D000AB522 /* LMCameraPage+InspireMe.swift */,
 				EA56DDBE2EC08E81000AB522 /* LMCameraPage+Session.swift */,
-				EA5835452EC979830013E531 /* LMCameraPage+Alerts.swift */,
 				EACB2E7B2EDC22B700983697 /* LMPhotoPreviewPage.swift */,
 			);
 			path = camera;
@@ -593,6 +584,7 @@
 		EAFBAC962E7E59F000586EC7 /* mine */ = {
 			isa = PBXGroup;
 			children = (
+				EACB30EF2EF6B53E00EC643C /* LMProfileItemView.swift */,
 				EAFBAD862E93B94B00586EC7 /* LMPhotoCollectionView.swift */,
 				EAFBADC12EA36E4500586EC7 /* LMGalleryPageView.swift */,
 				EAFBADC32EA36E5900586EC7 /* LMIdeasPageView.swift */,
@@ -765,6 +757,10 @@
 				EA3F166C2EE3DDCC00B24DA8 /* LMARGuidanceView.swift in Sources */,
 				EA8640712ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift in Sources */,
 				EA8640722ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift in Sources */,
+				EACB30E92EF63E3500EC643C /* LMCompositionJobDetailResponse.swift in Sources */,
+				EACB30EA2EF63E3500EC643C /* LMCompositionJobListResponse.swift in Sources */,
+				EACB30EB2EF63E3500EC643C /* LMFreeTrialResponse.swift in Sources */,
+				EACB30EC2EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift in Sources */,
 				EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */,
 				EAFBACAF2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift in Sources */,
 				EAFBADC42EA36E5900586EC7 /* LMIdeasPageView.swift in Sources */,
@@ -780,8 +776,6 @@
 				EACA1CF22E7E49B600C80883 /* LMApiResponseModel.swift in Sources */,
 				EACA1CF32E7E49B600C80883 /* processor.xcdatamodeld in Sources */,
 				EA8629B92EB5F7C000F2B00E /* LMLaunageManager.swift in Sources */,
-				EA58354E2EC99E0D0013E531 /* LMDebugMenuPage.swift in Sources */,
-				EA58354F2EC99E0D0013E531 /* LMInspireMeRecordsPage.swift in Sources */,
 				EAFBADC82EA4C90E00586EC7 /* LMNotificationsPage.swift in Sources */,
 				EA54E1DB2EBEED04000DB5EE /* LMSubscriptionPage.swift in Sources */,
 				EA8629A92EB5B18B00F2B00E /* LMProfileEditView.swift in Sources */,
@@ -833,7 +827,6 @@
 				EA56DDDE2EC091B1000AB522 /* LMUserRegisterResponse.swift in Sources */,
 				EA56DDDF2EC091B1000AB522 /* LMCompositionSuggestion.swift in Sources */,
 				EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */,
-				EA5835462EC979830013E531 /* LMCameraPage+Alerts.swift in Sources */,
 				EA56DDE02EC091B1000AB522 /* LMCompositionTaskResponse.swift in Sources */,
 				EAFBACB52E7E7C7100586EC7 /* LMValidatedInputField.swift in Sources */,
 				EAFBACB72E7E7D1F00586EC7 /* LMCameraPage.swift in Sources */,
@@ -856,12 +849,11 @@
 				EA3F16682EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift in Sources */,
 				EA3F16692EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift in Sources */,
 				EA3F166A2EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift in Sources */,
+				EACB30F02EF6B53E00EC643C /* LMProfileItemView.swift in Sources */,
 				EA8629B22EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift in Sources */,
 				EA8629B42EB5EEF700F2B00E /* LMSuggestionCardView.swift in Sources */,
 				EA8629B52EB5EEF700F2B00E /* LMCameraPreviewManager.swift in Sources */,
 				EA8629B62EB5EEF700F2B00E /* LMSuggestionsCarouselView.swift in Sources */,
-				EA5835492EC999330013E531 /* LMTestModeConfig.swift in Sources */,
-				EA58354A2EC999330013E531 /* LMTestDataManager.swift in Sources */,
 				EA8629AB2EB5B70300F2B00E /* LMNotificationTableViewCell.swift in Sources */,
 				EA5835512EC99E1F0013E531 /* LMInspireMeRecord.swift in Sources */,
 				EACA1D0C2E7E504F00C80883 /* LMWebViewPage.swift in Sources */,

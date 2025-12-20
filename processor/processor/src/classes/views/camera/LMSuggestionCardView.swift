@@ -8,6 +8,7 @@
 
 import UIKit
 import SnapKit
+import Kingfisher
 
 protocol LMSuggestionCardViewDelegate: AnyObject {
     func suggestionCardView(_ cardView: LMSuggestionCardView, didToggleFavorite isFavorite: Bool)
@@ -143,18 +144,13 @@ class LMSuggestionCardView: UIView {
         self.suggestion = suggestion
         self.isFavorite = isFavorite
         
-        if !suggestion.ready {
+        if suggestion.ready != true {
             showLoadingState()
         } else {
             hideLoadingState()
-            
-            // 设置图片 - 优先使用 similarImageUrl（相似构图），然后使用 imageUrl（AIGC构图）
-            if let similarImageUrl = suggestion.similarImageUrl {
-                loadImageFromURL(similarImageUrl)
-            } else if let imageUrl = suggestion.imageUrl {
+            if let imageUrl = suggestion.imageUrl {
                 loadImageFromURL(imageUrl)
             }
-            
             // 设置收藏状态
             heartButton.isSelected = isFavorite
             heartButton.tintColor = isFavorite ? UIColor.systemRed : UIColor.white
@@ -190,46 +186,39 @@ class LMSuggestionCardView: UIView {
         loadingSpinner.startAnimating()
         heartButton.isHidden = true
         
-        // 使用渐变图片作为占位图
-        let gradientImage = UIImage.gradientImage(
-            size: CGSize(width: 300, height: 300),
-            colors: [UIColor.systemPurple.cgColor, UIColor.systemPink.cgColor]
-        )
-        imageView.image = gradientImage
+        // 隐藏背景图片、模糊效果和主图片
+        backgroundImageView.isHidden = true
+        blurEffectView.isHidden = true
+        imageView.isHidden = true
     }
     
     private func hideLoadingState() {
         loadingView.isHidden = true
         loadingSpinner.stopAnimating()
+        
+        // 显示背景图片、模糊效果和主图片
+        backgroundImageView.isHidden = false
+        blurEffectView.isHidden = false
+        imageView.isHidden = false
+        
         updateSelectionState(animated: false)
     }
     
     private func loadImageFromURL(_ urlString: String) {
-        // 从 Assets.xcassets 加载本地图片
-        if let image = UIImage(named: urlString) {
-            // 设置三层结构：
-            // 1. 底层：拉伸填充的背景图
-            backgroundImageView.image = image
-            
-            // 2. 中层：模糊蒙层（已在 configureSubviews 中设置）
-            
-            // 3. 顶层：等比例显示的图片
-            imageView.image = image
-            
-            LMLogger.log("✅ Loaded local sample image with layered style: \(urlString)")
-        } else {
-            // 如果找不到图片，使用占位图
-            let placeholderImage = UIImage(systemName: "photo")
-            backgroundImageView.image = placeholderImage
-            imageView.image = placeholderImage
-            imageView.tintColor = UIColor.systemGray3
-            LMLogger.log("⚠️ Sample image not found: \(urlString)")
+        imageView.kf.setImage(with: URL(string: urlString),
+                                        placeholder: UIImage(systemName: "photo")) { result in
+            switch result {
+            case .success(let image):
+                self.backgroundImageView.image = image.image
+            case .failure(let error):
+                LMLogger.log("✅ Loaded image found error \(error)")
+            }
         }
     }
     
     // MARK: - Actions
     @objc private func heartButtonTapped() {
-        guard let suggestion = suggestion, suggestion.ready else { return }
+        guard let suggestion = suggestion, suggestion.ready == true else { return }
         
         let newFavoriteState = !heartButton.isSelected
         heartButton.isSelected = newFavoriteState
