@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Alamofire
 
 class LMLaunchSplashPage: UIViewController {
     
@@ -18,11 +19,21 @@ class LMLaunchSplashPage: UIViewController {
     // MARK: - Properties
     private var showPrivacy: Bool = false
     
+    // MARK: - Network Monitoring Properties
+    private var networkReachabilityManager: NetworkReachabilityManager?
+    private var networkTimeoutTimer: Timer?
+    private var isNetworkAlertShown: Bool = false
+    private let networkTimeoutDuration: TimeInterval = 30.0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureViewHierarchy()
         setupConstraints()
         loadAppDataAndCheckVersion()
+    }
+    
+    deinit {
+        stopNetworkMonitoring()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -48,9 +59,95 @@ class LMLaunchSplashPage: UIViewController {
         // 检查是否显示过隐私协议
         loadPackageDataAndEnterHomePage()
     }
+
     
     /// 加载配置信息并进入首页
     private func loadPackageDataAndEnterHomePage() {
+        // 开始网络监听，等待网络连接后继续执行
+        startNetworkMonitoringAndProceed()
+    }
+    
+    // MARK: - Network Monitoring
+    
+    /// 开始网络监听并在有网络时继续执行
+    private func startNetworkMonitoringAndProceed() {
+        networkReachabilityManager = NetworkReachabilityManager()
+        
+        // 检查当前网络状态
+        if let isReachable = networkReachabilityManager?.isReachable, isReachable {
+            LMLogger.log("✅ Network is available, proceeding...")
+            proceedWithUserDataLoading()
+            return
+        }
+        
+        LMLogger.log("⏳ Waiting for network connection...")
+        
+        // 启动超时计时器
+        startNetworkTimeoutTimer()
+        
+        // 开始监听网络状态变化
+        networkReachabilityManager?.startListening { [weak self] status in
+            guard let self = self else { return }
+            
+            switch status {
+            case .reachable(.ethernetOrWiFi), .reachable(.cellular):
+                LMLogger.log("✅ Network connected: \(status)")
+                self.stopNetworkMonitoring()
+                self.proceedWithUserDataLoading()
+                
+            case .notReachable:
+                LMLogger.log("❌ Network not reachable")
+                
+            case .unknown:
+                LMLogger.log("⚠️ Network status unknown")
+            }
+        }
+    }
+    
+    /// 启动网络超时计时器
+    private func startNetworkTimeoutTimer() {
+        networkTimeoutTimer?.invalidate()
+        networkTimeoutTimer = Timer.scheduledTimer(withTimeInterval: networkTimeoutDuration,
+                                                    repeats: false) { [weak self] _ in
+            guard let self = self else { return }
+            self.handleNetworkTimeout()
+        }
+    }
+    
+    /// 处理网络超时
+    private func handleNetworkTimeout() {
+        guard !isNetworkAlertShown else { return }
+        
+        // 再次检查网络状态
+        if let isReachable = networkReachabilityManager?.isReachable, isReachable {
+            LMLogger.log("✅ Network became available before timeout alert")
+            stopNetworkMonitoring()
+            proceedWithUserDataLoading()
+            return
+        }
+        
+        isNetworkAlertShown = true
+        LMLogger.log("⚠️ Network timeout after \(networkTimeoutDuration) seconds")
+        
+        // 显示无网络提示
+        DispatchQueue.main.async {
+            LMAlertDialog.showConfirmAlert("No network connection detected. Please check your network settings and restart the app.") {
+                // 无网络状态退出APP
+                exit(0)
+            }
+        }
+    }
+    
+    /// 停止网络监听
+    private func stopNetworkMonitoring() {
+        networkTimeoutTimer?.invalidate()
+        networkTimeoutTimer = nil
+        networkReachabilityManager?.stopListening()
+        networkReachabilityManager = nil
+    }
+    
+    /// 继续执行用户数据加载
+    private func proceedWithUserDataLoading() {
         // 尝试加载用户数据（刷新 Token + 获取用户信息）
         LMUserManager.loadCachedUserModelData { success in
             DispatchQueue.main.async {

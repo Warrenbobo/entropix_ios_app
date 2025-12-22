@@ -15,12 +15,12 @@ class LMAppleAuthManager: NSObject {
     private override init() {}
     
     // MARK: - Properties
-    private var completion: ((Result<LMLoginResponse, Error>) -> Void)?
+    private var completion: ((Result<LMUserModel, Error>) -> Void)?
     
     // MARK: - Public Methods
     
-    /// 发起Apple登录（统一使用 LMLoginResponse）
-    func signInWithApple(completion: @escaping (Result<LMLoginResponse, Error>) -> Void) {
+    /// 发起Apple登录
+    func signInWithApple(completion: @escaping (Result<LMUserModel, Error>) -> Void) {
         self.completion = completion
         
         LMLogger.log("🍎 Starting Apple Sign In process...")
@@ -111,10 +111,8 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
             deviceId: LMPackageManager.package.uuid
         ) { [weak self] registerResponse in
             if registerResponse.requestSuccess, let response = registerResponse.value {
-                LMLogger.log("✅ Apple registration successful for user: \(response.user?.username ?? "unknown")")
-                if let userModel = response.user {
-                    LMUserManager.shared.updateUser(userModel)
-                }
+                LMLogger.log("✅ Apple registration successful for user: \(response.username ?? "unknown")")
+                LMUserManager.shared.updateUser(response)
                 // 新用户注册成功后，自动领取免费试用（14天）
                 LMLogger.log("🍎 Step 2: Claiming free trial for new user...")
                 self?.claimFreeTrialAfterRegistration { trialResult in

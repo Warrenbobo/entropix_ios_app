@@ -529,7 +529,7 @@ extension LMSignInPage {
         }
     }
     
-    private func handleSuccessfulAppleAuthenticationResponse(loginResponse: LMLoginResponse) {
+    private func handleSuccessfulAppleAuthenticationResponse(loginResponse: LMUserModel) {
         LMLogger.log("✅ Apple authentication successful")
         
         // 导航到主界面

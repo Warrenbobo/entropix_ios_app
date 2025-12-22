@@ -44,7 +44,7 @@ class LMApiService {
         fullName: String?,
         username: String?,
         deviceId: String?,
-        completion: @escaping LMApiCallback<LMLoginResponse>
+        completion: @escaping LMApiCallback<LMUserModel>
     ) {
         var params: [String: Any] = [
             "apple_uid": appleUid,
@@ -68,7 +68,7 @@ class LMApiService {
             LMApi.Auth.appleRegister,
             method: .post,
             params: params,
-            type: LMLoginResponse.self,
+            type: LMUserModel.self,
             completeHandler: completion
         )
     }

@@ -43,7 +43,10 @@ class LMAuthGuard {
         
         if isGuestUser {
             LMLogger.log("🚫 Guest user attempting to: \(action)")
-            showLoginPage(from: viewController, completion: completion)
+            LMAppleAuthManager.shared.signInWithApple { result in
+                LMLogger.log("✅ Logged in user finished, guest value is: \(self.isGuestUser)")
+                completion?()
+            }
             return false
         }
         
@@ -57,9 +60,6 @@ class LMAuthGuard {
     ///   - completion: 登录成功后的回调
     private func showLoginPage(from viewController: UIViewController,
                               completion: (() -> Void)? = nil) {
-        
-        // 创建登录页面
-        let signInPage = LMSignInPage()
         
         // 如果有completion，监听登录成功通知
         if let completion = completion {
@@ -84,14 +84,6 @@ class LMAuthGuard {
             }
         }
         
-        // 使用导航控制器包装登录页
-        let navController = LMNavigationWrapper(rootViewController: signInPage)
-        navController.modalPresentationStyle = .fullScreen
-        
-        // 弹出登录页
-        viewController.present(navController, animated: true) {
-            LMLogger.log("📱 Login page presented")
-        }
     }
     
     // MARK: - Convenience Methods

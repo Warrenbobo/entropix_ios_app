@@ -143,10 +143,10 @@ extension LMNewInstallerPage {
             case .success(let response):
                 // Apple 登录成功
                 LMLogger.log("✅ Apple Sign In successful")
-                LMLogger.log("   User: \(response.user?.username ?? "")")
+                LMLogger.log("   User: \(response.username ?? "")")
 //                LMLogger.log("   Is New User: \(response.user.isNewUser)")
-                LMLogger.log("   Subscription: \(response.user?.subscription ?? "")")
-                LMLogger.log("   Inspire Points: \(response.user?.inspirePoints ?? 0)")
+                LMLogger.log("   Subscription: \(response.subscription ?? "")")
+                LMLogger.log("   Inspire Points: \(response.inspirePoints ?? 0)")
                 
                 // 处理登录成功
                 self.handleAppleLoginSuccess()
