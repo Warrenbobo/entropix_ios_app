@@ -90,6 +90,9 @@ class LMSuggestionsCarouselView: UIView {
     func updateSuggestions(_ suggestions: [LMCompositionSuggestion]) {
         LMLogger.log("🔄 Updating suggestions: \(suggestions.count) items")
         
+        // 保存当前选中的索引
+        let previousSelectedIndex = selectedIndex
+        
         self.suggestions = suggestions
         
         // 加载已保存的 Saved Ideas ID 集合
@@ -107,8 +110,16 @@ class LMSuggestionsCarouselView: UIView {
         layoutCardViews()
         LMLogger.log("✅ Layout completed for \(cardViews.count) cards")
         
-        // 第一次刷新数据时，默认选中第一个项目
-        if suggestions.count > 0 && selectedIndex < 0 {
+        // 恢复之前的选中状态
+        if previousSelectedIndex >= 0 && previousSelectedIndex < suggestions.count {
+            // 恢复之前选中的卡片
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.selectSuggestion(at: previousSelectedIndex, animated: false)
+                LMLogger.log("✅ Restored selection at index: \(previousSelectedIndex)")
+            }
+        } else if suggestions.count > 0 && selectedIndex < 0 {
+            // 第一次刷新数据时，默认选中第一个项目
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.selectSuggestion(at: 0, animated: false)
@@ -292,7 +303,7 @@ class LMSuggestionsCarouselView: UIView {
         
         // 计算总宽度（所有卡片使用统一间距10px，左右各30px边距）
         // totalWidth = 左边距(30) + 所有卡片宽度 + 卡片间距 + 右边距(30)
-        let totalWidth = sideInset + CGFloat(cardViews.count) * normalCardSize.width + CGFloat(cardViews.count - 1) * cardSpacing + sideInset
+        let totalWidth = sideInset + CGFloat(cardViews.count) * normalCardSize.width + CGFloat(cardViews.count - 1) * cardSpacing + sideInset * 2
         
         // 设置 contentView 大小（高度要足够容纳放大的卡片）
         let contentHeight = max(bounds.height, selectedCardSize.height)

@@ -144,10 +144,9 @@ extension LMInspireMeButtonView {
     }
     
     private func updateInspireButtonAppearance() {
-        pointsLabel.text = "-\(inspirePoints > 99 ? "99+" : "\(inspirePoints)")"
-        let hasPoints = inspirePoints > 0
-        let shouldEnable = hasPoints && isEnabledForCamera
-        if shouldEnable {
+//        pointsLabel.text = "-\(inspirePoints > 99 ? "99+" : "\(inspirePoints)")"
+//        let hasPoints = inspirePoints > 0
+        if isEnabledForCamera {
             self.isHidden = false
         } else {
             self.isHidden = true
@@ -181,10 +180,11 @@ extension LMInspireMeButtonView {
     }
     
     func decrementInspirePointsCount() {
-        if inspirePoints > 0 {
-            inspirePoints -= 1
-            updateInspireButtonAppearance()
-        }
+        updateInspireButtonAppearance()
+//        if inspirePoints > 0 {
+//            inspirePoints -= 1
+//            
+//        }
     }
     
     func getCurrentInspirePoints() -> Int {

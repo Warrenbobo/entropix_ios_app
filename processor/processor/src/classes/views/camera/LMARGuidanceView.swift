@@ -37,6 +37,16 @@ class LMARGuidanceView: UIView {
         return view
     }()
     
+    /// 成功对号图标（在绿框中心显示，3秒后消失）
+    private var successCheckmark: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = .systemGreen
+        imageView.image = UIImage(systemName: "checkmark.circle.fill")
+        imageView.isHidden = true
+        return imageView
+    }()
+    
     /// 连接线
     private var guidanceLine: CAShapeLayer = {
         let layer = CAShapeLayer()
@@ -120,11 +130,16 @@ class LMARGuidanceView: UIView {
         addSubview(referencePersonBox)
         addSubview(livePersonBox)
         addSubview(successBox)
+        addSubview(successCheckmark)
         layer.addSublayer(guidanceLine)
         
         referencePersonBox.center = CGPoint(x: -1000, y: -1000)
         livePersonBox.center = CGPoint(x: -1000, y: -1000)
         successBox.center = CGPoint(x: -1000, y: -1000)
+        
+        // 设置对号图标尺寸
+        successCheckmark.frame = CGRect(x: 0, y: 0, width: 50, height: 50)
+        successCheckmark.center = CGPoint(x: -1000, y: -1000)
         
         print("[AR Guidance] 初始化完成 - 白色框尺寸: \(refSize), 蓝色框尺寸: \(liveSize)")
     }
@@ -317,33 +332,72 @@ class LMARGuidanceView: UIView {
     
     // MARK: - Public Methods - Success Box (绿色成功框)
     
-    /// 显示绿色成功框（在白色框位置，3秒后自动消失）
+    /// 显示绿色成功框（复用白色框的位置和尺寸，绿框常驻，对号图标3秒后消失）
     func showSuccessBox() {
-        // 设置绿色框位置与白色框相同
+        // 清除之前的图层
+        successBox.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
+        
+        // 复用白色框的 bounds（尺寸）
+        successBox.bounds = referencePersonBox.bounds
+        
+        // 复用白色框的 center（位置）
         successBox.center = referencePersonBox.center
         
-        // 复制白色框的旋转状态
+        // 复用白色框的 transform（旋转）
         successBox.transform = referencePersonBox.transform
         
-        // 显示绿色框
+        // 重新创建绿色框的图层（基于新的 bounds）
+        createAndSetupFrameLayers(
+            for: successBox,
+            color: .systemGreen,
+            lineWidth: 3.0,
+            crosshairLength: 8,
+            crosshairWidth: 3
+        )
+        
+        // 显示绿色框（常驻）
         successBox.isHidden = false
         successBox.alpha = 1.0
         
-        print("[AR Guidance] 显示绿色成功框")
+        // 隐藏白色框和蓝色框
+        referencePersonBox.isHidden = true
+        livePersonBox.isHidden = true
+        guidanceLine.isHidden = true
         
-        // 3秒后自动隐藏
+        // 设置对号图标位置（在绿框中心）
+        successCheckmark.center = successBox.center
+        successCheckmark.isHidden = false
+        successCheckmark.alpha = 1.0
+        
+        print("[AR Guidance] 显示绿色成功框 - bounds: \(successBox.bounds), center: \(successBox.center)")
+        
+        // 3秒后只隐藏对号图标，绿框保持显示
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
-            self?.hideSuccessBox()
+            self?.hideSuccessCheckmark()
         }
     }
     
-    /// 隐藏绿色成功框
+    /// 隐藏对号图标（绿框保持显示）
+    private func hideSuccessCheckmark() {
+        UIView.animate(withDuration: 0.3) { [weak self] in
+            self?.successCheckmark.alpha = 0
+        } completion: { [weak self] _ in
+            self?.successCheckmark.isHidden = true
+            self?.successCheckmark.alpha = 1.0  // 重置alpha以便下次显示
+            print("[AR Guidance] 隐藏对号图标，绿框保持显示")
+        }
+    }
+    
+    /// 隐藏绿色成功框（完全隐藏，包括绿框和对号）
     func hideSuccessBox() {
         UIView.animate(withDuration: 0.3) { [weak self] in
             self?.successBox.alpha = 0
+            self?.successCheckmark.alpha = 0
         } completion: { [weak self] _ in
             self?.successBox.isHidden = true
             self?.successBox.alpha = 1.0  // 重置alpha以便下次显示
+            self?.successCheckmark.isHidden = true
+            self?.successCheckmark.alpha = 1.0
             print("[AR Guidance] 隐藏绿色成功框")
         }
     }
@@ -484,6 +538,11 @@ class LMARGuidanceView: UIView {
         referencePersonBox.isHidden = hidden
         livePersonBox.isHidden = hidden
         guidanceLine.isHidden = hidden
+        // 绿框和对号也需要隐藏
+        if hidden {
+            successBox.isHidden = true
+            successCheckmark.isHidden = true
+        }
         print("[AR Guidance] 所有引导元素 \(hidden ? "隐藏" : "显示")")
     }
 }

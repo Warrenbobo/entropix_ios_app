@@ -202,12 +202,14 @@ extension LMCameraPage {
         
         guard let compressedImage = compressImage(image, maxLongSide: 1080) else {
             hideProcessingOverlay()
+            isInspireMeCapture = false  // 重置标志，允许用户重新点击
             AppTheme.Toast.showText("Image compression failed")
             return
         }
         
         guard let optimizedImage = compressImage(image, maxLongSide: 960) else {
             hideProcessingOverlay()
+            isInspireMeCapture = false  // 重置标志，允许用户重新点击
             AppTheme.Toast.showText("Image optimization failed")
             return
         }
@@ -223,6 +225,7 @@ extension LMCameraPage {
             sceneType: nil
         ) { [weak self] result in
             self?.hideProcessingOverlay()
+            self?.isInspireMeCapture = false  // 重置标志，无论成功或失败都允许用户重新点击
             
             switch result {
             case .success(let response):

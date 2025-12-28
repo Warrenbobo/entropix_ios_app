@@ -51,7 +51,7 @@ class LMSuggestionCardView: UIView {
     
     // MARK: - Subview Configuration
     private func configureSubviews() {
-        backgroundColor = .gray
+        backgroundColor = .lightGray
         layer.cornerRadius = 12
         layer.masksToBounds = true
         layer.borderColor = UIColor.clear.cgColor
@@ -206,7 +206,7 @@ class LMSuggestionCardView: UIView {
     
     private func loadImageFromURL(_ urlString: String) {
         imageView.kf.setImage(with: URL(string: urlString),
-                                        placeholder: UIImage(systemName: "photo")) { result in
+                              placeholder: UIImage(named: "app_logo_transparent_bg")) { result in
             switch result {
             case .success(let image):
                 self.backgroundImageView.image = image.image

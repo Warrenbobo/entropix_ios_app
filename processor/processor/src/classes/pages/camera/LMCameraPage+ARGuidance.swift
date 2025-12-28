@@ -146,6 +146,15 @@ extension LMCameraPage {
         LMLogger.log("🎯 [AR Guidance] Current state: \(currentCameraState)")
         LMLogger.log("🎯 [AR Guidance] Current arGuidanceState: \(arGuidanceState)")
         LMLogger.log("🎯 [AR Guidance] isARGuidanceActive: \(isARGuidanceActive)")
+        LMLogger.log("🎯 [AR Guidance] referenceImageInitialOrientation: \(String(describing: referenceImageInitialOrientation))")
+        LMLogger.log("🎯 [AR Guidance] currentReferenceBbox: \(String(describing: currentReferenceBbox))")
+        
+        // 重置对齐状态
+        isCurrentlyAligned = false
+        lastLiveBoxBounds = nil
+        
+        // 记录AR引导开始时间，用于延迟显示蓝框
+        arGuidanceStartTime = Date()
         
         // 更新相机流检测管理器的摄像头位置
         let cameraPosition: AVCaptureDevice.Position = isUsingFrontCamera ? .front : .back
@@ -166,20 +175,24 @@ extension LMCameraPage {
         }
         LMLogger.log("✅ [AR Guidance] Reference image exists, size: \(referenceImage.size)")
         
-        // 根据图片宽高比判断初始方向
-        let imageWidth = referenceImage.size.width
-        let imageHeight = referenceImage.size.height
-        let isImagePortrait = imageHeight >= imageWidth
-        
-        // 保存referenceImage的初始方向（基于图片宽高比）
-        if isImagePortrait {
-            // 图片是竖向的（高>宽），初始方向为竖屏
-            referenceImageInitialOrientation = .portrait
-            LMLogger.log("📱 [AR Guidance] Image is portrait (H:\(imageHeight) > W:\(imageWidth)), saved initial orientation: portrait")
+        // 根据图片宽高比判断初始方向（仅在未设置时计算）
+        if referenceImageInitialOrientation == nil {
+            let imageWidth = referenceImage.size.width
+            let imageHeight = referenceImage.size.height
+            let isImagePortrait = imageHeight >= imageWidth
+            
+            // 保存referenceImage的初始方向（基于图片宽高比）
+            if isImagePortrait {
+                // 图片是竖向的（高>宽），初始方向为竖屏
+                referenceImageInitialOrientation = .portrait
+                LMLogger.log("📱 [AR Guidance] Image is portrait (H:\(imageHeight) > W:\(imageWidth)), saved initial orientation: portrait")
+            } else {
+                // 图片是横向的（宽>高），初始方向为横屏
+                referenceImageInitialOrientation = .landscapeRight
+                LMLogger.log("📱 [AR Guidance] Image is landscape (W:\(imageWidth) > H:\(imageHeight)), saved initial orientation: landscapeRight")
+            }
         } else {
-            // 图片是横向的（宽>高），初始方向为横屏
-            referenceImageInitialOrientation = .landscapeRight
-            LMLogger.log("📱 [AR Guidance] Image is landscape (W:\(imageWidth) > H:\(imageHeight)), saved initial orientation: landscapeRight")
+            LMLogger.log("📱 [AR Guidance] Using existing referenceImageInitialOrientation: \(referenceImageInitialOrientation!.rawValue)")
         }
         
         // 检查当前设备方向是否匹配图片方向
@@ -192,24 +205,44 @@ extension LMCameraPage {
             // 方向不匹配：不显示校准框，不启动检测
             arGuidanceState = .orientationMismatch
             arGuidanceView.setOrientationMatched(false)
-            LMLogger.log("⚠️ [AR Guidance] Orientation mismatch - AR guidance disabled")
-//            showToast("Please rotate device to match reference image orientation")
+            isARGuidanceActive = true // 仍然标记为激活，等待方向匹配后恢复
+            LMLogger.log("⚠️ [AR Guidance] Orientation mismatch - AR guidance waiting for correct orientation")
             return
         }
         
         // 方向匹配：检测人物并显示引导
         arGuidanceView.setOrientationMatched(true)
-        LMLogger.log("✅ [AR Guidance] Orientation matched, starting person detection...")
         
         // 🔧 修复：在启动 AR Guidance 时，根据当前设备方向初始化 arGuidanceView 的 transform
         // 这确保了即使设备在进入 AR Guidance 时已经处于非 portrait 方向，transform 也能正确设置
         updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
         LMLogger.log("📐 [AR Guidance] Initial transform set for orientation: \(currentOrientation.rawValue), transform: \(arGuidanceView.transform)")
         
-        detectPersonAndShowGuidance(in: referenceImage)
-        
-        isARGuidanceActive = true
-        LMLogger.log("✅ [AR Guidance] Session started, isARGuidanceActive: \(isARGuidanceActive)")
+        // 检查是否已有检测结果（用户关闭后重新开启的情况）
+        if let existingBbox = currentReferenceBbox {
+            LMLogger.log("✅ [AR Guidance] Restoring from existing bbox: \(existingBbox)")
+            
+            // 更新 ARGuidanceView 的尺寸
+            updateARGuidanceViewSize()
+            
+            // 转换bbox坐标到画布坐标
+            let canvasBbox = convertBboxToCanvas(bbox: existingBbox, imageSize: referenceImage.size)
+            
+            // 恢复白色框
+            arGuidanceView.setReferenceBoxBounds(bbox: canvasBbox)
+            arGuidanceView.showReferenceBox()
+            
+            // 更新状态并启动实时检测
+            arGuidanceState = .activeGuidance
+            isARGuidanceActive = true
+            
+            LMLogger.log("✅ [AR Guidance] Session restored with existing bbox, isARGuidanceActive: \(isARGuidanceActive)")
+        } else {
+            LMLogger.log("✅ [AR Guidance] Orientation matched, starting person detection...")
+            detectPersonAndShowGuidance(in: referenceImage)
+            isARGuidanceActive = true
+            LMLogger.log("✅ [AR Guidance] Session started, isARGuidanceActive: \(isARGuidanceActive)")
+        }
     }
     
     func stopARGuidanceSession() {
@@ -217,9 +250,13 @@ extension LMCameraPage {
         stopRealtimePersonDetection()
         arGuidanceView.hideOrShowAllGuidance(true)
         isARGuidanceActive = false
-        referenceImageInitialOrientation = nil // 清除初始方向
+        isCurrentlyAligned = false // 重置对齐状态
+        lastLiveBoxBounds = nil // 清除保存的蓝框位置
+        arGuidanceStartTime = nil // 清除开始时间
+        // 注意：不清除 referenceImageInitialOrientation，以便用户重新开启时可以恢复
+        // referenceImageInitialOrientation 只在退出 compositionSelected 状态时清除
         
-        LMLogger.log("✅ AR guidance session stopped")
+        LMLogger.log("✅ AR guidance session stopped (referenceImageInitialOrientation preserved)")
     }
     
     // MARK: - State Management
@@ -231,8 +268,9 @@ extension LMCameraPage {
         case .disabled:
             stopRealtimePersonDetection()
             arGuidanceView.hideOrShowAllGuidance(true)
-            currentReferenceImage = nil
-            currentReferenceBbox = nil
+            // 注意：不在这里清除 currentReferenceImage 和 currentReferenceBbox
+            // 这些只在退出 compositionSelected 状态时清除（closeReferenceImage 方法中）
+            // 这样用户关闭 AR Guidance 后重新开启时可以恢复
             
         case .waitingForReferenceDetection:
             // TODO: 显示检测中的提示（使用Toast或加载动画）
@@ -306,30 +344,25 @@ extension LMCameraPage {
         // 这确保了即使直接调用 detectPersonAndShowGuidance（而不是通过 startARGuidanceSession），transform 也能正确设置
         updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
         LMLogger.log("📐 [AR Guidance] detectPersonAndShowGuidance - transform set for orientation: \(currentOrientation.rawValue)")
-        
+
         // 方向匹配：检测人物
         arGuidanceState = .waitingForReferenceDetection
         arGuidanceView.setOrientationMatched(true)
         LMLogger.log("✅ [AR Guidance] Starting person detection in reference image...")
-        
-        // 使用图片尺寸作为缓存key
-        let imageId = "\(Int(image.size.width))x\(Int(image.size.height))"
-        
-        referenceImageDetectionManager.detectPersonInReferenceImage(
-            image,
-            imageId: imageId
-        ) { [weak self] bbox in
+
+        // 每次都执行新的检测，不使用缓存
+        referenceImageDetectionManager.detectPersonInReferenceImage(image) { [weak self] bbox in
             guard let self = self else { return }
-            
+
             LMLogger.log("📦 [AR Guidance] Detection callback received, bbox: \(String(describing: bbox))")
-            
+
             guard let bbox = bbox else {
                 self.arGuidanceState = .error(LMARGuidanceError.noPersonDetected)
                 LMLogger.log("❌ [AR Guidance] No person detected in reference image")
-                AppTheme.Toast.showText("No person detected in reference image")
+//                AppTheme.Toast.showText("No person detected in reference image")
                 return
             }
-            
+
             LMLogger.log("✅ [AR Guidance] Person detected! bbox: \(bbox)")
             LMLogger.log("📏 [AR Guidance] Reference image size: \(image.size)")
             LMLogger.log("📏 [AR Guidance] Canvas frame: \(self.cameraPreviewView.frame)")
@@ -397,11 +430,23 @@ extension LMCameraPage {
     ///   - bbox: 检测到的bbox（归一化坐标，Vision 坐标系统）
     ///   - confidence: 置信度
     private func handleRealtimeDetectionResult(bbox: CGRect?, confidence: Float) {
+        // 检查是否在初始延迟期间（1秒内不显示蓝框）
+        let isInInitialDelay: Bool
+        if let startTime = arGuidanceStartTime {
+            isInInitialDelay = Date().timeIntervalSince(startTime) < 1.0
+        } else {
+            isInInitialDelay = false
+        }
+        
         guard let bbox = bbox else {
-            // 没有检测到人物，隐藏蓝色框
-            if !arGuidanceView.livePersonBox.isHidden {
+            // 没有检测到人物，隐藏蓝色框（但在初始延迟期间本来就不显示）
+            if !arGuidanceView.livePersonBox.isHidden && !isInInitialDelay {
                 arGuidanceView.hideLiveBox()
                 LMLogger.log("🔵 [Live Detection] No person detected, hiding blue box")
+            }
+            // 如果当前是对齐状态但检测不到人物，恢复到非对齐状态
+            if isCurrentlyAligned {
+                restoreToNonAlignedState()
             }
             return
         }
@@ -430,27 +475,88 @@ extension LMCameraPage {
             LMLogger.log("🔵 [Live Detection] Height adjusted: \(canvasBbox.height) -> \(minSize)")
         }
         
-        // 首次显示时设置位置和尺寸，后续直接更新
-        if arGuidanceView.livePersonBox.isHidden {
-            arGuidanceView.setLiveBoxBounds(bbox: adjustedBbox)
-            arGuidanceView.showLiveBox()
-            LMLogger.log("🔵 [Live Detection] Blue box shown for first time with bounds: \(adjustedBbox)")
-        } else {
-            arGuidanceView.updateLiveBoxBounds(bbox: adjustedBbox)
-        }
-        
-        // 检查对齐状态（80%重叠率）
+        // 检查对齐状态
         if let referenceBbox = currentReferenceBbox,
            let referenceImage = currentReferenceImage {
             let referenceCanvasBbox = convertBboxToCanvas(bbox: referenceBbox, imageSize: referenceImage.size)
-            let overlapRatio = calculateOverlapRatio(rect1: referenceCanvasBbox, rect2: canvasBbox)
             
-            if overlapRatio >= 0.80 {
-                // 对齐成功（80%重叠）- 显示绿色成功框
-                showAlignmentSuccessWithGreenFrame()
-                LMLogger.log("✅ 对齐成功！重叠率: \(String(format: "%.1f", overlapRatio * 100))%")
+            // 使用2%容差判断对齐（基于取景框宽高）
+            let canvasSize = getMaxCanvasSize()
+            let horizontalTolerance = canvasSize.width * 0.02
+            let verticalTolerance = canvasSize.height * 0.02
+            
+            let horizontalDistance = abs(referenceCanvasBbox.midX - canvasBbox.midX)
+            let verticalDistance = abs(referenceCanvasBbox.midY - canvasBbox.midY)
+            
+            let isAligned = horizontalDistance <= horizontalTolerance && verticalDistance <= verticalTolerance
+            
+            if isAligned {
+                // 对齐状态
+                if !isCurrentlyAligned {
+                    // 首次进入对齐状态，显示绿色框
+                    showAlignmentSuccessWithGreenFrame()
+                    isCurrentlyAligned = true
+                    LMLogger.log("✅ 对齐成功！水平距离: \(String(format: "%.1f", horizontalDistance))px, 垂直距离: \(String(format: "%.1f", verticalDistance))px")
+                }
+                // 对齐状态下，继续更新蓝框位置（但蓝框是隐藏的，只是保持计算）
+                // 这样当超出阈值时可以立即显示
+                lastLiveBoxBounds = adjustedBbox
+            } else {
+                // 非对齐状态
+                if isCurrentlyAligned {
+                    // 从对齐状态变为非对齐状态，恢复蓝白框显示
+                    restoreToNonAlignedState()
+                    LMLogger.log("⚠️ 超出对齐阈值！水平距离: \(String(format: "%.1f", horizontalDistance))px, 垂直距离: \(String(format: "%.1f", verticalDistance))px")
+                }
+                
+                // 非对齐状态下，正常显示和更新蓝色框（但在初始延迟期间不显示）
+                if !isInInitialDelay {
+                    if arGuidanceView.livePersonBox.isHidden {
+                        arGuidanceView.setLiveBoxBounds(bbox: adjustedBbox)
+                        arGuidanceView.showLiveBox()
+                        LMLogger.log("🔵 [Live Detection] Blue box shown for first time with bounds: \(adjustedBbox)")
+                    } else {
+                        arGuidanceView.updateLiveBoxBounds(bbox: adjustedBbox)
+                    }
+                } else {
+                    // 初始延迟期间，只保存位置，不显示
+                    lastLiveBoxBounds = adjustedBbox
+                }
+            }
+        } else {
+            // 没有参考框，正常显示蓝色框（但在初始延迟期间不显示）
+            if !isInInitialDelay {
+                if arGuidanceView.livePersonBox.isHidden {
+                    arGuidanceView.setLiveBoxBounds(bbox: adjustedBbox)
+                    arGuidanceView.showLiveBox()
+                    LMLogger.log("🔵 [Live Detection] Blue box shown for first time with bounds: \(adjustedBbox)")
+                } else {
+                    arGuidanceView.updateLiveBoxBounds(bbox: adjustedBbox)
+                }
+            } else {
+                // 初始延迟期间，只保存位置，不显示
+                lastLiveBoxBounds = adjustedBbox
             }
         }
+    }
+    
+    /// 从对齐状态恢复到非对齐状态（显示蓝白框+引导线）
+    private func restoreToNonAlignedState() {
+        isCurrentlyAligned = false
+        
+        // 隐藏绿色框
+        arGuidanceView.hideSuccessBox()
+        
+        // 显示白色框
+        arGuidanceView.showReferenceBox()
+        
+        // 如果有保存的蓝框位置，恢复显示
+        if let lastBounds = lastLiveBoxBounds {
+            arGuidanceView.setLiveBoxBounds(bbox: lastBounds)
+            arGuidanceView.showLiveBox()
+        }
+        
+        LMLogger.log("🔄 恢复到非对齐状态，显示蓝白框+引导线")
     }
     
     // MARK: - Orientation Handling
@@ -773,26 +879,27 @@ extension LMCameraPage {
     }
     
     /// 显示对齐成功指示器（使用绿色校准框）
+    /// 注意：不再停止AR引导，而是保持检测以便在超出阈值时恢复
     func showAlignmentSuccessWithGreenFrame() {
         // 检查是否已经显示绿色框
         guard arGuidanceView.successBox.isHidden else {
             return
         }
         
-        // 停止AR引导检测
-        stopARGuidanceSession()
+        // 不再停止AR引导检测，保持实时检测以便在超出阈值时恢复
+        // stopARGuidanceSession() // 移除这行
         
-        // 更新AR Guidance按钮状态
-        cameraBottomControlsView.setARGuidanceActive(false)
+        // 不再更新AR Guidance按钮状态，因为AR引导仍然激活
+        // cameraBottomControlsView.setARGuidanceActive(false) // 移除这行
         
-        // 显示绿色成功框（在白色框位置，3秒后自动消失）
+        // 显示绿色成功框（在白色框位置，绿框常驻，对号3秒后消失）
         arGuidanceView.showSuccessBox()
         
         // 触觉反馈
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
         
-        LMLogger.log("✅ 显示绿色成功框")
+        LMLogger.log("✅ 显示绿色成功框（AR引导保持激活，继续检测）")
     }
     
     // MARK: - Cleanup
@@ -831,10 +938,12 @@ extension LMCameraPage {
         arGuidanceState = .disabled
         stopRealtimePersonDetection()
         cameraStreamDetectionManager?.reset()
-        referenceImageDetectionManager?.clearCache()
         referenceImageInitialOrientation = nil
         currentReferenceImage = nil
         currentReferenceBbox = nil
+        isCurrentlyAligned = false // 重置对齐状态
+        lastLiveBoxBounds = nil // 清除保存的蓝框位置
+        arGuidanceStartTime = nil // 清除开始时间
         
         arGuidanceView.hideOrShowAllGuidance(true)
         

@@ -331,7 +331,7 @@ extension LMAboutPage {
     
     private func showPrivacyPolicy() {
         // 可以打开网页或显示本地内容
-        if let url = URL(string: "https://example.com/privacy-policy") {
+        if let url = URL(string: LMApi.Terms.privacy) {
             openWebPage(url: url, title: "Privacy Policy")
         } else {
             showLocalPrivacyPolicy()
@@ -340,7 +340,7 @@ extension LMAboutPage {
     
     private func showTermsOfService() {
         // 可以打开网页或显示本地内容
-        if let url = URL(string: "https://example.com/terms-of-service") {
+        if let url = URL(string: LMApi.Terms.service) {
             openWebPage(url: url, title: "Terms of Service")
         } else {
             showLocalTermsOfService()

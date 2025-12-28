@@ -96,4 +96,10 @@ struct LMApi {
         /// 确认建议图
         static let confirm = "/v1/composition/suggestions/confirm"
     }
+    
+    struct Terms {
+        static let service = "https://framaist-legal-public-ap-southeast-1.s3.ap-southeast-1.amazonaws.com/terms-of-use.html"
+        
+        static let privacy = "https://framaist-legal-public-ap-southeast-1.s3.ap-southeast-1.amazonaws.com/privacy-policy.html"
+    }
 }
