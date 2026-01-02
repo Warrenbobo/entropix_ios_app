@@ -83,7 +83,7 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
         backButtonContainer.addSubview(backIconImageView)
         
         // 配置 Back 文字
-        backLabel.text = "Back"
+        backLabel.text = LMText.common.back
         backLabel.textColor = .white
         backLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         backButtonContainer.addSubview(backLabel)
@@ -113,7 +113,7 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
         saveButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
         
         let saveLabel = UILabel()
-        saveLabel.text = "Save"
+        saveLabel.text = LMText.common.save
         saveLabel.textColor = .white
         saveLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         saveButton.addSubview(saveLabel)
@@ -434,7 +434,7 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
         }
         
         // Show loading indicator
-        let loadingAlert = UIAlertController(title: nil, message: "Saving...", preferredStyle: .alert)
+        let loadingAlert = UIAlertController(title: nil, message: LMText.common.saving, preferredStyle: .alert)
         let loadingIndicator = UIActivityIndicatorView(style: .medium)
         loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
         loadingIndicator.startAnimating()
@@ -456,7 +456,7 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
                         self.showSaveSuccessAndNavigate()
                     } else {
                         LMLogger.log("❌ Failed to save photo to Gallery")
-                        self.showError(message: "Failed to save photo. Please try again.")
+                        self.showError(message: LMText.camera.failedToSavePhoto)
                     }
                 }
             }
@@ -498,14 +498,14 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     private func saveLivePhotoToLibrary() {
         guard let videoURL = photoData.livePhotoVideoURL else {
             LMLogger.log("❌ No Live Photo video URL for saving")
-            showError(message: "Failed to save Live Photo")
+            showError(message: LMText.camera.failedToSaveLivePhoto)
             return
         }
         
         // 检查视频文件是否存在
         guard FileManager.default.fileExists(atPath: videoURL.path) else {
             LMLogger.log("❌ Live Photo video file not found at: \(videoURL.path)")
-            showError(message: "Live Photo video file not found")
+            showError(message: LMText.camera.livePhotoVideoNotFound)
             return
         }
         
@@ -540,10 +540,10 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
                     self?.showSuccessIndicator()
                 } else if let error = error {
                     LMLogger.log("❌ Failed to save Live Photo: \(error.localizedDescription)")
-                    self?.showError(message: "Failed to save: \(error.localizedDescription)")
+                    self?.showError(message: "\(LMText.camera.failedToSaveLivePhoto): \(error.localizedDescription)")
                 } else {
                     LMLogger.log("❌ Failed to save Live Photo: Unknown error")
-                    self?.showError(message: "Failed to save Live Photo")
+                    self?.showError(message: LMText.camera.failedToSaveLivePhoto)
                 }
             }
         }
@@ -551,17 +551,17 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     
     @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
         if let error = error {
-            showError(message: "Failed to save: \(error.localizedDescription)")
+            showError(message: "\(LMText.camera.failedToSavePhoto): \(error.localizedDescription)")
         } else {
             showSuccessIndicator()
         }
     }
     
     private func showPhotoLibraryPermissionAlert() {
-        LMAlertDialog.showAlert(title: "Photo Library Access Required",
-                                message: "FramAist needs photo library access to save photos. Please enable photo library access in Settings.",
-                                cancelText: "Cancel",
-                                confirmText: "Open Settings",
+        LMAlertDialog.showAlert(title: LMText.camera.photoLibraryAccessRequired,
+                                message: LMText.camera.photoLibraryAccessRequiredMessage,
+                                cancelText: LMText.common.cancel,
+                                confirmText: LMText.common.openSettings,
                                 onConfirm: {
             if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(settingsURL)
@@ -591,8 +591,8 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     private func showSaveSuccessAndNavigate() {
         // 显示成功提示
         let successAlert = UIAlertController(
-            title: "Success",
-            message: "Photo saved to Gallery",
+            title: LMText.common.success,
+            message: LMText.camera.photoSavedToGallery,
             preferredStyle: .alert
         )
         present(successAlert, animated: true)

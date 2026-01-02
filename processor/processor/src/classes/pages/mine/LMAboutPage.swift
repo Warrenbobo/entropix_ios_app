@@ -43,7 +43,7 @@ class LMAboutPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "About"
+        barTitle = LMText.settings.about
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
@@ -112,11 +112,16 @@ extension LMAboutPage {
         appDeveloperTitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         appDeveloperTitleLabel.textColor = UIColor.systemGray
         appDeveloperTitleLabel.textAlignment = .left
+        appDeveloperTitleLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        appDeveloperTitleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         
         appDeveloperValueLabel.text = LMText.settings.framAIstTeam
         appDeveloperValueLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         appDeveloperValueLabel.textColor = UIColor.label
+        appDeveloperValueLabel.adjustsFontSizeToFitWidth = true
         appDeveloperValueLabel.textAlignment = .right
+        appDeveloperValueLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        appDeveloperValueLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
     }
     
     private func setupAppVersionSection() {
@@ -126,6 +131,8 @@ extension LMAboutPage {
         appVersionTitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         appVersionTitleLabel.textColor = UIColor.systemGray
         appVersionTitleLabel.textAlignment = .left
+        appVersionTitleLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        appVersionTitleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         
         // 获取应用版本号
         let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
@@ -133,6 +140,8 @@ extension LMAboutPage {
         appVersionValueLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         appVersionValueLabel.textColor = UIColor.label
         appVersionValueLabel.textAlignment = .right
+        appVersionValueLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        appVersionValueLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
     }
     
     private func setupPrivacyPolicySection() {
@@ -142,6 +151,8 @@ extension LMAboutPage {
         privacyPolicyTitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         privacyPolicyTitleLabel.textColor = UIColor.systemGray
         privacyPolicyTitleLabel.textAlignment = .left
+        privacyPolicyTitleLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        privacyPolicyTitleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         
         privacyPolicyButton.setTitle(LMText.settings.view, for: .normal)
         privacyPolicyButton.setTitleColor(UIColor.systemBlue, for: .normal)
@@ -149,6 +160,8 @@ extension LMAboutPage {
         privacyPolicyButton.backgroundColor = UIColor.clear
         privacyPolicyButton.contentHorizontalAlignment = .right
         privacyPolicyButton.addTarget(self, action: #selector(handlePrivacyPolicyButtonTapped), for: .touchUpInside)
+        privacyPolicyButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        privacyPolicyButton.setContentHuggingPriority(.defaultLow, for: .horizontal)
         
         // 添加点击手势到整个容器
         let privacyTapGesture = UITapGestureRecognizer(target: self, action: #selector(handlePrivacyPolicyButtonTapped))
@@ -163,6 +176,8 @@ extension LMAboutPage {
         termsOfServiceTitleLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
         termsOfServiceTitleLabel.textColor = UIColor.systemGray
         termsOfServiceTitleLabel.textAlignment = .left
+        termsOfServiceTitleLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        termsOfServiceTitleLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         
         termsOfServiceButton.setTitle(LMText.settings.view, for: .normal)
         termsOfServiceButton.setTitleColor(UIColor.systemBlue, for: .normal)
@@ -170,6 +185,8 @@ extension LMAboutPage {
         termsOfServiceButton.backgroundColor = UIColor.clear
         termsOfServiceButton.contentHorizontalAlignment = .right
         termsOfServiceButton.addTarget(self, action: #selector(handleTermsOfServiceButtonTapped), for: .touchUpInside)
+        termsOfServiceButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        termsOfServiceButton.setContentHuggingPriority(.defaultLow, for: .horizontal)
         
         // 添加点击手势到整个容器
         let termsTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTermsOfServiceButtonTapped))
@@ -358,23 +375,23 @@ extension LMAboutPage {
     
     private func showLocalPrivacyPolicy() {
         let alert = UIAlertController(
-            title: "Privacy Policy",
+            title: LMText.settings.privacyPolicy,
             message: "Privacy Policy content would be displayed here. This could be loaded from a local file or shown in a dedicated view controller.",
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
         present(alert, animated: true)
     }
     
     private func showLocalTermsOfService() {
         let alert = UIAlertController(
-            title: "Terms of Service",
+            title: LMText.settings.termsOfService,
             message: "Terms of Service content would be displayed here. This could be loaded from a local file or shown in a dedicated view controller.",
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        alert.addAction(UIAlertAction(title: LMText.common.ok, style: .default))
         present(alert, animated: true)
     }
 }

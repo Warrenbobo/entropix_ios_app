@@ -70,7 +70,7 @@ extension LMForgotPasswordPage {
     }
     
     private func setupDescriptionLabel() {
-        descriptionLabel.text = "Enter your email and new password to reset your password."
+        descriptionLabel.text = LMText.auth.enterEmailAndNewPassword
         descriptionLabel.font = UIFont.systemFont(ofSize: 16)
         descriptionLabel.textColor = UIColor.secondaryLabel
         descriptionLabel.textAlignment = .center
@@ -111,7 +111,7 @@ extension LMForgotPasswordPage {
     }
     
     private func setupResetPasswordButton() {
-        resetPasswordButton.setTitle("Reset Password", for: .normal)
+        resetPasswordButton.setTitle(LMText.auth.resetPassword, for: .normal)
         resetPasswordButton.setTitleColor(.white, for: .normal)
         resetPasswordButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         resetPasswordButton.backgroundColor = UIColor.systemOrange
@@ -245,13 +245,13 @@ extension LMForgotPasswordPage {
     
     private func validateNewPassword() -> Bool {
         guard let password = newPasswordInputField.text, !password.isEmpty else {
-            newPasswordInputField.displayErrorMessageWithText("Password is required")
+            newPasswordInputField.displayErrorMessageWithText(LMText.auth.passwordRequired)
             return false
         }
         
         // 密码至少8位
         guard password.count >= 8 else {
-            newPasswordInputField.displayErrorMessageWithText("Password must be at least 8 characters")
+            newPasswordInputField.displayErrorMessageWithText(LMText.auth.passwordMinLength)
             return false
         }
         
@@ -259,7 +259,7 @@ extension LMForgotPasswordPage {
         let letterRegex = ".*[A-Za-z]+.*"
         let letterTest = NSPredicate(format: "SELF MATCHES %@", letterRegex)
         guard letterTest.evaluate(with: password) else {
-            newPasswordInputField.displayErrorMessageWithText("Password must contain at least one letter")
+            newPasswordInputField.displayErrorMessageWithText(LMText.auth.passwordMustContainLetter)
             return false
         }
         
@@ -267,7 +267,7 @@ extension LMForgotPasswordPage {
         let numberRegex = ".*[0-9]+.*"
         let numberTest = NSPredicate(format: "SELF MATCHES %@", numberRegex)
         guard numberTest.evaluate(with: password) else {
-            newPasswordInputField.displayErrorMessageWithText("Password must contain at least one number")
+            newPasswordInputField.displayErrorMessageWithText(LMText.auth.passwordMustContainNumber)
             return false
         }
         
@@ -278,12 +278,12 @@ extension LMForgotPasswordPage {
         guard let password = newPasswordInputField.text,
               let confirmPassword = confirmPasswordInputField.text,
               !password.isEmpty, !confirmPassword.isEmpty else {
-            confirmPasswordInputField.displayErrorMessageWithText("Please confirm your password")
+            confirmPasswordInputField.displayErrorMessageWithText(LMText.auth.pleaseConfirmPassword)
             return false
         }
         
         guard password == confirmPassword else {
-            confirmPasswordInputField.displayErrorMessageWithText("Passwords do not match")
+            confirmPasswordInputField.displayErrorMessageWithText(LMText.auth.passwordsDoNotMatch)
             return false
         }
         
@@ -339,14 +339,14 @@ extension LMForgotPasswordPage {
     
     private func showLoadingIndicator() {
         resetPasswordButton.isEnabled = false
-        resetPasswordButton.setTitle("Resetting...", for: .normal)
+        resetPasswordButton.setTitle(LMText.auth.resetting, for: .normal)
         
         // 显示 Toast loading activity
         view.makeToastActivity(.center)
     }
     
     private func hideLoadingIndicator() {
-        resetPasswordButton.setTitle("Reset Password", for: .normal)
+        resetPasswordButton.setTitle(LMText.auth.resetPassword, for: .normal)
         
         // 隐藏 Toast loading activity
         view.hideToastActivity()
@@ -356,7 +356,7 @@ extension LMForgotPasswordPage {
     }
     
     private func showResetPasswordSuccess() {
-        AppTheme.Toast.showText("Password reset successfully! Please sign in.") { [weak self] _ in
+        AppTheme.Toast.showText(LMText.auth.passwordResetSuccess) { [weak self] _ in
             self?.navigationController?.popViewController(animated: true)
         }
     }

@@ -127,6 +127,9 @@ class LMCameraPage: LMPageWrapper {
         // 初始化AR引导功能（必须在相机设置之前）
         setupARGuidance()
         
+        // 初始化引导视图
+        setupGuideView()
+        
         checkCameraPermissionAndSetup()
         
         // 确保视图层级正确
@@ -146,6 +149,10 @@ class LMCameraPage: LMPageWrapper {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
         if status == .authorized {
             startCameraSession()
+            
+            // 注意：首次进入时的引导显示在 checkCameraPermissionAndSetup 中处理
+            // 这里只处理从其他页面返回的情况（viewWillAppear 会被多次调用）
+            // 引导的显示由 LMCameraGuideManager 控制，已显示过的不会重复显示
         }
         // 如果当前处于 compositionSelected 状态（有参考图），延迟1秒后恢复 AR 引导 UI
         if arGuidanceState == .paused {
@@ -195,6 +202,7 @@ class LMCameraPage: LMPageWrapper {
     ///    - arGuidanceView（AR校准框，在previewCanvasView内部）
     /// 2. referenceImageContainerView（参考图，在主视图）
     /// 3. cameraControlsView（右侧按钮，始终最顶层）
+    /// 4. guideView（引导视图，最顶层）
     func ensureCorrectViewHierarchy() {
         // 1. previewCanvasView 已经是最底层（在setupCameraPreviewComponent中添加）
         
@@ -218,7 +226,10 @@ class LMCameraPage: LMPageWrapper {
         view.bringSubviewToFront(cameraBottomControlsView)
         view.bringSubviewToFront(inspireMeButtonView)
         
-        LMLogger.log("✅ 视图层级已调整：Preview(Camera + AR Guidance) → Reference Image → Controls")
+        // 引导视图（最顶层）
+        bringGuideViewToFront()
+        
+        LMLogger.log("✅ 视图层级已调整：Preview(Camera + AR Guidance) → Reference Image → Controls → Guide")
     }
     
     private func setupTopStatusBarComponents() {
@@ -405,6 +416,8 @@ class LMCameraPage: LMPageWrapper {
             setDefaultCameraParameters()
             startCameraSession()
             LMLogger.log("✅ Camera permission already granted")
+            // 权限已授权，延迟显示引导（等待相机界面完全加载）
+            showInspireMeGuideAfterCameraReady()
             
         case .notDetermined:
             LMLogger.log("📱 Requesting camera permission...")
@@ -415,6 +428,8 @@ class LMCameraPage: LMPageWrapper {
                         self?.setupCameraSession()
                         self?.setDefaultCameraParameters()
                         self?.startCameraSession()
+                        // 首次授权成功后，延迟显示引导（等待相机界面完全加载）
+                        self?.showInspireMeGuideAfterCameraReady()
                     } else {
                         LMLogger.log("❌ Camera permission denied by user")
                         self?.handlePermissionDenied()
@@ -432,11 +447,23 @@ class LMCameraPage: LMPageWrapper {
         }
     }
     
+    /// 相机准备就绪后显示引导
+    private func showInspireMeGuideAfterCameraReady() {
+        // 延迟 0.5 秒，等待相机界面完全加载后再显示引导
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
+            // 只在普通状态下显示引导
+            if self.currentCameraState == .normal {
+                self.showInspireMeGuideIfNeeded()
+            }
+        }
+    }
+    
     /// 处理权限被拒绝的情况
     private func handlePermissionDenied() {
-        LMAlertDialog.showAlert(title: "Camera Access Denied",
-                                message: "Camera access is required to use this feature.",
-                                confirmText: "OK") { [weak self] in
+        LMAlertDialog.showAlert(title: LMText.camera.cameraAccessDenied,
+                                message: LMText.camera.cameraAccessRequired,
+                                confirmText: LMText.common.ok) { [weak self] in
             self?.navigationController?.popViewController(animated: true)
         }
     }
@@ -444,10 +471,10 @@ class LMCameraPage: LMPageWrapper {
     /// 显示前往设置的提示
     func showPermissionSettingsAlert() {
         LMAlertDialog.showAlert(
-            title: "Camera Access Required",
-            message: "FramAist needs camera access to take photos. Please enable camera access in Settings.",
-            cancelText: "Cancel",
-            confirmText: "Open Settings",
+            title: LMText.camera.cameraAccessRequiredTitle,
+            message: LMText.camera.cameraAccessRequiredMessage,
+            cancelText: LMText.common.cancel,
+            confirmText: LMText.common.openSettings,
             onConfirm: {
                 if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(settingsURL)
@@ -500,6 +527,9 @@ class LMCameraPage: LMPageWrapper {
             }
             
         case .compositionSelected:
+            // 隐藏 Step 3 和 Step 4 引导（用户点击返回按钮）
+            hideCompositionSelectedGuides()
+            
             // 判断导航来源
             switch navigationSource {
             case .savedIdea:
@@ -549,10 +579,10 @@ extension LMCameraPage {
     func showLeaveConfirmation(completion: @escaping (Bool) -> Void) {
         let config = LMAlertDialogConfig(
             image: UIImage(named: "exclamation_triangle_orange"),
-            title: "Give Up Inspires?",
-            message: "You will return to the camera. This action cannot be undone.",
-            cancelButtonText: LMLaunageManager.shared.common.cancel,
-            confirmButtonText: "Leave",
+            title: LMText.camera.giveUpInspires,
+            message: LMText.camera.giveUpInspiresMessage,
+            cancelButtonText: LMText.common.cancel,
+            confirmButtonText: LMText.common.leave,
             confirmButtonStyle: .destructive,
             onCancel: { completion(false) },
             onConfirm: { completion(true) }

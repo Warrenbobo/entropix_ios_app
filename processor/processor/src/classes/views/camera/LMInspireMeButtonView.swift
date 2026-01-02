@@ -43,6 +43,26 @@ class LMInspireMeButtonView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Hit Testing
+    /// 重写 hitTest 方法，确保问号按钮可以响应点击，其他区域传递给 inspireButton
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        // 首先检查点击是否在视图范围内
+        guard self.point(inside: point, with: event) else {
+            return nil
+        }
+        
+        // 检查是否点击了问号按钮区域（扩大触摸区域）
+        let questionButtonFrame = questionButton.convert(questionButton.bounds, to: self)
+        let expandedQuestionFrame = questionButtonFrame.insetBy(dx: -8, dy: -8) // 扩大触摸区域
+        
+        if expandedQuestionFrame.contains(point) {
+            return questionButton
+        }
+        
+        // 其他区域返回 inspireButton
+        return inspireButton
+    }
+    
 }
 
 extension LMInspireMeButtonView {
@@ -71,12 +91,13 @@ extension LMInspireMeButtonView {
     }
     
     private func setupTitleLabel() {
-        titleLabel.text = "Inspire Me"
+        titleLabel.text = LMText.camera.inspireMeButton
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         titleLabel.textColor = UIColor.white
         titleLabel.textAlignment = .center
         titleLabel.isUserInteractionEnabled = false
-        addSubview(titleLabel)
+        // 添加到 inspireButton 上，确保不会拦截触摸事件
+        inspireButton.addSubview(titleLabel)
     }
     
     private func setupBottomInfoBar() {
@@ -84,8 +105,10 @@ extension LMInspireMeButtonView {
         bottomStackView.axis = .horizontal
         bottomStackView.alignment = .center
         bottomStackView.spacing = 6
-        bottomStackView.isUserInteractionEnabled = true
-        addSubview(bottomStackView)
+        // 禁用 stackView 的交互，让触摸事件穿透到 inspireButton
+        bottomStackView.isUserInteractionEnabled = false
+        // 添加到 inspireButton 上
+        inspireButton.addSubview(bottomStackView)
         
         // 星星图标
         starImageView.image = UIImage(named: "star_fill")
@@ -100,7 +123,7 @@ extension LMInspireMeButtonView {
         pointsLabel.isUserInteractionEnabled = false
         bottomStackView.addArrangedSubview(pointsLabel)
         
-        // 问号按钮
+        // 问号按钮 - 需要单独处理点击事件
         questionButton.setImage(UIImage(systemName: "questionmark.circle"), for: .normal)
         questionButton.tintColor = UIColor.white
         questionButton.isUserInteractionEnabled = true
@@ -124,14 +147,14 @@ extension LMInspireMeButtonView {
             make.edges.equalToSuperview()
         }
         
-        // 顶部标题
+        // 顶部标题（相对于 inspireButton）
         titleLabel.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(12)
             make.centerX.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(16)
         }
         
-        // 底部信息栏
+        // 底部信息栏（相对于 inspireButton）
         bottomStackView.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(1)
             make.centerX.equalToSuperview().offset(6)
@@ -146,17 +169,22 @@ extension LMInspireMeButtonView {
     private func updateInspireButtonAppearance() {
 //        pointsLabel.text = "-\(inspirePoints > 99 ? "99+" : "\(inspirePoints)")"
 //        let hasPoints = inspirePoints > 0
-        if isEnabledForCamera {
-            self.isHidden = false
-        } else {
-            self.isHidden = true
-        }
+        
+        // 注意：这里只根据 isEnabledForCamera 更新按钮的视觉状态
+        // 实际的 isHidden 状态由 LMCameraPage 根据 currentCameraState 控制
+        // 不要在这里直接设置 isHidden，避免覆盖页面级别的隐藏状态
+        
+        // 更新按钮的透明度来表示启用/禁用状态
+        inspireButton.alpha = isEnabledForCamera ? 1.0 : 0.5
     }
 }
 
 extension LMInspireMeButtonView {
     
     @objc private func handleInspireButtonTapped() {
+        // 如果按钮被隐藏，不响应任何点击
+        guard !isHidden else { return }
+        
         // 如果因为前摄而禁用，通知代理显示提示
         if !isEnabledForCamera {
             delegate?.inspireMeButtonViewDidTapDisabledButton()
@@ -168,6 +196,8 @@ extension LMInspireMeButtonView {
     }
     
     @objc private func handleQuestionButtonTapped() {
+        // 如果按钮被隐藏，不响应任何点击
+        guard !isHidden else { return }
         delegate?.inspireMeButtonViewDidTapQuestionButton()
     }
 }
@@ -193,6 +223,8 @@ extension LMInspireMeButtonView {
     
     /// 设置 Inspire Me 按钮的启用/禁用状态（基于相机状态）
     /// - Parameter enabled: true 启用（后摄），false 禁用（前摄）
+    /// 注意：此方法只控制按钮的交互状态，不控制可见性
+    /// 可见性由 LMCameraPage 根据 currentCameraState 控制
     func setInspireMeButtonEnabled(_ enabled: Bool) {
         isEnabledForCamera = enabled
         updateInspireButtonAppearance()

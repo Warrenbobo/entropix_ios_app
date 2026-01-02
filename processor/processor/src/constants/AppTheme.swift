@@ -172,6 +172,17 @@ struct AppTheme {
             windowView.hideAllToasts()
             windowView.makeToast(message, duration: duration, position: .center, completion: completion)
         }
+        
+        static func showLoading() {
+            guard let windowView = Screen.window() else { return }
+            windowView.hideToastActivity()
+            windowView.makeToastActivity(.center)
+        }
+        
+        static func hideLoading() {
+            guard let windowView = Screen.window() else { return }
+            windowView.hideToastActivity()
+        }
     }
 
 }

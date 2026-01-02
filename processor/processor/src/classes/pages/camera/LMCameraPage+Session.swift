@@ -173,12 +173,26 @@ extension LMCameraPage {
     }
     
     func updateInspireMeButtonState() {
-        if isUsingFrontCamera {
+        // Inspire Me 按钮仅在 normal 状态下显示
+        // 在 showingSuggestions 和 compositionSelected 状态下，无论前后摄都不显示
+        guard currentCameraState == .normal else {
+            inspireMeButtonView.isHidden = true
             inspireMeButtonView.setInspireMeButtonEnabled(false)
-            LMLogger.log("📷 Front camera: Inspire Me button disabled")
+            LMLogger.log("📷 Camera state is \(currentCameraState): Inspire Me button hidden and disabled")
+            return
+        }
+        
+        // 在 normal 状态下，根据前后摄像头决定按钮状态
+        if isUsingFrontCamera {
+            // 前摄：显示按钮但禁用（灰色状态）
+            inspireMeButtonView.isHidden = false
+            inspireMeButtonView.setInspireMeButtonEnabled(false)
+            LMLogger.log("📷 Front camera in normal state: Inspire Me button visible but disabled")
         } else {
+            // 后摄：显示并启用按钮
+            inspireMeButtonView.isHidden = false
             inspireMeButtonView.setInspireMeButtonEnabled(true)
-            LMLogger.log("📷 Back camera: Inspire Me button enabled")
+            LMLogger.log("📷 Back camera in normal state: Inspire Me button visible and enabled")
         }
     }
 }

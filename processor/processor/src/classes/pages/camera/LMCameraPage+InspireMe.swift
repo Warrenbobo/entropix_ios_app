@@ -14,17 +14,23 @@ extension LMCameraPage {
     
     /// 验证相机状态是否可以使用 Inspire Me 功能
     private func validateCameraState() -> Bool {
+        // 检查当前相机页面状态，只有在 normal 状态下才能使用 Inspire Me
+        guard currentCameraState == .normal else {
+            LMLogger.log("⚠️ Cannot use Inspire Me - current state is \(currentCameraState), not normal")
+            return false
+        }
+        
         // 检查是否正在使用后置摄像头
         guard !isUsingFrontCamera else {
             LMLogger.log("⚠️ Cannot use Inspire Me with front camera")
-            AppTheme.Toast.showText("Inspire Me is only available with back camera")
+            AppTheme.Toast.showText(LMText.camera.inspireMeOnlyBackCamera)
             return false
         }
         
         // 检查相机会话是否正在运行
         guard let captureSession = captureSession, captureSession.isRunning else {
             LMLogger.log("⚠️ Camera session is not running")
-            AppTheme.Toast.showText("Camera is not ready. Please try again.")
+            AppTheme.Toast.showText(LMText.camera.cameraNotReady)
             return false
         }
         
@@ -39,6 +45,9 @@ extension LMCameraPage {
     
     func handleInspireMeFeature() {
         LMLogger.log("🎯 Starting Inspire Me feature...")
+        
+        // 隐藏 Step 1 引导（用户点击了 Inspire Me 按钮）
+        hideInspireMeGuide()
         
         // 检查登录状态
         guard requireLogin(action: "use Inspire Me feature") else {
@@ -97,10 +106,10 @@ extension LMCameraPage {
     func showInsufficientPointsAlert() {
         // First show the main alert
         let config = LMAlertDialogConfig(
-            title: "Out of Inspire Points",
-            message: "Please subscribe or earn points by watching ads.",
-            cancelButtonText: "Cancel",
-            confirmButtonText: "Watch Ads",
+            title: LMText.camera.outOfInspirePoints,
+            message: LMText.camera.subscribeOrWatchAds,
+            cancelButtonText: LMText.common.cancel,
+            confirmButtonText: LMText.profile.watchAds,
             confirmButtonStyle: .normal,
             onConfirm: { [weak self] in
                 self?.navigateToProfile()

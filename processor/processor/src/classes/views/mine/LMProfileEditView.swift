@@ -98,7 +98,7 @@ class LMProfileEditView: UIView {
     
     private func setupEditableFields() {
         // Avatar section
-        setupLabel(avatarLabel, text: "Avatar")
+        setupLabel(avatarLabel, text: LMText.profile.avatar)
         contentView.addSubview(avatarLabel)
         contentView.addSubview(avatarContainerView)
         avatarContainerView.addSubview(avatarImageView)
@@ -117,19 +117,19 @@ class LMProfileEditView: UIView {
         changePhotoButton.addTarget(self, action: #selector(changePhotoButtonTapped), for: .touchUpInside)
         
         // Nickname field
-        setupLabel(nicknameLabel, text: "Nickname")
+        setupLabel(nicknameLabel, text: LMText.profile.nickname)
         contentView.addSubview(nicknameLabel)
         contentView.addSubview(nicknameTextField)
-        setupTextField(nicknameTextField, placeholder: "Enter your nickname")
+        setupTextField(nicknameTextField, placeholder: LMText.profile.enterNickname)
         
         // Username field
-        setupLabel(usernameLabel, text: "Username")
+        setupLabel(usernameLabel, text: LMText.profile.username)
         contentView.addSubview(usernameLabel)
         contentView.addSubview(usernameTextField)
-        setupTextField(usernameTextField, placeholder: "Enter your username")
+        setupTextField(usernameTextField, placeholder: LMText.profile.enterUsername)
         
         // Date of Birth field
-        setupLabel(dateOfBirthLabel, text: "Date of Birth (optional)")
+        setupLabel(dateOfBirthLabel, text: LMText.profile.dateOfBirthOptional)
         contentView.addSubview(dateOfBirthLabel)
         contentView.addSubview(dateOfBirthContainerView)
         setupDateOfBirthField()
@@ -148,7 +148,7 @@ class LMProfileEditView: UIView {
             fieldView: emailFieldView,
             titleLabel: emailTitleLabel,
             valueLabel: emailValueLabel,
-            title: "Email Address",
+            title: LMText.profile.emailAddress,
             value: ""
         )
         nonEditableFieldsView.addSubview(emailFieldView)
@@ -158,7 +158,7 @@ class LMProfileEditView: UIView {
             fieldView: subscriptionFieldView,
             titleLabel: subscriptionTitleLabel,
             valueLabel: subscriptionValueLabel,
-            title: "Subscription Type",
+            title: LMText.profile.subscriptionType,
             value: ""
         )
         nonEditableFieldsView.addSubview(subscriptionFieldView)
@@ -168,7 +168,7 @@ class LMProfileEditView: UIView {
             fieldView: inspirePointsFieldView,
             titleLabel: inspirePointsTitleLabel,
             valueLabel: inspirePointsValueLabel,
-            title: "Inspire Points",
+            title: LMText.profile.inspirePoints,
             value: ""
         )
         nonEditableFieldsView.addSubview(inspirePointsFieldView)
@@ -213,7 +213,7 @@ class LMProfileEditView: UIView {
         dateOfBirthContainerView.layer.borderColor = UIColor.systemGray4.cgColor
         
         // TextField 设置
-        dateOfBirthTextField.placeholder = "年/月/日"
+        dateOfBirthTextField.placeholder = LMText.profile.dateFormatPlaceholder
         dateOfBirthTextField.font = UIFont.systemFont(ofSize: 16)
         dateOfBirthTextField.borderStyle = .none
         dateOfBirthTextField.backgroundColor = UIColor.clear
@@ -238,8 +238,8 @@ class LMProfileEditView: UIView {
         toolbar.barStyle = .default
         
         let flexSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        let doneButton = UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(datePickerDoneButtonTapped))
-        let cancelButton = UIBarButtonItem(title: "Cancel", style: .plain, target: self, action: #selector(datePickerCancelButtonTapped))
+        let doneButton = UIBarButtonItem(title: LMText.common.done, style: .done, target: self, action: #selector(datePickerDoneButtonTapped))
+        let cancelButton = UIBarButtonItem(title: LMText.common.cancel, style: .plain, target: self, action: #selector(datePickerCancelButtonTapped))
         
         toolbar.setItems([cancelButton, flexSpace, doneButton], animated: false)
         
@@ -295,14 +295,14 @@ class LMProfileEditView: UIView {
     
     private func setupPasswordFieldRow() {
         // Title label
-        passwordTitleLabel.text = "Password"
+        passwordTitleLabel.text = LMText.auth.password
         passwordTitleLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         passwordTitleLabel.textColor = UIColor.systemGray
         passwordTitleLabel.setContentHuggingPriority(.required, for: .horizontal)
         passwordTitleLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         
         // Change password button
-        changePasswordButton.setTitle("Change Password", for: .normal)
+        changePasswordButton.setTitle(LMText.profile.changePassword, for: .normal)
         changePasswordButton.setTitleColor(UIColor.systemBlue, for: .normal)
         changePasswordButton.titleLabel?.font = UIFont.systemFont(ofSize: 14)
         changePasswordButton.contentHorizontalAlignment = .right
@@ -510,7 +510,7 @@ class LMProfileEditView: UIView {
         
         // Inspire Points 显示逻辑
         if data.isPremiumUser {
-            inspirePointsValueLabel.text = "Unlimited"
+            inspirePointsValueLabel.text = LMText.profile.unlimited
         } else {
             inspirePointsValueLabel.text = "\(data.inspirePoints ?? 0)"
         }

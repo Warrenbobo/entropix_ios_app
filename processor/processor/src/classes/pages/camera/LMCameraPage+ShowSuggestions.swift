@@ -62,9 +62,41 @@ extension LMCameraPage {
             options: [.curveEaseInOut, .allowUserInteraction]
         ) {
             containerView.transform = CGAffineTransform(rotationAngle: rotationAngle)
+            
+            // 旋转后调整位置，确保不超出屏幕
+            self.adjustReferenceImagePositionAfterRotation()
         }
         
         LMLogger.log("📱 Reference image rotated to \(orientation.rawValue), angle: \(rotationAngle * 180 / .pi)°")
+    }
+    
+    /// 旋转后调整参考图位置，确保不超出屏幕边界
+    private func adjustReferenceImagePositionAfterRotation() {
+        guard let containerView = referenceImageContainerView else { return }
+        
+        // 获取旋转后的实际视觉尺寸（frame 会考虑 transform）
+        let visualFrame = containerView.frame
+        let visualHalfWidth = visualFrame.width / 2
+        let visualHalfHeight = visualFrame.height / 2
+        
+        // 计算边界
+        let topBoundary = view.safeAreaInsets.top + 44 + visualHalfHeight + 10
+        let bottomBoundary = cameraBottomControlsView.frame.minY - visualHalfHeight - 20
+        let leftBoundary = visualHalfWidth + 10
+        let rightBoundary = view.bounds.width - visualHalfWidth - 10
+        
+        // 获取当前中心点
+        var newCenter = containerView.center
+        
+        // 应用边界约束
+        newCenter.x = max(leftBoundary, min(newCenter.x, rightBoundary))
+        newCenter.y = max(topBoundary, min(newCenter.y, bottomBoundary))
+        
+        // 如果位置需要调整，更新中心点
+        if newCenter != containerView.center {
+            containerView.center = newCenter
+            LMLogger.log("📱 Reference image position adjusted after rotation: \(newCenter)")
+        }
     }
 }
 
@@ -114,6 +146,9 @@ extension LMCameraPage {
             options: [.curveEaseInOut, .allowUserInteraction]
         ) {
             self.view.layoutIfNeeded()
+        } completion: { [weak self] _ in
+            // 动画完成后显示 Step 2 引导（用户第一次进入 Show Suggestions 页面）
+            self?.showSwipeUpGuideIfNeeded()
         }
         
         LMLogger.log("📐 Entered Show Suggestions state - Task ID: \(taskId), Suggestions: \(suggestions?.count ?? 0), AR Guidance unavailable")
@@ -238,25 +273,78 @@ extension LMCameraPage {
     
     /// 处理 Job 列表响应
     private func handleJobListResponse(taskId: String, response: LMCompositionJobListResponse) {
-        // 检查 all_completed，如果已完成则停止轮询
-        if response.allCompleted == true {
-            LMLogger.log("✅ All jobs completed - stopping polling")
-            stopPollingAIGCSuggestions()
-            
-            // 清理无效的占位数据：ready 为 false 且 imageUrl 为 nil 的数据
-            cleanupInvalidSuggestions()
-            return
-        }
-        // 收到 job 列表响应后，立即安排 2 秒后的下一次轮询（与子 job 请求无关）
-        scheduleNextPoll(taskId: taskId)
         guard let jobIds = response.jobIds, !jobIds.isEmpty else {
             LMLogger.log("⚠️ No job IDs found in response")
+            // 如果没有 jobIds 但 allCompleted 为 true，直接清理
+            if response.allCompleted == true {
+                LMLogger.log("✅ All jobs completed (no jobs) - stopping polling")
+                stopPollingAIGCSuggestions()
+                cleanupInvalidSuggestions()
+            } else {
+                // 继续轮询
+                scheduleNextPoll(taskId: taskId)
+            }
             return
         }
+        
         LMLogger.log("📋 Got \(jobIds.count) jobs, all_completed: \(response.allCompleted ?? false)")
+        
+        // 检查 all_completed，如果已完成则进行最后一次兜底轮询
+        if response.allCompleted == true {
+            LMLogger.log("✅ All jobs completed - performing final fetch for all jobs before cleanup")
+            stopPollingAIGCSuggestions()
+            
+            // 最后一次兜底轮询所有的 jobId 对应的子任务
+            fetchAllJobDetailsAndCleanup(taskId: taskId, jobIds: jobIds)
+            return
+        }
+        
+        // 收到 job 列表响应后，立即安排 2 秒后的下一次轮询（与子 job 请求无关）
+        scheduleNextPoll(taskId: taskId)
+        
         // 步骤2: 异步并发请求所有 jobId 对应的建议图
         for jobId in jobIds {
             fetchJobDetailAndUpdateImmediately(taskId: taskId, jobId: jobId)
+        }
+    }
+    
+    /// 最后一次兜底轮询所有 jobId，完成后执行清理
+    private func fetchAllJobDetailsAndCleanup(taskId: String, jobIds: [String]) {
+        let dispatchGroup = DispatchGroup()
+        
+        for jobId in jobIds {
+            dispatchGroup.enter()
+            
+            LMApiService.shared.getJobDetail(taskId: taskId, jobId: jobId) { [weak self] detailResponse in
+                defer { dispatchGroup.leave() }
+                guard let self = self else { return }
+                
+                if detailResponse.requestSuccess, let data = detailResponse.value {
+                    // 当 job 的 status 为 done 且 suggestions 包含数据时，更新列表
+                    if let job = data.job,
+                       job.status == "done",
+                       let suggestions = data.suggestions,
+                       !suggestions.isEmpty {
+                        LMLogger.log("✅ [Final Fetch] Job \(jobId) done with \(suggestions.count) suggestions")
+                        
+                        // 在主线程更新 UI
+                        DispatchQueue.main.async {
+                            self.updateSuggestionsWithNewData(suggestions)
+                        }
+                    } else {
+                        LMLogger.log("⏳ [Final Fetch] Job \(jobId) status: \(data.job?.status ?? "unknown")")
+                    }
+                } else {
+                    LMLogger.log("❌ [Final Fetch] Failed to get job detail for \(jobId): \(detailResponse.message ?? "Unknown error")")
+                }
+            }
+        }
+        
+        // 所有任务完成后执行清理
+        dispatchGroup.notify(queue: .main) { [weak self] in
+            guard let self = self else { return }
+            LMLogger.log("✅ All final job fetches completed - cleaning up invalid suggestions")
+            self.cleanupInvalidSuggestions()
         }
     }
     
@@ -378,6 +466,9 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
                                  at index: Int) {
         LMLogger.log("📱 Selected suggestion at index: \(index), ID: \(suggestion.id ?? "unknown")")
         
+        // 隐藏 Step 2 引导（用户点选了其他 suggestion 项目）
+        hideSwipeUpGuide()
+        
         // 保存当前选中的构图
         currentSuggestion = suggestion
         
@@ -391,14 +482,14 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
         
         // TODO: 调用 API 保存/取消收藏
         // 暂时只显示反馈
-        AppTheme.Toast.showText("Suggestion saved to favorites")
+        AppTheme.Toast.showText(LMText.camera.suggestionSavedToFavorites)
     }
     
     func suggestionsCarouselViewDidRequestMoreSuggestions(_ view: LMSuggestionsCarouselView) {
         LMLogger.log("🔄 Requesting more suggestions")
         
         // TODO: 实现分页或重新生成
-        AppTheme.Toast.showText("No more suggestions available")
+        AppTheme.Toast.showText(LMText.camera.noMoreSuggestionsAvailable)
     }
     
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView,
@@ -406,11 +497,14 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
                                  at index: Int) {
         LMLogger.log("⬆️ Swiped up suggestion at index: \(index), ID: \(suggestion.id ?? "unknown")")
         
+        // 隐藏 Step 2 引导（用户上滑选择了构图方案）
+        hideSwipeUpGuide()
+        
         // 获取选中的卡片视图和图片
         guard let cardView = view.getSelectedCardView(),
               let image = cardView.displayedImage else {
             LMLogger.log("❌ Cannot enter composition selected state - no image loaded")
-            AppTheme.Toast.showText("Please wait for image to load")
+            AppTheme.Toast.showText(LMText.camera.pleaseWaitForImageToLoad)
             return
         }
         
@@ -419,6 +513,13 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
         
         // 进入 Camera with Composition Selected 状态
         enterCompositionSelectedState(with: suggestion, image: image)
+    }
+    
+    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpWithOffset offset: CGFloat) {
+        // 当用户向上滑动偏移量大于20时，隐藏 Step 2 引导
+        if offset > 20 && currentGuideStep == .swipeUp {
+            hideSwipeUpGuide()
+        }
     }
 }
 
@@ -440,6 +541,9 @@ extension LMCameraPage {
         currentCameraState = .compositionSelected
         currentSuggestion = suggestion
         currentReferenceImage = image
+        
+        // 确保 Inspire Me 按钮隐藏
+        inspireMeButtonView.isHidden = true
         
         // 隐藏构图轮播
         hideSuggestionsCarousel()
@@ -469,6 +573,11 @@ extension LMCameraPage {
             options: [.curveEaseInOut, .allowUserInteraction]
         ) {
             self.view.layoutIfNeeded()
+        } completion: { [weak self] _ in
+            // 动画完成后显示 Step 3 引导（用户第一次进入 Camera w/ composition selected 状态）
+            self?.showARGuidanceGuideIfNeeded()
+            // 尝试显示 Step 4 引导（如果 Step 3 已显示过且 AR Guidance 已开启）
+            self?.tryShowAlignBoxesGuideAfterDelay()
         }
         
         LMLogger.log("📐 [Composition Selected] State entered - AR Guidance should be starting")
@@ -481,6 +590,10 @@ extension LMCameraPage {
         showReferenceImageFromSavedIdea(item: item)
         cameraBottomControlsView.setARGuidanceActive(true)
         configureARGuidanceFeatures(true)
+        // 尝试显示 Step 3 引导
+        showARGuidanceGuideIfNeeded()
+        // 尝试显示 Step 4 引导（如果 Step 3 已显示过且 AR Guidance 已开启）
+        tryShowAlignBoxesGuideAfterDelay()
         LMLogger.log("📐 Entered Composition Selected state from Saved Idea - ID: \(item.id), AR Guidance auto-enabled")
     }
     
@@ -569,7 +682,7 @@ extension LMCameraPage {
         
         // 根据实际图片尺寸计算宽高比（而不是使用 suggestion 数据中的 width/height）
         let aspectRatio = referenceImage.size.width / referenceImage.size.height
-        let defaultMaxEdge: CGFloat = 100
+        let defaultMaxEdge = adaptiveReferenceImageSize(baseSize: 160)
         let newSize = calculateReferenceImageSize(maxEdge: defaultMaxEdge, aspectRatio: aspectRatio)
         
         // 保存原始宽高比到容器的 tag（用于双击放大/缩小时使用）
@@ -616,7 +729,7 @@ extension LMCameraPage {
         
         // 计算图片宽高比
         let aspectRatio = image.size.width / image.size.height
-        let defaultMaxEdge: CGFloat = 100
+        let defaultMaxEdge = adaptiveReferenceImageSize(baseSize: 160)
         let newSize = calculateReferenceImageSize(maxEdge: defaultMaxEdge, aspectRatio: aspectRatio)
         
         // 保存原始宽高比到容器的 tag（用于双击放大/缩小时使用）
@@ -639,6 +752,16 @@ extension LMCameraPage {
         ensureCorrectViewHierarchy()
         
         LMLogger.log("✅ Reference image displayed from Saved Idea - Size: \(newSize), Aspect Ratio: \(aspectRatio)")
+    }
+    
+    /// 根据屏幕宽度自适应计算参考图尺寸
+    /// - Parameter baseSize: 基准尺寸（基于 iPhone 15 Pro 393pt 宽度设计）
+    /// - Returns: 自适应后的尺寸
+    private func adaptiveReferenceImageSize(baseSize: CGFloat) -> CGFloat {
+        let screenWidth = UIScreen.main.bounds.width
+        let baseScreenWidth: CGFloat = 393.0 // iPhone 15 Pro 基准宽度
+        let scaleFactor = screenWidth / baseScreenWidth
+        return baseSize * scaleFactor
     }
     
     /// 计算参考图尺寸（根据最大边长和宽高比）
@@ -673,8 +796,8 @@ extension LMCameraPage {
         // 如果 tag 为 0（未设置），使用默认值 3:4
         let finalAspectRatio = aspectRatio > 0 ? aspectRatio : 0.75
         
-        let defaultMaxEdge: CGFloat = 100
-        let enlargedMaxEdge: CGFloat = 160
+        let defaultMaxEdge = adaptiveReferenceImageSize(baseSize: 160)
+        let enlargedMaxEdge = adaptiveReferenceImageSize(baseSize: 256)
         
         // 获取当前容器尺寸
         let currentWidth = containerView.bounds.width
@@ -716,6 +839,9 @@ extension LMCameraPage {
         guard let containerView = referenceImageContainerView else {
             return
         }
+        
+        // 隐藏 Step 3 和 Step 4 引导（用户点击关闭 Reference Image 按钮）
+        hideCompositionSelectedGuides()
         
         // 重置旋转变换
         containerView.transform = .identity
@@ -827,9 +953,10 @@ extension LMCameraPage {
                 y: containerView.center.y + translation.y
             )
             
-            // 获取边界约束（使用实时的 bounds，支持动态尺寸变化）
-            let imageHalfWidth = containerView.bounds.width / 2
-            let imageHalfHeight = containerView.bounds.height / 2
+            // 获取旋转后的实际视觉尺寸（frame 会考虑 transform 旋转）
+            let visualFrame = containerView.frame
+            let imageHalfWidth = visualFrame.width / 2
+            let imageHalfHeight = visualFrame.height / 2
             
             // 顶部边界：状态栏底部 + 安全距离
             let topBoundary = view.safeAreaInsets.top + 44 + imageHalfHeight + 10
@@ -850,7 +977,7 @@ extension LMCameraPage {
             gesture.setTranslation(.zero, in: view)
             
         case .ended:
-            LMLogger.log("📷 Reference image moved to: \(containerView.center), size: \(containerView.bounds.size)")
+            LMLogger.log("📷 Reference image moved to: \(containerView.center), visual size: \(containerView.frame.size)")
             
         default:
             break

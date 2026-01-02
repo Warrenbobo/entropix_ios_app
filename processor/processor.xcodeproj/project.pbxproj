@@ -56,6 +56,12 @@
 		EA6019392EC877620067F2F7 /* LMSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019372EC877620067F2F7 /* LMSessionManager.swift */; };
 		EA6019422EC8778B0067F2F7 /* TaskStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */; };
 		EA6019462EC877C20067F2F7 /* LMEmailVerificationPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6019452EC877C20067F2F7 /* LMEmailVerificationPage.swift */; };
+		EA7F25AA2F066E850008E091 /* LMCameraPage+Guide.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7F25A92F066E850008E091 /* LMCameraPage+Guide.swift */; };
+		EA7F25AC2F066E9B0008E091 /* LMCameraGuideManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7F25AB2F066E9B0008E091 /* LMCameraGuideManager.swift */; };
+		EA7F25AE2F066EAD0008E091 /* LMCameraGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7F25AD2F066EAD0008E091 /* LMCameraGuideView.swift */; };
+		EA7F25B12F066FCA0008E091 /* single_tap.json in Resources */ = {isa = PBXBuildFile; fileRef = EA7F25AF2F066FCA0008E091 /* single_tap.json */; };
+		EA7F25B22F066FCA0008E091 /* swipe_up_animation.json in Resources */ = {isa = PBXBuildFile; fileRef = EA7F25B02F066FCA0008E091 /* swipe_up_animation.json */; };
+		EA7F25B42F06B8850008E091 /* LMPrivacyPermissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7F25B32F06B8850008E091 /* LMPrivacyPermissionView.swift */; };
 		EA8629A32EB5A13F00F2B00E /* EVA02.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */; };
 		EA8629A52EB5A15800F2B00E /* LMImageProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */; };
 		EA8629A72EB5B16300F2B00E /* LMProfileDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */; };
@@ -79,7 +85,6 @@
 		EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CDE2E7E49B600C80883 /* ObjectExtensions.swift */; };
 		EACA1CF22E7E49B600C80883 /* LMApiResponseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CD02E7E49B600C80883 /* LMApiResponseModel.swift */; };
 		EACA1CF32E7E49B600C80883 /* processor.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CEA2E7E49B600C80883 /* processor.xcdatamodeld */; };
-		EACA1CF42E7E49B600C80883 /* anylibs.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CE02E7E49B600C80883 /* anylibs.swift */; };
 		EACA1CF62E7E49B600C80883 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CE52E7E49B600C80883 /* AppDelegate.swift */; };
 		EACA1CF72E7E49B600C80883 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CEB2E7E49B600C80883 /* SceneDelegate.swift */; };
 		EACA1CF82E7E49B600C80883 /* LMDialogWrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CD72E7E49B600C80883 /* LMDialogWrapper.swift */; };
@@ -192,6 +197,12 @@
 		EA6019372EC877620067F2F7 /* LMSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSessionManager.swift; sourceTree = "<group>"; };
 		EA60193F2EC8778B0067F2F7 /* TaskStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskStatus.swift; sourceTree = "<group>"; };
 		EA6019452EC877C20067F2F7 /* LMEmailVerificationPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEmailVerificationPage.swift; sourceTree = "<group>"; };
+		EA7F25A92F066E850008E091 /* LMCameraPage+Guide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+Guide.swift"; sourceTree = "<group>"; };
+		EA7F25AB2F066E9B0008E091 /* LMCameraGuideManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraGuideManager.swift; sourceTree = "<group>"; };
+		EA7F25AD2F066EAD0008E091 /* LMCameraGuideView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraGuideView.swift; sourceTree = "<group>"; };
+		EA7F25AF2F066FCA0008E091 /* single_tap.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = single_tap.json; sourceTree = "<group>"; };
+		EA7F25B02F066FCA0008E091 /* swipe_up_animation.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = swipe_up_animation.json; sourceTree = "<group>"; };
+		EA7F25B32F06B8850008E091 /* LMPrivacyPermissionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPrivacyPermissionView.swift; sourceTree = "<group>"; };
 		EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = EVA02.mlpackage; sourceTree = "<group>"; };
 		EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMImageProcessor.swift; sourceTree = "<group>"; };
 		EA8629A62EB5B16300F2B00E /* LMProfileDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileDisplayView.swift; sourceTree = "<group>"; };
@@ -221,7 +232,6 @@
 		EACA1CDC2E7E49B600C80883 /* AppConfigs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigs.swift; sourceTree = "<group>"; };
 		EACA1CDD2E7E49B600C80883 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		EACA1CDE2E7E49B600C80883 /* ObjectExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectExtensions.swift; sourceTree = "<group>"; };
-		EACA1CE02E7E49B600C80883 /* anylibs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = anylibs.swift; sourceTree = "<group>"; };
 		EACA1CE52E7E49B600C80883 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		EACA1CE62E7E49B600C80883 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EACA1CE72E7E49B600C80883 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -364,6 +374,7 @@
 		EACA1CCF2E7E49B600C80883 /* managers */ = {
 			isa = PBXGroup;
 			children = (
+				EA7F25AB2F066E9B0008E091 /* LMCameraGuideManager.swift */,
 				EA53553B2EE57BF100610950 /* LMAuthGuard.swift */,
 				EA3F16722EE41D8500B24DA8 /* LMDeviceOrientationManager.swift */,
 				EA3F16652EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift */,
@@ -461,7 +472,6 @@
 		EACA1CDB2E7E49B600C80883 /* classes */ = {
 			isa = PBXGroup;
 			children = (
-				EA3F166F2EE3DFA800B24DA8 /* utils */,
 				EACA1CCF2E7E49B600C80883 /* managers */,
 				EACA1CD12E7E49B600C80883 /* models */,
 				EACA1CD32E7E49B600C80883 /* pages */,
@@ -481,17 +491,11 @@
 			path = constants;
 			sourceTree = "<group>";
 		};
-		EACA1CE12E7E49B600C80883 /* libs */ = {
-			isa = PBXGroup;
-			children = (
-				EACA1CE02E7E49B600C80883 /* anylibs.swift */,
-			);
-			path = libs;
-			sourceTree = "<group>";
-		};
 		EACA1CE32E7E49B600C80883 /* resources */ = {
 			isa = PBXGroup;
 			children = (
+				EA7F25AF2F066FCA0008E091 /* single_tap.json */,
+				EA7F25B02F066FCA0008E091 /* swipe_up_animation.json */,
 				EA5835552EC9DBC70013E531 /* language_config.json */,
 				EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */,
 				EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */,
@@ -506,9 +510,9 @@
 			children = (
 				EACA1CDB2E7E49B600C80883 /* classes */,
 				EACA1CDF2E7E49B600C80883 /* constants */,
-				EACA1CE12E7E49B600C80883 /* libs */,
 				EA56DDE92EC0B379000AB522 /* api */,
 				EACA1CE32E7E49B600C80883 /* resources */,
+				EA3F166F2EE3DFA800B24DA8 /* utils */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -540,6 +544,7 @@
 			isa = PBXGroup;
 			children = (
 				EAFBACB62E7E7D1F00586EC7 /* LMCameraPage.swift */,
+				EA7F25A92F066E850008E091 /* LMCameraPage+Guide.swift */,
 				EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */,
 				EA56DDAC2EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift */,
 				EA56DDAD2EC08E1D000AB522 /* LMCameraPage+Capture.swift */,
@@ -612,6 +617,7 @@
 		EAFBACAE2E7E79C100586EC7 /* entrance */ = {
 			isa = PBXGroup;
 			children = (
+				EA7F25B32F06B8850008E091 /* LMPrivacyPermissionView.swift */,
 				EAFBACAC2E7E79C100586EC7 /* LMFeaturePreviewView.swift */,
 				EAFBACAD2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift */,
 			);
@@ -621,6 +627,7 @@
 		EAFBACBE2E7E8DB200586EC7 /* camera */ = {
 			isa = PBXGroup;
 			children = (
+				EA7F25AD2F066EAD0008E091 /* LMCameraGuideView.swift */,
 				EA3F166B2EE3DDCC00B24DA8 /* LMARGuidanceView.swift */,
 				EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */,
 				EA8629AC2EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift */,
@@ -700,6 +707,8 @@
 				EA5835562EC9DBC70013E531 /* language_config.json in Resources */,
 				EACA1CEF2E7E49B600C80883 /* LaunchScreen.storyboard in Resources */,
 				EACA1CF02E7E49B600C80883 /* Assets.xcassets in Resources */,
+				EA7F25B12F066FCA0008E091 /* single_tap.json in Resources */,
+				EA7F25B22F066FCA0008E091 /* swipe_up_animation.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -765,6 +774,7 @@
 				EAFBACAF2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift in Sources */,
 				EAFBADC42EA36E5900586EC7 /* LMIdeasPageView.swift in Sources */,
 				EAFBAD7D2E93790E00586EC7 /* LMForgotPasswordPage.swift in Sources */,
+				EA7F25B42F06B8850008E091 /* LMPrivacyPermissionView.swift in Sources */,
 				EA56DDA12EC08078000AB522 /* LMPersonDetectionManager.swift in Sources */,
 				EAFBACB02E7E79C100586EC7 /* LMFeaturePreviewView.swift in Sources */,
 				EA8629A32EB5A13F00F2B00E /* EVA02.mlpackage in Sources */,
@@ -782,7 +792,6 @@
 				EA8629BB2EB5F85700F2B00E /* LMLaunageModel.swift in Sources */,
 				EA56DDA72EC0833D000AB522 /* LMCompositionService.swift in Sources */,
 				EA0A47462EBF995C002CBB80 /* LMStoreManager.swift in Sources */,
-				EACA1CF42E7E49B600C80883 /* anylibs.swift in Sources */,
 				EAFBAC9F2E7E65B000586EC7 /* LMProcessorTopBar.swift in Sources */,
 				EAA37A7B2ED090230008081D /* LMAlertDialog.swift in Sources */,
 				EAFBAD812E938BEF00586EC7 /* LMSettingPage.swift in Sources */,
@@ -822,6 +831,7 @@
 				EA56DDD72EC091B1000AB522 /* LMCompositionResult.swift in Sources */,
 				EA3F16732EE41D8500B24DA8 /* LMDeviceOrientationManager.swift in Sources */,
 				EA56DDD82EC091B1000AB522 /* LMCompositionResultsResponse.swift in Sources */,
+				EA7F25AC2F066E9B0008E091 /* LMCameraGuideManager.swift in Sources */,
 				EA56DDDA2EC091B1000AB522 /* BoundingBox.swift in Sources */,
 				EA56DDDB2EC091B1000AB522 /* LMLoginResponse.swift in Sources */,
 				EA56DDDE2EC091B1000AB522 /* LMUserRegisterResponse.swift in Sources */,
@@ -842,6 +852,7 @@
 				EA0A473F2EBF8F19002CBB80 /* LMSubscriptionCountdownView.swift in Sources */,
 				EA0A47402EBF8F19002CBB80 /* LMSubscriptionFooterView.swift in Sources */,
 				EA0A47412EBF8F19002CBB80 /* LMSubscriptionPlanCardView.swift in Sources */,
+				EA7F25AE2F066EAD0008E091 /* LMCameraGuideView.swift in Sources */,
 				EA0A47422EBF8F19002CBB80 /* LMSubscriptionHeroView.swift in Sources */,
 				EAFBAD7B2E936ABD00586EC7 /* LMNavigationTitleView.swift in Sources */,
 				EA5835442EC976200013E531 /* LMCameraPage+ShowSuggestions.swift in Sources */,
@@ -857,6 +868,7 @@
 				EA8629AB2EB5B70300F2B00E /* LMNotificationTableViewCell.swift in Sources */,
 				EA5835512EC99E1F0013E531 /* LMInspireMeRecord.swift in Sources */,
 				EACA1D0C2E7E504F00C80883 /* LMWebViewPage.swift in Sources */,
+				EA7F25AA2F066E850008E091 /* LMCameraPage+Guide.swift in Sources */,
 				EAFBAD882E93B94B00586EC7 /* LMPhotoCollectionView.swift in Sources */,
 				EACA1D082E7E4CBF00C80883 /* LMPackageModel.swift in Sources */,
 				EACA1CFE2E7E49B600C80883 /* LMApiClient.swift in Sources */,

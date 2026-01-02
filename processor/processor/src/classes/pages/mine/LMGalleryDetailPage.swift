@@ -78,7 +78,7 @@ class LMGalleryDetailPage: UIViewController {
         backButtonContainer.addSubview(backIconImageView)
         
         // 配置 Back 文字
-        backLabel.text = "Back"
+        backLabel.text = LMText.common.back
         backLabel.textColor = .white
         backLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         backButtonContainer.addSubview(backLabel)
@@ -376,7 +376,7 @@ class LMGalleryDetailPage: UIViewController {
         guard let videoPath = galleryItem.livePhotoVideoPath,
               let imagePath = galleryItem.imagePath else {
             LMLogger.log("❌ Missing Live Photo data for saving")
-            showError(message: "Live Photo data not found")
+            showError(message: LMText.camera.livePhotoDataNotFound)
             return
         }
         
@@ -386,13 +386,13 @@ class LMGalleryDetailPage: UIViewController {
         // 检查文件是否存在
         guard FileManager.default.fileExists(atPath: videoPath) else {
             LMLogger.log("❌ Live Photo video file not found at: \(videoPath)")
-            showError(message: "Live Photo video not found")
+            showError(message: LMText.camera.livePhotoVideoNotFound)
             return
         }
         
         guard FileManager.default.fileExists(atPath: imagePath) else {
             LMLogger.log("❌ Live Photo image file not found at: \(imagePath)")
-            showError(message: "Live Photo image not found")
+            showError(message: LMText.camera.livePhotoImageNotFound)
             return
         }
         
@@ -425,7 +425,7 @@ class LMGalleryDetailPage: UIViewController {
                     LMLogger.log("❌ Failed to save Live Photo: \(error.localizedDescription)")
                     LMLogger.log("❌ Error code: \(nsError.code), domain: \(nsError.domain)")
                     LMLogger.log("❌ Error info: \(nsError.userInfo)")
-                    self?.showError(message: "Failed to save: \(error.localizedDescription)")
+                    self?.showError(message: "\(LMText.camera.failedToSaveLivePhoto): \(error.localizedDescription)")
                 }
             }
         }
@@ -433,15 +433,15 @@ class LMGalleryDetailPage: UIViewController {
     
     @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
         if let error = error {
-            showError(message: "Failed to save: \(error.localizedDescription)")
+            showError(message: "\(LMText.camera.failedToSavePhoto): \(error.localizedDescription)")
         } else {
             showSuccessIndicator()
         }
     }
     
     @objc private func deleteButtonTapped() {
-        LMAlertDialog.showGeneralAlert("This action cannot be undone.",
-                                       title: "Are you sure to delete this photo from gallery?") { [weak self] in
+        LMAlertDialog.showGeneralAlert(LMText.profile.actionCannotBeUndone,
+                                       title: LMText.profile.deletePhotoConfirm) { [weak self] in
             self?.performDelete()
         }
     }
@@ -472,7 +472,7 @@ class LMGalleryDetailPage: UIViewController {
                         self.navigationController?.popViewController(animated: true)
                     } else {
                         LMLogger.log("❌ Failed to delete gallery item from storage")
-                        self.showError(message: "Failed to delete photo. Please try again.")
+                        self.showError(message: LMText.camera.failedToSavePhoto)
                     }
                 }
             }

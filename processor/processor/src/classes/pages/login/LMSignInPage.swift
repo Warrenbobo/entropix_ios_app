@@ -42,7 +42,7 @@ class LMSignInPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "Sign In"
+        barTitle = LMText.auth.signIn
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
@@ -110,7 +110,7 @@ extension LMSignInPage {
         // 配置用户名输入框（不显示标题）
         usernameInputField.configureInputFieldProperties(
             title: "",
-            placeholder: "Username, email or mobile number",
+            placeholder: LMText.auth.usernameEmailOrMobile,
             isSecure: false,
             keyboardType: .default
         )
@@ -120,7 +120,7 @@ extension LMSignInPage {
         // 配置密码输入框（不显示标题）
         passwordInputField.configureInputFieldProperties(
             title: "",
-            placeholder: "Password",
+            placeholder: LMText.auth.password,
             isSecure: true,
             keyboardType: .default
         )
@@ -166,15 +166,16 @@ extension LMSignInPage {
     
     private func setupSignUpPromptComponent() {
         
+        let fullText = "\(LMText.auth.dontHaveAccount) \(LMText.auth.signUp)"
         let attributedText = NSMutableAttributedString(
-            string: "Don't have an account? Sign up",
+            string: fullText,
             attributes: [
                 .font: UIFont.systemFont(ofSize: 16),
                 .foregroundColor: UIColor.secondaryLabel
             ]
         )
         
-        let signUpRange = (attributedText.string as NSString).range(of: "Sign up")
+        let signUpRange = (attributedText.string as NSString).range(of: LMText.auth.signUp)
         attributedText.addAttribute(.foregroundColor, value: UIColor.systemOrange, range: signUpRange)
         attributedText.addAttribute(.font, value: UIFont.systemFont(ofSize: 16, weight: .semibold), range: signUpRange)
         
@@ -439,11 +440,11 @@ extension LMSignInPage {
         switch inputField {
         case usernameInputField:
             if !validateUsernameInputField() {
-                inputField.displayErrorMessageWithText("Username is required (minimum 3 characters)")
+                inputField.displayErrorMessageWithText(LMText.auth.usernameMinLength)
             }
         case passwordInputField:
             if !validatePasswordInputField() {
-                inputField.displayErrorMessageWithText("Password is required (minimum 6 characters)")
+                inputField.displayErrorMessageWithText(LMText.auth.passwordMinLength)
             }
         default:
             break
@@ -541,7 +542,7 @@ extension LMSignInPage {
     private func showLoadingIndicator() {
         // 禁用按钮交互
         primarySignInButton.isEnabled = false
-        primarySignInButton.setTitle("Signing in...", for: .normal)
+        primarySignInButton.setTitle(LMText.auth.signingIn, for: .normal)
         
         // 显示 Toast loading activity
         view.makeToastActivity(.center)
@@ -579,7 +580,7 @@ extension LMSignInPage {
     }
     
     private func presentInvalidCredentialsAlert() {
-        AppTheme.Toast.showText("Invalid credentials. Please check your username and password.")
+        AppTheme.Toast.showText(LMText.auth.invalidCredentials)
     }
     
     private func presentAuthenticationErrorAlert(message: String) {

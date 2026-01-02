@@ -2,9 +2,6 @@
 //  LMApiService.swift
 //  processor
 //
-//  API 服务封装
-//  Updated: 2025-01-16 - 根据接口文档完善所有接口
-//  Updated: 2025-01-20 - 统一使用 LMApiCallback 作为回调类型
 //
 
 import Foundation
@@ -316,9 +313,12 @@ class LMApiService {
     // MARK: - Composition APIs
     
     /// 提交构图任务
+    /// - Parameters:
+    ///   - originalImage: 原始场景图
+    ///   - compressedImage: 压缩后的场景图（PRD 要求长边≤1080px）
     func submitCompositionTask(
         originalImage: UIImage,
-        optimizedImage: UIImage,
+        compressedImage: UIImage,
         embeddings: [Float],
         aspectRatio: String,
         sceneType: String?,
@@ -326,7 +326,10 @@ class LMApiService {
     ) {
         
         guard let originalImageData = originalImage.jpegData(compressionQuality: 0.9),
-              let optimizedImageData = optimizedImage.jpegData(compressionQuality: 0.9) else {
+              let compressedImageData = compressedImage.jpegData(compressionQuality: 0.9) else {
+            var errorResponse = LMApiResponseModel<LMCompositionTaskResponse>.empty()
+            errorResponse.message = "Failed to convert image to JPEG data"
+            completion(errorResponse)
             return
         }
         
@@ -339,11 +342,11 @@ class LMApiService {
         
         let url = AppConfigs.Host.path() + LMApi.Composition.analyze
         
-        // 在后台线程执行上传（参考 LMApiClient.requestAndParser）
+        // 在后台线程执行上传
         DispatchQueue.global().async {
             AF.upload(multipartFormData: { multipartFormData in
                 multipartFormData.append(originalImageData, withName: "file", fileName: "scene.jpg", mimeType: "image/jpeg")
-                multipartFormData.append(optimizedImageData, withName: "optimized_file", fileName: "scene_optimized.jpg", mimeType: "image/jpeg")
+                multipartFormData.append(compressedImageData, withName: "optimized_file", fileName: "scene_optimized.jpg", mimeType: "image/jpeg")
                 
                 if let aspectRatioData = aspectRatio.data(using: .utf8) {
                     multipartFormData.append(aspectRatioData, withName: "aspect_ratio")
@@ -362,79 +365,25 @@ class LMApiService {
                 }
             }, to: url, headers: LMApiClient.uploadHTTPHeaders())
             .responseDecodable(of: LMApiResponseModel<LMCompositionTaskResponse>.self) { response in
-                // 格式化日志输出（参考 LMApiClient.requestFormatLog）
-                self.logCompositionTaskRequest(url: url, aspectRatio: aspectRatio, sceneType: sceneType, response: response)
                 
-                // 处理错误（参考 LMApiClient.requestAndParser）
-                if let error = response.error {
-                    LMLogger.log("❌ Upload error: \(error.localizedDescription)")
-                    let statusCode = response.response?.statusCode
-                    
-                    // 处理 200 状态码但有错误信息的情况
-                    if statusCode == 200 {
-                        if let data = response.data,
-                           let object = try? JSONSerialization.jsonObject(with: data, options: .fragmentsAllowed) as? [String: Any],
-                           let message = object["message"] as? String {
-                            LMLogger.log("⚠️ Status 200 but with error message: \(message)")
-                        }
+                // 统一的响应处理（参考 LMApiClient.requestAndParser）
+                switch response.result {
+                case .success(var responseModel):
+                    responseModel.rawData = response.data
+                    DispatchQueue.main.async {
+                        completion(responseModel)
                     }
-                    
+                case .failure(_):
+                    LMLogger.log("❌ Upload error: \(String(describing: response.error))")
+                    let statusCode = response.response?.statusCode
                     var errorResponse = LMApiResponseModel<LMCompositionTaskResponse>.general(of: statusCode, rawData: response.data)
                     errorResponse.rawData = response.data
                     DispatchQueue.main.async {
                         completion(errorResponse)
                     }
-                    return
-                }
-                
-                // 处理解析失败（参考 LMApiClient.requestAndParser）
-                guard var responseValue = response.value else {
-                    LMLogger.log("❌ Failed to parse response")
-                    var emptyResponse = LMApiResponseModel<LMCompositionTaskResponse>.empty()
-                    emptyResponse.rawData = response.data
-                    DispatchQueue.main.async {
-                        completion(emptyResponse)
-                    }
-                    return
-                }
-                
-                responseValue.rawData = response.data
-                DispatchQueue.main.async {
-                    completion(responseValue)
-                    if let message = responseValue.message, !responseValue.requestSuccess {
-                        LMLogger.log("⚠️ Request completed but not successful: \(message)")
-                    }
                 }
             }
         }
-    }
-    
-    /// 格式化输出构图任务请求的日志（参考 LMApiClient.requestFormatLog）
-    private func logCompositionTaskRequest(
-        url: String,
-        aspectRatio: String,
-        sceneType: String?,
-        response: DataResponse<LMApiResponseModel<LMCompositionTaskResponse>, AFError>
-    ) {
-        var requestParser = "Request Object\nPath: POST \(url)\n"
-        requestParser += "Params:\n"
-        requestParser += "  - aspect_ratio: \(aspectRatio)\n"
-        if let sceneType = sceneType {
-            requestParser += "  - scene_type: \(sceneType)\n"
-        }
-        requestParser += "  - file: scene.jpg (multipart)\n"
-        requestParser += "  - optimized_file: scene_optimized.jpg (multipart)\n"
-        requestParser += "  - embeddings: [Float array]\n"
-        
-        var responseParser = "Response Object\n"
-        if let data = response.data,
-           let jsonString = String(data: data, encoding: .utf8) {
-            responseParser += jsonString
-        } else if let error = response.error {
-            responseParser += error.localizedDescription
-        }
-        
-        LMLogger.log("\(requestParser)\n\(LMLogger.dividingLine)\n\(responseParser)")
     }
     
     /// 获取任务建议图（轮询：获取所有建议图）

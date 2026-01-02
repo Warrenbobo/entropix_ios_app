@@ -3,7 +3,6 @@
 //  processor
 //
 //  Created by muz on 2025/11/9.
-//  Updated to use unified API service
 //
 
 import UIKit
@@ -14,7 +13,8 @@ class LMCompositionService {
     
     private init() {}
     
-    // MARK: - Type Aliases for Backward Compatibility
+    // MARK: - Type Aliases
+    typealias CompositionTaskResponse = LMCompositionTaskResponse
     typealias CompositionStatusResponse = LMCompositionSuggestionsResponse
     typealias ConfirmSuggestionResponse = LMConfirmSuggestionResponse
     typealias CompositionHistoryResponse = LMCompositionResultsResponse
@@ -24,48 +24,29 @@ class LMCompositionService {
     /// 提交构图任务
     /// - Parameters:
     ///   - originalImage: 原始场景图
-    ///   - optimizedImage: 预处理后的 960px 场景图
+    ///   - compressedImage: 压缩后的场景图（PRD 要求长边≤1080px）
     ///   - embeddings: 图像向量（768维）
     ///   - aspectRatio: 宽高比
     ///   - sceneType: 场景类型（可选）
-    ///   - completion: 完成回调
+    ///   - completion: 完成回调（使用统一的 LMApiCallback）
     func submitCompositionTask(
         originalImage: UIImage,
-        optimizedImage: UIImage,
+        compressedImage: UIImage,
         embeddings: [Float],
         aspectRatio: String,
         sceneType: String? = nil,
-        completion: @escaping (Result<CompositionTaskResponse, Error>) -> Void
+        completion: @escaping LMApiCallback<CompositionTaskResponse>
     ) {
         LMLogger.log("📤 Submitting composition task...")
         
-        // 验证向量维度
-        guard embeddings.count == 768 else {
-            let error = NSError(domain: "CompositionService", code: -1, 
-                              userInfo: [NSLocalizedDescriptionKey: "Embeddings must be 768 dimensions"])
-            completion(.failure(error))
-            return
-        }
-        
-        // 使用统一的 API 服务
         LMApiService.shared.submitCompositionTask(
             originalImage: originalImage,
-            optimizedImage: optimizedImage,
+            compressedImage: compressedImage,
             embeddings: embeddings,
             aspectRatio: aspectRatio,
-            sceneType: sceneType
-        ) { response in
-            if response.requestSuccess, let data = response.value {
-                completion(.success(data))
-            } else {
-                let error = NSError(
-                    domain: "CompositionService",
-                    code: response.code ?? -1,
-                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Unknown error"]
-                )
-                completion(.failure(error))
-            }
-        }
+            sceneType: sceneType,
+            completion: completion
+        )
     }
     
     // MARK: - 轮询任务状态
@@ -73,23 +54,12 @@ class LMCompositionService {
     /// 轮询任务状态
     /// - Parameters:
     ///   - taskId: 任务ID
-    ///   - completion: 完成回调
+    ///   - completion: 完成回调（使用统一的 LMApiCallback）
     func pollTaskStatus(
         taskId: String,
-        completion: @escaping (Result<CompositionStatusResponse, Error>) -> Void
+        completion: @escaping LMApiCallback<CompositionStatusResponse>
     ) {
-        LMApiService.shared.getSuggestions(taskId: taskId) { response in
-            if response.requestSuccess, let data = response.value {
-                completion(.success(data))
-            } else {
-                let error = NSError(
-                    domain: "CompositionService",
-                    code: response.code ?? -1,
-                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Unknown error"]
-                )
-                completion(.failure(error))
-            }
-        }
+        LMApiService.shared.getSuggestions(taskId: taskId, completion: completion)
     }
     
     // MARK: - 确认建议
@@ -98,26 +68,17 @@ class LMCompositionService {
     /// - Parameters:
     ///   - taskId: 任务ID
     ///   - suggestionId: 建议ID
-    ///   - completion: 完成回调
+    ///   - completion: 完成回调（使用统一的 LMApiCallback）
     func confirmSuggestion(
         taskId: String,
         suggestionId: String,
-        completion: @escaping (Result<ConfirmSuggestionResponse, Error>) -> Void
+        completion: @escaping LMApiCallback<ConfirmSuggestionResponse>
     ) {
-        LMApiService.shared.confirmSuggestion(taskId: taskId, suggestionId: suggestionId) { response in
-            if response.requestSuccess, let data = response.value {
-                LMLogger.log("✅ Suggestion confirmed: \(suggestionId)")
-                completion(.success(data))
-            } else {
-                let error = NSError(
-                    domain: "CompositionService",
-                    code: response.code ?? -1,
-                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Unknown error"]
-                )
-                LMLogger.log("❌ Confirmation failed: \(error.localizedDescription)")
-                completion(.failure(error))
-            }
-        }
+        LMApiService.shared.confirmSuggestion(
+            taskId: taskId,
+            suggestionId: suggestionId,
+            completion: completion
+        )
     }
     
     // MARK: - 获取历史记录
@@ -126,23 +87,16 @@ class LMCompositionService {
     /// - Parameters:
     ///   - page: 页码
     ///   - number: 每页数量
-    ///   - completion: 完成回调
+    ///   - completion: 完成回调（使用统一的 LMApiCallback）
     func fetchHistory(
         page: Int = 1,
         number: Int = 4,
-        completion: @escaping (Result<CompositionHistoryResponse, Error>) -> Void
+        completion: @escaping LMApiCallback<CompositionHistoryResponse>
     ) {
-        LMApiService.shared.getCompositionResults(page: page, number: number) { response in
-            if response.requestSuccess, let data = response.value {
-                completion(.success(data))
-            } else {
-                let error = NSError(
-                    domain: "CompositionService",
-                    code: response.code ?? -1,
-                    userInfo: [NSLocalizedDescriptionKey: response.message ?? "Unknown error"]
-                )
-                completion(.failure(error))
-            }
-        }
+        LMApiService.shared.getCompositionResults(
+            page: page,
+            number: number,
+            completion: completion
+        )
     }
 }

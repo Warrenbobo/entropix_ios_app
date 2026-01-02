@@ -14,6 +14,7 @@ protocol LMSuggestionsCarouselViewDelegate: AnyObject {
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didToggleFavorite suggestion: LMCompositionSuggestion, at index: Int)
     func suggestionsCarouselViewDidRequestMoreSuggestions(_ view: LMSuggestionsCarouselView)
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpSuggestion suggestion: LMCompositionSuggestion, at index: Int)
+    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpWithOffset offset: CGFloat)
 }
 
 class LMSuggestionsCarouselView: UIView {
@@ -30,12 +31,38 @@ class LMSuggestionsCarouselView: UIView {
     private var selectedIndex: Int = -1 // -1 表示未选中任何卡片
     
     // MARK: - Constants
-    private let normalCardSize = CGSize(width: 75, height: 100) 
-    private let cardSpacing: CGFloat = 10
-    private let sideInset: CGFloat = 30
+    // 基准尺寸（基于 iPhone 15 Pro 393pt 宽度设计，放大 1.1 倍）
+    private let baseScreenWidth: CGFloat = 393.0
+    private let baseNormalCardWidth: CGFloat = 82.5  // 75 * 1.1
+    private let baseNormalCardHeight: CGFloat = 110  // 100 * 1.1
+    private let baseCardSpacing: CGFloat = 11       // 10 * 1.1
+    private let baseSideInset: CGFloat = 33         // 30 * 1.1
+    
+    // 自适应计算后的尺寸
+    private var normalCardSize: CGSize {
+        let scale = screenScaleFactor
+        return CGSize(
+            width: baseNormalCardWidth * scale,
+            height: baseNormalCardHeight * scale
+        )
+    }
+    
+    private var cardSpacing: CGFloat {
+        return baseCardSpacing * screenScaleFactor
+    }
+    
+    private var sideInset: CGFloat {
+        return baseSideInset * screenScaleFactor
+    }
+    
     private let selectedScale: CGFloat = 1.4
     private let selectedBorderWidth: CGFloat = 3
     private let selectedYOffset: CGFloat = 20 // 选中时向上偏移20px
+    
+    // 屏幕缩放因子
+    private var screenScaleFactor: CGFloat {
+        return UIScreen.main.bounds.width / baseScreenWidth
+    }
     
     // 计算选中时的卡片大小
     private var selectedCardSize: CGSize {
@@ -425,6 +452,9 @@ class LMSuggestionsCarouselView: UIView {
                 let progress = min(moveDistance / swipeUpThreshold, 1.0)
                 cardView.alpha = 1.0 - (progress * 0.2) // 最多降低20%透明度
                 
+                // 通知代理滑动偏移量
+                delegate?.suggestionsCarouselView(self, didSwipeUpWithOffset: moveDistance)
+                
                 LMLogger.log("📏 Dragging distance: \(moveDistance), progress: \(progress)")
             }
             
@@ -491,11 +521,16 @@ class LMSuggestionsCarouselView: UIView {
     }
     
     // MARK: - Layout
+    private var lastLayoutBoundsSize: CGSize = .zero
+    
     override func layoutSubviews() {
         super.layoutSubviews()
         
         // 只在 bounds 真正改变时才重新布局，避免滚动时频繁触发
-        if bounds.size != scrollView.bounds.size {
+        // 使用缓存的 lastLayoutBoundsSize 而不是 scrollView.bounds.size
+        // 因为 scrollView.bounds 在滚动时会频繁变化
+        if bounds.size != lastLayoutBoundsSize {
+            lastLayoutBoundsSize = bounds.size
             layoutCardViews()
         }
     }
@@ -536,26 +571,45 @@ extension LMSuggestionsCarouselView: UIGestureRecognizerDelegate {
     
     /// 允许多个手势同时识别
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        // 如果是卡片上的手势，不允许同时识别
-        if gestureRecognizer.view is LMSuggestionCardView || otherGestureRecognizer.view is LMSuggestionCardView {
-            return false
+        // 如果是卡片上的 Pan 手势，不允许与 ScrollView 的滚动手势同时识别
+        if let panGesture = gestureRecognizer as? UIPanGestureRecognizer,
+           panGesture.view is LMSuggestionCardView {
+            // 检查另一个手势是否是 ScrollView 的滚动手势
+            if otherGestureRecognizer.view is UIScrollView {
+                return false
+            }
         }
-        return true
+        // 如果是 ScrollView 的滚动手势，允许与其他手势同时识别
+        if gestureRecognizer.view is UIScrollView {
+            return true
+        }
+        return false
     }
     
     /// 手势是否应该开始
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        // Pan 手势：只在卡片上生效
+        // Pan 手势：只在卡片上生效，且只处理明显的垂直滑动
         if let panGesture = gestureRecognizer as? UIPanGestureRecognizer {
             guard gestureRecognizer.view is LMSuggestionCardView else { return false }
-            // 检查是否为向上的拖动
+            
             let velocity = panGesture.velocity(in: self)
-            // 如果是明显的横向滑动，不触发（让 scrollView 处理）
+            
+            // 如果是明显的横向滑动（横向速度是纵向的2倍以上），不触发卡片的 Pan 手势
+            // 让 scrollView 处理横向滚动
             if abs(velocity.x) > abs(velocity.y) * 2 {
                 return false
             }
-            return true
+            
+            // 只有明显的向上滑动才触发卡片的 Pan 手势
+            // 向上滑动：velocity.y < 0，且纵向速度大于横向速度
+            if velocity.y < 0 && abs(velocity.y) > abs(velocity.x) {
+                return true
+            }
+            
+            // 其他情况不触发卡片的 Pan 手势
+            return false
         }
+        
         // Tap 手势：总是允许
         if gestureRecognizer is UITapGestureRecognizer {
             return true

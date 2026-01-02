@@ -113,38 +113,22 @@ extension LMCameraPage {
             configuration.computeUnits = .all
             guard let model = try? EVA02(configuration: configuration) else {
                 LMLogger.log("❌ Failed to load EVA02 model")
-                return generateDummyEmbeddings()
+                return nil
             }
             let output = try model.prediction(image: multiArray)
             let embedding = extractEmbedding(from: output)
-            guard embedding.count == 768 else {
-                LMLogger.log("❌ Invalid embedding dimension: \(embedding.count), expected 768")
-                return generateDummyEmbeddings()
-            }
-            
-            LMLogger.log("✅ EVA02 inference completed, embedding dimension: \(embedding.count)")
+            LMLogger.log("✅ EVA02 inference completed, embedding dimension: \(embedding?.count ?? 0)")
             return embedding
         } catch {
             LMLogger.log("❌ Failed to process image with ImageProcessor: \(error.localizedDescription)")
-            return generateDummyEmbeddings()
+            return nil
         }
-    }
-    
-    /// 生成测试用的 768 维向量
-    func generateDummyEmbeddings() -> [Float] {
-        var embeddings = (0..<768).map { _ in Float.random(in: -1...1) }
-        
-        let norm = sqrt(embeddings.reduce(0) { $0 + $1 * $1 })
-        if norm > 0 {
-            embeddings = embeddings.map { $0 / norm }
-        }
-        
-        return embeddings
     }
     
     /// 从模型输出中提取 embedding
-    func extractEmbedding(from output: Any) -> [Float] {
-        if let multiArray = output as? MLMultiArray {
+    func extractEmbedding(from output: Any) -> [Float]? {
+        if let outputObject = output as? EVA02Output {
+            let multiArray = outputObject.input0_1
             let count = multiArray.count
             var embedding = [Float](repeating: 0, count: count)
             for i in 0..<count {
@@ -152,8 +136,7 @@ extension LMCameraPage {
             }
             return embedding
         }
-        
-        return generateDummyEmbeddings()
+        return nil
     }
 }
 
@@ -200,55 +183,54 @@ extension LMCameraPage {
     func processAndUploadImage(_ image: UIImage, sceneFeature: [Float]?) {
         LMLogger.log("📤 Processing and uploading image...")
         
+        // PRD 3.13.3.4: 压缩图像，长边≤1080px
         guard let compressedImage = compressImage(image, maxLongSide: 1080) else {
             hideProcessingOverlay()
-            isInspireMeCapture = false  // 重置标志，允许用户重新点击
-            AppTheme.Toast.showText("Image compression failed")
-            return
-        }
-        
-        guard let optimizedImage = compressImage(image, maxLongSide: 960) else {
-            hideProcessingOverlay()
-            isInspireMeCapture = false  // 重置标志，允许用户重新点击
-            AppTheme.Toast.showText("Image optimization failed")
+            isInspireMeCapture = false
+            AppTheme.Toast.showText(LMText.camera.imageCompressionFailed)
             return
         }
         
         let aspectRatio = calculateAspectRatio(compressedImage)
-        let embeddings = sceneFeature ?? Array(repeating: 0.0, count: 768)
+        
+        guard let embeddings = sceneFeature else {
+            hideProcessingOverlay()
+            isInspireMeCapture = false
+            AppTheme.Toast.showText(LMText.camera.analysisFailed)
+            return
+        }
         
         LMCompositionService.shared.submitCompositionTask(
-            originalImage: compressedImage,
-            optimizedImage: optimizedImage,
+            originalImage: image,
+            compressedImage: compressedImage,
             embeddings: embeddings,
             aspectRatio: aspectRatio,
             sceneType: nil
-        ) { [weak self] result in
+        ) { [weak self] response in
             self?.hideProcessingOverlay()
-            self?.isInspireMeCapture = false  // 重置标志，无论成功或失败都允许用户重新点击
+            self?.isInspireMeCapture = false
             
-            switch result {
-            case .success(let response):
-                LMLogger.log("✅ Task submitted: \(response.taskId)")
-                self?.navigateToShowSuggestions(response)
-                
-            case .failure(let error):
-                LMLogger.log("❌ Task submission failed: \(error.localizedDescription)")
+            if response.requestSuccess, let data = response.value {
+                LMLogger.log("✅ Task submitted: \(data.taskId ?? "unknown")")
+                self?.navigateToShowSuggestions(data)
+            } else {
+                LMLogger.log("❌ Task submission failed: \(response.message ?? "Unknown error")")
                 
                 // 检查是否为订阅失效错误
-                if self?.isSubscriptionExpiredError(error) == true {
+                if self?.isSubscriptionExpiredError(response) == true {
                     self?.showSubscriptionExpiredAlert()
                 } else {
-                    AppTheme.Toast.showText("Analysis failed: \(error.localizedDescription)")
+                    // 使用后端返回的 message，无需本地硬编码
+                    let errorMessage = response.message ?? LMText.camera.analysisFailed
+                    AppTheme.Toast.showText(errorMessage)
                 }
             }
         }
     }
     
     /// 检查是否为订阅失效错误
-    private func isSubscriptionExpiredError(_ error: Error) -> Bool {
-        let nsError = error as NSError
-        let errorMessage = nsError.localizedDescription.lowercased()
+    private func isSubscriptionExpiredError(_ response: LMApiResponseModel<LMCompositionTaskResponse>) -> Bool {
+        guard let message = response.message?.lowercased() else { return false }
         
         // 检查错误消息中是否包含订阅相关的关键词
         let subscriptionKeywords = [
@@ -262,7 +244,7 @@ extension LMCameraPage {
         ]
         
         for keyword in subscriptionKeywords {
-            if errorMessage.contains(keyword.lowercased()) {
+            if message.contains(keyword.lowercased()) {
                 return true
             }
         }

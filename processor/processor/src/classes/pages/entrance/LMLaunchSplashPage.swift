@@ -15,9 +15,13 @@ class LMLaunchSplashPage: UIViewController {
     private let logoImageView = UIImageView()
     private let appNameLabel = UILabel()
     private let taglineLabel = UILabel()
+    private var privacyPermissionView: LMPrivacyPermissionView?
     
     // MARK: - Properties
     private var showPrivacy: Bool = false
+    
+    // MARK: - Privacy Permission Keys
+    private static let privacyPermissionKey = "hasAgreedPrivacyPermission"
     
     // MARK: - Network Monitoring Properties
     private var networkReachabilityManager: NetworkReachabilityManager?
@@ -56,8 +60,32 @@ class LMLaunchSplashPage: UIViewController {
     
     /// 检查用户是否已经同意隐私授权
     private func checkPrivacyPermissionState() {
-        // 检查是否显示过隐私协议
-        loadPackageDataAndEnterHomePage()
+        let hasAgreed = UserDefaults.standard.bool(forKey: Self.privacyPermissionKey)
+        
+        if hasAgreed {
+            // 已同意隐私授权，直接进入首页
+            LMLogger.log("✅ Privacy permission already agreed, proceeding...")
+            loadPackageDataAndEnterHomePage()
+        } else {
+            // 未同意隐私授权，显示授权弹窗
+            LMLogger.log("📋 Showing privacy permission dialog...")
+            showPrivacyPermissionDialog()
+        }
+    }
+    
+    /// 显示隐私授权弹窗
+    private func showPrivacyPermissionDialog() {
+        let permissionView = LMPrivacyPermissionView()
+        permissionView.delegate = self
+        permissionView.show(in: view, animated: true)
+        self.privacyPermissionView = permissionView
+    }
+    
+    /// 标记用户已同意隐私授权
+    private func markPrivacyPermissionAgreed() {
+        UserDefaults.standard.set(true, forKey: Self.privacyPermissionKey)
+        UserDefaults.standard.synchronize()
+        LMLogger.log("✅ Privacy permission marked as agreed")
     }
 
     
@@ -131,7 +159,7 @@ class LMLaunchSplashPage: UIViewController {
         
         // 显示无网络提示
         DispatchQueue.main.async {
-            LMAlertDialog.showConfirmAlert("No network connection detected. Please check your network settings and restart the app.") {
+            LMAlertDialog.showConfirmAlert(LMText.entrance.noNetworkConnection) {
                 // 无网络状态退出APP
                 exit(0)
             }
@@ -231,14 +259,14 @@ class LMLaunchSplashPage: UIViewController {
         view.addSubview(logoImageView)
         
         // 应用名称
-        appNameLabel.text = "Entropix"
+        appNameLabel.text = LMText.entrance.entropix
         appNameLabel.font = UIFont.boldSystemFont(ofSize: 32)
         appNameLabel.textColor = .label
         appNameLabel.textAlignment = .center
         view.addSubview(appNameLabel)
         
         // 标语
-        taglineLabel.text = "Unleash Your Creativity in Photography"
+        taglineLabel.text = LMText.entrance.unleashCreativity
         taglineLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
         taglineLabel.textColor = UIColor(white: 0.67, alpha: 1.0)
         taglineLabel.textAlignment = .center
@@ -290,5 +318,42 @@ class LMLaunchSplashPage: UIViewController {
     /// 跳转隐私政策
     private func userPrivacyTextOnTap() {
        
+    }
+}
+
+// MARK: - LMPrivacyPermissionViewDelegate
+extension LMLaunchSplashPage: LMPrivacyPermissionViewDelegate {
+    
+    func privacyPermissionViewDidAgree(_ view: LMPrivacyPermissionView) {
+        LMLogger.log("✅ User agreed to privacy permission")
+        // 标记已同意
+        markPrivacyPermissionAgreed()
+        // 隐藏弹窗并进入首页
+        view.hide(animated: true) { [weak self] in
+            self?.privacyPermissionView = nil
+            self?.loadPackageDataAndEnterHomePage()
+        }
+    }
+    
+    func privacyPermissionViewDidReject(_ view: LMPrivacyPermissionView) {
+        LMLogger.log("❌ User rejected privacy permission, exiting app")
+        // 用户不同意，退出 APP
+        exit(0)
+    }
+    
+    func privacyPermissionViewDidTapPrivacyPolicy(_ view: LMPrivacyPermissionView) {
+        LMLogger.log("📋 User tapped Privacy Policy link")
+        // 打开隐私政策页面
+        if let url = URL(string: LMApi.Terms.privacy) {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    func privacyPermissionViewDidTapTermsOfService(_ view: LMPrivacyPermissionView) {
+        LMLogger.log("📋 User tapped Terms of Service link")
+        // 打开服务条款页面
+        if let url = URL(string: LMApi.Terms.service) {
+            UIApplication.shared.open(url)
+        }
     }
 }

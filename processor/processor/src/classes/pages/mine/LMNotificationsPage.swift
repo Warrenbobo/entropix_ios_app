@@ -75,7 +75,7 @@ class LMNotificationsPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "Notifications"
+        barTitle = LMText.settings.notifications
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         loadNotificationData()

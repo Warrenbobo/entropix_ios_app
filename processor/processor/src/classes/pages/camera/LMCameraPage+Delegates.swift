@@ -95,8 +95,8 @@ extension LMCameraPage: LMCameraControlsViewDelegate {
     }
     
     func showLivePhotosNotSupportedAlert() {
-        LMAlertDialog.showGeneralAlert("Live Photos is not supported on this device.",
-            title: "Live Photos",
+        LMAlertDialog.showGeneralAlert(LMText.camera.livePhotosNotSupported,
+            title: LMText.camera.livePhotos,
             onConfirm: { [weak self] in
                 self?.cameraControlsView.updateLivePhotoStatus(false)
             }
@@ -111,6 +111,22 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
         let isActive = cameraBottomControlsView.isARGuidanceActive()
         LMLogger.log("🎯 AR Guidance: \(isActive ? "ON" : "OFF")")
         
+        // 隐藏 Step 3 引导（用户点击了 AR Guidance 按钮）
+        hideARGuidanceGuide()
+        
+        // 如果关闭 AR Guidance，隐藏 Step 4 引导
+        if !isActive {
+            hideAlignBoxesGuide()
+        }
+        
+        // 如果开启 AR Guidance，显示 Step 4 引导
+        if isActive {
+            // 延迟显示 Step 4，等待 AR Guidance 初始化完成
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.showAlignBoxesGuideIfNeeded()
+            }
+        }
+        
         // 如果在 Show Suggestions 状态下开启 AR Guidance，需要先显示 Reference Image
         if isActive && currentCameraState == .showingSuggestions {
             // 检查是否有选中的构图和对应的卡片视图
@@ -120,7 +136,7 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
                 LMLogger.log("⚠️ No suggestion selected or image not loaded, cannot enable AR Guidance")
                 // 将 AR Guidance 状态改回 available（关闭状态）
                 cameraBottomControlsView.setARGuidanceAvailable(true)
-                AppTheme.Toast.showText("Please select a composition with loaded image first")
+                AppTheme.Toast.showText(LMText.camera.selectCompositionFirst)
                 return
             }
             
@@ -152,12 +168,17 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
         // 检测人物并显示AR引导
         detectPersonAndShowGuidance(in: image)
         
+        // 尝试显示 Step 3 引导
+        showARGuidanceGuideIfNeeded()
+        // 尝试显示 Step 4 引导（如果 Step 3 已显示过且 AR Guidance 已开启）
+        tryShowAlignBoxesGuideAfterDelay()
+        
         LMLogger.log("✅ 从Show Suggestions进入Composition Selected状态")
     }
     
     func cameraBottomControlsViewDidTapUnavailableARGuidance() {
-        LMLogger.log("⚠️ User tapped unavailable AR Guidance button")
-        AppTheme.Toast.showText("AR Guidance is only available after using Inspire Me")
+        // 不做任何处理，unavailable 状态下点击无效果
+        LMLogger.log("⚠️ User tapped unavailable AR Guidance button - ignored")
     }
     
     func cameraBottomControlsViewDidTapCaptureButton() {
@@ -203,7 +224,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
             LMLogger.log("❌ Failed to get image buffer from sample buffer")
             DispatchQueue.main.async { [weak self] in
                 self?.hideProcessingOverlay()
-                AppTheme.Toast.showText("Failed to capture frame from video stream")
+                AppTheme.Toast.showText(LMText.camera.failedToCaptureFrame)
             }
             return
         }
@@ -216,7 +237,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
             LMLogger.log("❌ Failed to create CGImage from CIImage")
             DispatchQueue.main.async { [weak self] in
                 self?.hideProcessingOverlay()
-                AppTheme.Toast.showText("Failed to process captured frame")
+                AppTheme.Toast.showText(LMText.camera.failedToProcessFrame)
             }
             return
         }
@@ -268,13 +289,13 @@ extension LMCameraPage: LMInspireMeButtonViewDelegate {
         LMLogger.log("❓ Inspire Me question button tapped")
         
         // 显示 Inspire Me 功能说明
-        AppTheme.Toast.showText("Tap to get AI-powered composition suggestions for your photo. Each use costs 1 Inspire Point.")
+        AppTheme.Toast.showText(LMText.camera.inspireMeHint)
     }
     
     func inspireMeButtonViewDidTapDisabledButton() {
         LMLogger.log("⚠️ Inspire Me button tapped while using front camera")
         
         // 显示前摄不可用提示
-        AppTheme.Toast.showText("Inspire Me not available on front camera. Please switch to back camera to use this feature.")
+        AppTheme.Toast.showText(LMText.camera.inspireMeFrontCameraHint)
     }
 }

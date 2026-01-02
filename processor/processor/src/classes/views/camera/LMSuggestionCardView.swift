@@ -20,6 +20,17 @@ class LMSuggestionCardView: UIView {
         return imageView.image
     }
     
+    // MARK: - Adaptive Size Constants
+    private static let baseScreenWidth: CGFloat = 393.0
+    
+    private static var screenScaleFactor: CGFloat {
+        return UIScreen.main.bounds.width / baseScreenWidth
+    }
+    
+    private static func adaptiveSize(_ baseSize: CGFloat) -> CGFloat {
+        return baseSize * screenScaleFactor
+    }
+    
     // MARK: - UI Components
     private let backgroundImageView = UIImageView() // 底层：拉伸填充
     private let blurEffectView: UIVisualEffectView = {
@@ -28,10 +39,28 @@ class LMSuggestionCardView: UIView {
         return UIVisualEffectView(effect: blurEffect)
     }() // 中层：模糊蒙层
     private let imageView = UIImageView() // 顶层：等比例显示
+    private let placeholderImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .center  // 居中显示，不缩放
+        imageView.tintColor = .lightGray
+        let pointSize = adaptiveSize(32)
+        let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
+        imageView.image = UIImage(systemName: "photo", withConfiguration: config)
+        imageView.isHidden = true
+        return imageView
+    }() // Placeholder 图标（居中显示）
     private let heartButton = UIButton()
     private let loadingView = UIView()
     private let loadingSpinner = UIActivityIndicatorView(style: .medium)
     private let loadingLabel = UILabel()
+    private let aigcBadgeImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "aigc")
+        imageView.contentMode = .scaleAspectFit
+        imageView.alpha = 0.7  // 30% 透明度即70%不透明度
+        imageView.isHidden = true  // 默认隐藏
+        return imageView
+    }() // AIGC 标识图
     
     // MARK: - Properties
     weak var delegate: LMSuggestionCardViewDelegate?
@@ -52,7 +81,7 @@ class LMSuggestionCardView: UIView {
     // MARK: - Subview Configuration
     private func configureSubviews() {
         backgroundColor = .lightGray
-        layer.cornerRadius = 12
+        layer.cornerRadius = Self.adaptiveSize(12)
         layer.masksToBounds = true
         layer.borderColor = UIColor.clear.cgColor
         layer.borderWidth = 0
@@ -75,13 +104,13 @@ class LMSuggestionCardView: UIView {
         
         // 加载视图设置
         loadingView.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.9)
-        loadingView.layer.cornerRadius = 12
+        loadingView.layer.cornerRadius = Self.adaptiveSize(12)
         
         loadingSpinner.color = UIColor.white
         loadingSpinner.hidesWhenStopped = true
         
         loadingLabel.text = LMText.camera.generating
-        loadingLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        loadingLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(12), weight: .medium)
         loadingLabel.textColor = UIColor.white
         loadingLabel.textAlignment = .center
         
@@ -89,6 +118,8 @@ class LMSuggestionCardView: UIView {
         addSubview(backgroundImageView)  // 底层：拉伸背景
         addSubview(blurEffectView)       // 中层：模糊蒙层
         addSubview(imageView)            // 顶层：等比例图片
+        addSubview(placeholderImageView) // Placeholder 图标
+        addSubview(aigcBadgeImageView)   // AIGC 标识图
         addSubview(heartButton)
         addSubview(loadingView)
         loadingView.addSubview(loadingSpinner)
@@ -114,11 +145,24 @@ class LMSuggestionCardView: UIView {
             make.edges.equalToSuperview()
         }
         
+        // Placeholder 图标（居中显示）
+        placeholderImageView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(Self.adaptiveSize(64))  // 自适应大小
+        }
+        
+        // AIGC 标识图（左上角）
+        aigcBadgeImageView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(8)
+            make.leading.equalToSuperview().offset(8)
+            make.size.equalTo(Self.adaptiveSize(24))
+        }
+        
         // 心形按钮约束
         heartButton.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(12)
             make.trailing.equalToSuperview().offset(-8)
-            make.size.equalTo(22)
+            make.size.equalTo(Self.adaptiveSize(22))
         }
         
         // 加载视图约束
@@ -129,13 +173,13 @@ class LMSuggestionCardView: UIView {
         // 加载指示器约束
         loadingSpinner.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.centerY.equalToSuperview().offset(-10)
+            make.centerY.equalToSuperview().offset(-Self.adaptiveSize(10))
         }
         
         // 加载标签约束
         loadingLabel.snp.makeConstraints { make in
-            make.top.equalTo(loadingSpinner.snp.bottom).offset(8)
-            make.leading.trailing.equalToSuperview().inset(8)
+            make.top.equalTo(loadingSpinner.snp.bottom).offset(Self.adaptiveSize(8))
+            make.leading.trailing.equalToSuperview().inset(Self.adaptiveSize(8))
         }
     }
     
@@ -143,6 +187,9 @@ class LMSuggestionCardView: UIView {
     func configure(with suggestion: LMCompositionSuggestion, isFavorite: Bool = false) {
         self.suggestion = suggestion
         self.isFavorite = isFavorite
+        
+        // 根据 source 字段显示/隐藏 AIGC 标识（source = "generated" 时显示）
+        aigcBadgeImageView.isHidden = !suggestion.isAIGC
         
         if suggestion.ready != true {
             showLoadingState()
@@ -205,13 +252,23 @@ class LMSuggestionCardView: UIView {
     }
     
     private func loadImageFromURL(_ urlString: String) {
+        // 显示 placeholder 图标
+        placeholderImageView.isHidden = false
+        
         imageView.kf.setImage(with: URL(string: urlString),
-                              placeholder: UIImage(named: "app_logo_transparent_bg")) { result in
+                              placeholder: nil) { [weak self] result in
+            guard let self = self else { return }
+            
+            // 隐藏 placeholder 图标
+            self.placeholderImageView.isHidden = true
+            
             switch result {
             case .success(let image):
                 self.backgroundImageView.image = image.image
             case .failure(let error):
-                LMLogger.log("✅ Loaded image found error \(error)")
+                // 加载失败时保持显示 placeholder
+                self.placeholderImageView.isHidden = false
+                LMLogger.log("❌ Failed to load image: \(error)")
             }
         }
     }

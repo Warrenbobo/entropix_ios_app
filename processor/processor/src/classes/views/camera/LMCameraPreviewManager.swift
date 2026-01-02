@@ -198,13 +198,13 @@ class LMCameraPreviewManager: NSObject {
     
     private func showGiveUpConfirmation() {
         let alert = UIAlertController(
-            title: "Give Up Inspires?",
-            message: "You will return to the camera. This action cannot be undone.",
+            title: LMText.camera.giveUpInspires,
+            message: LMText.camera.giveUpInspiresMessage,
             preferredStyle: .alert
         )
         
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Give Up", style: .destructive) { _ in
+        alert.addAction(UIAlertAction(title: LMText.common.cancel, style: .cancel))
+        alert.addAction(UIAlertAction(title: LMText.subscription.giveUp, style: .destructive) { _ in
             self.hideSuggestions()
             self.delegate?.cameraPreviewManagerDidRequestBack(self)
         })
@@ -254,6 +254,10 @@ extension LMCameraPreviewManager: LMSuggestionsCarouselViewDelegate {
         currentState = .composition
         updateViewVisibility()
         delegate?.cameraPreviewManager(self, didSelectSuggestion: suggestion)
+    }
+    
+    func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpWithOffset offset: CGFloat) {
+        // 滑动偏移量回调，由 LMCameraPage 处理引导消失逻辑
     }
 }
 

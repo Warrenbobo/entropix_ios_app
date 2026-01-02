@@ -46,6 +46,11 @@ struct LMCompositionSuggestion: Codable {
         return source == "generated"
     }
     
+    /// 是否为 AIGC 生成的图片（当 source = "generated" 时显示 AIGC 标签）
+    var isAIGC: Bool {
+        return source == "generated"
+    }
+    
     /// 获取宽高比，如果后端没有返回则根据宽高计算
     func getAspectRatio() -> Double {
         if let width = width, let height = height, height > 0 {

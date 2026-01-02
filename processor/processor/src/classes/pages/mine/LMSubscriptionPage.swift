@@ -43,7 +43,7 @@ class LMSubscriptionPage: LMPageWrapper {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "Choose Your Plan"
+        barTitle = LMText.subscription.chooseYourPlan
         viewAdapter(scrollView)
         configureViewHierarchy()
         setupLayout()
@@ -439,7 +439,8 @@ extension LMSubscriptionPage: LMSubscriptionDialogViewDelegate {
     }
     
     private func showPurchaseSuccess(plan: SubscriptionPlan) {
-        AppTheme.Toast.showText("🎉 Successfully subscribed to \(plan.title)!")
+        let message = String(format: LMText.subscription.purchaseSuccessFormat, plan.title)
+        AppTheme.Toast.showText(message)
     }
     
     private func showPurchaseError(_ error: Error) {

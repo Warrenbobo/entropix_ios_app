@@ -70,7 +70,7 @@ class LMSavedIdeaDetailPage: UIViewController {
         backButtonContainer.addSubview(backIconImageView)
         
         // 配置 Back 文字
-        backLabel.text = "Back"
+        backLabel.text = LMText.common.back
         backLabel.textColor = .white
         backLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         backButtonContainer.addSubview(backLabel)
@@ -186,8 +186,8 @@ class LMSavedIdeaDetailPage: UIViewController {
     
     private func showUnlikeConfirmation() {
         let dialog = LMAlertDialog.deleteConfirmation(
-            title: "Remove this photo from Saved Idea?",
-            message: "This action cannot be recall."
+            title: LMText.profile.removeSavedIdeaConfirm,
+            message: LMText.profile.actionCannotBeRecall
         ) { [weak self] in
             self?.performUnlike()
         }
@@ -226,7 +226,7 @@ class LMSavedIdeaDetailPage: UIViewController {
                         self.navigationController?.popViewController(animated: true)
                     } else {
                         LMLogger.log("❌ Failed to delete saved idea from storage")
-                        self.showError(message: "Failed to remove saved idea. Please try again.")
+                        self.showError(message: LMText.profile.failedToRemoveSavedIdea)
                     }
                 }
             }

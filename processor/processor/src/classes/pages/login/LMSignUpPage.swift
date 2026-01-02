@@ -39,7 +39,7 @@ class LMSignUpPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "Create Account"
+        barTitle = LMText.auth.createAccount
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
@@ -111,8 +111,8 @@ extension LMSignUpPage {
         
         // 配置用户名输入框
         usernameInputField.configureInputFieldProperties(
-            title: "Username",
-            placeholder: "Enter your username",
+            title: LMText.profile.username,
+            placeholder: LMText.profile.enterUsername,
             isSecure: false,
             keyboardType: .default
         )
@@ -121,8 +121,8 @@ extension LMSignUpPage {
         
         // 配置邮箱输入框
         emailInputField.configureInputFieldProperties(
-            title: "Email",
-            placeholder: "Enter your email",
+            title: LMText.auth.email,
+            placeholder: LMText.auth.enterYourEmail,
             isSecure: false,
             keyboardType: .emailAddress
         )
@@ -131,8 +131,8 @@ extension LMSignUpPage {
         
         // 配置密码输入框
         passwordInputField.configureInputFieldProperties(
-            title: "Password",
-            placeholder: "Enter your password",
+            title: LMText.auth.password,
+            placeholder: LMText.auth.enterYourPassword,
             isSecure: true,
             keyboardType: .default
         )
@@ -141,8 +141,8 @@ extension LMSignUpPage {
         
         // 配置确认密码输入框
         confirmPasswordInputField.configureInputFieldProperties(
-            title: "Confirm Password",
-            placeholder: "Confirm your password",
+            title: LMText.auth.confirmPassword,
+            placeholder: LMText.auth.confirmYourPassword,
             isSecure: true,
             keyboardType: .default
         )
@@ -162,14 +162,14 @@ extension LMSignUpPage {
         
         // 服务条款文本设置
         let attributedText = NSMutableAttributedString(
-            string: "By agreeing to the terms and conditions, you are entering into a legally binding contract with the service provider.",
+            string: LMText.auth.termsAgreementText,
             attributes: [
                 .font: UIFont.systemFont(ofSize: 14),
                 .foregroundColor: UIColor.secondaryLabel
             ]
         )
         
-        let termsRange = (attributedText.string as NSString).range(of: "terms and conditions")
+        let termsRange = (attributedText.string as NSString).range(of: LMText.auth.termsAndConditions)
         attributedText.addAttribute(.foregroundColor, value: UIColor.systemBlue, range: termsRange)
         attributedText.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: termsRange)
         
@@ -202,15 +202,16 @@ extension LMSignUpPage {
     private func setupLoginPromptSectionComponents() {
         loginPromptSectionView.addSubview(loginPromptLabel)
         
+        let fullText = "\(LMText.auth.alreadyHaveAccount) \(LMText.auth.login)"
         let attributedText = NSMutableAttributedString(
-            string: "Already have an account? Login",
+            string: fullText,
             attributes: [
                 .font: UIFont.systemFont(ofSize: 16),
                 .foregroundColor: UIColor.secondaryLabel
             ]
         )
         
-        let loginRange = (attributedText.string as NSString).range(of: "Login")
+        let loginRange = (attributedText.string as NSString).range(of: LMText.auth.login)
         attributedText.addAttribute(.foregroundColor, value: UIColor.systemBlue, range: loginRange)
         attributedText.addAttribute(.font, value: UIFont.systemFont(ofSize: 16, weight: .semibold), range: loginRange)
         
@@ -371,7 +372,7 @@ extension LMSignUpPage {
         let location = gesture.location(in: termsAgreementLabel)
         let attributedText = termsAgreementLabel.attributedText!
         
-        if let termsRange = attributedText.string.range(of: "terms and conditions") {
+        if let termsRange = attributedText.string.range(of: LMText.auth.termsAndConditions) {
             let termsNSRange = NSRange(termsRange, in: attributedText.string)
             
             let textStorage = NSTextStorage(attributedString: attributedText)
@@ -466,19 +467,19 @@ extension LMSignUpPage {
         switch inputField {
         case usernameInputField:
             if !validateUsernameInputField() {
-                inputField.displayErrorMessageWithText("Username is required")
+                inputField.displayErrorMessageWithText(LMText.auth.usernameRequired)
             }
         case emailInputField:
             if !validateEmailInputField() {
-                inputField.displayErrorMessageWithText("Please enter a valid email address")
+                inputField.displayErrorMessageWithText(LMText.auth.pleaseEnterValidEmail)
             }
         case passwordInputField:
             if !validatePasswordInputField() {
-                inputField.displayErrorMessageWithText("Password must be at least 8 characters")
+                inputField.displayErrorMessageWithText(LMText.auth.passwordMinLength)
             }
         case confirmPasswordInputField:
             if !validateConfirmPasswordInputField() {
-                inputField.displayErrorMessageWithText("Passwords do not match")
+                inputField.displayErrorMessageWithText(LMText.auth.passwordsDoNotMatch)
             }
         default:
             break
@@ -584,22 +585,22 @@ extension LMSignUpPage {
         var isValid = true
         
         if !validateUsernameInputField() {
-            usernameInputField.displayErrorMessageWithText("Username is required (minimum 3 characters)")
+            usernameInputField.displayErrorMessageWithText(LMText.auth.usernameMinLength)
             isValid = false
         }
         
         if !validateEmailInputField() {
-            emailInputField.displayErrorMessageWithText("Please enter a valid email address")
+            emailInputField.displayErrorMessageWithText(LMText.auth.pleaseEnterValidEmail)
             isValid = false
         }
         
         if !validatePasswordInputField() {
-            passwordInputField.displayErrorMessageWithText("Password must be at least 8 characters with at least one number and one letter")
+            passwordInputField.displayErrorMessageWithText(LMText.auth.passwordRequirementFull)
             isValid = false
         }
         
         if !validateConfirmPasswordInputField() {
-            confirmPasswordInputField.displayErrorMessageWithText("Passwords do not match")
+            confirmPasswordInputField.displayErrorMessageWithText(LMText.auth.passwordsDoNotMatch)
             isValid = false
         }
         
@@ -640,7 +641,7 @@ extension LMSignUpPage {
     private func showLoadingIndicator() {
         // 禁用按钮交互
         primarySignUpButton.isEnabled = false
-        primarySignUpButton.setTitle("Creating Account...", for: .normal)
+        primarySignUpButton.setTitle(LMText.auth.creatingAccount, for: .normal)
         
         // 显示 Toast loading activity
         view.makeToastActivity(.center)
@@ -678,11 +679,11 @@ extension LMSignUpPage {
     }
     
     private func presentTermsAgreementRequiredAlert() {
-        AppTheme.Toast.showText("Please agree to the terms and conditions to continue.")
+        AppTheme.Toast.showText(LMText.auth.agreeToTermsRequired)
     }
     
     private func presentRegistrationSuccessAlert() {
-        AppTheme.Toast.showText("Account created! Please check your email to verify.") { [weak self] _ in
+        AppTheme.Toast.showText(LMText.auth.accountCreatedVerifyEmail) { [weak self] _ in
             self?.navigateToLoginViewController()
         }
     }
@@ -697,7 +698,7 @@ extension LMSignUpPage {
     private func createTermsAndConditionsViewController() -> UIViewController {
         let termsVC = UIViewController()
         termsVC.view.backgroundColor = UIColor.systemBackground
-        termsVC.title = "Terms and Conditions"
+        termsVC.title = LMText.auth.termsAndConditionsTitle
         return termsVC
     }
 }

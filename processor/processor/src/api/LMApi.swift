@@ -3,8 +3,6 @@
 //  processor
 //
 //  Created by muz on 2025/9/20.
-//  Updated: 2025-01-16 - 根据最新接口文档优化
-//  Updated: 2025-01-20 - 统一使用 LMApiCallback 作为回调类型
 //
 
 import Foundation
@@ -98,8 +96,8 @@ struct LMApi {
     }
     
     struct Terms {
-        static let service = "https://framaist-legal-public-ap-southeast-1.s3.ap-southeast-1.amazonaws.com/terms-of-use.html"
+        static let service = "https://legal.framaist.entropixai.com/terms-of-use.html"
         
-        static let privacy = "https://framaist-legal-public-ap-southeast-1.s3.ap-southeast-1.amazonaws.com/privacy-policy.html"
+        static let privacy = "https://legal.framaist.entropixai.com/privacy-policy.html"
     }
 }

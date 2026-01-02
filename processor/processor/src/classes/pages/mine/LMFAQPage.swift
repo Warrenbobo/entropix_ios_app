@@ -72,7 +72,7 @@ class LMFAQPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "Frequent Questions"
+        barTitle = LMText.settings.frequentQuestions
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()

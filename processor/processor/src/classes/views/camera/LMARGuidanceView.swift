@@ -77,6 +77,11 @@ class LMARGuidanceView: UIView {
         return CGSize(width: refSize.width * 0.8, height: refSize.height * 0.8)
     }
     
+    /// 框的最小尺寸（防止圆角重叠）
+    /// 圆角半径为 18，每个角的长度为 24，最小尺寸应为 cornerLength * 2 = 48
+    /// 为了更好的视觉效果，设置为 60
+    private let minimumBoxSize: CGFloat = 60
+    
     // MARK: - Initialization
     
     override init(frame: CGRect) {
@@ -162,8 +167,13 @@ class LMARGuidanceView: UIView {
         // 清除之前的图层
         referencePersonBox.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         
+        // 应用最小尺寸限制，防止圆角重叠
+        let constrainedWidth = max(bbox.size.width, minimumBoxSize)
+        let constrainedHeight = max(bbox.size.height, minimumBoxSize)
+        let constrainedSize = CGSize(width: constrainedWidth, height: constrainedHeight)
+        
         // 设置新的 bounds 和 center
-        referencePersonBox.bounds = CGRect(origin: .zero, size: bbox.size)
+        referencePersonBox.bounds = CGRect(origin: .zero, size: constrainedSize)
         referencePersonBox.center = CGPoint(x: bbox.midX, y: bbox.midY)
         referencePersonBox.transform = .identity  // 重置旋转
         
@@ -179,7 +189,7 @@ class LMARGuidanceView: UIView {
         // 注意：不在这里调用 showReferenceBox()
         // 让外部在设置完旋转后再调用 showReferenceBox()
         
-        print("[AR Guidance View] 设置白色校准框 bbox - frame: \(referencePersonBox.frame), bounds: \(referencePersonBox.bounds)")
+        print("[AR Guidance View] 设置白色校准框 bbox - original: \(bbox.size), constrained: \(constrainedSize), frame: \(referencePersonBox.frame)")
     }
     
     /// 旋转白色校准框
@@ -267,8 +277,13 @@ class LMARGuidanceView: UIView {
         // 清除之前的图层
         livePersonBox.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         
+        // 应用最小尺寸限制，防止圆角重叠
+        let constrainedWidth = max(bbox.size.width, minimumBoxSize)
+        let constrainedHeight = max(bbox.size.height, minimumBoxSize)
+        let constrainedSize = CGSize(width: constrainedWidth, height: constrainedHeight)
+        
         // 设置新的 bounds 和 center
-        livePersonBox.bounds = CGRect(origin: .zero, size: bbox.size)
+        livePersonBox.bounds = CGRect(origin: .zero, size: constrainedSize)
         livePersonBox.center = CGPoint(x: bbox.midX, y: bbox.midY)
         livePersonBox.transform = .identity  // 重置旋转
         
@@ -281,18 +296,30 @@ class LMARGuidanceView: UIView {
             crosshairWidth: 2
         )
         
-        print("[AR Guidance View] 设置蓝色框 bbox - frame: \(livePersonBox.frame), bounds: \(livePersonBox.bounds)")
+        print("[AR Guidance View] 设置蓝色框 bbox - original: \(bbox.size), constrained: \(constrainedSize), frame: \(livePersonBox.frame)")
     }
     
     /// 更新蓝色框的 bounds（高频调用，带动画）
     /// - Parameter bbox: 画布坐标系统下的边界框
     func updateLiveBoxBounds(bbox: CGRect) {
+        // 应用最小尺寸限制，防止圆角重叠
+        let constrainedWidth = max(bbox.size.width, minimumBoxSize)
+        let constrainedHeight = max(bbox.size.height, minimumBoxSize)
+        
+        // 计算约束后的 frame（保持中心点不变）
+        let constrainedFrame = CGRect(
+            x: bbox.midX - constrainedWidth / 2,
+            y: bbox.midY - constrainedHeight / 2,
+            width: constrainedWidth,
+            height: constrainedHeight
+        )
+        
         // 保存当前的 transform
         let currentTransform = self.livePersonBox.transform
         // 临时重置 transform 以便正确设置 frame
         self.livePersonBox.transform = .identity
         // 设置新的 frame
-        self.livePersonBox.frame = bbox
+        self.livePersonBox.frame = constrainedFrame
         // 恢复 transform
         self.livePersonBox.transform = currentTransform
         self.updateGuidanceLine()

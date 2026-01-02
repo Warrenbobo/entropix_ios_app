@@ -182,7 +182,7 @@ extension LMGalleryPageView {
         collectionView.reloadData()
         
         // 显示"Please sign in"提示
-        showEmptyState(message: "Please sign in")
+        showEmptyState(message: LMText.common.pleaseSignIn)
     }
     
     /// 显示空状态提示

@@ -39,7 +39,7 @@ class LMMessageDetailPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "Notification"
+        barTitle = LMText.settings.notifications
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()

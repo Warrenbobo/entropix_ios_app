@@ -47,7 +47,7 @@ class LMContactUsPage: LMPageWrapper {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = "Contact Us"
+        barTitle = LMText.settings.contactUs
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
@@ -134,7 +134,7 @@ extension LMContactUsPage {
         discordInviteLinkLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         discordInviteLinkLabel.textColor = UIColor.systemGray
         
-        discordLinkLabel.text = "https://discord.gg/myerMyeCLM"
+        discordLinkLabel.text = "https://discord.gg/9M8AQ8NKDM"
         discordLinkLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         discordLinkLabel.textColor = UIColor.systemBlue
         discordLinkLabel.numberOfLines = 0
@@ -180,7 +180,7 @@ extension LMContactUsPage {
         emailAddressLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
         emailAddressLabel.textColor = UIColor.systemGray
         
-        emailLinkLabel.text = "support@framaiist.com"
+        emailLinkLabel.text = "contact@entropixai.com"
         emailLinkLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
         emailLinkLabel.textColor = UIColor.systemBlue
         emailLinkLabel.numberOfLines = 0
@@ -392,7 +392,7 @@ extension LMContactUsPage {
     }
     
     @objc private func handleDiscordCopyButtonTapped() {
-        copyToClipboard(text: "https://discord.gg/myerMyeCLM", message: "Discord invite link copied!")
+        copyToClipboard(text: "https://discord.gg/9M8AQ8NKDM", message: "Discord invite link copied!")
     }
     
     @objc private func handleEmailContainerTapped() {
@@ -400,7 +400,7 @@ extension LMContactUsPage {
     }
     
     @objc private func handleEmailCopyButtonTapped() {
-        copyToClipboard(text: "support@framaiist.com", message: "Email address copied!")
+        copyToClipboard(text: "contact@entropixai.com", message: "Email address copied!")
     }
 }
 
@@ -408,22 +408,22 @@ extension LMContactUsPage {
 extension LMContactUsPage {
     
     private func openDiscordInvite() {
-        guard let url = URL(string: "https://discord.gg/myerMyeCLM") else { return }
+        guard let url = URL(string: "https://discord.gg/9M8AQ8NKDM") else { return }
         
         if UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         } else {
-            showAlert(title: "Unable to Open", message: "Please copy the invite link and open it in your browser.")
+            showAlert(title: LMText.settings.unableToOpen, message: LMText.settings.copyInviteLinkMessage)
         }
     }
     
     private func openEmailClient() {
-        guard let url = URL(string: "mailto:support@framaiist.com") else { return }
+        guard let url = URL(string: "mailto:contact@entropixai.com") else { return }
         
         if UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         } else {
-            showAlert(title: "Unable to Open", message: "Please copy the email address and use your preferred email client.")
+            showAlert(title: LMText.settings.unableToOpen, message: LMText.settings.copyEmailMessage)
         }
     }
     

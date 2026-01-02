@@ -370,4 +370,9 @@ extension LMCameraBottomControlsView {
     func restoreBottomControlsHeight() {
         setLayoutMode(.normal, animated: true)
     }
+    
+    /// 获取 AR Guidance 按钮容器视图（用于引导定位）
+    func getARGuidanceContainerView() -> UIView {
+        return arGuidanceContainer
+    }
 }

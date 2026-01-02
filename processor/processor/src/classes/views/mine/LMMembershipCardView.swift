@@ -22,35 +22,20 @@ class LMMembershipCardView: UIView {
         self.currentExpiryDays = expiryDays
         self.currentInspirePoints = inspirePoints
         
-        if isPlusUser {
-            setupPlusUserStyle()
-            titleLabel.text = LMText.profile.plusPlan
-            
-            // 显示到期倒计时（仅当少于7天时）
-            if let days = expiryDays, days < 7 {
-                subtitleLabel.text = "Expires in \(days) day\(days == 1 ? "" : "s")"
-                subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.9)
-                expiryWarningIcon.isHidden = false
-            } else {
-                subtitleLabel.text = LMText.profile.unlimitedInspires
-                subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
-                expiryWarningIcon.isHidden = true
-            }
-            
-            mainLabel.text = LMText.profile.unlimited
-            descLabel.text = LMText.profile.inspirePoints
-            watchAdsButton.setTitle(LMText.profile.watchAdsWithIcon, for: .normal)
-            upgradeButton.isHidden = true
-        } else {
-            setupFreeUserStyle()
-            titleLabel.text = LMText.profile.freePlan
-            subtitleLabel.text = LMText.profile.limitedUsage
-            mainLabel.text = "\(inspirePoints ?? 0)"
-            descLabel.text = LMText.profile.inspirePoints
-            watchAdsButton.setTitle(LMText.profile.watchAds, for: .normal)
-            upgradeButton.isHidden = false
-            expiryWarningIcon.isHidden = true
-        }
+        // 始终隐藏 Upgrade 按钮和 Watch Ads 按钮
+        upgradeButton.isHidden = true
+        watchAdsButton.isHidden = true
+        expiryWarningIcon.isHidden = true
+        
+        // 始终使用 Plus Plan 样式
+        setupPlusUserStyle()
+        
+        // 固定显示内容
+        titleLabel.text = LMText.profile.plusPlan
+        subtitleLabel.text = LMText.profile.unlimitedInspires
+        subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
+        mainLabel.text = LMText.profile.unlimited
+        descLabel.text = LMText.profile.inspirePoints
     }
     
     func setWatchAdsButtonAction(_ action: @escaping () -> Void) {
@@ -137,11 +122,11 @@ class LMMembershipCardView: UIView {
         
         // Setup main points label
         mainLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
-        mainLabel.textAlignment = .center
+        mainLabel.textAlignment = .left
         
         // Setup description label
         descLabel.font = UIFont.systemFont(ofSize: 11, weight: .medium)
-        descLabel.textAlignment = .center
+        descLabel.textAlignment = .left
         
         // Setup watch ads button
         watchAdsButton.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
@@ -203,14 +188,16 @@ class LMMembershipCardView: UIView {
             make.top.equalTo(subscriptionInfoContainer.snp.bottom)
         }
         
+        // mainLabel 与会员图标左对齐
         mainLabel.snp.makeConstraints { make in
-            make.centerX.equalTo(descLabel)
-            make.bottom.equalTo(descLabel.snp.top).offset(-8)
+            make.leading.equalTo(iconImageView)
+            make.bottom.equalTo(descLabel.snp.top).offset(-4)
         }
         
+        // descLabel 与 mainLabel 居中对齐
         descLabel.snp.makeConstraints { make in
             make.bottom.equalTo(-20)
-            make.leading.equalTo(20)
+            make.centerX.equalTo(mainLabel)
         }
         
         watchAdsButton.snp.makeConstraints { make in
@@ -222,11 +209,16 @@ class LMMembershipCardView: UIView {
     }
     
     private func configureDefaultContent() {
+        // 固定显示 Plus Plan 样式
         titleLabel.text = LMText.profile.plusPlan
         subtitleLabel.text = LMText.profile.unlimitedInspires
-        mainLabel.text = "0"
+        mainLabel.text = LMText.profile.unlimited
         descLabel.text = LMText.profile.inspirePoints
-        watchAdsButton.setTitle(LMText.profile.watchAdsWithIcon, for: .normal)
+        
+        // 隐藏按钮
+        watchAdsButton.isHidden = true
+        upgradeButton.isHidden = true
+        
         setupPlusUserStyle()
     }
     
@@ -256,6 +248,9 @@ class LMMembershipCardView: UIView {
         mainLabel.textColor = .white
         descLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         
+        // 恢复 mainLabel 字体大小
+        mainLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        
         // Watch ads button styling for plus plan
         watchAdsButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
         watchAdsButton.setTitleColor(.white, for: .normal)
@@ -284,7 +279,10 @@ class LMMembershipCardView: UIView {
         mainLabel.textColor = UIColor(red: 0.22, green: 0.25, blue: 0.32, alpha: 1.0)
         descLabel.textColor = UIColor(red: 0.42, green: 0.45, blue: 0.5, alpha: 1.0)
         
-        // Upgrade button styling
+        // 调整 mainLabel 字体大小以适应 "Free Unlimited" 文字
+        mainLabel.font = UIFont.systemFont(ofSize: 18, weight: .bold)
+        
+        // Upgrade button styling (虽然隐藏，但保留样式设置)
         upgradeButton.backgroundColor = UIColor(red: 0.23, green: 0.51, blue: 0.96, alpha: 1.0)  // #3b82f6
         upgradeButton.setTitleColor(.white, for: .normal)
         upgradeButton.setTitle(LMText.profile.upgrade, for: .normal)

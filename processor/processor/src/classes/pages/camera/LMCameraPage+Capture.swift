@@ -31,6 +31,9 @@ extension LMCameraPage {
             return
         }
         
+        // 隐藏当前显示的任何引导
+        hideCurrentGuideIfNeeded()
+        
         let photoSettings = AVCapturePhotoSettings()
         let flashMode = cameraControlsView.getCurrentFlashMode()
         if photoOutput.supportedFlashModes.contains(flashMode.avFlashMode) && !isUsingFrontCamera {
@@ -167,14 +170,14 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if let error = error {
             LMLogger.log("❌ Photo capture error: \(error.localizedDescription)")
-            AppTheme.Toast.showText("Failed to capture photo: \(error.localizedDescription)")
+            AppTheme.Toast.showText("\(LMText.camera.failedToCapturePhoto): \(error.localizedDescription)")
             return
         }
         
         guard let imageData = photo.fileDataRepresentation(),
               var capturedImage = UIImage(data: imageData) else {
             LMLogger.log("❌ Failed to convert photo data to image")
-            AppTheme.Toast.showText("Failed to process captured photo")
+            AppTheme.Toast.showText(LMText.camera.failedToProcessCapturedPhoto)
             return
         }
         

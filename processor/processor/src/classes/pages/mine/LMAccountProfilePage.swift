@@ -254,10 +254,10 @@ extension LMAccountProfilePage {
     /// 显示放弃修改确认弹窗
     private func showDiscardChangesAlert() {
         LMAlertDialog.showAlert(
-            title: "Discard Changes?",
-            message: "Exiting edit mode will discard all unsaved changes. Are you sure you want to exit?",
+            title: LMText.profile.discardChanges,
+            message: LMText.profile.discardChangesMessage,
             cancelText: LMText.common.cancel,
-            confirmText: "Discard",
+            confirmText: LMText.profile.discard,
             onConfirm: { [weak self] in
                 // 用户确认放弃修改，恢复原始数据并返回显示模式
                 self?.editView.updateWithData(self?.userProfileData ?? LMUserModel(userId: ""))
@@ -278,7 +278,7 @@ extension LMAccountProfilePage {
     private func saveProfileToServer(_ data: LMUserModel) {
         isSaving = true
         actionButton.isEnabled = false
-        AppTheme.Toast.showText("Saving...")
+        AppTheme.Toast.showText(LMText.common.saving)
         
         LMApiService.shared.updateProfile(
             username: data.username,
@@ -304,7 +304,7 @@ extension LMAccountProfilePage {
                 self.showSaveSuccessAlert()
             } else {
                 // 显示错误提示
-                let errorMessage = response.message ?? "Failed to save profile"
+                let errorMessage = response.message ?? LMText.profile.failedToSaveProfile
                 AppTheme.Toast.showText(errorMessage)
             }
         }
@@ -352,7 +352,7 @@ extension LMAccountProfilePage: ProfileDisplayViewDelegate {
     
     func profileDisplayViewDidTapSubscription(_ view: LMProfileDisplayView) {
         // TODO: 跳转到订阅页面
-        AppTheme.Toast.showText("Subscription details")
+        AppTheme.Toast.showText(LMText.profile.subscriptionDetails)
     }
 }
 
@@ -391,7 +391,7 @@ extension LMAccountProfilePage: UIImagePickerControllerDelegate, UINavigationCon
         guard !isUploadingAvatar else { return }
         
         isUploadingAvatar = true
-        AppTheme.Toast.showText("Uploading avatar...")
+        AppTheme.Toast.showText(LMText.profile.uploadingAvatar)
         
         // 在后台线程处理图片
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -423,7 +423,7 @@ extension LMAccountProfilePage: UIImagePickerControllerDelegate, UINavigationCon
                 self.showAvatarUpdateSuccess()
             } else {
                 // 显示错误提示
-                let errorMessage = response.message ?? "Failed to upload avatar"
+                let errorMessage = response.message ?? LMText.profile.failedToSaveProfile
                 AppTheme.Toast.showText(errorMessage)
             }
         }
@@ -461,12 +461,12 @@ extension LMAccountProfilePage: UIImagePickerControllerDelegate, UINavigationCon
     }
     
     private func showAvatarUpdateSuccess() {
-        AppTheme.Toast.showText("Avatar updated")
+        AppTheme.Toast.showText(LMText.profile.avatarUpdated)
     }
     
     private func showImageProcessingError() {
-        LMAlertDialog.showGeneralAlert("Failed to process the selected image. Please try again.",
-            title: "Error",
+        LMAlertDialog.showGeneralAlert(LMText.profile.failedToProcessImage,
+            title: LMText.common.error,
             onConfirm: {}
         )
     }
@@ -485,7 +485,7 @@ extension LMAccountProfilePage: ProfileEditViewDelegate {
     }
     
     private func showImagePicker() {
-        let alert = UIAlertController(title: LMText.profile.changePhoto, message: "Choose a photo source", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: LMText.profile.changePhoto, message: LMText.profile.choosePhotoSource, preferredStyle: .actionSheet)
         
         // 相机选项
         if UIImagePickerController.isSourceTypeAvailable(.camera) {
@@ -584,11 +584,13 @@ extension LMAccountProfilePage: ProfileEditViewDelegate {
     // MARK: - Permission Denied Alert
     
     private func showPermissionDeniedAlert(for feature: String) {
+        let title = String(format: LMText.settings.featureAccessRequiredFormat, feature)
+        let message = String(format: LMText.settings.enableFeatureAccessMessage, feature)
         LMAlertDialog.showAlert(
-            title: "\(feature) Access Required",
-            message: "Please enable \(feature) access in Settings to change your profile photo.",
+            title: title,
+            message: message,
             cancelText: LMText.common.cancel,
-            confirmText: "Open Settings",
+            confirmText: LMText.common.openSettings,
             onConfirm: {
                 if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(settingsURL)

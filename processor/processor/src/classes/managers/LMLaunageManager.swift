@@ -82,6 +82,10 @@ class LMLaunageManager {
         return currentConfig?.settings ?? LMSettingsTextConfig()
     }
     
+    var entrance: LMEntranceTextConfig {
+        return currentConfig?.entrance ?? LMEntranceTextConfig()
+    }
+    
     // MARK: - Public Methods for Initialization
     func loadLanguageConfiguration() {
         loadLanguageData()
@@ -128,7 +132,8 @@ class LMLaunageManager {
             profile: LMProfileTextConfig(),
             subscription: LMSubscriptionTextConfig(),
             auth: LMAuthTextConfig(),
-            settings: LMSettingsTextConfig()
+            settings: LMSettingsTextConfig(),
+            entrance: LMEntranceTextConfig()
         )
         let chineseConfig = LMAppLaunageConfig(
             common: LMCommonTextConfig(
@@ -154,7 +159,7 @@ class LMLaunageManager {
                 grid: "网格",
                 flipCamera: "翻转相机",
                 arGuidance: "AR 引导",
-                inspireMeButton: "灵感启发  ⓘ",
+                inspireMeButton: "灵感启发",
                 inspirePointsFormat: "灵感点数 -%d",
                 guidanceNotice: "使用 AI 引导前请先获取灵感",
                 alignPersonFrame: "将人物对齐绿色框架",
@@ -304,7 +309,6 @@ class LMLaunageManager {
                 back: " 返回",
                 goShot: "去拍摄",
                 deleting: "删除中...",
-                copied: "已复制！",
                 joinDiscord: "加入我们的 Discord 频道",
                 inviteLink: "邀请链接：",
                 sendMessage: "直接给我们发送消息",
@@ -335,6 +339,16 @@ class LMLaunageManager {
                 privacyPolicyLink: "隐私政策",
                 noAccountPrompt: "还没有账户？注册",
                 signUpLink: "注册"
+            ),
+            entrance: LMEntranceTextConfig(
+                entropix: "Entropix",
+                unleashCreativity: "释放您的摄影创意",
+                noNetworkConnection: "未检测到网络连接。请检查您的网络设置并重启应用。",
+                privacyPermission: "隐私权限",
+                privacyDescription: "我们收集和使用您的数据来提供个性化服务、改进应用功能并增强您的体验。您的数据将被安全存储，未经您的同意不会与第三方共享。",
+                agree: "同意",
+                rejectAndExit: "拒绝并退出",
+                viewPrivacyAndTerms: "查看我们的隐私政策和服务条款"
             )
         )
         
@@ -346,10 +360,40 @@ class LMLaunageManager {
     }
     
     private func loadSavedLanguage() {
+        // 首先检查是否有用户保存的语言偏好
         if let savedLanguage = UserDefaults.standard.string(forKey: "app_language"),
            let language = LMLanguageType(rawValue: savedLanguage) {
             currentLanguage = language
+            LMLogger.log("✅ Loaded saved language preference: \(language.displayName)")
+            return
         }
+        
+        // 如果没有保存的语言偏好，根据设备语言设置默认语言
+        let defaultLanguage = getDefaultLanguageFromDevice()
+        currentLanguage = defaultLanguage
+        LMLogger.log("✅ Set default language based on device: \(defaultLanguage.displayName)")
+    }
+    
+    /// 根据设备语言获取默认语言
+    /// 如果设备语言是中文（简体或繁体），返回中文；否则返回英文
+    private func getDefaultLanguageFromDevice() -> LMLanguageType {
+        // 获取设备首选语言列表
+//        let preferredLanguages = Locale.preferredLanguages
+//        
+//        // 检查首选语言是否包含中文
+//        for languageCode in preferredLanguages {
+//            let lowercased = languageCode.lowercased()
+//            // 检查是否是中文语言代码
+//            // zh-Hans: 简体中文, zh-Hant: 繁体中文, zh-CN: 中国大陆, zh-TW: 台湾, zh-HK: 香港
+//            if lowercased.hasPrefix("zh") {
+//                LMLogger.log("📱 Device language detected as Chinese: \(languageCode)")
+//                return .chinese
+//            }
+//        }
+        
+        // 默认返回英文
+        LMLogger.log("📱 Device language is not Chinese, defaulting to English")
+        return .english
     }
 }
 

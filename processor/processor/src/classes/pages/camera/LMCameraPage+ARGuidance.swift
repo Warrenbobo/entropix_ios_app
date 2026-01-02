@@ -452,8 +452,7 @@ extension LMCameraPage {
         }
         
         // 详细的坐标转换日志
-        let maxCanvasSize = getMaxCanvasSize()
-        var canvasBbox = convertBboxToCanvas(bbox: bbox, imageSize: CGSize.zero)
+        let canvasBbox = convertBboxToCanvas(bbox: bbox, imageSize: CGSize.zero)
         
         // 应用最小尺寸限制，防止蓝色框变形
         let minSize: CGFloat = 30.0
@@ -885,6 +884,9 @@ extension LMCameraPage {
         guard arGuidanceView.successBox.isHidden else {
             return
         }
+        
+        // 隐藏 Step 4 引导（用户第一次 AR Guidance 校准成功）
+        hideAlignBoxesGuide()
         
         // 不再停止AR引导检测，保持实时检测以便在超出阈值时恢复
         // stopARGuidanceSession() // 移除这行
