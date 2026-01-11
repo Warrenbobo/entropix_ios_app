@@ -106,6 +106,9 @@ class LMMinePage: LMPageWrapper {
         membershipCardView.setUpgradeButtonAction { [weak self] in
             self?.upgradeButtonTapped()
         }
+        membershipCardView.setFreeTrialButtonAction { [weak self] in
+            self?.freeTrialButtonTapped()
+        }
         
         // 照片集合视图
         photoCollectionView.onHeightChanged = { [weak self] newHeight in
@@ -200,6 +203,39 @@ class LMMinePage: LMPageWrapper {
                                                  animated: true)
     }
     
+    private func freeTrialButtonTapped() {
+        // 检查登录状态
+        guard requireLogin(action: "claim free trial") else {
+            return
+        }
+        
+        // 设置按钮为加载状态
+        membershipCardView.updateFreeTrialButtonState(hasFreeTrial: false, isLoading: true)
+        
+        // 调用领取免费试用 API
+        LMUserManager.shared.claimFreeTrial { [weak self] response in
+            DispatchQueue.main.async {
+                if response.requestSuccess, let data = response.value {
+                    if let granted = data.granted, granted {
+                        // 领取成功，更新按钮状态
+                        self?.membershipCardView.updateFreeTrialButtonState(hasFreeTrial: true, isLoading: false)
+                        // 刷新用户数据
+                        self?.refreshUserData()
+                        LMLogger.log("✅ Free trial claimed successfully")
+                    } else {
+                        // 已经领取过或其他情况
+                        self?.membershipCardView.updateFreeTrialButtonState(hasFreeTrial: true, isLoading: false)
+                        LMLogger.log("⚠️ Free trial already claimed or not available")
+                    }
+                } else {
+                    // 请求失败，恢复按钮状态（后端有容错，所以这里也设置为已领取状态）
+                    self?.membershipCardView.updateFreeTrialButtonState(hasFreeTrial: true, isLoading: false)
+                    LMLogger.log("❌ Failed to claim free trial: \(response.message ?? "Unknown error")")
+                }
+            }
+        }
+    }
+    
     private func cameraButtonTapped() {
         let cameraView = LMCameraPage()
         navigationController?.pushViewController(cameraView, animated: true)
@@ -221,15 +257,20 @@ class LMMinePage: LMPageWrapper {
             avatar: user.avatar
         )
         
-        // 计算到期天数
-        let expiryDays: Int = 0
+        // 计算到期天数（从用户模型获取）
+        let expiryDays: Int? = user.daysUntilExpiration
+        
+        // 检查用户是否已领取免费试用
+        // 如果用户有订阅（trial 或其他），则认为已领取
+        let hasFreeTrial = user.subscription != nil && !user.subscription!.isEmpty
         
         // 更新会员卡片
         let isPlusUser = (user.subscriptionType == .plus || user.subscriptionType == .lifelong)
         membershipCardView.updateMembershipStatus(
             isPlusUser: isPlusUser,
             inspirePoints: user.inspirePoints,
-            expiryDays: expiryDays
+            expiryDays: expiryDays,
+            hasFreeTrial: hasFreeTrial
         )
         
         // 刷新Gallery和Saved Ideas
@@ -244,11 +285,12 @@ class LMMinePage: LMPageWrapper {
             avatar: nil
         )
         
-        // 显示免费计划，0个Inspire Points
+        // 显示免费计划，0个Inspire Points，未领取免费试用
         membershipCardView.updateMembershipStatus(
             isPlusUser: false,
             inspirePoints: 0,
-            expiryDays: nil
+            expiryDays: nil,
+            hasFreeTrial: false
         )
         
         // 清空Gallery和Saved Ideas

@@ -207,8 +207,10 @@ extension LMCameraPage {
     func showSuggestionsCarousel() {
         // 创建轮播视图
         if self.suggestionsCarouselView != nil {
+            // 重置手势状态，防止状态残留导致卡顿
+            self.suggestionsCarouselView?.resetGestureState()
             self.suggestionsCarouselView?.isHidden = false
-            LMLogger.log("✅ Suggestions carousel shown (reused existing view)")
+            LMLogger.log("✅ Suggestions carousel shown (reused existing view, gesture state reset)")
         } else {
             let carouselView = LMSuggestionsCarouselView()
             carouselView.delegate = self
@@ -225,8 +227,10 @@ extension LMCameraPage {
     
     /// 隐藏构图轮播视图
     func hideSuggestionsCarousel() {
+        // 重置手势状态，防止状态残留
+        self.suggestionsCarouselView?.resetGestureState()
         self.suggestionsCarouselView?.isHidden = true
-        LMLogger.log("✅ Suggestions carousel hidden")
+        LMLogger.log("✅ Suggestions carousel hidden (gesture state reset)")
     }
 }
 
@@ -466,8 +470,10 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
                                  at index: Int) {
         LMLogger.log("📱 Selected suggestion at index: \(index), ID: \(suggestion.id ?? "unknown")")
         
-        // 隐藏 Step 2 引导（用户点选了其他 suggestion 项目）
-        hideSwipeUpGuide()
+        // 性能优化：只在当前确实显示 swipeUp 引导时才调用隐藏方法
+        if currentGuideStep == .swipeUp {
+            hideSwipeUpGuide()
+        }
         
         // 保存当前选中的构图
         currentSuggestion = suggestion
@@ -516,10 +522,9 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
     }
     
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpWithOffset offset: CGFloat) {
-        // 当用户向上滑动偏移量大于20时，隐藏 Step 2 引导
-        if offset > 20 && currentGuideStep == .swipeUp {
-            hideSwipeUpGuide()
-        }
+        // offset 已经是大于阈值的值，直接隐藏引导
+        // hideSwipeUpGuide 内部有 guard 检查，确保只执行一次
+        hideSwipeUpGuide()
     }
 }
 
@@ -899,39 +904,33 @@ extension LMCameraPage {
             currentReferenceImage = nil
             currentReferenceBbox = nil
             
-            // 显示构图轮播
+            // 显示构图轮播（会自动重置手势状态）
             showSuggestionsCarousel()
             
-            // 更新轮播视图的数据
-            if let carouselView = suggestionsCarouselView {
-                carouselView.updateSuggestions(currentSuggestions)
-                
-                // 使用 ID 在更新后的列表中查找索引，确保数据安全
-                if let selectedId = previouslySelectedId,
-                   let newIndex = currentSuggestions.firstIndex(where: { $0.id == selectedId }),
-                   newIndex < currentSuggestions.count {
-                    // 延迟一点执行，确保轮播视图已经完成布局
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                        guard let self = self,
-                              let carouselView = self.suggestionsCarouselView else { return }
-                        
-                        // 再次验证索引有效性（防止在延迟期间数据再次变化）
-                        if let finalIndex = self.currentSuggestions.firstIndex(where: { $0.id == selectedId }),
-                           finalIndex < self.currentSuggestions.count {
-                            carouselView.selectSuggestion(at: finalIndex, animated: true)
-                            LMLogger.log("📐 Restored selection to index: \(finalIndex) (ID: \(selectedId))")
-                        } else {
-                            LMLogger.log("⚠️ Previously selected suggestion (ID: \(selectedId)) no longer exists in list")
-                        }
-                    }
-                } else if let selectedId = previouslySelectedId {
-                    LMLogger.log("⚠️ Previously selected suggestion (ID: \(selectedId)) not found in updated list")
-                }
-            }
-            
-            // 调整底部控制栏
+            // 调整底部控制栏（同步操作）
             bottomControlsHeightConstraint?.update(offset: 44)
             cameraBottomControlsView.setLayoutMode(.compact, animated: true)
+            
+            // 更新轮播视图的数据并恢复选中状态
+            if let carouselView = suggestionsCarouselView {
+                // 如果有之前选中的 ID，先找到对应的索引
+                var targetIndex: Int? = nil
+                if let selectedId = previouslySelectedId {
+                    targetIndex = currentSuggestions.firstIndex(where: { $0.id == selectedId })
+                    if targetIndex == nil {
+                        LMLogger.log("⚠️ Previously selected suggestion (ID: \(selectedId)) not found in updated list")
+                    }
+                }
+                
+                // 直接更新数据，updateSuggestions 内部会处理选中状态恢复
+                carouselView.updateSuggestions(currentSuggestions)
+                
+                // 如果有目标索引且与当前选中不同，手动设置选中状态
+                if let index = targetIndex, index != carouselView.getSelectedIndex() {
+                    carouselView.selectSuggestion(at: index, animated: false)
+                    LMLogger.log("📐 Restored selection to index: \(index) (ID: \(previouslySelectedId ?? "unknown"))")
+                }
+            }
             
             LMLogger.log("✅ Reference image hidden, returned to Show Suggestions state, AR Guidance reset to unavailable")
         }

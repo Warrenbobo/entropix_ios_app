@@ -8,6 +8,7 @@
 import UIKit
 import Vision
 import AVFoundation
+import CoreImage
 
 /// 人物检测结果
 struct PersonDetectionResult {
@@ -58,12 +59,17 @@ class LMPersonDetectionManager {
     /// 当前使用的摄像头位置（用于方向计算）
     var currentCameraPosition: AVCaptureDevice.Position = .back
     
-    // Vision 请求
-    private lazy var personDetectionRequest: VNDetectHumanRectanglesRequest = {
-        let request = VNDetectHumanRectanglesRequest { [weak self] request, error in
-            self?.handleDetectionResults(request: request, error: error)
-        }
+    // Vision 请求 - 全身检测
+    private lazy var fullBodyDetectionRequest: VNDetectHumanRectanglesRequest = {
+        let request = VNDetectHumanRectanglesRequest()
         request.upperBodyOnly = false // 检测全身
+        return request
+    }()
+    
+    // Vision 请求 - 上半身检测
+    private lazy var upperBodyDetectionRequest: VNDetectHumanRectanglesRequest = {
+        let request = VNDetectHumanRectanglesRequest()
+        request.upperBodyOnly = true // 检测上半身
         return request
     }()
     
@@ -122,17 +128,13 @@ class LMPersonDetectionManager {
         guard isDetecting else { return }
         
         guard let cgImage = image.cgImage else {
-            LMLogger.log("❌ Failed to get CGImage from UIImage")
             return
         }
         
         detectionQueue.async { [weak self] in
             if shouldRotateToPortrait {
-                // 检查是否为横向图片
                 let isLandscape = image.size.width > image.size.height
                 if isLandscape {
-                    LMLogger.log("🔄 [Image Detection] Landscape image detected, rotating to portrait (home button on right)")
-                    // 旋转图片到竖屏方向（逆时针90度，home键在右侧）
                     if let rotatedImage = self?.rotateImageToPortrait(cgImage) {
                         self?.performDetection(on: rotatedImage)
                         return
@@ -140,7 +142,6 @@ class LMPersonDetectionManager {
                 }
             }
             
-            // 不需要旋转或旋转失败，使用原图
             self?.performDetection(on: cgImage)
         }
     }
@@ -152,11 +153,9 @@ class LMPersonDetectionManager {
         let width = cgImage.width
         let height = cgImage.height
         
-        // 创建旋转后的尺寸（宽高互换）
         let rotatedWidth = height
         let rotatedHeight = width
         
-        // 创建位图上下文
         let colorSpace = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = cgImage.bitmapInfo.rawValue
         
@@ -169,17 +168,11 @@ class LMPersonDetectionManager {
             space: colorSpace,
             bitmapInfo: bitmapInfo
         ) else {
-            LMLogger.log("❌ Failed to create CGContext for rotation")
             return nil
         }
         
-        // 移动到中心点
         context.translateBy(x: CGFloat(rotatedWidth) / 2, y: CGFloat(rotatedHeight) / 2)
-        
-        // 逆时针旋转90度（-π/2）
         context.rotate(by: -.pi / 2)
-        
-        // 绘制图片（从中心点偏移）
         context.draw(
             cgImage,
             in: CGRect(
@@ -190,36 +183,52 @@ class LMPersonDetectionManager {
             )
         )
         
-        // 获取旋转后的图片
-        guard let rotatedCGImage = context.makeImage() else {
-            LMLogger.log("❌ Failed to create rotated CGImage")
-            return nil
-        }
-        
-        LMLogger.log("✅ [Image Detection] Image rotated: \(width)x\(height) -> \(rotatedWidth)x\(rotatedHeight)")
-        
-        return rotatedCGImage
+        return context.makeImage()
     }
     
     // MARK: - Private Methods
     
     /// 执行检测（CVPixelBuffer）
     private func performDetection(on pixelBuffer: CVPixelBuffer) {
-        // 获取设备方向并转换为 CGImagePropertyOrientation
         let deviceOrientation = LMDeviceOrientationManager.shared.currentOrientation
         let imageOrientation: CGImagePropertyOrientation
         guard deviceOrientation != .faceDown && deviceOrientation != .faceDown && deviceOrientation != .unknown else {
-            // 过滤其他方向，防止出现识别错误
             return
         }
         imageOrientation = getImageOrientation(from: deviceOrientation)
-        let handler = VNImageRequestHandler(
+        
+        let fullBodyHandler = VNImageRequestHandler(
             cvPixelBuffer: pixelBuffer,
             orientation: imageOrientation,
             options: [:]
         )
         do {
-            try handler.perform([personDetectionRequest])
+            try fullBodyHandler.perform([fullBodyDetectionRequest])
+            
+            if let observations = fullBodyDetectionRequest.results,
+               let firstPerson = observations.first {
+                handleDetectionSuccess(observation: firstPerson)
+                return
+            }
+            
+            let upperBodyHandler = VNImageRequestHandler(
+                cvPixelBuffer: pixelBuffer,
+                orientation: imageOrientation,
+                options: [:]
+            )
+            try upperBodyHandler.perform([upperBodyDetectionRequest])
+            
+            if let observations = upperBodyDetectionRequest.results,
+               let firstPerson = observations.first {
+                handleDetectionSuccess(observation: firstPerson)
+                return
+            }
+            
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.personDetectionManagerDidNotDetectPerson(self)
+            }
+            
         } catch {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -263,20 +272,40 @@ class LMPersonDetectionManager {
     
     /// 执行检测（CGImage）
     private func performDetection(on cgImage: CGImage) {
-        // 对于静态图像，不设置方向信息
-        // 让 Vision 使用图像的原始方向
-        // 注意：这里的坐标系统应该与图像的显示方向一致
+        // 使用 CIImage 作为输入，更兼容各种图片格式
+        let ciImage = CIImage(cgImage: cgImage)
         
-        LMLogger.log("📸 [Image Detection] CGImage size: \(cgImage.width) x \(cgImage.height)")
-        
-        let handler = VNImageRequestHandler(
-            cgImage: cgImage,
+        let fullBodyHandler = VNImageRequestHandler(
+            ciImage: ciImage,
             options: [:]
         )
         
         do {
-            // 仅执行人体检测（人脸检测已禁用）
-            try handler.perform([personDetectionRequest])
+            try fullBodyHandler.perform([fullBodyDetectionRequest])
+            
+            if let observations = fullBodyDetectionRequest.results,
+               let firstPerson = observations.first {
+                handleDetectionSuccess(observation: firstPerson)
+                return
+            }
+            
+            let upperBodyHandler = VNImageRequestHandler(
+                ciImage: ciImage,
+                options: [:]
+            )
+            try upperBodyHandler.perform([upperBodyDetectionRequest])
+            
+            if let observations = upperBodyDetectionRequest.results,
+               let firstPerson = observations.first {
+                handleDetectionSuccess(observation: firstPerson)
+                return
+            }
+            
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.delegate?.personDetectionManagerDidNotDetectPerson(self)
+            }
+            
         } catch {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -286,7 +315,31 @@ class LMPersonDetectionManager {
     }
     
 
-    /// 处理检测结果
+    /// 处理检测成功的结果
+    private func handleDetectionSuccess(observation: VNHumanObservation) {
+        let visionBox = observation.boundingBox
+        
+        let bodyBoundingBox = BoundingBox(
+            x: Double(visionBox.origin.x),
+            y: Double(visionBox.origin.y),
+            width: Double(visionBox.size.width),
+            height: Double(visionBox.size.height)
+        )
+        
+        let result = PersonDetectionResult(
+            boundingBox: bodyBoundingBox,
+            confidence: observation.confidence,
+            timestamp: Date()
+        )
+        
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.delegate?.personDetectionManager(self, didDetectPerson: result)
+        }
+    }
+
+    /// 处理检测结果（已废弃，保留用于兼容）
+    @available(*, deprecated, message: "Use handleDetectionSuccess instead")
     private func handleDetectionResults(request: VNRequest, error: Error?) {
         if let error = error {
             DispatchQueue.main.async { [weak self] in
@@ -298,7 +351,6 @@ class LMPersonDetectionManager {
         
         guard let observations = request.results as? [VNHumanObservation],
               let firstPerson = observations.first else {
-            // 未检测到人物，通知代理
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.delegate?.personDetectionManagerDidNotDetectPerson(self)
@@ -306,12 +358,8 @@ class LMPersonDetectionManager {
             return
         }
         
-        // 转换人体边界框坐标
         let visionBox = firstPerson.boundingBox
         
-        // Vision 框架的坐标系统：原点在左下角，Y轴向上
-        // 保持 Vision 原始坐标，不进行任何转换
-        // 后续在 UI 层根据需要进行坐标转换
         let bodyBoundingBox = BoundingBox(
             x: Double(visionBox.origin.x),
             y: Double(visionBox.origin.y),
@@ -319,42 +367,12 @@ class LMPersonDetectionManager {
             height: Double(visionBox.size.height)
         )
         
-        // 人体宽度阈值检查已禁用 - 不再检查人体宽度
-        // let isBodyWidthExceedingThreshold = bodyBoundingBox.width > (2.0 / 3.0)
-        // LMLogger.log("👤 Person body width: \(String(format: "%.2f", bodyBoundingBox.width * 100))% of screen, threshold: 66.7%")
-        
-        // 人脸检测已禁用 - 仅使用人体检测
-        // let faceBox = detectFaceInRegion(firstPerson.boundingBox)
-        
-        // 不再扩展人体 bbox，直接使用原始检测结果
-        // let expandedBodyBox = expandBodyBoxToIncludeHead(bodyBox: bodyBoundingBox, faceBox: faceBox)
-        
-        LMLogger.log("📦 Body box: \(bodyBoundingBox)")
-        
-        // 人脸检测和宽度阈值检查已禁用
-        // if isBodyWidthExceedingThreshold {
-        //     guard faceBox != nil else {
-        //         LMLogger.log("⚠️ Body width exceeds 2/3 but no face detected - treating as no person")
-        //         DispatchQueue.main.async { [weak self] in
-        //             guard let self = self else { return }
-        //             self.delegate?.personDetectionManagerDidNotDetectPerson(self)
-        //         }
-        //         return
-        //     }
-        // }
-        
-        // 直接使用人体 bbox（不扩展，不包含人脸信息）
         let result = PersonDetectionResult(
             boundingBox: bodyBoundingBox,
-            // faceBoundingBox: nil,  // 人脸检测已禁用
             confidence: firstPerson.confidence,
             timestamp: Date()
-            // isBodyWidthExceedingThreshold: isBodyWidthExceedingThreshold  // 宽度阈值检查已禁用
         )
         
-        LMLogger.log("✅ Using body bbox without face detection")
-        
-        // 回到主线程通知代理
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             self.delegate?.personDetectionManager(self, didDetectPerson: result)

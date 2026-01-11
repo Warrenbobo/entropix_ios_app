@@ -10,20 +10,20 @@ import Foundation
 
 /// 相机引导步骤
 enum LMCameraGuideStep: String, CaseIterable {
-    case inspirMe = "hasShownInspireMeGuide"           // Step 1: Tab to Inspire
+    case inspirMe = "hasShownInspireMeGuide"           // Step 1: Tap to Inspire
     case swipeUp = "hasShownSwipeUpGuide"              // Step 2: Swipe Up to Select Template
-    case arGuidance = "hasShownARGuidanceGuide"        // Step 3: Tab to Turn AR Guidance On/Off
+    case arGuidance = "hasShownARGuidanceGuide"        // Step 3: Tap to Turn AR Guidance On/Off
     case alignBoxes = "hasShownAlignBoxesGuide"        // Step 4: Align the Boxes
     
     /// 引导标题
     var title: String {
         switch self {
         case .inspirMe:
-            return "Step 1:\nTab to Inspire"
+            return "Step 1:\nTap to Inspire"
         case .swipeUp:
             return "Step 2:\nSwipe Up to Select Template"
         case .arGuidance:
-            return "Step 3:\nTab to Turn AR Guidance On/Off"
+            return "Step 3:\nTap to Turn AR Guidance On/Off"
         case .alignBoxes:
             return "Step 4:\nAlign the Boxes"
         }

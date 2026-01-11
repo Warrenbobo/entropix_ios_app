@@ -12,20 +12,32 @@ class LMMembershipCardView: UIView {
     
     var watchAdsButtonAction: (() -> Void)?
     var upgradeButtonAction: (() -> Void)?
+    var freeTrialButtonAction: (() -> Void)?
     
     private var isPlusUser: Bool = false
     private var currentExpiryDays: Int?
     private var currentInspirePoints: Int?
+    private var hasFreeTrial: Bool = false
     
-    func updateMembershipStatus(isPlusUser: Bool, inspirePoints: Int?, expiryDays: Int? = nil) {
+    func updateMembershipStatus(isPlusUser: Bool, inspirePoints: Int?, expiryDays: Int? = nil, hasFreeTrial: Bool = false) {
         self.isPlusUser = isPlusUser
         self.currentExpiryDays = expiryDays
         self.currentInspirePoints = inspirePoints
+        self.hasFreeTrial = hasFreeTrial
         
         // 始终隐藏 Upgrade 按钮和 Watch Ads 按钮
         upgradeButton.isHidden = true
         watchAdsButton.isHidden = true
         expiryWarningIcon.isHidden = true
+        
+        // 显示/隐藏 Free Trial 按钮
+        // 仅对非 Plus 用户显示，且根据是否已领取设置状态
+        if !isPlusUser {
+            freeTrialButton.isHidden = false
+            updateFreeTrialButtonState(hasFreeTrial: hasFreeTrial)
+        } else {
+            freeTrialButton.isHidden = true
+        }
         
         // 始终使用 Plus Plan 样式
         setupPlusUserStyle()
@@ -36,6 +48,53 @@ class LMMembershipCardView: UIView {
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         mainLabel.text = LMText.profile.unlimited
         descLabel.text = LMText.profile.inspirePoints
+        
+        // 更新到期信息显示（仅对 Plus 用户显示）
+        updateExpiryInfo(expiryDays: isPlusUser ? expiryDays : nil)
+    }
+    
+    /// 更新到期信息显示
+    private func updateExpiryInfo(expiryDays: Int?) {
+        if let days = expiryDays, days >= 0 {
+            // 显示到期天数
+            expiryDaysLabel.isHidden = false
+            expiryDescLabel.isHidden = false
+            
+            // 根据天数选择单复数格式
+            if days == 1 {
+                expiryDaysLabel.text = String(format: LMText.profile.dayFormat, days)
+            } else {
+                expiryDaysLabel.text = String(format: LMText.profile.daysFormat, days)
+            }
+            expiryDescLabel.text = LMText.profile.tilExpiration
+            
+            // 设置颜色（与 Plus 样式一致）
+            expiryDaysLabel.textColor = .white
+            expiryDescLabel.textColor = UIColor.white.withAlphaComponent(0.8)
+        } else {
+            // 隐藏到期信息
+            expiryDaysLabel.isHidden = true
+            expiryDescLabel.isHidden = true
+        }
+    }
+    
+    /// 更新 Free Trial 按钮状态
+    func updateFreeTrialButtonState(hasFreeTrial: Bool, isLoading: Bool = false) {
+        self.hasFreeTrial = hasFreeTrial
+        
+        if isLoading {
+            freeTrialButton.setTitle(LMText.profile.claimingFreeTrial, for: .normal)
+            freeTrialButton.isEnabled = false
+            freeTrialButton.alpha = 0.6
+        } else if hasFreeTrial {
+            freeTrialButton.setTitle(LMText.profile.freeTrialClaimed, for: .normal)
+            freeTrialButton.isEnabled = false
+            freeTrialButton.alpha = 0.6
+        } else {
+            freeTrialButton.setTitle(LMText.profile.getFreeTrial, for: .normal)
+            freeTrialButton.isEnabled = true
+            freeTrialButton.alpha = 1.0
+        }
     }
     
     func setWatchAdsButtonAction(_ action: @escaping () -> Void) {
@@ -46,6 +105,10 @@ class LMMembershipCardView: UIView {
         self.upgradeButtonAction = action
     }
     
+    func setFreeTrialButtonAction(_ action: @escaping () -> Void) {
+        self.freeTrialButtonAction = action
+    }
+    
     private let cardView = UIView()
     private let subscriptionInfoContainer = UIView()
     private let iconImageView = UIImageView()
@@ -53,9 +116,13 @@ class LMMembershipCardView: UIView {
     private let subtitleLabel = UILabel()
     private let expiryWarningIcon = UIImageView()  // 新增：到期警告图标
     private let upgradeButton = UIButton()
+    private let freeTrialButton = UIButton()  // 新增：免费试用按钮
     private let pointsActionContainer = UIView()
     private let mainLabel = UILabel()
     private let descLabel = UILabel()
+    // 新增：到期信息标签
+    private let expiryDaysLabel = UILabel()
+    private let expiryDescLabel = UILabel()
     private let watchAdsButton = UIButton()
     private let gradientLayer = CAGradientLayer()
     
@@ -88,10 +155,13 @@ class LMMembershipCardView: UIView {
         subscriptionInfoContainer.addSubview(subtitleLabel)
         subscriptionInfoContainer.addSubview(expiryWarningIcon)
         subscriptionInfoContainer.addSubview(upgradeButton)
+        subscriptionInfoContainer.addSubview(freeTrialButton)
         
         // Points and action section
         pointsActionContainer.addSubview(mainLabel)
         pointsActionContainer.addSubview(descLabel)
+        pointsActionContainer.addSubview(expiryDaysLabel)
+        pointsActionContainer.addSubview(expiryDescLabel)
         pointsActionContainer.addSubview(watchAdsButton)
         
         // Setup card view
@@ -120,6 +190,18 @@ class LMMembershipCardView: UIView {
         upgradeButton.layer.cornerRadius = 16
         upgradeButton.addTarget(self, action: #selector(upgradeButtonTapped), for: .touchUpInside)
         
+        // Setup free trial button
+        freeTrialButton.titleLabel?.font = UIFont.systemFont(ofSize: 11, weight: .semibold)
+        freeTrialButton.layer.cornerRadius = 16
+        freeTrialButton.setTitle(LMText.profile.getFreeTrial, for: .normal)
+        freeTrialButton.backgroundColor = UIColor.white.withAlphaComponent(0.25)
+        freeTrialButton.setTitleColor(.white, for: .normal)
+        freeTrialButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .disabled)
+        freeTrialButton.layer.borderWidth = 1
+        freeTrialButton.layer.borderColor = UIColor.white.withAlphaComponent(0.4).cgColor
+        freeTrialButton.addTarget(self, action: #selector(freeTrialButtonTapped), for: .touchUpInside)
+        freeTrialButton.isHidden = true
+        
         // Setup main points label
         mainLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         mainLabel.textAlignment = .left
@@ -127,6 +209,17 @@ class LMMembershipCardView: UIView {
         // Setup description label
         descLabel.font = UIFont.systemFont(ofSize: 11, weight: .medium)
         descLabel.textAlignment = .left
+        
+        // Setup expiry days label (bold, same style as mainLabel)
+        expiryDaysLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
+        expiryDaysLabel.textAlignment = .left
+        expiryDaysLabel.isHidden = true
+        
+        // Setup expiry description label (same style as descLabel)
+        expiryDescLabel.font = UIFont.systemFont(ofSize: 11, weight: .medium)
+        expiryDescLabel.textAlignment = .left
+        expiryDescLabel.text = LMText.profile.tilExpiration
+        expiryDescLabel.isHidden = true
         
         // Setup watch ads button
         watchAdsButton.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
@@ -182,6 +275,13 @@ class LMMembershipCardView: UIView {
             make.height.equalTo(32)
         }
         
+        freeTrialButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-20)
+            make.top.equalTo(30)
+            make.width.equalTo(110)
+            make.height.equalTo(32)
+        }
+        
         // Points and action container
         pointsActionContainer.snp.makeConstraints { make in
             make.bottom.leading.trailing.equalToSuperview()
@@ -198,6 +298,18 @@ class LMMembershipCardView: UIView {
         descLabel.snp.makeConstraints { make in
             make.bottom.equalTo(-20)
             make.centerX.equalTo(mainLabel)
+        }
+        
+        // expiryDaysLabel 在 mainLabel 右侧，保持一定间距
+        expiryDaysLabel.snp.makeConstraints { make in
+            make.leading.equalTo(mainLabel.snp.trailing).offset(40)
+            make.bottom.equalTo(mainLabel)
+        }
+        
+        // expiryDescLabel 与 expiryDaysLabel 居中对齐
+        expiryDescLabel.snp.makeConstraints { make in
+            make.bottom.equalTo(descLabel)
+            make.centerX.equalTo(expiryDaysLabel)
         }
         
         watchAdsButton.snp.makeConstraints { make in
@@ -218,6 +330,7 @@ class LMMembershipCardView: UIView {
         // 隐藏按钮
         watchAdsButton.isHidden = true
         upgradeButton.isHidden = true
+        freeTrialButton.isHidden = true
         
         setupPlusUserStyle()
     }
@@ -356,6 +469,18 @@ class LMMembershipCardView: UIView {
         upgradeButtonAction?()
     }
     
+    @objc private func freeTrialButtonTapped() {
+        // Add button press animation
+        UIView.animate(withDuration: 0.1, animations: {
+            self.freeTrialButton.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                self.freeTrialButton.transform = CGAffineTransform.identity
+            }
+        }
+        freeTrialButtonAction?()
+    }
+    
     // MARK: - Language Support
     
     private func setupLanguageObserver() {
@@ -372,7 +497,8 @@ class LMMembershipCardView: UIView {
         updateMembershipStatus(
             isPlusUser: isPlusUser,
             inspirePoints: currentInspirePoints,
-            expiryDays: currentExpiryDays
+            expiryDays: currentExpiryDays,
+            hasFreeTrial: hasFreeTrial
         )
     }
 }

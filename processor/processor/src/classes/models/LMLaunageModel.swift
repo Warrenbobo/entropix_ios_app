@@ -137,6 +137,12 @@ struct LMProfileTextConfig: Codable {
     var watchAdsWithIcon: String = "▶ Watch Ads"
     var upgrade: String = "Upgrade"
     var plusIndicator: String = "+5"
+    var getFreeTrial: String = "Get Free Trial"
+    var freeTrialClaimed: String = "Free Trial Claimed"
+    var claimingFreeTrial: String = "Claiming..."
+    var tilExpiration: String = "Til Expiration"
+    var daysFormat: String = "%d Days"
+    var dayFormat: String = "%d Day"
     
     // Profile Display
     var fullName: String = "Full Name"

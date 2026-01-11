@@ -80,6 +80,8 @@
 		EA8640712ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86406D2ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift */; };
 		EA8640722ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */; };
 		EAA37A7B2ED090230008081D /* LMAlertDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA37A7A2ED090230008081D /* LMAlertDialog.swift */; };
+		EAA3E9C52F1273D60069FC46 /* LMARGuidanceTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA3E9C22F1273D60069FC46 /* LMARGuidanceTestHelper.swift */; };
+		EAA3E9C62F1273D60069FC46 /* LMARGuidanceTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA3E9C32F1273D60069FC46 /* LMARGuidanceTestViewController.swift */; };
 		EACA1CEF2E7E49B600C80883 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */; };
 		EACA1CF02E7E49B600C80883 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE62E7E49B600C80883 /* Assets.xcassets */; };
 		EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CDE2E7E49B600C80883 /* ObjectExtensions.swift */; };
@@ -221,6 +223,8 @@
 		EA86406E2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SavedIdeaEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
 		EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SavedIdeaEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		EAA37A7A2ED090230008081D /* LMAlertDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAlertDialog.swift; sourceTree = "<group>"; };
+		EAA3E9C22F1273D60069FC46 /* LMARGuidanceTestHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceTestHelper.swift; sourceTree = "<group>"; };
+		EAA3E9C32F1273D60069FC46 /* LMARGuidanceTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceTestViewController.swift; sourceTree = "<group>"; };
 		EACA1CCC2E7E49B600C80883 /* LMApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApi.swift; sourceTree = "<group>"; };
 		EACA1CCD2E7E49B600C80883 /* LMApiClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiClient.swift; sourceTree = "<group>"; };
 		EACA1CD02E7E49B600C80883 /* LMApiResponseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiResponseModel.swift; sourceTree = "<group>"; };
@@ -353,6 +357,15 @@
 			path = api;
 			sourceTree = "<group>";
 		};
+		EAA3E9C42F1273D60069FC46 /* tests */ = {
+			isa = PBXGroup;
+			children = (
+				EAA3E9C22F1273D60069FC46 /* LMARGuidanceTestHelper.swift */,
+				EAA3E9C32F1273D60069FC46 /* LMARGuidanceTestViewController.swift */,
+			);
+			path = tests;
+			sourceTree = "<group>";
+		};
 		EACA1BE82E7E408900C80883 = {
 			isa = PBXGroup;
 			children = (
@@ -472,6 +485,7 @@
 		EACA1CDB2E7E49B600C80883 /* classes */ = {
 			isa = PBXGroup;
 			children = (
+				EAA3E9C42F1273D60069FC46 /* tests */,
 				EACA1CCF2E7E49B600C80883 /* managers */,
 				EACA1CD12E7E49B600C80883 /* models */,
 				EACA1CD32E7E49B600C80883 /* pages */,
@@ -839,6 +853,8 @@
 				EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */,
 				EA56DDE02EC091B1000AB522 /* LMCompositionTaskResponse.swift in Sources */,
 				EAFBACB52E7E7C7100586EC7 /* LMValidatedInputField.swift in Sources */,
+				EAA3E9C52F1273D60069FC46 /* LMARGuidanceTestHelper.swift in Sources */,
+				EAA3E9C62F1273D60069FC46 /* LMARGuidanceTestViewController.swift in Sources */,
 				EAFBACB72E7E7D1F00586EC7 /* LMCameraPage.swift in Sources */,
 				EA56DD9A2EC076B6000AB522 /* LMSavedIdeaDetailPage.swift in Sources */,
 				EA56DD9B2EC076B6000AB522 /* LMGalleryDetailPage.swift in Sources */,

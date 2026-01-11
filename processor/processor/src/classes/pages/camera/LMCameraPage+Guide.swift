@@ -8,32 +8,39 @@
 
 import UIKit
 
-// MARK: - Guide Properties
+// MARK: - Guide Properties Storage
+/// 使用全局字典存储引导相关属性，避免关联对象的性能开销
+private var guideViewStorage = NSMapTable<LMCameraPage, LMCameraGuideView>.weakToStrongObjects()
+private var guideStepStorage = NSMapTable<LMCameraPage, NSNumber>.weakToStrongObjects()
+
 extension LMCameraPage {
     
-    // 使用关联对象存储引导视图
-    private struct AssociatedKeys {
-        static var guideView = "guideView"
-        static var currentGuideStep = "currentGuideStep"
-    }
-    
-    /// 引导视图
+    /// 引导视图（使用 NSMapTable 存储，避免关联对象的性能开销）
     var guideView: LMCameraGuideView? {
         get {
-            return objc_getAssociatedObject(self, &AssociatedKeys.guideView) as? LMCameraGuideView
+            return guideViewStorage.object(forKey: self)
         }
         set {
-            objc_setAssociatedObject(self, &AssociatedKeys.guideView, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            if let value = newValue {
+                guideViewStorage.setObject(value, forKey: self)
+            } else {
+                guideViewStorage.removeObject(forKey: self)
+            }
         }
     }
     
-    /// 当前显示的引导步骤
+    /// 当前显示的引导步骤（使用 NSMapTable 存储，避免关联对象的性能开销）
     var currentGuideStep: LMCameraGuideStep? {
         get {
-            return objc_getAssociatedObject(self, &AssociatedKeys.currentGuideStep) as? LMCameraGuideStep
+            guard let number = guideStepStorage.object(forKey: self) else { return nil }
+            return LMCameraGuideStep.allCases.first { $0.rawValue.hashValue == number.intValue }
         }
         set {
-            objc_setAssociatedObject(self, &AssociatedKeys.currentGuideStep, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            if let value = newValue {
+                guideStepStorage.setObject(NSNumber(value: value.rawValue.hashValue), forKey: self)
+            } else {
+                guideStepStorage.removeObject(forKey: self)
+            }
         }
     }
 }

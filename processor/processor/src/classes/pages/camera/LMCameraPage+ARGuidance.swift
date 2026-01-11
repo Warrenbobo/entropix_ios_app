@@ -76,15 +76,12 @@ extension LMCameraPage {
         if arGuidanceView == nil {
             arGuidanceView = LMARGuidanceView(frame: .zero)
             previewCanvasView.addSubview(arGuidanceView)
-            
-            LMLogger.log("✅ AR Guidance View已添加到 previewCanvasView")
         }
         
         // 创建检测管理器（每个管理器使用独立的 PersonDetectionManager 实例）
         if referenceImageDetectionManager == nil {
             let referenceDetector = LMPersonDetectionManager()
             referenceImageDetectionManager = LMReferenceImageDetectionManager(personDetectionManager: referenceDetector)
-            LMLogger.log("✅ Reference Image Detection Manager 已创建（独立实例）")
         }
         
         if cameraStreamDetectionManager == nil {
@@ -95,7 +92,6 @@ extension LMCameraPage {
             cameraStreamDetectionManager.onDetectionResult = { [weak self] bbox, confidence in
                 self?.handleRealtimeDetectionResult(bbox: bbox, confidence: confidence)
             }
-            LMLogger.log("✅ Camera Stream Detection Manager 已创建（独立实例）")
         }
         
         // 监听设备方向变化
@@ -105,18 +101,14 @@ extension LMCameraPage {
             name: .devicePhysicalOrientationDidChange,
             object: nil
         )
-        
-        LMLogger.log("✅ AR引导功能初始化完成")
     }
     
     // MARK: - Configuration
     
     func configureARGuidanceFeatures(_ enabled: Bool) {
         if enabled {
-            LMLogger.log("📱 AR Guidance features enabled")
             startARGuidanceSession()
         } else {
-            LMLogger.log("📱 AR Guidance features disabled")
             stopARGuidanceSession()
         }
     }
@@ -136,9 +128,6 @@ extension LMCameraPage {
             width: canvasSize.width,
             height: canvasSize.height
         )
-        
-        LMLogger.log("📐 [AR Guidance] Updated ARGuidanceView frame to: \(arGuidanceView.frame)")
-        LMLogger.log("📐 [AR Guidance] Canvas size: \(canvasSize)")
     }
     
     func startARGuidanceSession() {

@@ -10,7 +10,7 @@ import CoreData
 import ApiInspector
 
 @main
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, ApiInspectorDelegate {
 
 
 
@@ -22,12 +22,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             enableRequestLog: true,
             enableWebDebug: false
         )
+        config.customMenuItems = [ApiInspectorCustomMenuItem(name: "构图",
+                                                             actionType: "analyze",
+                                                             icon: "📷"),
+                                  ApiInspectorCustomMenuItem(name: "会员",
+                                                             actionType: "vip",
+                                                             icon: "💰"),]
+        ApiInspector.shared.delegate = self
         ApiInspector.shared.start(with: config)
         // Initialize StoreKit 2 manager
 //        Task {
 //            await LMStoreManager.shared.initialize()
 //        }
         return true
+    }
+    
+    func apiInspector(_ inspector: ApiInspector, didSelectCustomMenuItemWithActionType actionType: String) {
+        if actionType == "analyze" {
+            if let controller = AppTheme.Screen.visibleController() {
+                LMARGuidanceTestViewController.present(from: controller)
+            }
+        } else if actionType == "vip" {
+            LMApiService.shared.claimFreeTrial { response in
+                
+            }
+        }
     }
 
     // MARK: UISceneSession Lifecycle

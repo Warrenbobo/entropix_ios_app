@@ -143,6 +143,9 @@ class LMCameraGuideView: UIView {
             return
         }
         
+        // 立即清除 currentStep，防止重复调用
+        currentStep = nil
+        
         if animated {
             UIView.animate(withDuration: 0.3, animations: {
                 self.alpha = 0
