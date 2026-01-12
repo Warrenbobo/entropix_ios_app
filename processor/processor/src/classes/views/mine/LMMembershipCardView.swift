@@ -18,32 +18,31 @@ class LMMembershipCardView: UIView {
     private var currentExpiryDays: Int?
     private var currentInspirePoints: Int?
     private var hasFreeTrial: Bool = false
+    private var currentSubscriptionType: SubscriptionType = .free
     
-    func updateMembershipStatus(isPlusUser: Bool, inspirePoints: Int?, expiryDays: Int? = nil, hasFreeTrial: Bool = false) {
+    func updateMembershipStatus(isPlusUser: Bool, inspirePoints: Int?, expiryDays: Int? = nil, hasFreeTrial: Bool = false, subscriptionType: SubscriptionType = .free) {
         self.isPlusUser = isPlusUser
         self.currentExpiryDays = expiryDays
         self.currentInspirePoints = inspirePoints
         self.hasFreeTrial = hasFreeTrial
+        self.currentSubscriptionType = subscriptionType
         
         // 始终隐藏 Upgrade 按钮和 Watch Ads 按钮
         upgradeButton.isHidden = true
         watchAdsButton.isHidden = true
         expiryWarningIcon.isHidden = true
         
-        // 显示/隐藏 Free Trial 按钮
-        // 仅对非 Plus 用户显示，且根据是否已领取设置状态
-        if !isPlusUser {
-            freeTrialButton.isHidden = false
-            updateFreeTrialButtonState(hasFreeTrial: hasFreeTrial)
-        } else {
-            freeTrialButton.isHidden = true
-        }
+        // Free Trial 按钮始终显示，根据会员状态设置是否可点击
+        // isPlusUser 为 true 表示会员有效（已领取且未到期），按钮置灰
+        // hasFreeTrial 为 true 表示已领取过免费试用，按钮置灰
+        freeTrialButton.isHidden = false
+        updateFreeTrialButtonState(hasFreeTrial: hasFreeTrial || isPlusUser)
         
         // 始终使用 Plus Plan 样式
         setupPlusUserStyle()
         
-        // 固定显示内容
-        titleLabel.text = LMText.profile.plusPlan
+        // 根据订阅类型显示标题
+        titleLabel.text = subscriptionType.displayName
         subtitleLabel.text = LMText.profile.unlimitedInspires
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         mainLabel.text = LMText.profile.unlimited
@@ -82,18 +81,22 @@ class LMMembershipCardView: UIView {
     func updateFreeTrialButtonState(hasFreeTrial: Bool, isLoading: Bool = false) {
         self.hasFreeTrial = hasFreeTrial
         
+        // 文案始终为 "Get Free Trial"
         if isLoading {
             freeTrialButton.setTitle(LMText.profile.claimingFreeTrial, for: .normal)
             freeTrialButton.isEnabled = false
             freeTrialButton.alpha = 0.6
-        } else if hasFreeTrial {
-            freeTrialButton.setTitle(LMText.profile.freeTrialClaimed, for: .normal)
-            freeTrialButton.isEnabled = false
-            freeTrialButton.alpha = 0.6
         } else {
             freeTrialButton.setTitle(LMText.profile.getFreeTrial, for: .normal)
-            freeTrialButton.isEnabled = true
-            freeTrialButton.alpha = 1.0
+            if hasFreeTrial {
+                // 已领取且会员未过期，按钮置灰不可点击
+                freeTrialButton.isEnabled = false
+                freeTrialButton.alpha = 0.6
+            } else {
+                // 未领取，按钮可点击
+                freeTrialButton.isEnabled = true
+                freeTrialButton.alpha = 1.0
+            }
         }
     }
     
@@ -191,7 +194,7 @@ class LMMembershipCardView: UIView {
         upgradeButton.addTarget(self, action: #selector(upgradeButtonTapped), for: .touchUpInside)
         
         // Setup free trial button
-        freeTrialButton.titleLabel?.font = UIFont.systemFont(ofSize: 11, weight: .semibold)
+        freeTrialButton.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         freeTrialButton.layer.cornerRadius = 16
         freeTrialButton.setTitle(LMText.profile.getFreeTrial, for: .normal)
         freeTrialButton.backgroundColor = UIColor.white.withAlphaComponent(0.25)
@@ -498,7 +501,8 @@ class LMMembershipCardView: UIView {
             isPlusUser: isPlusUser,
             inspirePoints: currentInspirePoints,
             expiryDays: currentExpiryDays,
-            hasFreeTrial: hasFreeTrial
+            hasFreeTrial: hasFreeTrial,
+            subscriptionType: currentSubscriptionType
         )
     }
 }

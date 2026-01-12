@@ -261,16 +261,16 @@ class LMMinePage: LMPageWrapper {
         let expiryDays: Int? = user.daysUntilExpiration
         
         // 检查用户是否已领取免费试用
-        // 如果用户有订阅（trial 或其他），则认为已领取
-        let hasFreeTrial = user.subscription != nil && !user.subscription!.isEmpty
+        // 如果用户有订阅（trial 或其他付费类型），则认为已领取
+        let hasFreeTrial = user.subscriptionType.isPaidType
         
-        // 更新会员卡片
-        let isPlusUser = (user.subscriptionType == .plus || user.subscriptionType == .lifelong)
+        // 更新会员卡片 - 使用 isPremiumUser 判断（考虑到期时间）
         membershipCardView.updateMembershipStatus(
-            isPlusUser: isPlusUser,
+            isPlusUser: user.isPremiumUser,
             inspirePoints: user.inspirePoints,
             expiryDays: expiryDays,
-            hasFreeTrial: hasFreeTrial
+            hasFreeTrial: hasFreeTrial,
+            subscriptionType: user.subscriptionType
         )
         
         // 刷新Gallery和Saved Ideas

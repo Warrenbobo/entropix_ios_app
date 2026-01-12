@@ -129,6 +129,7 @@ struct LMProfileTextConfig: Codable {
     // Membership Card
     var plusPlan: String = "Plus Plan"
     var freePlan: String = "Free Plan"
+    var trialPlan: String = "Trial Plan"
     var unlimitedInspires: String = "Unlimited Inspires"
     var limitedUsage: String = "Limited Usage"
     var unlimited: String = "Unlimited"
