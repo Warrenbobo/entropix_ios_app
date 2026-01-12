@@ -435,6 +435,10 @@ struct LMSettingsTextConfig: Codable {
     var featureAccessRequiredFormat: String = "%@ Access Required"
     var enableFeatureAccessMessage: String = "Please enable %@ access in Settings to change your profile photo."
     
+    // Notifications
+    var noNewNotification: String = "No new notification"
+    var loadingNotifications: String = "Loading notifications..."
+    
     // Debug Test Page
     var requestLogs: String = "Request Logs"
     var requestDetails: String = "Request Details"

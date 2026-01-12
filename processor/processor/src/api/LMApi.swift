@@ -100,4 +100,13 @@ struct LMApi {
         
         static let privacy = "https://legal.framaist.entropixai.com/privacy-policy.html"
     }
+    
+    // MARK: - Notification APIs
+    struct Notification {
+        /// 拉取通知列表（轮询）
+        static let list = "/v1/notifications"
+        
+        /// 标记已读
+        static let markRead = "/v1/notifications/read"
+    }
 }

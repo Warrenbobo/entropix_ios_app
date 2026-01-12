@@ -2,14 +2,15 @@
 //  LMNotificationTableViewCell.swift
 //  processor
 //
-//  Created by muz on 2025/11/1.
+//  通知列表Cell - 支持新的API数据模型
 //
 
 import UIKit
+import SnapKit
 
-// MARK: - Custom Table View Cell
 class LMNotificationTableViewCell: UITableViewCell {
     
+    // MARK: - UI Components
     private let iconContainerView = UIView()
     private let iconImageView = UIImageView()
     private let unreadIndicator = UIView()
@@ -18,6 +19,7 @@ class LMNotificationTableViewCell: UITableViewCell {
     private let messageLabel = UILabel()
     private let separatorView = UIView()
     
+    // MARK: - Initialization
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupCell()
@@ -28,6 +30,7 @@ class LMNotificationTableViewCell: UITableViewCell {
         setupCell()
     }
     
+    // MARK: - Setup
     private func setupCell() {
         backgroundColor = UIColor.clear
         selectionStyle = .none
@@ -48,8 +51,8 @@ class LMNotificationTableViewCell: UITableViewCell {
     
     private func setupIconContainer() {
         iconContainerView.layer.cornerRadius = 8
-        
         iconContainerView.backgroundColor = .hexColor("#FEF9C2")
+        
         iconImageView.image = UIImage(named: "bullhorn_yellow")
         iconImageView.contentMode = .center
         
@@ -121,27 +124,37 @@ class LMNotificationTableViewCell: UITableViewCell {
         }
     }
     
-    func configure(with notification: NotificationItem, isLast: Bool) {
-        
+    // MARK: - Configuration (新API模型)
+    func configure(with notification: LMNotificationModel, isLast: Bool) {
         titleLabel.text = notification.title
-        timeLabel.text = notification.timeAgo
-        messageLabel.text = notification.message
+        timeLabel.text = notification.formattedTimeAgo
+        messageLabel.text = notification.previewMessage
         
-        unreadIndicator.isHidden = !notification.isUnread
+        // 更新图标样式
+        let notificationType = notification.notificationType
+        iconContainerView.backgroundColor = notificationType.backgroundColor
+        
+        // 使用系统图标或自定义图标
+        if let customIcon = UIImage(named: notificationType.iconName) {
+            iconImageView.image = customIcon
+        } else {
+            iconImageView.image = UIImage(systemName: notificationType.iconName)
+            iconImageView.tintColor = notificationType.iconColor
+        }
+        
+        // 未读状态
+        unreadIndicator.isHidden = notification.isRead
+        
+        // 分隔线
         separatorView.isHidden = isLast
-        
-        // 添加点击效果
-//        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(cellTapped))
-//        addGestureRecognizer(tapGesture)
     }
     
-    @objc private func cellTapped() {
-        UIView.animate(withDuration: 0.1, animations: {
-            self.transform = CGAffineTransform(scaleX: 0.98, y: 0.98)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                self.transform = CGAffineTransform.identity
-            }
+    // MARK: - Highlight Effect
+    override func setHighlighted(_ highlighted: Bool, animated: Bool) {
+        super.setHighlighted(highlighted, animated: animated)
+        
+        UIView.animate(withDuration: 0.1) {
+            self.contentView.alpha = highlighted ? 0.7 : 1.0
         }
     }
 }

@@ -82,6 +82,9 @@
 		EAA37A7B2ED090230008081D /* LMAlertDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA37A7A2ED090230008081D /* LMAlertDialog.swift */; };
 		EAA3E9C52F1273D60069FC46 /* LMARGuidanceTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA3E9C22F1273D60069FC46 /* LMARGuidanceTestHelper.swift */; };
 		EAA3E9C62F1273D60069FC46 /* LMARGuidanceTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA3E9C32F1273D60069FC46 /* LMARGuidanceTestViewController.swift */; };
+		EAAF53ED2F15449500E961DC /* LMNotificationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53EC2F15449500E961DC /* LMNotificationModel.swift */; };
+		EAAF53EF2F1544AF00E961DC /* LMNotificationDetailPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53EE2F1544AF00E961DC /* LMNotificationDetailPage.swift */; };
+		EAAF53F12F1544DD00E961DC /* LMNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53F02F1544DD00E961DC /* LMNotificationManager.swift */; };
 		EACA1CEF2E7E49B600C80883 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */; };
 		EACA1CF02E7E49B600C80883 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE62E7E49B600C80883 /* Assets.xcassets */; };
 		EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CDE2E7E49B600C80883 /* ObjectExtensions.swift */; };
@@ -141,7 +144,6 @@
 		EAFBADC42EA36E5900586EC7 /* LMIdeasPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC32EA36E5900586EC7 /* LMIdeasPageView.swift */; };
 		EAFBADC62EA4C34300586EC7 /* LMFAQPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */; };
 		EAFBADC82EA4C90E00586EC7 /* LMNotificationsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */; };
-		EAFBADCA2EA4C92900586EC7 /* LMMessageDetailPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC92EA4C92900586EC7 /* LMMessageDetailPage.swift */; };
 		ED1A82AB7EA3BF2D0B7016C1 /* Pods_processor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */; };
 /* End PBXBuildFile section */
 
@@ -225,6 +227,9 @@
 		EAA37A7A2ED090230008081D /* LMAlertDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAlertDialog.swift; sourceTree = "<group>"; };
 		EAA3E9C22F1273D60069FC46 /* LMARGuidanceTestHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceTestHelper.swift; sourceTree = "<group>"; };
 		EAA3E9C32F1273D60069FC46 /* LMARGuidanceTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceTestViewController.swift; sourceTree = "<group>"; };
+		EAAF53EC2F15449500E961DC /* LMNotificationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationModel.swift; sourceTree = "<group>"; };
+		EAAF53EE2F1544AF00E961DC /* LMNotificationDetailPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationDetailPage.swift; sourceTree = "<group>"; };
+		EAAF53F02F1544DD00E961DC /* LMNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationManager.swift; sourceTree = "<group>"; };
 		EACA1CCC2E7E49B600C80883 /* LMApi.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApi.swift; sourceTree = "<group>"; };
 		EACA1CCD2E7E49B600C80883 /* LMApiClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiClient.swift; sourceTree = "<group>"; };
 		EACA1CD02E7E49B600C80883 /* LMApiResponseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiResponseModel.swift; sourceTree = "<group>"; };
@@ -286,7 +291,6 @@
 		EAFBADC32EA36E5900586EC7 /* LMIdeasPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMIdeasPageView.swift; sourceTree = "<group>"; };
 		EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFAQPage.swift; sourceTree = "<group>"; };
 		EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationsPage.swift; sourceTree = "<group>"; };
-		EAFBADC92EA4C92900586EC7 /* LMMessageDetailPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMMessageDetailPage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -387,6 +391,7 @@
 		EACA1CCF2E7E49B600C80883 /* managers */ = {
 			isa = PBXGroup;
 			children = (
+				EAAF53F02F1544DD00E961DC /* LMNotificationManager.swift */,
 				EA7F25AB2F066E9B0008E091 /* LMCameraGuideManager.swift */,
 				EA53553B2EE57BF100610950 /* LMAuthGuard.swift */,
 				EA3F16722EE41D8500B24DA8 /* LMDeviceOrientationManager.swift */,
@@ -411,6 +416,7 @@
 		EACA1CD12E7E49B600C80883 /* models */ = {
 			isa = PBXGroup;
 			children = (
+				EAAF53EC2F15449500E961DC /* LMNotificationModel.swift */,
 				EACB30E52EF63E3500EC643C /* LMCompositionJobDetailResponse.swift */,
 				EACB30E62EF63E3500EC643C /* LMCompositionJobListResponse.swift */,
 				EACB30E72EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift */,
@@ -574,6 +580,7 @@
 		EACA1D0F2E7E517B00C80883 /* mine */ = {
 			isa = PBXGroup;
 			children = (
+				EAAF53EE2F1544AF00E961DC /* LMNotificationDetailPage.swift */,
 				EA56DD982EC076B6000AB522 /* LMGalleryDetailPage.swift */,
 				EA56DD992EC076B6000AB522 /* LMSavedIdeaDetailPage.swift */,
 				EACA1D102E7E519100C80883 /* LMMinePage.swift */,
@@ -583,7 +590,6 @@
 				EAFBAD822E93905B00586EC7 /* LMContactUsPage.swift */,
 				EAFBAD842E9393E400586EC7 /* LMLanguagePage.swift */,
 				EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */,
-				EAFBADC92EA4C92900586EC7 /* LMMessageDetailPage.swift */,
 				EA54E1DA2EBEED04000DB5EE /* LMSubscriptionPage.swift */,
 				EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */,
 			);
@@ -828,7 +834,6 @@
 				EA56DDBD2EC08E1D000AB522 /* LMCameraPage+InspireMe.swift in Sources */,
 				EAFBAD792E8FCB4E00586EC7 /* LMUserModel.swift in Sources */,
 				EAFBADC22EA36E4500586EC7 /* LMGalleryPageView.swift in Sources */,
-				EAFBADCA2EA4C92900586EC7 /* LMMessageDetailPage.swift in Sources */,
 				EA8629A52EB5A15800F2B00E /* LMImageProcessor.swift in Sources */,
 				EACA1CF92E7E49B600C80883 /* LMNavigationWrapper.swift in Sources */,
 				EAFBAD7F2E93804000586EC7 /* LMAboutPage.swift in Sources */,
@@ -869,6 +874,7 @@
 				EA0A47402EBF8F19002CBB80 /* LMSubscriptionFooterView.swift in Sources */,
 				EA0A47412EBF8F19002CBB80 /* LMSubscriptionPlanCardView.swift in Sources */,
 				EA7F25AE2F066EAD0008E091 /* LMCameraGuideView.swift in Sources */,
+				EAAF53F12F1544DD00E961DC /* LMNotificationManager.swift in Sources */,
 				EA0A47422EBF8F19002CBB80 /* LMSubscriptionHeroView.swift in Sources */,
 				EAFBAD7B2E936ABD00586EC7 /* LMNavigationTitleView.swift in Sources */,
 				EA5835442EC976200013E531 /* LMCameraPage+ShowSuggestions.swift in Sources */,
@@ -896,9 +902,11 @@
 				EAFBACC62E8F69D100586EC7 /* LMUserProfileModel.swift in Sources */,
 				EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */,
 				EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */,
+				EAAF53ED2F15449500E961DC /* LMNotificationModel.swift in Sources */,
 				EA53553C2EE57BF100610950 /* LMAuthGuard.swift in Sources */,
 				EA86406A2ED2D24800A0CD43 /* LMPhotoStorageManager.swift in Sources */,
 				EA86406B2ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift in Sources */,
+				EAAF53EF2F1544AF00E961DC /* LMNotificationDetailPage.swift in Sources */,
 				EA86406C2ED2D24800A0CD43 /* PhotoEntity+CoreDataClass.swift in Sources */,
 				EA6019392EC877620067F2F7 /* LMSessionManager.swift in Sources */,
 				EA6019422EC8778B0067F2F7 /* TaskStatus.swift in Sources */,
