@@ -130,6 +130,49 @@ extension LMCameraPage {
         )
     }
     
+    /// 当画布比例变化时更新 AR Guidance 的位置
+    /// 此方法在 updatePreviewCanvasAspectRatio 完成后调用
+    func updateARGuidanceForAspectRatioChange() {
+        // 检查是否有参考图和 bbox
+        guard let referenceImage = currentReferenceImage,
+              let referenceBbox = currentReferenceBbox else {
+            LMLogger.log("📐 [AR Guidance] No reference image or bbox, skipping aspect ratio update")
+            return
+        }
+        
+        // 检查 AR Guidance 是否激活
+        guard arGuidanceState == .activeGuidance || arGuidanceState == .referenceDetected(bbox: referenceBbox) else {
+            LMLogger.log("📐 [AR Guidance] AR Guidance not active, skipping aspect ratio update")
+            return
+        }
+        
+        LMLogger.log("📐 [AR Guidance] Updating AR Guidance for aspect ratio change")
+        LMLogger.log("📐 [AR Guidance] previewCanvasView bounds: \(previewCanvasView.bounds)")
+        
+        // 1. 更新 ARGuidanceView 的尺寸
+        updateARGuidanceViewSize()
+        
+        // 2. 重新计算白色框的位置
+        let canvasBbox = convertBboxToCanvas(bbox: referenceBbox, imageSize: referenceImage.size)
+        
+        // 3. 更新白色框位置
+        arGuidanceView.setReferenceBoxBounds(bbox: canvasBbox)
+        
+        // 4. 如果白色框是显示状态，确保它仍然显示
+        if !arGuidanceView.livePersonBox.isHidden || isCurrentlyAligned {
+            // 如果是对齐状态，更新绿色框位置
+            if isCurrentlyAligned {
+                arGuidanceView.showSuccessBox()
+            } else {
+                arGuidanceView.showReferenceBox()
+            }
+        } else {
+            arGuidanceView.showReferenceBox()
+        }
+        
+        LMLogger.log("📐 [AR Guidance] Updated reference box for new canvas size: \(canvasBbox)")
+    }
+    
     func startARGuidanceSession() {
         LMLogger.log("🎯 [AR Guidance] startARGuidanceSession called")
         LMLogger.log("🎯 [AR Guidance] Current state: \(currentCameraState)")
@@ -700,105 +743,39 @@ extension LMCameraPage {
         }
     }
     
-    // MARK: - Face Detection Helper (已禁用 - 仅使用人体检测)
-    
-    // 人脸检测已禁用 - 不再检测人脸
-    // /// 检测图像中的人脸并返回人脸 bbox
-    // /// - Parameter image: 待检测的图像
-    // /// - Returns: 人脸 bbox（归一化坐标），如果未检测到则返回 nil
-    // private func detectFaceInCurrentImage(_ image: UIImage) -> CGRect? {
-    //     guard let cgImage = image.cgImage else {
-    //         return nil
-    //     }
-    //     
-    //     // 创建人脸检测请求
-    //     let faceDetectionRequest = VNDetectFaceRectanglesRequest()
-    //     
-    //     // 获取设备方向
-    //     let deviceOrientation = UIDevice.current.orientation
-    //     let imageOrientation: CGImagePropertyOrientation
-    //     switch deviceOrientation {
-    //     case .portrait:
-    //         imageOrientation = .right
-    //     case .portraitUpsideDown:
-    //         imageOrientation = .left
-    //     case .landscapeLeft:
-    //         imageOrientation = .up
-    //     case .landscapeRight:
-    //         imageOrientation = .down
-    //     default:
-    //         imageOrientation = .right
-    //     }
-    //     
-    //     // 创建请求处理器
-    //     let handler = VNImageRequestHandler(cgImage: cgImage, orientation: imageOrientation, options: [:])
-    //     
-    //     do {
-    //         try handler.perform([faceDetectionRequest])
-    //         
-    //         // 获取检测结果
-    //         guard let faceObservations = faceDetectionRequest.results as? [VNFaceObservation],
-    //               let firstFace = faceObservations.first else {
-    //             return nil
-    //         }
-    //         
-    //         // 保持 Vision 原始坐标（归一化坐标 0-1）
-    //         // 不进行坐标转换，保持与 PersonDetectionManager 一致
-    //         let visionBox = firstFace.boundingBox
-    //         let faceBbox = CGRect(
-    //             x: visionBox.origin.x,
-    //             y: visionBox.origin.y,
-    //             width: visionBox.size.width,
-    //             height: visionBox.size.height
-    //         )
-    //         
-    //         return faceBbox
-    //     } catch {
-    //         LMLogger.log("❌ Face detection failed: \(error.localizedDescription)")
-    //         return nil
-    //     }
-    // }
-    
     // MARK: - Coordinate Conversion
     
-    /// 计算最大画布尺寸（基于 reference image 的宽高比）
+    /// 计算最大画布尺寸（基于当前画布比例和 reference image）
     /// 返回画布尺寸（始终以屏幕宽度为基准）
-    /// 注意：横向图片已在识别前旋转到竖屏方向，因此这里的宽高比已经是旋转后的
+    /// 注意：横向图片已在识别前旋转到竖屏方向，因此这里需要使用旋转后的宽高比
+    /// 当画布比例变化时，AR Guidance 的画布尺寸也会相应变化
     private func getMaxCanvasSize() -> CGSize {
         let topOffset = AppTheme.Screen.safeAreaTop + LMCameraConstants.topStatusBarHeight
         let bottomOffset = LMCameraConstants.bottomControlsHeight
         let availableHeight = AppTheme.Screen.height - topOffset - bottomOffset - AppTheme.Screen.safeAreaBottom
         let screenWidth = AppTheme.Screen.width
         
-        // 根据 reference image 计算画布尺寸
-        if let referenceImage = currentReferenceImage {
-            let imageWidth = referenceImage.size.width
-            let imageHeight = referenceImage.size.height
-            
-            // 统一逻辑：以图片宽度对齐屏幕宽度，等比拉伸
-            let scale = screenWidth / imageWidth
-            let canvasWidth = screenWidth
-            let canvasHeight = imageHeight * scale
-            
-            // 确保高度不超过可用高度
-            if canvasHeight > availableHeight {
-                // 如果高度超出，以可用高度为基准重新计算
-                let adjustedScale = availableHeight / imageHeight
-                return CGSize(width: imageWidth * adjustedScale, height: availableHeight)
-            }
-            
-            return CGSize(width: canvasWidth, height: canvasHeight)
-        } else {
-            // 默认使用 3:4 竖向比例
-            let canvasWidth = screenWidth
-            let aspectRatio: CGFloat = 3.0 / 4.0
-            let canvasHeight = canvasWidth / aspectRatio
-            
-            if canvasHeight > availableHeight {
-                return CGSize(width: availableHeight * aspectRatio, height: availableHeight)
-            }
-            return CGSize(width: canvasWidth, height: canvasHeight)
+        // 使用当前画布比例计算尺寸（与 updatePreviewCanvasAspectRatio 保持一致）
+        let canvasWidth = screenWidth
+        var canvasHeight: CGFloat
+        
+        switch currentAspectRatio {
+        case .ratio3_4:
+            canvasHeight = canvasWidth * 4.0 / 3.0
+        case .ratio1_1:
+            canvasHeight = canvasWidth
+        case .ratio9_16:
+            canvasHeight = canvasWidth * 16.0 / 9.0
         }
+        
+        // 限制最大高度
+        if canvasHeight > availableHeight {
+            canvasHeight = availableHeight
+        }
+        
+        LMLogger.log("📐 [Canvas] getMaxCanvasSize - ratio: \(currentAspectRatio.displayName), size: \(canvasWidth)x\(canvasHeight)")
+        
+        return CGSize(width: canvasWidth, height: canvasHeight)
     }
     
     /// 将bbox坐标转换到画布坐标

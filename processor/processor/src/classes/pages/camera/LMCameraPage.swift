@@ -387,10 +387,15 @@ class LMCameraPage: LMPageWrapper {
                 animations: {
                     self.view.layoutIfNeeded()
                 },
-                completion: nil
+                completion: { [weak self] _ in
+                    // 动画完成后更新 AR Guidance 位置
+                    self?.updateARGuidanceForAspectRatioChange()
+                }
             )
         } else {
             view.layoutIfNeeded()
+            // 立即更新 AR Guidance 位置
+            updateARGuidanceForAspectRatioChange()
         }
         
         LMLogger.log("📐 Updated preview canvas to \(ratio.displayName) - Canvas size: \(canvasWidth)x\(canvasHeight)")
