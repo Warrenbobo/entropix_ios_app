@@ -82,6 +82,7 @@ extension LMPhotoCollectionView {
         galleryTabButton.setTitleColor(UIColor.systemBlue, for: .selected)
         galleryTabButton.setTitleColor(UIColor.systemGray, for: .normal)
         galleryTabButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        galleryTabButton.titleLabel?.adjustsFontSizeToFitWidth = true
         galleryTabButton.isSelected = true
         galleryTabButton.addTarget(self, action: #selector(galleryTabButtonTapped), for: .touchUpInside)
         
@@ -90,6 +91,7 @@ extension LMPhotoCollectionView {
         savedIdeasTabButton.setTitleColor(UIColor.systemBlue, for: .selected)
         savedIdeasTabButton.setTitleColor(UIColor.systemGray, for: .normal)
         savedIdeasTabButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        savedIdeasTabButton.titleLabel?.adjustsFontSizeToFitWidth = true
         savedIdeasTabButton.addTarget(self, action: #selector(savedIdeasTabButtonTapped), for: .touchUpInside)
         
         // Tab Indicator
