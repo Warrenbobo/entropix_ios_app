@@ -10,12 +10,14 @@ import Foundation
 // MARK: - Language Type
 enum LMLanguageType: String, Codable {
     case english = "en"
-    case chinese = "zh"
+    case simplifiedChinese = "zh-Hans"
+    case traditionalChinese = "zh-Hant"
     
     var displayName: String {
         switch self {
         case .english: return "English"
-        case .chinese: return "中文"
+        case .simplifiedChinese: return "中文-简"
+        case .traditionalChinese: return "中文-繁"
         }
     }
 }
@@ -33,8 +35,10 @@ class LMLaunageManager {
         switch currentLanguage {
         case .english:
             return languageModel?.english
-        case .chinese:
-            return languageModel?.chinese
+        case .simplifiedChinese:
+            return languageModel?.simplifiedChinese
+        case .traditionalChinese:
+            return languageModel?.traditionalChinese
         }
     }
     
@@ -79,7 +83,16 @@ class LMLaunageManager {
     }
     
     var settings: LMSettingsTextConfig {
-        return currentConfig?.settings ?? LMSettingsTextConfig()
+        let config = currentConfig?.settings ?? LMSettingsTextConfig()
+        // Debug: Log FAQ count when accessed
+        if config.faqs.isEmpty {
+            LMLogger.log("⚠️ LMLaunageManager - settings.faqs is EMPTY!")
+            LMLogger.log("⚠️ Current language: \(currentLanguage.displayName)")
+            LMLogger.log("⚠️ Current config exists: \(currentConfig != nil)")
+        } else {
+            LMLogger.log("✅ LMLaunageManager - settings.faqs count: \(config.faqs.count)")
+        }
+        return config
     }
     
     var entrance: LMEntranceTextConfig {
@@ -117,9 +130,42 @@ class LMLaunageManager {
             let decoder = JSONDecoder()
             decoder.keyDecodingStrategy = .convertFromSnakeCase
             let model = try decoder.decode(LMLaunageModel.self, from: data)
+            
+            // Debug: Check FAQ data after decoding
+            LMLogger.log("✅ JSON decoded successfully")
+            if let englishFAQs = model.english?.settings?.faqs {
+                LMLogger.log("✅ English FAQs count: \(englishFAQs.count)")
+            } else {
+                LMLogger.log("⚠️ English FAQs is nil or empty")
+            }
+            if let simplifiedFAQs = model.simplifiedChinese?.settings?.faqs {
+                LMLogger.log("✅ Simplified Chinese FAQs count: \(simplifiedFAQs.count)")
+            } else {
+                LMLogger.log("⚠️ Simplified Chinese FAQs is nil or empty")
+            }
+            if let traditionalFAQs = model.traditionalChinese?.settings?.faqs {
+                LMLogger.log("✅ Traditional Chinese FAQs count: \(traditionalFAQs.count)")
+            } else {
+                LMLogger.log("⚠️ Traditional Chinese FAQs is nil or empty")
+            }
+            
             return model
         } catch {
             LMLogger.log("❌ Failed to decode language JSON: \(error)")
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .keyNotFound(let key, let context):
+                    LMLogger.log("❌ Key '\(key.stringValue)' not found: \(context.debugDescription)")
+                case .typeMismatch(let type, let context):
+                    LMLogger.log("❌ Type mismatch for type \(type): \(context.debugDescription)")
+                case .valueNotFound(let type, let context):
+                    LMLogger.log("❌ Value not found for type \(type): \(context.debugDescription)")
+                case .dataCorrupted(let context):
+                    LMLogger.log("❌ Data corrupted: \(context.debugDescription)")
+                @unknown default:
+                    LMLogger.log("❌ Unknown decoding error")
+                }
+            }
             return nil
         }
     }
@@ -135,7 +181,7 @@ class LMLaunageManager {
             settings: LMSettingsTextConfig(),
             entrance: LMEntranceTextConfig()
         )
-        let chineseConfig = LMAppLaunageConfig(
+        let simplifiedChineseConfig = LMAppLaunageConfig(
             common: LMCommonTextConfig(
                 ok: "确定",
                 cancel: "取消",
@@ -351,8 +397,9 @@ class LMLaunageManager {
                 viewPrivacyAndTerms: "查看我们的隐私政策和服务条款"
             )
         )
+        let traditionalChineseConfig = simplifiedChineseConfig // Use same as simplified for now, will be loaded from JSON
         
-        languageModel = LMLaunageModel(english: englishConfig, chinese: chineseConfig)
+        languageModel = LMLaunageModel(english: englishConfig, simplifiedChinese: simplifiedChineseConfig, traditionalChinese: traditionalChineseConfig)
     }
     
     private func saveLanguage() {
@@ -361,11 +408,22 @@ class LMLaunageManager {
     
     private func loadSavedLanguage() {
         // 首先检查是否有用户保存的语言偏好
-        if let savedLanguage = UserDefaults.standard.string(forKey: "app_language"),
-           let language = LMLanguageType(rawValue: savedLanguage) {
-            currentLanguage = language
-            LMLogger.log("✅ Loaded saved language preference: \(language.displayName)")
-            return
+        if let savedLanguage = UserDefaults.standard.string(forKey: "app_language") {
+            // Migration: map old "zh" to new "zh-Hans" for existing users
+            let languageCode = savedLanguage == "zh" ? "zh-Hans" : savedLanguage
+            
+            if let language = LMLanguageType(rawValue: languageCode) {
+                currentLanguage = language
+                
+                // Update saved preference if migration occurred
+                if savedLanguage == "zh" {
+                    saveLanguage()
+                    LMLogger.log("✅ Migrated language preference from 'zh' to 'zh-Hans'")
+                }
+                
+                LMLogger.log("✅ Loaded saved language preference: \(language.displayName)")
+                return
+            }
         }
         
         // 如果没有保存的语言偏好，根据设备语言设置默认语言

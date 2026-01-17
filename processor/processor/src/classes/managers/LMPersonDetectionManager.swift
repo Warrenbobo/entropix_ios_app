@@ -237,36 +237,17 @@ class LMPersonDetectionManager {
         }
     }
     
-    /// 根据设备方向和摄像头位置获取图像方向
-    /// - Parameter deviceOrientation: 设备方向
+    /// 根据摄像头位置获取图像方向
+    /// UI固定为Portrait，相机预览固定竖向显示，因此使用固定的方向值
+    /// - Parameter deviceOrientation: 设备方向（已废弃，保留参数以保持接口兼容）
     /// - Returns: CGImagePropertyOrientation
     private func getImageOrientation(from deviceOrientation: UIDeviceOrientation) -> CGImagePropertyOrientation {
+        // UI固定Portrait，相机预览固定竖向显示
+        // Vision检测使用固定方向，返回的bbox直接对应屏幕上的竖向画面
         if currentCameraPosition == .front {
-            switch deviceOrientation {
-            case .portrait:
-                return .leftMirrored
-            case .portraitUpsideDown:
-                return .rightMirrored
-            case .landscapeLeft:
-                return .upMirrored
-            case .landscapeRight:
-                return .downMirrored
-            default:
-                return .leftMirrored
-            }
+            return .leftMirrored  // 前置摄像头固定值
         } else {
-            switch deviceOrientation {
-            case .portrait:
-                return .right
-            case .portraitUpsideDown:
-                return .left
-            case .landscapeLeft:
-                return .right
-            case .landscapeRight:
-                return .left
-            default:
-                return .right
-            }
+            return .right         // 后置摄像头固定值
         }
     }
     

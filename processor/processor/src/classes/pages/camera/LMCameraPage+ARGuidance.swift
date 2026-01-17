@@ -72,10 +72,41 @@ extension LMCameraPage {
     
     /// 设置AR引导功能（在viewDidLoad中调用）
     func setupARGuidance() {
-        // 创建AR引导视图
+        // 创建AR引导视图（包含白色框、绿色框）
         if arGuidanceView == nil {
             arGuidanceView = LMARGuidanceView(frame: .zero)
             previewCanvasView.addSubview(arGuidanceView)
+        }
+        
+        // 创建独立的蓝色框（不在arGuidanceView内，不跟随旋转）
+        if livePersonBox == nil {
+            livePersonBox = UIView()
+            livePersonBox.backgroundColor = .clear
+            livePersonBox.isHidden = true
+            // 添加到previewCanvasView，在arGuidanceView之后（层级在上面）
+            previewCanvasView.addSubview(livePersonBox)
+            
+            // 初始化蓝色框的尺寸和图层
+            let liveSize = getLiveBoxDefaultSize()
+            livePersonBox.bounds = CGRect(origin: .zero, size: liveSize)
+            livePersonBox.center = CGPoint(x: -1000, y: -1000)
+            createLiveBoxFrameLayers()
+            
+            LMLogger.log("🔵 [AR Guidance] 独立蓝色框已创建，尺寸: \(liveSize)")
+        }
+        
+        // 创建引导线（在previewCanvasView的layer上，不在arGuidanceView内）
+        if guidanceLine == nil {
+            guidanceLine = CAShapeLayer()
+            guidanceLine.strokeColor = UIColor.systemBlue.cgColor
+            guidanceLine.lineWidth = 1.5
+            guidanceLine.lineDashPattern = [6, 4]
+            guidanceLine.fillColor = UIColor.clear.cgColor
+            guidanceLine.isHidden = true
+            // 添加到previewCanvasView的layer上
+            previewCanvasView.layer.addSublayer(guidanceLine)
+            
+            LMLogger.log("📏 [AR Guidance] 引导线已创建在previewCanvasView.layer上")
         }
         
         // 创建检测管理器（每个管理器使用独立的 PersonDetectionManager 实例）
@@ -101,6 +132,184 @@ extension LMCameraPage {
             name: .devicePhysicalOrientationDidChange,
             object: nil
         )
+    }
+    
+    // MARK: - Live Box (蓝色框) Helper Methods
+    
+    /// 获取蓝色框默认尺寸
+    private func getLiveBoxDefaultSize() -> CGSize {
+        let screenWidth = UIScreen.main.bounds.width
+        let width = screenWidth * 2.0 / 5.0
+        let height = width * 1.1
+        return CGSize(width: width, height: height)
+    }
+    
+    /// 框的最小尺寸（防止圆角重叠）
+    private var liveBoxMinimumSize: CGFloat { 60 }
+    
+    /// 创建蓝色框的图层
+    private func createLiveBoxFrameLayers() {
+        guard let livePersonBox = livePersonBox else { return }
+        
+        // 清除之前的图层
+        livePersonBox.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
+        
+        let bounds = livePersonBox.bounds
+        let color = UIColor.systemBlue
+        let lineWidth: CGFloat = 2.0
+        let crosshairLength: CGFloat = 6
+        let crosshairWidth: CGFloat = 2
+        
+        // 1. 创建并设置四个圆角图层（仅描边，不填充）
+        let cornerLayer = CAShapeLayer()
+        cornerLayer.name = "cornerLayer"
+        cornerLayer.fillColor = UIColor.clear.cgColor
+        cornerLayer.strokeColor = color.withAlphaComponent(0.9).cgColor
+        cornerLayer.lineWidth = lineWidth
+        cornerLayer.path = createCornerPath(in: bounds).cgPath
+        livePersonBox.layer.addSublayer(cornerLayer)
+        
+        // 2. 创建并设置中心准星图层（实心填充）
+        let crosshairLayer = CAShapeLayer()
+        crosshairLayer.name = "crosshairLayer"
+        crosshairLayer.fillColor = color.cgColor
+        crosshairLayer.strokeColor = UIColor.clear.cgColor
+        crosshairLayer.path = createCrosshairPath(in: bounds, length: crosshairLength, width: crosshairWidth).cgPath
+        livePersonBox.layer.addSublayer(crosshairLayer)
+    }
+    
+    /// 创建四个圆角路径
+    private func createCornerPath(in bounds: CGRect) -> UIBezierPath {
+        let path = UIBezierPath()
+        let cornerLength: CGFloat = 24
+        let cornerRadius: CGFloat = 18
+        
+        // 左上角
+        path.move(to: CGPoint(x: 0, y: cornerLength))
+        path.addArc(withCenter: CGPoint(x: cornerRadius, y: cornerRadius),
+                    radius: cornerRadius, startAngle: .pi, endAngle: .pi * 1.5, clockwise: true)
+        path.addLine(to: CGPoint(x: cornerLength, y: 0))
+        
+        // 右上角
+        path.move(to: CGPoint(x: bounds.width - cornerLength, y: 0))
+        path.addArc(withCenter: CGPoint(x: bounds.width - cornerRadius, y: cornerRadius),
+                    radius: cornerRadius, startAngle: .pi * 1.5, endAngle: 0, clockwise: true)
+        path.addLine(to: CGPoint(x: bounds.width, y: cornerLength))
+        
+        // 右下角
+        path.move(to: CGPoint(x: bounds.width, y: bounds.height - cornerLength))
+        path.addArc(withCenter: CGPoint(x: bounds.width - cornerRadius, y: bounds.height - cornerRadius),
+                    radius: cornerRadius, startAngle: 0, endAngle: .pi * 0.5, clockwise: true)
+        path.addLine(to: CGPoint(x: bounds.width - cornerLength, y: bounds.height))
+        
+        // 左下角
+        path.move(to: CGPoint(x: cornerLength, y: bounds.height))
+        path.addArc(withCenter: CGPoint(x: cornerRadius, y: bounds.height - cornerRadius),
+                    radius: cornerRadius, startAngle: .pi * 0.5, endAngle: .pi, clockwise: true)
+        path.addLine(to: CGPoint(x: 0, y: bounds.height - cornerLength))
+        
+        return path
+    }
+    
+    /// 创建十字准星路径
+    private func createCrosshairPath(in bounds: CGRect, length: CGFloat, width: CGFloat) -> UIBezierPath {
+        let path = UIBezierPath()
+        let centerX = bounds.width / 2
+        let centerY = bounds.height / 2
+        
+        // 水平线
+        path.append(UIBezierPath(rect: CGRect(x: centerX - length, y: centerY - width / 2, width: length * 2, height: width)))
+        // 垂直线
+        path.append(UIBezierPath(rect: CGRect(x: centerX - width / 2, y: centerY - length, width: width, height: length * 2)))
+        
+        return path
+    }
+    
+    /// 设置蓝色框的bounds
+    func setLiveBoxBounds(bbox: CGRect) {
+        guard let livePersonBox = livePersonBox else { return }
+        
+        // 应用最小尺寸限制
+        let constrainedWidth = max(bbox.size.width, liveBoxMinimumSize)
+        let constrainedHeight = max(bbox.size.height, liveBoxMinimumSize)
+        let constrainedSize = CGSize(width: constrainedWidth, height: constrainedHeight)
+        
+        // 设置新的 bounds 和 center
+        livePersonBox.bounds = CGRect(origin: .zero, size: constrainedSize)
+        livePersonBox.center = CGPoint(x: bbox.midX, y: bbox.midY)
+        livePersonBox.transform = .identity
+        
+        // 重新创建图层
+        createLiveBoxFrameLayers()
+        
+        // 更新引导线
+        updateGuidanceLineForLiveBox()
+        
+        LMLogger.log("🔵 [Live Box] 设置 bbox - size: \(constrainedSize), center: (\(bbox.midX), \(bbox.midY))")
+    }
+    
+    /// 更新蓝色框的bounds（高频调用）
+    func updateLiveBoxBounds(bbox: CGRect) {
+        guard let livePersonBox = livePersonBox else { return }
+        
+        // 应用最小尺寸限制
+        let constrainedWidth = max(bbox.size.width, liveBoxMinimumSize)
+        let constrainedHeight = max(bbox.size.height, liveBoxMinimumSize)
+        
+        let constrainedFrame = CGRect(
+            x: bbox.midX - constrainedWidth / 2,
+            y: bbox.midY - constrainedHeight / 2,
+            width: constrainedWidth,
+            height: constrainedHeight
+        )
+        
+        // 直接设置 frame（蓝色框不旋转，所以不需要处理 transform）
+        livePersonBox.frame = constrainedFrame
+        
+        // 更新引导线
+        updateGuidanceLineForLiveBox()
+    }
+    
+    /// 显示蓝色框
+    func showLiveBox() {
+        livePersonBox?.isHidden = false
+    }
+    
+    /// 隐藏蓝色框和引导线
+    func hideLiveBox() {
+        livePersonBox?.isHidden = true
+        guidanceLine?.isHidden = true
+    }
+    
+    /// 更新引导线（连接白色框和蓝色框的中心点）
+    /// 引导线在previewCanvasView.layer上绘制，因此两个框的坐标都需要转换到previewCanvasView坐标系
+    private func updateGuidanceLineForLiveBox() {
+        guard let livePersonBox = livePersonBox,
+              let arGuidanceView = arGuidanceView,
+              let guidanceLine = guidanceLine else { return }
+        
+        // 蓝色框的中心点（已经在previewCanvasView坐标系中）
+        let liveBoxFrame = livePersonBox.frame
+        let liveBoxCenterInCanvas = CGPoint(
+            x: liveBoxFrame.midX,
+            y: liveBoxFrame.midY
+        )
+        
+        // 白色框的中心点（在arGuidanceView坐标系中）
+        let whiteBoxCenterInARView = arGuidanceView.getReferenceBoxCenter()
+        
+        // 将白色框中心点从arGuidanceView坐标系转换到previewCanvasView坐标系
+        let whiteBoxCenterInCanvas = arGuidanceView.convert(whiteBoxCenterInARView, to: previewCanvasView)
+        
+        // 现在两个点都在previewCanvasView坐标系中了，直接绘制引导线
+        let path = UIBezierPath()
+        path.move(to: whiteBoxCenterInCanvas)
+        path.addLine(to: liveBoxCenterInCanvas)
+        guidanceLine.path = path.cgPath
+        guidanceLine.isHidden = livePersonBox.isHidden || arGuidanceView.isReferenceBoxHidden()
+        
+        LMLogger.log("🔵 [Guidance Line] 白色框中心(Canvas): \(whiteBoxCenterInCanvas)")
+        LMLogger.log("🔵 [Guidance Line] 蓝色框中心(Canvas): \(liveBoxCenterInCanvas)")
     }
     
     // MARK: - Configuration
@@ -159,7 +368,7 @@ extension LMCameraPage {
         arGuidanceView.setReferenceBoxBounds(bbox: canvasBbox)
         
         // 4. 如果白色框是显示状态，确保它仍然显示
-        if !arGuidanceView.livePersonBox.isHidden || isCurrentlyAligned {
+        if let livePersonBox = livePersonBox, !livePersonBox.isHidden || isCurrentlyAligned {
             // 如果是对齐状态，更新绿色框位置
             if isCurrentlyAligned {
                 arGuidanceView.showSuccessBox()
@@ -281,6 +490,7 @@ extension LMCameraPage {
         arGuidanceState = .disabled
         stopRealtimePersonDetection()
         arGuidanceView.hideOrShowAllGuidance(true)
+        hideLiveBox() // 隐藏独立的蓝色框
         isARGuidanceActive = false
         isCurrentlyAligned = false // 重置对齐状态
         lastLiveBoxBounds = nil // 清除保存的蓝框位置
@@ -453,7 +663,7 @@ extension LMCameraPage {
     /// 停止实时人物检测
     func stopRealtimePersonDetection() {
         cameraStreamDetectionManager.stopRealtimeDetection()
-        arGuidanceView.hideLiveBox()
+        hideLiveBox() // 使用新的方法隐藏独立的蓝色框
         LMLogger.log("⏹️ 停止实时人物检测")
     }
     
@@ -472,8 +682,8 @@ extension LMCameraPage {
         
         guard let bbox = bbox else {
             // 没有检测到人物，隐藏蓝色框（但在初始延迟期间本来就不显示）
-            if !arGuidanceView.livePersonBox.isHidden && !isInInitialDelay {
-                arGuidanceView.hideLiveBox()
+            if let livePersonBox = livePersonBox, !livePersonBox.isHidden && !isInInitialDelay {
+                hideLiveBox()
                 LMLogger.log("🔵 [Live Detection] No person detected, hiding blue box")
             }
             // 如果当前是对齐状态但检测不到人物，恢复到非对齐状态
@@ -509,17 +719,36 @@ extension LMCameraPage {
         // 检查对齐状态
         if let referenceBbox = currentReferenceBbox,
            let referenceImage = currentReferenceImage {
-            let referenceCanvasBbox = convertBboxToCanvas(bbox: referenceBbox, imageSize: referenceImage.size)
+            // 获取白色框在 arGuidanceView 坐标系中的 bbox
+            let referenceCanvasBboxInARView = convertBboxToCanvas(bbox: referenceBbox, imageSize: referenceImage.size)
+            
+            // 将白色框的中心点从 arGuidanceView 坐标系转换到 previewCanvasView 坐标系
+            let whiteBoxCenterInARView = CGPoint(
+                x: referenceCanvasBboxInARView.midX,
+                y: referenceCanvasBboxInARView.midY
+            )
+            let whiteBoxCenterInCanvas = arGuidanceView.convert(whiteBoxCenterInARView, to: previewCanvasView)
+            
+            // 蓝色框的中心点（已经在 previewCanvasView 坐标系中）
+            let blueBoxCenterInCanvas = CGPoint(
+                x: canvasBbox.midX,
+                y: canvasBbox.midY
+            )
             
             // 使用2%容差判断对齐（基于取景框宽高）
             let canvasSize = getMaxCanvasSize()
             let horizontalTolerance = canvasSize.width * 0.02
             let verticalTolerance = canvasSize.height * 0.02
             
-            let horizontalDistance = abs(referenceCanvasBbox.midX - canvasBbox.midX)
-            let verticalDistance = abs(referenceCanvasBbox.midY - canvasBbox.midY)
+            let horizontalDistance = abs(whiteBoxCenterInCanvas.x - blueBoxCenterInCanvas.x)
+            let verticalDistance = abs(whiteBoxCenterInCanvas.y - blueBoxCenterInCanvas.y)
             
             let isAligned = horizontalDistance <= horizontalTolerance && verticalDistance <= verticalTolerance
+            
+            LMLogger.log("🎯 [Alignment Check] 白色框中心(Canvas): \(whiteBoxCenterInCanvas), 蓝色框中心(Canvas): \(blueBoxCenterInCanvas)")
+            LMLogger.log("🎯 [Alignment Check] 水平距离: \(String(format: "%.1f", horizontalDistance))px (容差: \(String(format: "%.1f", horizontalTolerance))px)")
+            LMLogger.log("🎯 [Alignment Check] 垂直距离: \(String(format: "%.1f", verticalDistance))px (容差: \(String(format: "%.1f", verticalTolerance))px)")
+            LMLogger.log("🎯 [Alignment Check] 对齐状态: \(isAligned)")
             
             if isAligned {
                 // 对齐状态
@@ -527,6 +756,8 @@ extension LMCameraPage {
                     // 首次进入对齐状态，显示绿色框
                     showAlignmentSuccessWithGreenFrame()
                     isCurrentlyAligned = true
+                    // 隐藏蓝色框
+                    hideLiveBox()
                     LMLogger.log("✅ 对齐成功！水平距离: \(String(format: "%.1f", horizontalDistance))px, 垂直距离: \(String(format: "%.1f", verticalDistance))px")
                 }
                 // 对齐状态下，继续更新蓝框位置（但蓝框是隐藏的，只是保持计算）
@@ -542,12 +773,12 @@ extension LMCameraPage {
                 
                 // 非对齐状态下，正常显示和更新蓝色框（但在初始延迟期间不显示）
                 if !isInInitialDelay {
-                    if arGuidanceView.livePersonBox.isHidden {
-                        arGuidanceView.setLiveBoxBounds(bbox: adjustedBbox)
-                        arGuidanceView.showLiveBox()
+                    if let livePersonBox = livePersonBox, livePersonBox.isHidden {
+                        setLiveBoxBounds(bbox: adjustedBbox)
+                        showLiveBox()
                         LMLogger.log("🔵 [Live Detection] Blue box shown for first time with bounds: \(adjustedBbox)")
                     } else {
-                        arGuidanceView.updateLiveBoxBounds(bbox: adjustedBbox)
+                        updateLiveBoxBounds(bbox: adjustedBbox)
                     }
                 } else {
                     // 初始延迟期间，只保存位置，不显示
@@ -557,12 +788,12 @@ extension LMCameraPage {
         } else {
             // 没有参考框，正常显示蓝色框（但在初始延迟期间不显示）
             if !isInInitialDelay {
-                if arGuidanceView.livePersonBox.isHidden {
-                    arGuidanceView.setLiveBoxBounds(bbox: adjustedBbox)
-                    arGuidanceView.showLiveBox()
+                if let livePersonBox = livePersonBox, livePersonBox.isHidden {
+                    setLiveBoxBounds(bbox: adjustedBbox)
+                    showLiveBox()
                     LMLogger.log("🔵 [Live Detection] Blue box shown for first time with bounds: \(adjustedBbox)")
                 } else {
-                    arGuidanceView.updateLiveBoxBounds(bbox: adjustedBbox)
+                    updateLiveBoxBounds(bbox: adjustedBbox)
                 }
             } else {
                 // 初始延迟期间，只保存位置，不显示
@@ -583,8 +814,8 @@ extension LMCameraPage {
         
         // 如果有保存的蓝框位置，恢复显示
         if let lastBounds = lastLiveBoxBounds {
-            arGuidanceView.setLiveBoxBounds(bbox: lastBounds)
-            arGuidanceView.showLiveBox()
+            setLiveBoxBounds(bbox: lastBounds)
+            showLiveBox()
         }
         
         LMLogger.log("🔄 恢复到非对齐状态，显示蓝白框+引导线")
@@ -883,6 +1114,7 @@ extension LMCameraPage {
         }
         // 隐藏所有UI元素
         arGuidanceView.hideOrShowAllGuidance(true)
+        hideLiveBox() // 隐藏独立的蓝色框
         stopRealtimePersonDetection()
        
         // - reset()（会清除回调）
@@ -914,6 +1146,7 @@ extension LMCameraPage {
         arGuidanceStartTime = nil // 清除开始时间
         
         arGuidanceView.hideOrShowAllGuidance(true)
+        hideLiveBox() // 隐藏独立的蓝色框
         
         NotificationCenter.default.removeObserver(
             self,

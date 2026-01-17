@@ -10,7 +10,8 @@ import Foundation
 // MARK: - Language Model
 struct LMLaunageModel: Codable {
     var english: LMAppLaunageConfig?
-    var chinese: LMAppLaunageConfig?
+    var simplifiedChinese: LMAppLaunageConfig?
+    var traditionalChinese: LMAppLaunageConfig?
 }
 
 // MARK: - App Language Config
@@ -345,6 +346,12 @@ struct LMAuthTextConfig: Codable {
     var termsAgreementText: String = "By agreeing to the terms and conditions, you are entering into a legally binding contract with the service provider."
 }
 
+// MARK: - FAQ Item
+struct LMFAQItem: Codable {
+    var question: String
+    var answer: String
+}
+
 // MARK: - Settings Text Config
 struct LMSettingsTextConfig: Codable {
     // Settings Page
@@ -352,6 +359,9 @@ struct LMSettingsTextConfig: Codable {
     var account: String = "Account"
     var general: String = "General"
     var about: String = "About"
+    
+    // FAQ Items
+    var faqs: [LMFAQItem] = []
     
     // Account Section
     var accountProfile: String = "Account Profile"

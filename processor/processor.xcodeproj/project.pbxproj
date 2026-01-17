@@ -80,8 +80,6 @@
 		EA8640712ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86406D2ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift */; };
 		EA8640722ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */; };
 		EAA37A7B2ED090230008081D /* LMAlertDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA37A7A2ED090230008081D /* LMAlertDialog.swift */; };
-		EAA3E9C52F1273D60069FC46 /* LMARGuidanceTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA3E9C22F1273D60069FC46 /* LMARGuidanceTestHelper.swift */; };
-		EAA3E9C62F1273D60069FC46 /* LMARGuidanceTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA3E9C32F1273D60069FC46 /* LMARGuidanceTestViewController.swift */; };
 		EAAF53ED2F15449500E961DC /* LMNotificationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53EC2F15449500E961DC /* LMNotificationModel.swift */; };
 		EAAF53EF2F1544AF00E961DC /* LMNotificationDetailPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53EE2F1544AF00E961DC /* LMNotificationDetailPage.swift */; };
 		EAAF53F12F1544DD00E961DC /* LMNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53F02F1544DD00E961DC /* LMNotificationManager.swift */; };
@@ -114,6 +112,8 @@
 		EACB30EB2EF63E3500EC643C /* LMFreeTrialResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30E82EF63E3500EC643C /* LMFreeTrialResponse.swift */; };
 		EACB30EC2EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30E72EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift */; };
 		EACB30F02EF6B53E00EC643C /* LMProfileItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30EF2EF6B53E00EC643C /* LMProfileItemView.swift */; };
+		EAE3BAA32F1B8B410067715C /* LMARGuidanceTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAE3BAA12F1B8B410067715C /* LMARGuidanceTestViewController.swift */; };
+		EAE3BAA42F1B8B410067715C /* LMARGuidanceTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAE3BAA02F1B8B410067715C /* LMARGuidanceTestHelper.swift */; };
 		EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC942E7E548A00586EC7 /* LMSignInPage.swift */; };
 		EAFBAC992E7E5A0800586EC7 /* LMMineUserInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC982E7E5A0800586EC7 /* LMMineUserInfoView.swift */; };
 		EAFBAC9F2E7E65B000586EC7 /* LMProcessorTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC9E2E7E65B000586EC7 /* LMProcessorTopBar.swift */; };
@@ -225,8 +225,6 @@
 		EA86406E2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SavedIdeaEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
 		EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SavedIdeaEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		EAA37A7A2ED090230008081D /* LMAlertDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAlertDialog.swift; sourceTree = "<group>"; };
-		EAA3E9C22F1273D60069FC46 /* LMARGuidanceTestHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceTestHelper.swift; sourceTree = "<group>"; };
-		EAA3E9C32F1273D60069FC46 /* LMARGuidanceTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceTestViewController.swift; sourceTree = "<group>"; };
 		EAAF53EC2F15449500E961DC /* LMNotificationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationModel.swift; sourceTree = "<group>"; };
 		EAAF53EE2F1544AF00E961DC /* LMNotificationDetailPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationDetailPage.swift; sourceTree = "<group>"; };
 		EAAF53F02F1544DD00E961DC /* LMNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationManager.swift; sourceTree = "<group>"; };
@@ -260,6 +258,8 @@
 		EACB30E72EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionTaskDetailResponse.swift; sourceTree = "<group>"; };
 		EACB30E82EF63E3500EC643C /* LMFreeTrialResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFreeTrialResponse.swift; sourceTree = "<group>"; };
 		EACB30EF2EF6B53E00EC643C /* LMProfileItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileItemView.swift; sourceTree = "<group>"; };
+		EAE3BAA02F1B8B410067715C /* LMARGuidanceTestHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceTestHelper.swift; sourceTree = "<group>"; };
+		EAE3BAA12F1B8B410067715C /* LMARGuidanceTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceTestViewController.swift; sourceTree = "<group>"; };
 		EAFBAC922E7E540D00586EC7 /* processor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = processor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EAFBAC942E7E548A00586EC7 /* LMSignInPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSignInPage.swift; sourceTree = "<group>"; };
 		EAFBAC982E7E5A0800586EC7 /* LMMineUserInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMMineUserInfoView.swift; sourceTree = "<group>"; };
@@ -361,18 +361,10 @@
 			path = api;
 			sourceTree = "<group>";
 		};
-		EAA3E9C42F1273D60069FC46 /* tests */ = {
-			isa = PBXGroup;
-			children = (
-				EAA3E9C22F1273D60069FC46 /* LMARGuidanceTestHelper.swift */,
-				EAA3E9C32F1273D60069FC46 /* LMARGuidanceTestViewController.swift */,
-			);
-			path = tests;
-			sourceTree = "<group>";
-		};
 		EACA1BE82E7E408900C80883 = {
 			isa = PBXGroup;
 			children = (
+				EAE3BAA22F1B8B410067715C /* tests */,
 				EACA1CEC2E7E49B600C80883 /* processor */,
 				EACA1BF22E7E408900C80883 /* Products */,
 				B6D676A52273F4EC9040FD29 /* Pods */,
@@ -491,7 +483,6 @@
 		EACA1CDB2E7E49B600C80883 /* classes */ = {
 			isa = PBXGroup;
 			children = (
-				EAA3E9C42F1273D60069FC46 /* tests */,
 				EACA1CCF2E7E49B600C80883 /* managers */,
 				EACA1CD12E7E49B600C80883 /* models */,
 				EACA1CD32E7E49B600C80883 /* pages */,
@@ -594,6 +585,15 @@
 				EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */,
 			);
 			path = mine;
+			sourceTree = "<group>";
+		};
+		EAE3BAA22F1B8B410067715C /* tests */ = {
+			isa = PBXGroup;
+			children = (
+				EAE3BAA02F1B8B410067715C /* LMARGuidanceTestHelper.swift */,
+				EAE3BAA12F1B8B410067715C /* LMARGuidanceTestViewController.swift */,
+			);
+			path = tests;
 			sourceTree = "<group>";
 		};
 		EAFBAC932E7E546D00586EC7 /* login */ = {
@@ -858,8 +858,6 @@
 				EA6019342EC82D130067F2F7 /* LMInspireMeButtonView.swift in Sources */,
 				EA56DDE02EC091B1000AB522 /* LMCompositionTaskResponse.swift in Sources */,
 				EAFBACB52E7E7C7100586EC7 /* LMValidatedInputField.swift in Sources */,
-				EAA3E9C52F1273D60069FC46 /* LMARGuidanceTestHelper.swift in Sources */,
-				EAA3E9C62F1273D60069FC46 /* LMARGuidanceTestViewController.swift in Sources */,
 				EAFBACB72E7E7D1F00586EC7 /* LMCameraPage.swift in Sources */,
 				EA56DD9A2EC076B6000AB522 /* LMSavedIdeaDetailPage.swift in Sources */,
 				EA56DD9B2EC076B6000AB522 /* LMGalleryDetailPage.swift in Sources */,
@@ -902,6 +900,8 @@
 				EAFBACC62E8F69D100586EC7 /* LMUserProfileModel.swift in Sources */,
 				EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */,
 				EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */,
+				EAE3BAA32F1B8B410067715C /* LMARGuidanceTestViewController.swift in Sources */,
+				EAE3BAA42F1B8B410067715C /* LMARGuidanceTestHelper.swift in Sources */,
 				EAAF53ED2F15449500E961DC /* LMNotificationModel.swift in Sources */,
 				EA53553C2EE57BF100610950 /* LMAuthGuard.swift in Sources */,
 				EA86406A2ED2D24800A0CD43 /* LMPhotoStorageManager.swift in Sources */,

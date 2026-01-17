@@ -30,6 +30,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ApiInspectorDelegate {
                                                              icon: "💰"),]
         ApiInspector.shared.delegate = self
         ApiInspector.shared.start(with: config)
+        
         // Initialize StoreKit 2 manager
 //        Task {
 //            await LMStoreManager.shared.initialize()

@@ -8,13 +8,6 @@
 import UIKit
 import SnapKit
 
-// MARK: - FAQ Data Model
-struct FAQItem {
-    let question: String
-    let answer: String
-    let id: String
-}
-
 class LMFAQPage: LMPageWrapper {
     
     // MARK: - UI Components
@@ -27,62 +20,63 @@ class LMFAQPage: LMPageWrapper {
     private let contactSupportView = UIView()
     
     // MARK: - Properties
-    private let faqItems: [FAQItem] = [
-        FAQItem(
-            question: "1. How do I get more Inspire Points?",
-            answer: "You can earn Inspire Points by watching ads, upgrading to our Plus Plan for unlimited points, or completing special challenges. Free users get 3 points upon signup and can earn more through ads.",
-            id: "inspire_points"
-        ),
-        FAQItem(
-            question: "2. What is the difference between Free and Plus plans?",
-            answer: "Free plan includes basic camera features and limited Inspire Points. Plus plan offers unlimited Inspire Points, advanced AI features, priority support, and access to premium compositions.",
-            id: "plans_difference"
-        ),
-        FAQItem(
-            question: "3. How does the AI Guidance feature work?",
-            answer: "AI Guidance helps you compose better photos by analyzing your camera view and providing real-time suggestions. It compares your current view with reference images and guides you to achieve similar compositions.",
-            id: "ai_guidance"
-        ),
-        FAQItem(
-            question: "4. Can I save my favorite compositions?",
-            answer: "Yes! You can save any composition you like by tapping the heart icon. Saved compositions will appear in your \"Saved Ideas\" tab in the Profile section for easy access later.",
-            id: "save_compositions"
-        ),
-        FAQItem(
-            question: "5. How do I change my subscription plan?",
-            answer: "Go to Profile > More Options > Account Profile, then tap on your subscription type. You can upgrade to Plus plan or manage your current subscription from there.",
-            id: "change_subscription"
-        ),
-        FAQItem(
-            question: "6. Why can't I access certain features?",
-            answer: "Some advanced features require Inspire Points or a Plus subscription. Check your current plan and Inspire Points balance in your Profile. You can earn more points by watching ads or upgrading your plan.",
-            id: "feature_access"
-        ),
-        FAQItem(
-            question: "7. How do I delete my photos from the gallery?",
-            answer: "In your Profile, go to the Gallery tab, tap on any photo, then tap the three dots menu and select \"Delete\". You'll be asked to confirm the deletion before it's permanently removed.",
-            id: "delete_photos"
-        ),
-        FAQItem(
-            question: "8. Is my data secure and private?",
-            answer: "Yes, we take privacy seriously. Your photos are stored securely and we never share your personal data. You can read our full Privacy Policy in the About section for more details.",
-            id: "data_security"
-        )
-    ]
+    // FAQ items are now loaded from language configuration
+    private var faqItems: [LMFAQItem] {
+        return LMText.settings.faqs
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         barTitle = LMText.settings.frequentQuestions
+        
+        // Debug: Check FAQ items count
+        LMLogger.log("📋 FAQ Page - Loading FAQs")
+        LMLogger.log("📋 FAQ items count: \(faqItems.count)")
+        for (index, item) in faqItems.enumerated() {
+            LMLogger.log("📋 FAQ \(index + 1): \(item.question)")
+        }
+        
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
         setupFAQItems()
         setupContactSupportSection()
+        
+        // Register for language change notifications
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleLanguageChange),
+            name: LMLaunageManager.languageDidChangeNotification,
+            object: nil
+        )
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func handleLanguageChange() {
+        // Update page title
+        barTitle = LMText.settings.frequentQuestions
+        
+        // Update title label
+        titleLabel.text = LMText.settings.faq
+        
+        // Reload FAQ items
+        reloadFAQItems()
+    }
+    
+    private func reloadFAQItems() {
+        // Remove all existing FAQ views
+        faqStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        // Re-add FAQ items with new language
+        setupFAQItems()
     }
 }
 
@@ -183,7 +177,7 @@ extension LMFAQPage {
         }
     }
     
-    private func createFAQItemView(faqItem: FAQItem, isLast: Bool) -> UIView {
+    private func createFAQItemView(faqItem: LMFAQItem, isLast: Bool) -> UIView {
         let containerView = UIView()
         containerView.backgroundColor = UIColor.clear
         
@@ -305,20 +299,13 @@ extension LMFAQPage {
 // MARK: - Public Methods
 extension LMFAQPage {
     
-    func scrollToFAQ(withId id: String) {
-        // 滚动到特定的FAQ项目
-        if let index = faqItems.firstIndex(where: { $0.id == id }) {
-            let faqView = faqStackView.arrangedSubviews[index]
-            scrollView.scrollRectToVisible(faqView.frame, animated: true)
-        }
-    }
-    
     func addCustomFAQ(question: String, answer: String) {
-        // 动态添加FAQ项目的方法
-        let customFAQ = FAQItem(question: question, answer: answer, id: "custom_\(Date().timeIntervalSince1970)")
+        // Note: This method creates a temporary FAQ item for display only
+        // It won't be persisted to the language configuration
+        let customFAQ = LMFAQItem(question: question, answer: answer)
         let faqView = createFAQItemView(faqItem: customFAQ, isLast: true)
         
-        // 更新最后一个项目，添加分隔线
+        // Update the last item to add a separator line
         if let lastView = faqStackView.arrangedSubviews.last {
             let separatorView = UIView()
             separatorView.backgroundColor = UIColor.systemGray6

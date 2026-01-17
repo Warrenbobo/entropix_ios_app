@@ -54,6 +54,8 @@ class LMCameraPage: LMPageWrapper {
     
     // MARK: - AR Guidance (New Architecture)
     var arGuidanceView: LMARGuidanceView!
+    var livePersonBox: UIView! // 蓝色校准框（独立于arGuidanceView，不跟随旋转）
+    var guidanceLine: CAShapeLayer! // 引导线（在previewCanvasView.layer上，连接白色框和蓝色框）
     var referenceImageDetectionManager: LMReferenceImageDetectionManager!
     var cameraStreamDetectionManager: LMCameraStreamDetectionManager!
     var arGuidanceState: LMARGuidanceState = .disabled {
@@ -199,7 +201,8 @@ class LMCameraPage: LMPageWrapper {
     /// 层级顺序（从下到上）：
     /// 1. previewCanvasView（相机画面）
     ///    - cameraPreviewView（对焦层，在previewCanvasView内部）
-    ///    - arGuidanceView（AR校准框，在previewCanvasView内部）
+    ///    - arGuidanceView（AR白色/绿色校准框，在previewCanvasView内部）
+    ///    - livePersonBox（AR蓝色校准框，独立于arGuidanceView，在previewCanvasView内部）
     /// 2. referenceImageContainerView（参考图，在主视图）
     /// 3. cameraControlsView（右侧按钮，始终最顶层）
     /// 4. guideView（引导视图，最顶层）
@@ -210,6 +213,11 @@ class LMCameraPage: LMPageWrapper {
         if let arGuidanceView = arGuidanceView {
             // arGuidanceView 在 previewCanvasView 内部，确保在 cameraPreviewView 之上
             previewCanvasView.bringSubviewToFront(arGuidanceView)
+        }
+        
+        // 蓝色框在 arGuidanceView 之上（因为蓝色框不跟随旋转，需要独立显示）
+        if let livePersonBox = livePersonBox {
+            previewCanvasView.bringSubviewToFront(livePersonBox)
         }
         
         // 3. 主视图层级
@@ -229,7 +237,7 @@ class LMCameraPage: LMPageWrapper {
         // 引导视图（最顶层）
         bringGuideViewToFront()
         
-        LMLogger.log("✅ 视图层级已调整：Preview(Camera + AR Guidance) → Reference Image → Controls → Guide")
+        LMLogger.log("✅ 视图层级已调整：Preview(Camera + AR Guidance + LiveBox) → Reference Image → Controls → Guide")
     }
     
     private func setupTopStatusBarComponents() {

@@ -66,6 +66,7 @@ class LMSuggestionCardView: UIView {
     weak var delegate: LMSuggestionCardViewDelegate?
     private var suggestion: LMCompositionSuggestion?
     private var isFavorite: Bool = false
+    private var currentImageUrl: String? = nil // ✅ Track current image URL to prevent redundant loads
     
     // MARK: - Initialization
     override init(frame: CGRect) {
@@ -195,9 +196,25 @@ class LMSuggestionCardView: UIView {
             showLoadingState()
         } else {
             hideLoadingState()
+            
+            // ✅ CRITICAL FIX: Only reload image if URL has actually changed
+            // This prevents unnecessary image reloading when returning from reference image
             if let imageUrl = suggestion.imageUrl {
-                loadImageFromURL(imageUrl)
+                if currentImageUrl != imageUrl {
+                    // URL changed - load new image
+                    loadImageFromURL(imageUrl)
+                    currentImageUrl = imageUrl
+                    LMLogger.log("🖼️ Loading new image: \(imageUrl)")
+                } else {
+                    // URL unchanged - skip reload, image is already displayed
+                    LMLogger.log("⏭️ Skipping image reload - URL unchanged: \(imageUrl)")
+                }
+            } else {
+                // No image URL - clear current URL and show placeholder
+                currentImageUrl = nil
+                placeholderImageView.isHidden = false
             }
+            
             // 设置收藏状态
             heartButton.isSelected = isFavorite
             heartButton.tintColor = isFavorite ? UIColor.systemRed : UIColor.white

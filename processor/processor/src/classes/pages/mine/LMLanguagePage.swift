@@ -22,7 +22,7 @@ class LMLanguagePage: LMPageWrapper {
     private let dropdownArrowImageView = UIImageView()
     
     // MARK: - Properties
-    private let availableLanguages: [LMLanguageType] = [.english, .chinese]
+    private let availableLanguages: [LMLanguageType] = [.english, .simplifiedChinese, .traditionalChinese]
     private var currentLanguage: LMLanguageType {
         return LMLaunageManager.shared.currentLanguage
     }

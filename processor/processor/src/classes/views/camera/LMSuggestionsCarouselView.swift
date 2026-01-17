@@ -30,6 +30,7 @@ class LMSuggestionsCarouselView: UIView {
     private var favoriteSuggestionIds: Set<String> = [] // 收藏的构图方案ID集合
     private var selectedIndex: Int = -1 // -1 表示未选中任何卡片
     private var isUpdatingSuggestions: Bool = false // 防止并发更新
+    private var lastDataHash: Int = 0 // 上次数据的哈希值，用于检测数据是否真正变化
     
     // MARK: - Constants
     // 基准尺寸（基于 iPhone 15 Pro 393pt 宽度设计，放大 1.1 倍）
@@ -94,6 +95,8 @@ class LMSuggestionsCarouselView: UIView {
         scrollView.backgroundColor = .clear
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.showsVerticalScrollIndicator = false
+        // ✅ CRITICAL FIX: Set clipsToBounds = false to allow enlarged cards to extend beyond bounds
+        // This prevents the top of selected cards from being clipped when they scale up and move up
         scrollView.clipsToBounds = false
         scrollView.decelerationRate = .fast
         
@@ -126,6 +129,27 @@ class LMSuggestionsCarouselView: UIView {
         
         isUpdatingSuggestions = true
         
+        // ✅ Use defer to ensure flag is reset even if early return occurs
+        defer {
+            isUpdatingSuggestions = false
+            LMLogger.log("🔓 Update lock released")
+        }
+        
+        // ✅ CRITICAL: Check if this is initial load (first time creating cards)
+        let isInitialLoad = cardViews.isEmpty
+        
+        // ✅ Calculate data hash to detect actual changes
+        let newDataHash = calculateDataHash(suggestions)
+        let dataActuallyChanged = (newDataHash != lastDataHash)
+        
+        if !dataActuallyChanged && !isInitialLoad {
+            LMLogger.log("⏭️ Data unchanged (hash: \(newDataHash)), skipping update to prevent scroll reset")
+            return
+        }
+        
+        lastDataHash = newDataHash
+        LMLogger.log("📊 Data changed (new hash: \(newDataHash)), proceeding with update")
+        
         // 保存当前选中的索引
         let previousSelectedIndex = selectedIndex
         
@@ -135,38 +159,73 @@ class LMSuggestionsCarouselView: UIView {
         // 对于小数据量，同步操作更可靠
         loadSavedIdeaIds()
         
-        // 重置更新标志
-        isUpdatingSuggestions = false
-        
-        // 智能更新：复用现有卡片，只更新数据
-        smartUpdateCardViews()
-        LMLogger.log("✅ Smart updated \(cardViews.count) card views")
+        // ✅ CRITICAL: Only use smartUpdateCardViews for non-initial updates
+        // Initial load must create all cards from scratch
+        if isInitialLoad {
+            // 首次加载：创建所有卡片
+            createCardViews()
+            LMLogger.log("✅ Initial load: Created \(cardViews.count) card views")
+        } else {
+            // 后续更新：智能复用现有卡片
+            smartUpdateCardViews()
+            LMLogger.log("✅ Smart updated \(cardViews.count) card views")
+        }
         
         // 布局 card views
         layoutCardViews()
         LMLogger.log("✅ Layout completed for \(cardViews.count) cards")
         
-        // 恢复之前的选中状态（同步执行）
-        if previousSelectedIndex >= 0 && previousSelectedIndex < suggestions.count {
+        // ✅ Handle selection based on scenario
+        if isInitialLoad {
+            // ✅ 首次加载：默认选中第一个卡片（需求要求）
+            if suggestions.count > 0 {
+                selectSuggestionSync(at: 0, animated: false)
+                
+                // 触发 delegate 回调
+                let firstSuggestion = suggestions[0]
+                delegate?.suggestionsCarouselView(
+                    self,
+                    didSelectSuggestion: firstSuggestion,
+                    at: 0
+                )
+                
+                LMLogger.log("✅ Initial load: Auto-selected first suggestion with enlarged style")
+            }
+        } else if previousSelectedIndex >= 0 && previousSelectedIndex < suggestions.count {
+            // ✅ 恢复之前的选中状态（例如从 Reference Image 返回）
             selectSuggestionSync(at: previousSelectedIndex, animated: false)
             LMLogger.log("✅ Restored selection at index: \(previousSelectedIndex)")
-        } else if suggestions.count > 0 && selectedIndex < 0 {
-            // 第一次刷新数据时，默认选中第一个项目
-            selectSuggestionSync(at: 0, animated: false)
-            
-            // 触发 delegate 回调
-            let firstSuggestion = suggestions[0]
-            delegate?.suggestionsCarouselView(
-                self,
-                didSelectSuggestion: firstSuggestion,
-                at: 0
-            )
-            
-            LMLogger.log("✅ Auto-selected first suggestion")
         }
     }
     
-    /// 加载已保存的 Saved Ideas ID 集合（同步版本）
+    /// 计算数据哈希值，用于检测数据是否真正变化
+    /// 只比较关键字段：id, ready, imageUrl
+    private func calculateDataHash(_ suggestions: [LMCompositionSuggestion]) -> Int {
+        var hasher = Hasher()
+        for suggestion in suggestions {
+            hasher.combine(suggestion.id)
+            hasher.combine(suggestion.ready)
+            hasher.combine(suggestion.imageUrl)
+        }
+        return hasher.finalize()
+    }
+    
+    /// 加载已保存的 Saved Ideas ID 集合（异步版本，避免阻塞主线程）
+    private func loadSavedIdeaIdsAsync(completion: @escaping () -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let savedIdeas = LMPhotoStorageManager.shared.fetchAllSavedIdeas()
+            let ids = Set(savedIdeas.compactMap { $0.id })
+            
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.favoriteSuggestionIds = ids
+                LMLogger.log("💡 Loaded \(ids.count) saved idea IDs (async)")
+                completion()
+            }
+        }
+    }
+    
+    /// 加载已保存的 Saved Ideas ID 集合（同步版本，仅用于非关键路径）
     private func loadSavedIdeaIds() {
         let savedIdeas = LMPhotoStorageManager.shared.fetchAllSavedIdeas()
         favoriteSuggestionIds = Set(savedIdeas.compactMap { $0.id })
@@ -174,53 +233,68 @@ class LMSuggestionsCarouselView: UIView {
     }
     
     /// 智能更新卡片视图：复用现有卡片，只更新数据，避免重复创建
+    /// ⚠️ CRITICAL: 此方法不会重新添加手势，因为 CardView 只创建一次
     private func smartUpdateCardViews() {
         let newCount = suggestions.count
         let existingCount = cardViews.count
         
         // 情况1：需要添加新卡片
         if newCount > existingCount {
-            // 更新现有卡片的数据
+            // ✅ FIX: 同步更新现有卡片的数据，避免异步导致的 tag 不一致
             for (index, cardView) in cardViews.enumerated() {
                 let suggestion = suggestions[index]
                 let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
-                cardView.configure(with: suggestion, isFavorite: isFavorite)
+                
+                // 同步更新 tag，避免点击时找不到正确的索引
                 cardView.tag = index
+                // 异步加载图片，避免阻塞主线程
+                cardView.configure(with: suggestion, isFavorite: isFavorite)
             }
             
-            // 创建新卡片
+            // 创建新卡片（只在数量增加时才创建）
             for index in existingCount..<newCount {
                 let suggestion = suggestions[index]
                 let cardView = createCardView(for: suggestion, at: index)
                 cardViews.append(cardView)
                 contentView.addSubview(cardView)
             }
+            
+            LMLogger.log("➕ Added \(newCount - existingCount) new card views")
         }
         // 情况2：需要移除多余卡片
         else if newCount < existingCount {
-            // 移除多余的卡片
+            // ✅ CRITICAL: Explicitly remove gesture recognizers before removing card views
             for index in (newCount..<existingCount).reversed() {
                 let cardView = cardViews[index]
+                // Remove all gesture recognizers to prevent memory leaks
+                cardView.gestureRecognizers?.forEach { cardView.removeGestureRecognizer($0) }
                 cardView.removeFromSuperview()
                 cardViews.remove(at: index)
             }
             
-            // 更新剩余卡片的数据
+            // ✅ FIX: 同步更新剩余卡片的数据
             for (index, cardView) in cardViews.enumerated() {
                 let suggestion = suggestions[index]
                 let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
-                cardView.configure(with: suggestion, isFavorite: isFavorite)
+                
                 cardView.tag = index
+                cardView.configure(with: suggestion, isFavorite: isFavorite)
             }
+            
+            LMLogger.log("➖ Removed \(existingCount - newCount) card views")
         }
         // 情况3：数量相同，只更新数据
         else {
+            // ✅ FIX: 同步更新 tag，异步加载图片
             for (index, cardView) in cardViews.enumerated() {
                 let suggestion = suggestions[index]
                 let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
-                cardView.configure(with: suggestion, isFavorite: isFavorite)
+                
                 cardView.tag = index
+                cardView.configure(with: suggestion, isFavorite: isFavorite)
             }
+            
+            LMLogger.log("🔄 Updated data for \(cardViews.count) existing card views")
         }
     }
     
@@ -323,6 +397,7 @@ class LMSuggestionsCarouselView: UIView {
     }
     
     /// 更新指定索引的构图方案
+    /// ⚠️ 用于轮询时单个卡片的更新，不刷新整个列表
     /// - Parameters:
     ///   - suggestion: 新的构图方案数据
     ///   - index: 要更新的索引位置
@@ -335,26 +410,24 @@ class LMSuggestionsCarouselView: UIView {
         // 更新数据源
         suggestions[index] = suggestion
         
-        // 更新对应的 card view
+        // ✅ CRITICAL: Update card asynchronously to prevent blocking during scroll
         let cardView = cardViews[index]
         let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
-        cardView.configure(with: suggestion, isFavorite: isFavorite)
         
-        // 如果是当前选中的卡片，可能需要重新布局以更新边框等样式
-        if index == selectedIndex {
-            UIView.animate(withDuration: 0.2) {
-                self.layoutCardViews()
-            }
+        DispatchQueue.main.async {
+            cardView.configure(with: suggestion, isFavorite: isFavorite)
         }
         
-        LMLogger.log("✅ Updated suggestion at index \(index): \(suggestion.id ?? "unknown")")
+        // ✅ 更新数据哈希，避免下次 updateSuggestions 误判为数据未变化
+        lastDataHash = calculateDataHash(suggestions)
+        
+        LMLogger.log("✅ Updated single suggestion at index \(index): \(suggestion.id ?? "unknown") (no list refresh)")
     }
     
     /// 批量更新多个构图方案
+    /// ⚠️ 用于轮询时多个卡片的更新，不刷新整个列表
     /// - Parameter updates: 字典，key为索引，value为新的构图方案数据
     func updateSuggestions(_ updates: [Int: LMCompositionSuggestion]) {
-        var needsLayout = false
-        
         for (index, suggestion) in updates {
             guard index >= 0 && index < suggestions.count && index < cardViews.count else {
                 LMLogger.log("⚠️ Invalid index for updating suggestion: \(index)")
@@ -364,25 +437,19 @@ class LMSuggestionsCarouselView: UIView {
             // 更新数据源
             suggestions[index] = suggestion
             
-            // 更新对应的 card view
+            // ✅ CRITICAL: Update card asynchronously
             let cardView = cardViews[index]
             let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
-            cardView.configure(with: suggestion, isFavorite: isFavorite)
             
-            // 如果更新了选中的卡片，标记需要重新布局
-            if index == selectedIndex {
-                needsLayout = true
+            DispatchQueue.main.async {
+                cardView.configure(with: suggestion, isFavorite: isFavorite)
             }
         }
         
-        // 如果需要，重新布局
-        if needsLayout {
-            UIView.animate(withDuration: 0.2) {
-                self.layoutCardViews()
-            }
-        }
+        // ✅ 更新数据哈希
+        lastDataHash = calculateDataHash(suggestions)
         
-        LMLogger.log("✅ Batch updated \(updates.count) suggestions")
+        LMLogger.log("✅ Batch updated \(updates.count) suggestions (no list refresh)")
     }
     
     // MARK: - Private Methods
@@ -426,10 +493,15 @@ class LMSuggestionsCarouselView: UIView {
         // 设置 contentView 大小（高度要足够容纳放大的卡片）
         let contentHeight = max(bounds.height, selectedCardSize.height)
         
-        // 只在必要时更新 contentView 的 frame 和 scrollView 的 contentSize
-        if contentView.frame.size != CGSize(width: totalWidth, height: contentHeight) {
+        // ✅ FIX 10: Use tolerance-based comparison for CGSize to avoid floating-point precision issues
+        let newContentSize = CGSize(width: totalWidth, height: contentHeight)
+        let sizeDifference = abs(contentView.frame.width - newContentSize.width) + abs(contentView.frame.height - newContentSize.height)
+        
+        // Only update if difference is significant (> 0.5 points)
+        if sizeDifference > 0.5 {
             contentView.frame = CGRect(x: 0, y: 0, width: totalWidth, height: contentHeight)
-            scrollView.contentSize = CGSize(width: totalWidth, height: contentHeight)
+            scrollView.contentSize = newContentSize
+            LMLogger.log("📏 Updated contentSize to \(newContentSize)")
         }
         
         // 布局每个 card
@@ -478,6 +550,17 @@ class LMSuggestionsCarouselView: UIView {
         guard index >= 0 && index < cardViews.count else { return }
         
         let cardView = cardViews[index]
+        
+        // ✅ CRITICAL FIX: For first card (index 0), align to left edge instead of center
+        // This prevents the card from scrolling off-screen to the left
+        if index == 0 {
+            // 第一个卡片：滚动到左边缘（考虑左侧边距）
+            scrollView.setContentOffset(CGPoint(x: 0, y: 0), animated: animated)
+            LMLogger.log("📍 Scrolled to first card (left edge)")
+            return
+        }
+        
+        // 其他卡片：滚动到中心位置
         let cardCenterX = cardView.frame.midX
         let scrollViewCenterX = scrollView.bounds.width / 2
         let targetOffsetX = cardCenterX - scrollViewCenterX
@@ -486,16 +569,49 @@ class LMSuggestionsCarouselView: UIView {
         let clampedOffsetX = max(0, min(targetOffsetX, maxOffsetX))
         
         scrollView.setContentOffset(CGPoint(x: clampedOffsetX, y: 0), animated: animated)
+        LMLogger.log("📍 Scrolled to card at index \(index), offset: \(clampedOffsetX)")
     }
     
     @objc private func cardTapped(_ gesture: UITapGestureRecognizer) {
         guard let cardView = gesture.view as? LMSuggestionCardView else { return }
         let index = cardView.tag
         
+        // ✅ FIX: 添加索引有效性检查，避免异步更新导致的索引错误
+        guard index >= 0 && index < suggestions.count && index < cardViews.count else {
+            LMLogger.log("⚠️ Invalid tap index: \(index), suggestions count: \(suggestions.count)")
+            return
+        }
+        
         LMLogger.log("👆 Card tapped at index: \(index)")
         
         if index != selectedIndex {
-            selectSuggestion(at: index, animated: true)
+            // ✅ 更新选中状态
+            let previousIndex = selectedIndex
+            selectedIndex = index
+            
+            // 取消之前选中的 card
+            if previousIndex >= 0 && previousIndex < cardViews.count {
+                let previousCard = cardViews[previousIndex]
+                previousCard.isSelected = false
+            }
+            
+            // 选中新的 card
+            let currentCard = cardViews[index]
+            currentCard.isSelected = true
+            
+            // ✅ FIX: 使用更短的动画时间，提升响应速度
+            UIView.animate(
+                withDuration: 0.25,
+                delay: 0,
+                usingSpringWithDamping: 0.85,
+                initialSpringVelocity: 0.3,
+                options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]
+            ) {
+                self.layoutCardViews()
+            } completion: { _ in
+                // ✅ 动画完成后滚动到中心位置（带动画效果）
+                self.scrollToCard(at: index, animated: true)
+            }
             
             // 触发 delegate 回调
             let suggestion = suggestions[index]
@@ -642,7 +758,11 @@ class LMSuggestionsCarouselView: UIView {
         // 重置更新标志（防止异步操作残留）
         isUpdatingSuggestions = false
         
-        LMLogger.log("🔄 Gesture state reset completed")
+        // ✅ FIX 3: Reset ScrollView gesture recognizers to clear any stuck state
+        scrollView.panGestureRecognizer.isEnabled = false
+        scrollView.panGestureRecognizer.isEnabled = true
+        
+        LMLogger.log("🔄 Gesture state reset completed (including ScrollView gestures)")
     }
     
     // MARK: - Layout
@@ -696,6 +816,16 @@ extension LMSuggestionsCarouselView: UIGestureRecognizerDelegate {
     
     /// 允许多个手势同时识别
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        // ✅ FIX: 禁止 Tap 与 ScrollView 同时识别
+        // 点击 item 时应该触发选中和滚动效果，而不是同时滚动列表
+        
+        // 如果是卡片上的 Tap 手势，不允许与 ScrollView 的滚动手势同时识别
+        if gestureRecognizer is UITapGestureRecognizer && gestureRecognizer.view is LMSuggestionCardView {
+            if otherGestureRecognizer.view is UIScrollView {
+                return false
+            }
+        }
+        
         // 如果是卡片上的 Pan 手势，不允许与 ScrollView 的滚动手势同时识别
         if let panGesture = gestureRecognizer as? UIPanGestureRecognizer,
            panGesture.view is LMSuggestionCardView {
@@ -704,40 +834,46 @@ extension LMSuggestionsCarouselView: UIGestureRecognizerDelegate {
                 return false
             }
         }
-        // 如果是 ScrollView 的滚动手势，允许与其他手势同时识别
+        
+        // ScrollView 的滚动手势不与卡片手势同时识别
         if gestureRecognizer.view is UIScrollView {
-            return true
+            if otherGestureRecognizer.view is LMSuggestionCardView {
+                return false
+            }
         }
+        
         return false
     }
     
     /// 手势是否应该开始
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        // Tap 手势：总是允许，优先级最高
+        if gestureRecognizer is UITapGestureRecognizer {
+            return true
+        }
+        
         // Pan 手势：只在卡片上生效，且只处理明显的垂直滑动
         if let panGesture = gestureRecognizer as? UIPanGestureRecognizer {
             guard gestureRecognizer.view is LMSuggestionCardView else { return false }
             
             let velocity = panGesture.velocity(in: self)
+            let translation = panGesture.translation(in: self)
             
-            // 如果是明显的横向滑动（横向速度是纵向的2倍以上），不触发卡片的 Pan 手势
-            // 让 scrollView 处理横向滚动
-            if abs(velocity.x) > abs(velocity.y) * 2 {
+            // ✅ FIX: 使用更宽松的判断条件，避免误拦截点击
+            // 只有在明确的横向滑动时才阻止 Pan 手势
+            if abs(velocity.x) > abs(velocity.y) * 1.5 {
                 return false
             }
             
-            // 只有明显的向上滑动才触发卡片的 Pan 手势
-            // 向上滑动：velocity.y < 0，且纵向速度大于横向速度
-            if velocity.y < 0 && abs(velocity.y) > abs(velocity.x) {
+            // ✅ FIX: 只有在明确的向上滑动且移动距离足够时才触发
+            // 这样可以避免误判点击为 Pan 手势
+            if velocity.y < -50 && abs(translation.y) > 5 {
                 return true
             }
             
-            // 其他情况不触发卡片的 Pan 手势
+            // ✅ FIX: 其他情况允许手势开始，但会在 changed 状态中判断
+            // 这样可以避免阻塞 Tap 手势
             return false
-        }
-        
-        // Tap 手势：总是允许
-        if gestureRecognizer is UITapGestureRecognizer {
-            return true
         }
         
         return true
@@ -745,10 +881,9 @@ extension LMSuggestionsCarouselView: UIGestureRecognizerDelegate {
     
     /// 手势是否应该要求其他手势失败
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        // Tap 手势应该等待 Pan 手势失败后再触发
-        if gestureRecognizer is UITapGestureRecognizer && otherGestureRecognizer is UIPanGestureRecognizer {
-            return true
-        }
+        // ✅ FIX: 移除 Tap 等待 Pan 的逻辑，让 Tap 手势优先响应
+        // 这样可以避免点击延迟和无响应问题
+        // 原逻辑会导致：点击时需要等待 Pan 手势判断失败，造成延迟
         return false
     }
 }

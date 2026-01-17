@@ -7,22 +7,15 @@
 
 import UIKit
 
-/// AR引导视图 - 显示人物检测的校准框和引导线
+/// AR引导视图 - 显示人物检测的白色校准框和绿色成功框
+/// 注意：蓝色框（livePersonBox）已分离到独立的视图中（在LMCameraPage中），不在此View内
+/// 这是因为此View会随设备方向旋转，而蓝色框需要保持固定方向（跟随相机预览）
 class LMARGuidanceView: UIView {
     
     // MARK: - Properties
     
     /// 白色静态框（Reference Image中的人物位置）
     private var referencePersonBox: UIView = {
-        let view = UIView()
-        view.backgroundColor = .clear
-        view.isHidden = true
-        return view
-    }()
-    
-    /// 蓝色动态框（实时检测的人物位置）
-    /// 注意：设为internal以便外部检查isHidden状态
-    var livePersonBox: UIView = {
         let view = UIView()
         view.backgroundColor = .clear
         view.isHidden = true
@@ -47,17 +40,6 @@ class LMARGuidanceView: UIView {
         return imageView
     }()
     
-    /// 连接线
-    private var guidanceLine: CAShapeLayer = {
-        let layer = CAShapeLayer()
-        layer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.8).cgColor
-        layer.lineWidth = 3.0
-        layer.lineDashPattern = [2, 6]
-        layer.lineCap = .round
-        layer.isHidden = true
-        return layer
-    }()
-    
     /// 方向匹配状态
     private var isOrientationMatched: Bool = false
     
@@ -69,12 +51,6 @@ class LMARGuidanceView: UIView {
         let width = screenWidth * 2.0 / 5.0
         let height = width * 1.1
         return CGSize(width: width, height: height)
-    }
-    
-    /// 蓝色框尺寸（白色框的 0.8 倍）
-    private var liveBoxSize: CGSize {
-        let refSize = referenceBoxSize
-        return CGSize(width: refSize.width * 0.8, height: refSize.height * 0.8)
     }
     
     /// 框的最小尺寸（防止圆角重叠）
@@ -110,18 +86,7 @@ class LMARGuidanceView: UIView {
             crosshairWidth: 3
         )
         
-        // 2. 设置蓝色框的固定尺寸和图层
-        let liveSize = liveBoxSize
-        livePersonBox.bounds = CGRect(origin: .zero, size: liveSize)
-        createAndSetupFrameLayers(
-            for: livePersonBox,
-            color: .systemBlue,
-            lineWidth: 2.0,
-            crosshairLength: 6,
-            crosshairWidth: 2
-        )
-        
-        // 3. 设置绿色成功框的固定尺寸和图层（与白色框相同）
+        // 2. 设置绿色成功框的固定尺寸和图层（与白色框相同）
         successBox.bounds = CGRect(origin: .zero, size: refSize)
         createAndSetupFrameLayers(
             for: successBox,
@@ -131,22 +96,19 @@ class LMARGuidanceView: UIView {
             crosshairWidth: 3
         )
         
-        // 4. 添加子视图到视图层级
+        // 3. 添加子视图到视图层级（不包含引导线，引导线已移到外部管理）
         addSubview(referencePersonBox)
-        addSubview(livePersonBox)
         addSubview(successBox)
         addSubview(successCheckmark)
-        layer.addSublayer(guidanceLine)
         
         referencePersonBox.center = CGPoint(x: -1000, y: -1000)
-        livePersonBox.center = CGPoint(x: -1000, y: -1000)
         successBox.center = CGPoint(x: -1000, y: -1000)
         
         // 设置对号图标尺寸
         successCheckmark.frame = CGRect(x: 0, y: 0, width: 50, height: 50)
         successCheckmark.center = CGPoint(x: -1000, y: -1000)
         
-        print("[AR Guidance] 初始化完成 - 白色框尺寸: \(refSize), 蓝色框尺寸: \(liveSize)")
+        print("[AR Guidance] 初始化完成 - 白色框尺寸: \(refSize)")
     }
     
     // MARK: - Public Methods - Reference Box (白色静态框)
@@ -232,129 +194,15 @@ class LMARGuidanceView: UIView {
         referencePersonBox.isHidden = true
     }
     
-    // MARK: - Public Methods - Live Box (蓝色动态框)
-    
-    /// 设置蓝色框的位置（首次显示时调用）
-    /// 注意：尺寸和图层已在 setupViews 中创建，此方法只设置中心点位置
-    /// - Parameter position: 中心点位置
-    func setLiveBoxPosition(position: CGPoint) {
-        // 只设置中心点位置（bounds 和图层已在 setupViews 中设置）
-        livePersonBox.center = position
-        livePersonBox.transform = .identity  // 重置 transform
-        
-        print("[AR Guidance] 设置蓝色校准框位置 - position: \(position)")
+    /// 获取白色框的中心点（用于外部计算引导线）
+    /// - Returns: 白色框在本视图坐标系中的中心点
+    func getReferenceBoxCenter() -> CGPoint {
+        return referencePersonBox.center
     }
     
-    /// 旋转蓝色校准框
-    /// - Parameter angle: 旋转角度（弧度），正值为顺时针旋转
-    func rotateLiveBox(angle: CGFloat) {
-        // 保存当前的 center，因为旋转可能会影响 frame
-        let currentCenter = livePersonBox.center
-        
-        // 以中心点为基准旋转
-        livePersonBox.transform = CGAffineTransform(rotationAngle: angle)
-        
-        // 确保 center 保持不变
-        livePersonBox.center = currentCenter
-        
-        print("[AR Guidance View] 旋转蓝色校准框 - angle: \(angle) radians (\(angle * 180 / .pi) degrees)")
-    }
-    
-    /// 移动蓝色框到新位置（直接更新center，高频调用）
-    /// 注意：只移动位置，不改变尺寸
-    /// - Parameter position: 目标中心点位置
-    func moveLiveBoxToPosition(position: CGPoint) {
-        // 直接更新center位置
-        livePersonBox.center = position
-        
-        // 更新连接线
-        updateGuidanceLine()
-    }
-    
-    /// 设置蓝色框的完整 bounds（位置和尺寸）
-    /// - Parameter bbox: 画布坐标系统下的边界框
-    func setLiveBoxBounds(bbox: CGRect) {
-        // 清除之前的图层
-        livePersonBox.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
-        
-        // 应用最小尺寸限制，防止圆角重叠
-        let constrainedWidth = max(bbox.size.width, minimumBoxSize)
-        let constrainedHeight = max(bbox.size.height, minimumBoxSize)
-        let constrainedSize = CGSize(width: constrainedWidth, height: constrainedHeight)
-        
-        // 设置新的 bounds 和 center
-        livePersonBox.bounds = CGRect(origin: .zero, size: constrainedSize)
-        livePersonBox.center = CGPoint(x: bbox.midX, y: bbox.midY)
-        livePersonBox.transform = .identity  // 重置旋转
-        
-        // 重新创建图层（基于新的 bounds）
-        createAndSetupFrameLayers(
-            for: livePersonBox,
-            color: .systemBlue,
-            lineWidth: 2.0,
-            crosshairLength: 6,
-            crosshairWidth: 2
-        )
-        
-        print("[AR Guidance View] 设置蓝色框 bbox - original: \(bbox.size), constrained: \(constrainedSize), frame: \(livePersonBox.frame)")
-    }
-    
-    /// 更新蓝色框的 bounds（高频调用，带动画）
-    /// - Parameter bbox: 画布坐标系统下的边界框
-    func updateLiveBoxBounds(bbox: CGRect) {
-        // 应用最小尺寸限制，防止圆角重叠
-        let constrainedWidth = max(bbox.size.width, minimumBoxSize)
-        let constrainedHeight = max(bbox.size.height, minimumBoxSize)
-        
-        // 计算约束后的 frame（保持中心点不变）
-        let constrainedFrame = CGRect(
-            x: bbox.midX - constrainedWidth / 2,
-            y: bbox.midY - constrainedHeight / 2,
-            width: constrainedWidth,
-            height: constrainedHeight
-        )
-        
-        // 保存当前的 transform
-        let currentTransform = self.livePersonBox.transform
-        // 临时重置 transform 以便正确设置 frame
-        self.livePersonBox.transform = .identity
-        // 设置新的 frame
-        self.livePersonBox.frame = constrainedFrame
-        // 恢复 transform
-        self.livePersonBox.transform = currentTransform
-        self.updateGuidanceLine()
-    }
-    
-    /// 显示蓝色框
-    func showLiveBox() {
-        livePersonBox.isHidden = false
-    }
-    
-    /// 隐藏蓝色框
-    func hideLiveBox() {
-        livePersonBox.isHidden = true
-        livePersonBox.transform = .identity  // 重置transform
-        guidanceLine.isHidden = true
-    }
-    
-    /// 更新连接线（连接白色框准星和蓝色框准星）
-    func updateGuidanceLine() {
-        guard !referencePersonBox.isHidden && !livePersonBox.isHidden else {
-            guidanceLine.isHidden = true
-            return
-        }
-        
-        // 计算白色框的中心点（准星位置）
-        let whiteCenter = referencePersonBox.center
-        
-        // 计算蓝色框的中心点（准星位置）
-        let blueCenter = livePersonBox.center
-        
-        let path = UIBezierPath()
-        path.move(to: whiteCenter)
-        path.addLine(to: blueCenter)
-        guidanceLine.path = path.cgPath
-        guidanceLine.isHidden = false
+    /// 获取白色框是否隐藏
+    func isReferenceBoxHidden() -> Bool {
+        return referencePersonBox.isHidden
     }
     
     // MARK: - Public Methods - Success Box (绿色成功框)
@@ -386,10 +234,8 @@ class LMARGuidanceView: UIView {
         successBox.isHidden = false
         successBox.alpha = 1.0
         
-        // 隐藏白色框和蓝色框
+        // 隐藏白色框（蓝色框和引导线由外部控制）
         referencePersonBox.isHidden = true
-        livePersonBox.isHidden = true
-        guidanceLine.isHidden = true
         
         // 设置对号图标位置（在绿框中心）
         successCheckmark.center = successBox.center
@@ -559,12 +405,10 @@ class LMARGuidanceView: UIView {
         print("[AR Guidance] 方向匹配 - \(matched)")
     }
     
-    /// 隐藏所有引导元素
+    /// 隐藏所有引导元素（仅控制本视图内的元素，蓝色框和引导线由外部控制）
     /// 仅隐藏使用
     func hideOrShowAllGuidance(_ hidden: Bool = false) {
         referencePersonBox.isHidden = hidden
-        livePersonBox.isHidden = hidden
-        guidanceLine.isHidden = hidden
         // 绿框和对号也需要隐藏
         if hidden {
             successBox.isHidden = true

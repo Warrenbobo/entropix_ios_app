@@ -215,13 +215,27 @@ extension LMCameraPage {
             let carouselView = LMSuggestionsCarouselView()
             carouselView.delegate = self
             view.addSubview(carouselView)
+            
+            // ✅ CRITICAL FIX: Calculate carousel height dynamically based on screen size
+            // Formula: (baseCardHeight * screenScale * selectedScale) + selectedYOffset + buffer
+            // This ensures selected cards are never clipped on any screen size
+            let screenWidth = UIScreen.main.bounds.width
+            let baseScreenWidth: CGFloat = 393.0  // iPhone 15 Pro reference
+            let screenScaleFactor = screenWidth / baseScreenWidth
+            let baseNormalCardHeight: CGFloat = 110.0
+            let selectedScale: CGFloat = 1.4
+            let selectedYOffset: CGFloat = 20.0
+            let buffer: CGFloat = 10.0
+            
+            let carouselHeight = (baseNormalCardHeight * screenScaleFactor * selectedScale) + selectedYOffset + buffer
+            
             carouselView.snp.makeConstraints { make in
                 make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-20)
                 make.leading.trailing.equalToSuperview()
-                make.height.equalTo(170)
+                make.height.equalTo(carouselHeight)
             }
             self.suggestionsCarouselView = carouselView
-            LMLogger.log("✅ Suggestions carousel created and shown")
+            LMLogger.log("✅ Suggestions carousel created with adaptive height: \(carouselHeight)px (screen scale: \(screenScaleFactor))")
         }
     }
     
@@ -378,9 +392,13 @@ extension LMCameraPage {
         }
     }
     
-    /// 根据新数据立即更新建议图列表
+    /// 根据新数据立即更新建议图列表（轮询时使用单卡片更新）
+    /// ⚠️ 此方法用于轮询期间的单卡片更新，不刷新整个列表
     private func updateSuggestionsWithNewData(_ newSuggestions: [LMCompositionSuggestion]) {
         guard !newSuggestions.isEmpty else { return }
+        
+        // 用于批量更新的字典：key=索引，value=新数据
+        var updates: [Int: LMCompositionSuggestion] = [:]
         
         // 根据 rank 替换现有列表中的占位符或更新已有项
         for newSuggestion in newSuggestions {
@@ -390,7 +408,8 @@ extension LMCameraPage {
             if let existingIndex = currentSuggestions.firstIndex(where: { $0.rank == rank }) {
                 // 替换占位符或更新已有项
                 currentSuggestions[existingIndex] = newSuggestion
-                LMLogger.log("🔄 Updated suggestion at rank \(rank)")
+                updates[existingIndex] = newSuggestion
+                LMLogger.log("🔄 Updated suggestion at rank \(rank), index \(existingIndex)")
             } else {
                 // 如果没有找到相同 rank 的项，添加到列表
                 currentSuggestions.append(newSuggestion)
@@ -401,13 +420,18 @@ extension LMCameraPage {
         // 按 rank 排序
         currentSuggestions.sort { ($0.rank ?? 0) < ($1.rank ?? 0) }
         
-        // 刷新 UI（无论 Show Suggestions 是否可见，只要视图存在就更新）
-        // 这样当用户从 compositionSelected 状态返回时，列表已经是最新的
+        // ✅ CRITICAL: Always update carousel when new data arrives, regardless of visibility
+        // Polling should update UI even when carousel is hidden (e.g., in Reference Image state)
         if let carouselView = suggestionsCarouselView {
-            carouselView.updateSuggestions(currentSuggestions)
-            LMLogger.log("✅ UI updated with \(newSuggestions.count) new suggestions, total: \(currentSuggestions.count), carousel visible: \(!carouselView.isHidden)")
+            if !updates.isEmpty {
+                // 批量更新单个卡片（不刷新整个列表）
+                carouselView.updateSuggestions(updates)
+                LMLogger.log("✅ Updated \(updates.count) cards individually (no list refresh), carousel visible: \(!carouselView.isHidden), total: \(currentSuggestions.count)")
+            } else {
+                LMLogger.log("⏭️ No existing cards to update, data added to list only")
+            }
         } else {
-            LMLogger.log("✅ Data updated with \(newSuggestions.count) new suggestions, total: \(currentSuggestions.count) (carousel not available)")
+            LMLogger.log("⏸️ Carousel not initialized, data updated but UI update deferred (total: \(currentSuggestions.count))")
         }
     }
     
@@ -433,6 +457,7 @@ extension LMCameraPage {
     }
     
     /// 清理无效的占位数据（ready 为 false 且 imageUrl 为 nil）
+    /// ⚠️ 仅在轮询结束且最终数据总数与初始不一致时调用，执行完整列表刷新
     private func cleanupInvalidSuggestions() {
         let originalCount = currentSuggestions.count
         
@@ -449,15 +474,16 @@ extension LMCameraPage {
         if removedCount > 0 {
             LMLogger.log("🧹 Cleaned up \(removedCount) invalid suggestions (ready=false && imageUrl=nil)")
             
-            // 更新 UI（无论 Show Suggestions 是否可见，只要视图存在就更新）
+            // ✅ CRITICAL FIX: Only refresh full list if final count ≠ initial count
+            // This is the ONLY scenario where full list refresh is allowed during polling
             if let carouselView = suggestionsCarouselView {
                 carouselView.updateSuggestions(currentSuggestions)
-                LMLogger.log("✅ UI updated after cleanup, remaining: \(currentSuggestions.count) suggestions, carousel visible: \(!carouselView.isHidden)")
+                LMLogger.log("✅ Full list refreshed after cleanup (count changed: \(originalCount) → \(currentSuggestions.count)), carousel visible: \(!carouselView.isHidden)")
             } else {
                 LMLogger.log("✅ Data cleaned up, remaining: \(currentSuggestions.count) suggestions (carousel not available)")
             }
         } else {
-            LMLogger.log("✅ No invalid suggestions to clean up")
+            LMLogger.log("✅ No invalid suggestions to clean up, no list refresh needed")
         }
     }
 }
@@ -665,8 +691,7 @@ extension LMCameraPage {
         self.referenceImageView = imageView
         self.referenceCloseButton = closeButton
         
-        // 开始监听设备方向变化
-        startObservingDeviceOrientation()
+        // ✅ 不在初始化时启动方向监听，等到真正显示参考图时再启动
         
         LMLogger.log("✅ Reference image component initialized and hidden by default")
     }
@@ -678,6 +703,9 @@ extension LMCameraPage {
             LMLogger.log("❌ Reference image component not initialized")
             return
         }
+        
+        // ✅ 只在显示参考图时才开始监听设备方向
+        startObservingDeviceOrientation()
         
         // 使用已加载的 currentReferenceImage
         guard let referenceImage = currentReferenceImage else {
@@ -845,6 +873,9 @@ extension LMCameraPage {
             return
         }
         
+        // ✅ 停止监听设备方向变化（参考图关闭后不再需要）
+        stopObservingDeviceOrientation()
+        
         // 隐藏 Step 3 和 Step 4 引导（用户点击关闭 Reference Image 按钮）
         hideCompositionSelectedGuides()
         
@@ -881,12 +912,12 @@ extension LMCameraPage {
             LMLogger.log("✅ Navigated back to Saved Idea page")
             
         case .normal:
+            // ✅ 不停止 polling - polling 应该在后台持续运行直到所有任务完成
             // 从 Show Suggestions 进入，返回 Show Suggestions 状态
             containerView.isHidden = true
             currentCameraState = .showingSuggestions
             
             // 保存当前选中的构图 ID（用于恢复选中状态）
-            // 使用 ID 而不是索引，因为在轮询期间 currentSuggestions 可能已经变化
             let previouslySelectedId = currentSuggestion?.id
             
             currentSuggestion = nil
@@ -907,29 +938,43 @@ extension LMCameraPage {
             // 显示构图轮播（会自动重置手势状态）
             showSuggestionsCarousel()
             
-            // 调整底部控制栏（同步操作）
-            bottomControlsHeightConstraint?.update(offset: 44)
-            cameraBottomControlsView.setLayoutMode(.compact, animated: true)
+            // ✅ FIX 1: Ensure correct view hierarchy after showing carousel
+            ensureCorrectViewHierarchy()
+            LMLogger.log("✅ View hierarchy corrected after showing carousel")
             
-            // 更新轮播视图的数据并恢复选中状态
-            if let carouselView = suggestionsCarouselView {
-                // 如果有之前选中的 ID，先找到对应的索引
-                var targetIndex: Int? = nil
-                if let selectedId = previouslySelectedId {
-                    targetIndex = currentSuggestions.firstIndex(where: { $0.id == selectedId })
-                    if targetIndex == nil {
-                        LMLogger.log("⚠️ Previously selected suggestion (ID: \(selectedId)) not found in updated list")
+            // ✅ FIX 6: Sequence animations properly to avoid conflicts
+            // Step 1: Update layout constraints first
+            bottomControlsHeightConstraint?.update(offset: 44)
+            
+            // Step 2: Animate layout changes
+            UIView.animate(
+                withDuration: 0.35,
+                delay: 0,
+                usingSpringWithDamping: 0.85,
+                initialSpringVelocity: 0.5,
+                options: [.curveEaseInOut]
+            ) {
+                self.view.layoutIfNeeded()
+            } completion: { [weak self] _ in
+                guard let self = self else { return }
+                
+                // Step 3: After layout animation completes, update bottom controls mode
+                self.cameraBottomControlsView.setLayoutMode(.compact, animated: true)
+                
+                // Step 4: 只恢复选中状态，不刷新整个列表（避免图片重新加载）
+                if let carouselView = self.suggestionsCarouselView {
+                    // 如果有之前选中的 ID，找到对应的索引并恢复选中状态
+                    if let selectedId = previouslySelectedId,
+                       let targetIndex = self.currentSuggestions.firstIndex(where: { $0.id == selectedId }) {
+                        // 只更新选中状态，不调用 updateSuggestions（避免图片重新加载）
+                        if targetIndex != carouselView.getSelectedIndex() {
+                            carouselView.selectSuggestion(at: targetIndex, animated: false)
+                            LMLogger.log("📐 Restored selection to index: \(targetIndex) (ID: \(selectedId)) without refreshing list")
+                        }
                     }
                 }
                 
-                // 直接更新数据，updateSuggestions 内部会处理选中状态恢复
-                carouselView.updateSuggestions(currentSuggestions)
-                
-                // 如果有目标索引且与当前选中不同，手动设置选中状态
-                if let index = targetIndex, index != carouselView.getSelectedIndex() {
-                    carouselView.selectSuggestion(at: index, animated: false)
-                    LMLogger.log("📐 Restored selection to index: \(index) (ID: \(previouslySelectedId ?? "unknown"))")
-                }
+                LMLogger.log("✅ Polling continues in background - Reference Image closed")
             }
             
             LMLogger.log("✅ Reference image hidden, returned to Show Suggestions state, AR Guidance reset to unavailable")
