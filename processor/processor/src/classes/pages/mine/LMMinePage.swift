@@ -219,6 +219,8 @@ class LMMinePage: LMPageWrapper {
                     if let granted = data.granted, granted {
                         // 领取成功，更新按钮状态
                         self?.membershipCardView.updateFreeTrialButtonState(hasFreeTrial: true, isLoading: false)
+                        // 显示领取成功提示
+                        AppTheme.Toast.showText(LMText.profile.freeTrialClaimed)
                         // 刷新用户数据
                         self?.refreshUserData()
                         LMLogger.log("✅ Free trial claimed successfully")
@@ -261,8 +263,11 @@ class LMMinePage: LMPageWrapper {
         let expiryDays: Int? = user.daysUntilExpiration
         
         // 检查用户是否已领取免费试用
-        // 如果用户有订阅（trial 或其他付费类型），则认为已领取
-        let hasFreeTrial = user.subscriptionType.isPaidType
+        // 仅基于 subscriptionEndDate 判断：
+        // - 如果 subscriptionEndDate 为空，表示从未领取过，可以领取
+        // - 如果 subscriptionEndDate 已过期，表示会员已到期，可以重新领取
+        // - 如果 subscriptionEndDate 未过期，表示会员有效期内，不可领取
+        let hasFreeTrial = !user.isSubscriptionExpired
         
         // 更新会员卡片 - 使用 isPremiumUser 判断（考虑到期时间）
         membershipCardView.updateMembershipStatus(

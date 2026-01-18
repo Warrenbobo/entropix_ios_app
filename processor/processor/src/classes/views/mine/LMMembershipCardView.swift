@@ -32,19 +32,25 @@ class LMMembershipCardView: UIView {
         watchAdsButton.isHidden = true
         expiryWarningIcon.isHidden = true
         
-        // Free Trial 按钮始终显示，根据会员状态设置是否可点击
-        // isPlusUser 为 true 表示会员有效（已领取且未到期），按钮置灰
-        // hasFreeTrial 为 true 表示已领取过免费试用，按钮置灰
+        // Free Trial 按钮始终显示，根据会员到期时间设置是否可点击
+        // hasFreeTrial 为 true 表示会员有效期内（subscriptionEndDate 未过期），按钮置灰
+        // hasFreeTrial 为 false 表示 subscriptionEndDate 为空或已过期，按钮可点击
         freeTrialButton.isHidden = false
         updateFreeTrialButtonState(hasFreeTrial: hasFreeTrial || isPlusUser)
         
-        // 始终使用 Plus Plan 样式
-        setupPlusUserStyle()
+        // 根据会员状态设置背景色
+        // 当用户有会员时（isPlusUser 为 true），显示渐变色背景
+        // 当用户会员过期或未领取会员时，显示亮灰色背景
+        if isPlusUser {
+            setupPlusUserStyle()
+        } else {
+            setupFreeUserStyle()
+        }
         
         // 根据订阅类型显示标题
         titleLabel.text = subscriptionType.displayName
         subtitleLabel.text = LMText.profile.unlimitedInspires
-        subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
+        subtitleLabel.textColor = isPlusUser ? UIColor.white.withAlphaComponent(0.8) : UIColor(red: 0.42, green: 0.45, blue: 0.5, alpha: 1.0)
         mainLabel.text = LMText.profile.unlimited
         descLabel.text = LMText.profile.inspirePoints
         
@@ -89,14 +95,29 @@ class LMMembershipCardView: UIView {
         } else {
             freeTrialButton.setTitle(LMText.profile.getFreeTrial, for: .normal)
             if hasFreeTrial {
-                // 已领取且会员未过期，按钮置灰不可点击
+                // 会员有效期内（subscriptionEndDate 未过期），按钮置灰不可点击
                 freeTrialButton.isEnabled = false
                 freeTrialButton.alpha = 0.6
             } else {
-                // 未领取，按钮可点击
+                // subscriptionEndDate 为空或已过期，按钮可点击
                 freeTrialButton.isEnabled = true
                 freeTrialButton.alpha = 1.0
             }
+        }
+        
+        // 根据会员状态调整按钮样式
+        if isPlusUser {
+            // Plus 用户：白色半透明背景
+            freeTrialButton.backgroundColor = UIColor.white.withAlphaComponent(0.25)
+            freeTrialButton.setTitleColor(.white, for: .normal)
+            freeTrialButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .disabled)
+            freeTrialButton.layer.borderColor = UIColor.white.withAlphaComponent(0.4).cgColor
+        } else {
+            // Free 用户：蓝色背景
+            freeTrialButton.backgroundColor = UIColor(red: 0.23, green: 0.51, blue: 0.96, alpha: 1.0)
+            freeTrialButton.setTitleColor(.white, for: .normal)
+            freeTrialButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .disabled)
+            freeTrialButton.layer.borderColor = UIColor.clear.cgColor
         }
     }
     
@@ -324,7 +345,7 @@ class LMMembershipCardView: UIView {
     }
     
     private func configureDefaultContent() {
-        // 固定显示 Plus Plan 样式
+        // 默认显示 Free Plan 样式（灰色背景）
         titleLabel.text = LMText.profile.plusPlan
         subtitleLabel.text = LMText.profile.unlimitedInspires
         mainLabel.text = LMText.profile.unlimited
@@ -335,7 +356,7 @@ class LMMembershipCardView: UIView {
         upgradeButton.isHidden = true
         freeTrialButton.isHidden = true
         
-        setupPlusUserStyle()
+        setupFreeUserStyle()
     }
     
     override func layoutSubviews() {

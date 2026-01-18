@@ -221,6 +221,12 @@ class LMCameraPage: LMPageWrapper {
         }
         
         // 3. 主视图层级
+        // ✅ CRITICAL FIX: Suggestions Carousel 必须在 Reference Image 之下
+        // 这样可以确保 Reference Image 关闭后，Carousel 的手势不会被遮挡
+        if let suggestionsCarouselView = suggestionsCarouselView {
+            view.bringSubviewToFront(suggestionsCarouselView)
+        }
+        
         // Reference Image Container（如果存在）
         if let referenceImageContainerView = referenceImageContainerView {
             view.bringSubviewToFront(referenceImageContainerView)
@@ -237,7 +243,7 @@ class LMCameraPage: LMPageWrapper {
         // 引导视图（最顶层）
         bringGuideViewToFront()
         
-        LMLogger.log("✅ 视图层级已调整：Preview(Camera + AR Guidance + LiveBox) → Reference Image → Controls → Guide")
+        LMLogger.log("✅ 视图层级已调整：Preview(Camera + AR Guidance + LiveBox) → Suggestions Carousel → Reference Image → Controls → Guide")
     }
     
     private func setupTopStatusBarComponents() {

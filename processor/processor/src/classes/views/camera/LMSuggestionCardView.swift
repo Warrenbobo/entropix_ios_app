@@ -317,3 +317,64 @@ class LMSuggestionCardView: UIView {
         heartButton.layer.add(animation, forKey: "heartBeat")
     }
 }
+
+
+// MARK: - Touch Event Logging (Debug)
+extension LMSuggestionCardView {
+    
+    /// 记录触摸开始事件
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        
+        LMLogger.log("🎴 [CARD_TOUCH] ========== CARD TOUCH BEGAN ==========")
+        LMLogger.log("🎴 [CARD_TOUCH] Card index: \(self.tag)")
+        LMLogger.log("🎴 [CARD_TOUCH] Location: \(location)")
+        LMLogger.log("🎴 [CARD_TOUCH] Card frame: \(self.frame)")
+        LMLogger.log("🎴 [CARD_TOUCH] Card isUserInteractionEnabled: \(self.isUserInteractionEnabled)")
+        LMLogger.log("🎴 [CARD_TOUCH] Card alpha: \(self.alpha)")
+        LMLogger.log("🎴 [CARD_TOUCH] Card transform: \(self.transform)")
+        
+        // 检查是否点击在心形按钮上
+        let heartLocation = touch.location(in: heartButton)
+        if heartButton.bounds.contains(heartLocation) {
+            LMLogger.log("🎴 [CARD_TOUCH] Touch is on heart button")
+        }
+    }
+    
+    /// 记录触摸移动事件
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesMoved(touches, with: event)
+        
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        let previousLocation = touch.previousLocation(in: self)
+        let delta = CGPoint(x: location.x - previousLocation.x, y: location.y - previousLocation.y)
+        
+        // 只记录显著的移动
+        if abs(delta.x) > 5 || abs(delta.y) > 5 {
+            LMLogger.log("🎴 [CARD_TOUCH] ========== CARD TOUCH MOVED ==========")
+            LMLogger.log("🎴 [CARD_TOUCH] Card index: \(self.tag)")
+            LMLogger.log("🎴 [CARD_TOUCH] Delta: \(delta)")
+        }
+    }
+    
+    /// 记录触摸结束事件
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
+        
+        LMLogger.log("🎴 [CARD_TOUCH] ========== CARD TOUCH ENDED ==========")
+        LMLogger.log("🎴 [CARD_TOUCH] Card index: \(self.tag)")
+    }
+    
+    /// 记录触摸取消事件
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesCancelled(touches, with: event)
+        
+        LMLogger.log("🎴 [CARD_TOUCH] ========== CARD TOUCH CANCELLED ==========")
+        LMLogger.log("🎴 [CARD_TOUCH] Card index: \(self.tag)")
+        LMLogger.log("🎴 [CARD_TOUCH] ⚠️ Card touch was cancelled")
+    }
+}

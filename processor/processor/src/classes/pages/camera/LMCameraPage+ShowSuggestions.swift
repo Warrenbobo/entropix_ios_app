@@ -209,8 +209,16 @@ extension LMCameraPage {
         if self.suggestionsCarouselView != nil {
             // 重置手势状态，防止状态残留导致卡顿
             self.suggestionsCarouselView?.resetGestureState()
+            
+            // ✅ CRITICAL FIX: Ensure carousel is properly enabled for interaction
+            self.suggestionsCarouselView?.isUserInteractionEnabled = true
             self.suggestionsCarouselView?.isHidden = false
-            LMLogger.log("✅ Suggestions carousel shown (reused existing view, gesture state reset)")
+            
+            // ✅ Force layout update to ensure proper positioning
+            self.suggestionsCarouselView?.setNeedsLayout()
+            self.suggestionsCarouselView?.layoutIfNeeded()
+            
+            LMLogger.log("✅ Suggestions carousel shown (reused existing view, gesture state reset, interaction enabled)")
         } else {
             let carouselView = LMSuggestionsCarouselView()
             carouselView.delegate = self
@@ -942,6 +950,10 @@ extension LMCameraPage {
             ensureCorrectViewHierarchy()
             LMLogger.log("✅ View hierarchy corrected after showing carousel")
             
+            // ✅ FIX 2: Force layout update to ensure carousel is properly positioned
+            view.setNeedsLayout()
+            view.layoutIfNeeded()
+            
             // ✅ FIX 6: Sequence animations properly to avoid conflicts
             // Step 1: Update layout constraints first
             bottomControlsHeightConstraint?.update(offset: 44)
@@ -960,6 +972,13 @@ extension LMCameraPage {
                 
                 // Step 3: After layout animation completes, update bottom controls mode
                 self.cameraBottomControlsView.setLayoutMode(.compact, animated: true)
+                
+                // ✅ FIX 3: Reset gesture state again after animation completes
+                // This ensures any gesture state changes during animation are cleared
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    self.suggestionsCarouselView?.resetGestureState()
+                    LMLogger.log("✅ Gesture state reset after animation completion")
+                }
                 
                 // Step 4: 只恢复选中状态，不刷新整个列表（避免图片重新加载）
                 if let carouselView = self.suggestionsCarouselView {

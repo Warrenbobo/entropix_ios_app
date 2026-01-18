@@ -232,6 +232,9 @@ class LMLaunageManager {
                 watchAdsWithIcon: "▶ 观看广告",
                 upgrade: "升级",
                 plusIndicator: "+5",
+                getFreeTrial: "领取免费试用",
+                freeTrialClaimed: "已领取免费试用",
+                claimingFreeTrial: "领取中...",
                 fullName: "全名",
                 username: "用户名",
                 emailAddress: "电子邮箱",
@@ -286,7 +289,12 @@ class LMLaunageManager {
                 oneTimePayment: "一次性付款，永久拥有",
                 autoRenewNotice: "自动续订订阅将在当前周期结束前至少 24 小时自动续订，除非取消。",
                 termsOfService: "服务条款",
-                privacyPolicy: "隐私政策"
+                privacyPolicy: "隐私政策",
+                trialExpiredTitle: "会员已到期",
+                trialExpiredMessage: "您的会员已到期。领取免费试用以继续使用高级功能。",
+                getFreeTrial: "领取免费试用",
+                subscribeNow: "立即订阅",
+                gotIt: "知道了"
             ),
             auth: LMAuthTextConfig(
                 signIn: "登录",

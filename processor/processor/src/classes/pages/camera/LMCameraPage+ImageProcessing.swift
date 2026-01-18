@@ -258,10 +258,10 @@ extension LMCameraPage {
             title: LMText.subscription.trialExpiredTitle,
             message: LMText.subscription.trialExpiredMessage,
             cancelText: LMText.subscription.gotIt,
-            confirmText: LMText.subscription.subscribeNow,
-            confirmStyle: .destructive,
+            confirmText: LMText.subscription.getFreeTrial,
+            confirmStyle: .gradient,
             onConfirm: { [weak self] in
-                self?.navigateToSubscription()
+                self?.navigateToProfile()
             }
         )
     }

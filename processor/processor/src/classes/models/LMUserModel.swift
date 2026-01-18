@@ -93,7 +93,7 @@ struct LMUserModel: Codable {
             return false
         }
         
-        // 没有到期日期，视为已过期（free 用户）
+        // 没有到期日期，视为已过期（可以领取免费试用）
         guard let endDate = subscriptionEndDateParsed else {
             return true
         }

@@ -23,6 +23,7 @@ struct LMAlertDialogConfig {
     enum ButtonStyle {
         case destructive  // Red background
         case normal       // Gray background
+        case gradient     // Gradient background (like Inspire Me button)
     }
     
     init(
@@ -264,7 +265,7 @@ class LMAlertDialog: UIView {
             messageLabel.text = message
             containerView.addSubview(messageLabel)
             messageLabel.snp.makeConstraints { make in
-                make.top.equalTo(topView!.snp.bottom).offset(16)
+                make.top.equalTo(topView!.snp.bottom).offset(5)
                 make.left.equalToSuperview().offset(24)
                 make.right.equalToSuperview().offset(-24)
             }
@@ -286,6 +287,16 @@ class LMAlertDialog: UIView {
         case .normal:
             confirmButton.backgroundColor = .hexColor("#F2F2F2")
             confirmButton.setTitleColor(.hexColor("#333333"), for: .normal)
+        case .gradient:
+            // 使用与 Inspire Me 按钮相同的渐变色
+            let gradientImage = UIImage.gradientImage(
+                size: CGSize(width: 300, height: 52),
+                colors: [UIColor.hexColor("#6680E6").cgColor,
+                        UIColor.hexColor("#9966E6").cgColor],
+                direction: .vertical
+            )
+            confirmButton.setBackgroundImage(gradientImage, for: .normal)
+            confirmButton.setTitleColor(.white, for: .normal)
         }
         
         // Add button(s)

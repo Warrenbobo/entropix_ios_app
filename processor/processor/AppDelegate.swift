@@ -24,10 +24,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ApiInspectorDelegate {
         )
         config.customMenuItems = [ApiInspectorCustomMenuItem(name: "构图",
                                                              actionType: "analyze",
-                                                             icon: "📷"),
-                                  ApiInspectorCustomMenuItem(name: "会员",
-                                                             actionType: "vip",
-                                                             icon: "💰"),]
+                                                             icon: "📷")]
         ApiInspector.shared.delegate = self
         ApiInspector.shared.start(with: config)
         
@@ -42,10 +39,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, ApiInspectorDelegate {
         if actionType == "analyze" {
             if let controller = AppTheme.Screen.visibleController() {
                 LMARGuidanceTestViewController.present(from: controller)
-            }
-        } else if actionType == "vip" {
-            LMApiService.shared.claimFreeTrial { response in
-                
             }
         }
     }

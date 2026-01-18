@@ -9,6 +9,57 @@
 import UIKit
 import SnapKit
 
+// MARK: - Debug ScrollView (with touch event logging)
+/// 自定义 ScrollView，用于记录触摸事件，帮助调试手势冲突问题
+private class DebugScrollView: UIScrollView {
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        
+        LMLogger.log("📜 [SCROLL_TOUCH] ========== SCROLL TOUCH BEGAN ==========")
+        LMLogger.log("📜 [SCROLL_TOUCH] Location: \(location)")
+        LMLogger.log("📜 [SCROLL_TOUCH] ContentOffset: \(contentOffset)")
+        LMLogger.log("📜 [SCROLL_TOUCH] isDragging: \(isDragging)")
+        LMLogger.log("📜 [SCROLL_TOUCH] isDecelerating: \(isDecelerating)")
+        LMLogger.log("📜 [SCROLL_TOUCH] isScrollEnabled: \(isScrollEnabled)")
+        LMLogger.log("📜 [SCROLL_TOUCH] panGestureRecognizer.state: \(panGestureRecognizer.state.rawValue)")
+    }
+    
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesMoved(touches, with: event)
+        
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        let previousLocation = touch.previousLocation(in: self)
+        let delta = CGPoint(x: location.x - previousLocation.x, y: location.y - previousLocation.y)
+        
+        // 只记录显著的移动
+        if abs(delta.x) > 5 || abs(delta.y) > 5 {
+            LMLogger.log("📜 [SCROLL_TOUCH] ========== SCROLL TOUCH MOVED ==========")
+            LMLogger.log("📜 [SCROLL_TOUCH] Delta: \(delta)")
+            LMLogger.log("📜 [SCROLL_TOUCH] isDragging: \(isDragging)")
+        }
+    }
+    
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
+        
+        LMLogger.log("📜 [SCROLL_TOUCH] ========== SCROLL TOUCH ENDED ==========")
+        LMLogger.log("📜 [SCROLL_TOUCH] ContentOffset: \(contentOffset)")
+        LMLogger.log("📜 [SCROLL_TOUCH] isDragging: \(isDragging)")
+    }
+    
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesCancelled(touches, with: event)
+        
+        LMLogger.log("📜 [SCROLL_TOUCH] ========== SCROLL TOUCH CANCELLED ==========")
+        LMLogger.log("📜 [SCROLL_TOUCH] ⚠️ ScrollView touch was cancelled")
+    }
+}
+
 protocol LMSuggestionsCarouselViewDelegate: AnyObject {
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSelectSuggestion suggestion: LMCompositionSuggestion, at index: Int)
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didToggleFavorite suggestion: LMCompositionSuggestion, at index: Int)
@@ -90,8 +141,8 @@ class LMSuggestionsCarouselView: UIView {
     private func configureSubviews() {
         backgroundColor = UIColor.clear
         
-        // 配置 ScrollView
-        scrollView = UIScrollView()
+        // 配置 ScrollView（使用 DebugScrollView 来记录触摸事件）
+        scrollView = DebugScrollView()
         scrollView.backgroundColor = .clear
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.showsVerticalScrollIndicator = false
@@ -99,6 +150,7 @@ class LMSuggestionsCarouselView: UIView {
         // This prevents the top of selected cards from being clipped when they scale up and move up
         scrollView.clipsToBounds = false
         scrollView.decelerationRate = .fast
+        scrollView.delegate = self // 设置代理以监听滚动事件
         
         // 性能优化：减少离屏渲染
         scrollView.layer.shouldRasterize = false
@@ -551,12 +603,19 @@ class LMSuggestionsCarouselView: UIView {
         
         let cardView = cardViews[index]
         
+        // 📊 详细日志：滚动操作
+        LMLogger.log("📍 [SCROLL] Scrolling to card at index: \(index)")
+        LMLogger.log("📍 [SCROLL] Card frame: \(cardView.frame)")
+        LMLogger.log("📍 [SCROLL] ScrollView bounds: \(scrollView.bounds)")
+        LMLogger.log("📍 [SCROLL] ScrollView contentSize: \(scrollView.contentSize)")
+        LMLogger.log("📍 [SCROLL] Current contentOffset: \(scrollView.contentOffset)")
+        
         // ✅ CRITICAL FIX: For first card (index 0), align to left edge instead of center
         // This prevents the card from scrolling off-screen to the left
         if index == 0 {
             // 第一个卡片：滚动到左边缘（考虑左侧边距）
             scrollView.setContentOffset(CGPoint(x: 0, y: 0), animated: animated)
-            LMLogger.log("📍 Scrolled to first card (left edge)")
+            LMLogger.log("📍 [SCROLL] First card - scrolled to left edge (offset: 0)")
             return
         }
         
@@ -568,8 +627,14 @@ class LMSuggestionsCarouselView: UIView {
         let maxOffsetX = scrollView.contentSize.width - scrollView.bounds.width
         let clampedOffsetX = max(0, min(targetOffsetX, maxOffsetX))
         
+        LMLogger.log("📍 [SCROLL] Card center X: \(cardCenterX)")
+        LMLogger.log("📍 [SCROLL] ScrollView center X: \(scrollViewCenterX)")
+        LMLogger.log("📍 [SCROLL] Target offset X: \(targetOffsetX)")
+        LMLogger.log("📍 [SCROLL] Max offset X: \(maxOffsetX)")
+        LMLogger.log("📍 [SCROLL] Clamped offset X: \(clampedOffsetX)")
+        
         scrollView.setContentOffset(CGPoint(x: clampedOffsetX, y: 0), animated: animated)
-        LMLogger.log("📍 Scrolled to card at index \(index), offset: \(clampedOffsetX)")
+        LMLogger.log("📍 [SCROLL] Scrolled to card at index \(index), offset: \(clampedOffsetX)")
     }
     
     @objc private func cardTapped(_ gesture: UITapGestureRecognizer) {
@@ -582,9 +647,30 @@ class LMSuggestionsCarouselView: UIView {
             return
         }
         
-        LMLogger.log("👆 Card tapped at index: \(index)")
+        // ✅ 状态检查：只在空闲或滚动减速状态下允许点击
+        switch gestureState {
+        case .idle, .scrollDecelerating:
+            break // 允许继续
+        default:
+            LMLogger.log("👆 [TAP] Tap ignored due to state: \(gestureState.description)")
+            return
+        }
+        
+        // 📊 详细日志：点击事件
+        LMLogger.log("👆 [TAP] Card tapped at index: \(index)")
+        LMLogger.log("👆 [TAP] Gesture state: \(gesture.state.rawValue)")
+        LMLogger.log("👆 [TAP] Current selected index: \(selectedIndex)")
+        LMLogger.log("👆 [TAP] Card frame: \(cardView.frame)")
+        LMLogger.log("👆 [TAP] Tap location in view: \(gesture.location(in: self))")
         
         if index != selectedIndex {
+            // 转换到点击状态
+            guard transitionToState(.cardTapping(index: index)) else {
+                return
+            }
+            // 📊 详细日志：选中状态变更
+            LMLogger.log("👆 [TAP] Selection changing from \(selectedIndex) to \(index)")
+            
             // ✅ 更新选中状态
             let previousIndex = selectedIndex
             selectedIndex = index
@@ -593,13 +679,16 @@ class LMSuggestionsCarouselView: UIView {
             if previousIndex >= 0 && previousIndex < cardViews.count {
                 let previousCard = cardViews[previousIndex]
                 previousCard.isSelected = false
+                LMLogger.log("👆 [TAP] Deselected card at index: \(previousIndex)")
             }
             
             // 选中新的 card
             let currentCard = cardViews[index]
             currentCard.isSelected = true
+            LMLogger.log("👆 [TAP] Selected card at index: \(index)")
             
             // ✅ FIX: 使用更短的动画时间，提升响应速度
+            LMLogger.log("👆 [TAP] Starting layout animation...")
             UIView.animate(
                 withDuration: 0.25,
                 delay: 0,
@@ -608,20 +697,100 @@ class LMSuggestionsCarouselView: UIView {
                 options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]
             ) {
                 self.layoutCardViews()
-            } completion: { _ in
+            } completion: { finished in
+                LMLogger.log("👆 [TAP] Layout animation completed (finished: \(finished))")
                 // ✅ 动画完成后滚动到中心位置（带动画效果）
                 self.scrollToCard(at: index, animated: true)
+                
+                // 转换回空闲状态
+                self.transitionToState(.idle)
             }
             
             // 触发 delegate 回调
             let suggestion = suggestions[index]
+            LMLogger.log("👆 [TAP] Triggering delegate callback for suggestion: \(suggestion.id ?? "unknown")")
             delegate?.suggestionsCarouselView(self, didSelectSuggestion: suggestion, at: index)
+        } else {
+            LMLogger.log("👆 [TAP] Card already selected, no action taken")
         }
+    }
+    
+    // MARK: - Gesture State Machine
+    private enum GestureInteractionState {
+        case idle                           // 空闲状态
+        case scrolling                      // 正在滚动列表
+        case scrollDecelerating             // 滚动减速中
+        case cardTapping(index: Int)        // 正在点击卡片
+        case cardDragging(index: Int)       // 正在拖拽卡片（上滑）
+        case cardDragEnding(index: Int)     // 拖拽结束中（动画播放）
+        
+        func canTransitionTo(_ newState: GestureInteractionState) -> Bool {
+            switch (self, newState) {
+            // 空闲状态可以转换到任何状态
+            case (.idle, _):
+                return true
+                
+            // 滚动状态只能转换到减速或空闲
+            case (.scrolling, .scrollDecelerating),
+                 (.scrolling, .idle),
+                 (.scrolling, .scrolling): // 允许保持滚动状态
+                return true
+                
+            // 减速状态只能转换到空闲或保持减速状态
+            case (.scrollDecelerating, .idle),
+                 (.scrollDecelerating, .scrollDecelerating): // 允许保持减速状态
+                return true
+                
+            // 点击状态只能转换到空闲
+            case (.cardTapping, .idle):
+                return true
+                
+            // 拖拽状态可以转换到拖拽结束或空闲
+            case (.cardDragging, .cardDragEnding),
+                 (.cardDragging, .idle):
+                return true
+                
+            // 拖拽结束状态只能转换到空闲
+            case (.cardDragEnding, .idle):
+                return true
+                
+            // 其他转换不允许
+            default:
+                return false
+            }
+        }
+        
+        var description: String {
+            switch self {
+            case .idle: return "idle"
+            case .scrolling: return "scrolling"
+            case .scrollDecelerating: return "scrollDecelerating"
+            case .cardTapping(let index): return "cardTapping(\(index))"
+            case .cardDragging(let index): return "cardDragging(\(index))"
+            case .cardDragEnding(let index): return "cardDragEnding(\(index))"
+            }
+        }
+    }
+    
+    private var gestureState: GestureInteractionState = .idle {
+        didSet {
+            LMLogger.log("🔄 [STATE] Gesture state changed: \(oldValue.description) -> \(gestureState.description)")
+        }
+    }
+    
+    @discardableResult
+    private func transitionToState(_ newState: GestureInteractionState) -> Bool {
+        guard gestureState.canTransitionTo(newState) else {
+            LMLogger.log("⚠️ [STATE] Invalid transition: \(gestureState.description) -> \(newState.description)")
+            return false
+        }
+        
+        gestureState = newState
+        return true
     }
     
     // MARK: - Swipe Up Gesture Properties
     private let swipeUpThreshold: CGFloat = 150.0 // 生效阈值
-    private var isDraggingCard = false
     private var draggedCardOriginalFrame: CGRect = .zero
     private var hasNotifiedSwipeUpOffset = false // 标记是否已通知过偏移量
     private weak var currentDraggedCardView: LMSuggestionCardView? // 当前正在拖动的卡片
@@ -632,23 +801,38 @@ class LMSuggestionsCarouselView: UIView {
         
         guard index >= 0 && index < suggestions.count else { return }
         
+        let translation = gesture.translation(in: self)
+        let velocity = gesture.velocity(in: self)
+        
         switch gesture.state {
         case .began:
+            // 状态已在 gestureRecognizerShouldBegin 中转换
+            LMLogger.log("🎯 [PAN] Started dragging card at index: \(index)")
+            LMLogger.log("🎯 [PAN] Initial translation: \(translation)")
+            LMLogger.log("🎯 [PAN] Initial velocity: \(velocity)")
+            LMLogger.log("🎯 [PAN] Card frame: \(cardView.frame)")
+            
             // 记录初始状态
-            isDraggingCard = true
             currentDraggedCardView = cardView
             draggedCardOriginalFrame = cardView.frame
             hasNotifiedSwipeUpOffset = false // 重置通知标志
             
-            LMLogger.log("🎯 Started dragging card at index: \(index)")
-            
         case .changed:
-            let translation = gesture.translation(in: self)
+            // 只在拖拽状态下处理
+            guard case .cardDragging = gestureState else {
+                LMLogger.log("🎯 [PAN] Changed ignored due to state: \(gestureState.description)")
+                return
+            }
+            
+            // 📊 详细日志：拖动中
+            LMLogger.log("🎯 [PAN] Dragging changed - translation: \(translation), velocity: \(velocity)")
             
             // 只处理向上的拖动
             if translation.y < 0 {
                 // 计算上移距离（限制最大移动距离为阈值的1.5倍）
                 let moveDistance = min(abs(translation.y), swipeUpThreshold * 1.5)
+                
+                LMLogger.log("🎯 [PAN] Move distance: \(moveDistance), threshold: \(swipeUpThreshold)")
                 
                 // 应用平移变换（向上移动）
                 cardView.transform = CGAffineTransform(translationX: 0, y: -moveDistance)
@@ -657,24 +841,59 @@ class LMSuggestionsCarouselView: UIView {
                 let progress = min(moveDistance / swipeUpThreshold, 1.0)
                 cardView.alpha = 1.0 - (progress * 0.2) // 最多降低20%透明度
                 
+                LMLogger.log("🎯 [PAN] Progress: \(progress), alpha: \(cardView.alpha)")
+                
                 // 只在偏移量超过阈值且尚未通知过时，通知代理一次
                 if moveDistance > 20 && !hasNotifiedSwipeUpOffset {
                     hasNotifiedSwipeUpOffset = true
+                    LMLogger.log("🎯 [PAN] Notifying delegate of swipe up offset: \(moveDistance)")
                     delegate?.suggestionsCarouselView(self, didSwipeUpWithOffset: moveDistance)
                 }
+            } else {
+                LMLogger.log("🎯 [PAN] Translation.y >= 0, ignoring (not upward swipe)")
             }
             
         case .ended, .cancelled:
-            let translation = gesture.translation(in: self)
+            // 转换到拖拽结束状态
+            guard transitionToState(.cardDragEnding(index: index)) else {
+                return
+            }
+            
+            // 📊 详细日志：拖动结束
+            LMLogger.log("🏁 [PAN] Drag ended/cancelled - state: \(gesture.state.rawValue)")
+            LMLogger.log("🏁 [PAN] Final translation: \(translation)")
+            LMLogger.log("🏁 [PAN] Final velocity: \(velocity)")
             
             // 判断是否达到阈值
             let swipeDistance = abs(translation.y)
             let shouldTrigger = swipeDistance >= swipeUpThreshold && translation.y < 0
             
-            LMLogger.log("🏁 Drag ended - distance: \(swipeDistance), threshold: \(swipeUpThreshold), trigger: \(shouldTrigger)")
+            LMLogger.log("🏁 [PAN] Swipe distance: \(swipeDistance), threshold: \(swipeUpThreshold), trigger: \(shouldTrigger)")
             
             if shouldTrigger {
                 // 达到阈值：执行上划动画并触发回调
+                LMLogger.log("⬆️ [PAN] Triggering swipe up animation")
+                
+                // ✅ FIX: 在触发上划动画前，先更新选中状态
+                // 但不立即重新布局，避免与 transform 冲突
+                let previousIndex = selectedIndex
+                selectedIndex = index
+                
+                // 取消之前选中的卡片
+                if previousIndex >= 0 && previousIndex < cardViews.count && previousIndex != index {
+                    let previousCard = cardViews[previousIndex]
+                    previousCard.isSelected = false
+                    LMLogger.log("⬆️ [PAN] Deselected previous card at index: \(previousIndex)")
+                }
+                
+                // 选中当前卡片（在动画前设置，确保状态正确）
+                cardView.isSelected = true
+                LMLogger.log("⬆️ [PAN] Selected current card at index: \(index)")
+                
+                // ⚠️ 注意：不在这里调用 layoutCardViews()
+                // 因为卡片当前有 transform 变换，重新布局会导致位置错误
+                // 等动画完成并重置 transform 后再重新布局
+                
                 UIView.animate(
                     withDuration: 0.3,
                     delay: 0,
@@ -684,11 +903,11 @@ class LMSuggestionsCarouselView: UIView {
                         cardView.transform = CGAffineTransform(translationX: 0, y: -self.bounds.height)
                         cardView.alpha = 0
                     },
-                    completion: { _ in
-                        LMLogger.log("⬆️ Card swiped up at index: \(index)")
+                    completion: { finished in
+                        LMLogger.log("⬆️ [PAN] Swipe up animation completed (finished: \(finished))")
+                        LMLogger.log("⬆️ [PAN] Card swiped up at index: \(index)")
                         
                         // 触发上划回调
-                        self.selectedIndex = index
                         let suggestion = self.suggestions[index]
                         self.delegate?.suggestionsCarouselView(
                             self,
@@ -696,15 +915,26 @@ class LMSuggestionsCarouselView: UIView {
                             at: index
                         )
                         
-                        // 重置卡片状态（延迟一点，避免用户看到）
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            cardView.transform = .identity
-                            cardView.alpha = 1.0
-                        }
+                        // ✅ FIX: 立即重置卡片状态并转换到空闲状态，避免阻塞后续点击
+                        // 先重置 transform 和 alpha
+                        cardView.transform = .identity
+                        cardView.alpha = 1.0
+                        
+                        // 重新布局，应用选中状态的视觉效果
+                        self.layoutCardViews()
+                        
+                        // 滚动到选中的卡片（居中显示）
+                        self.scrollToCard(at: index, animated: true)
+                        
+                        // ✅ CRITICAL: 立即转换回空闲状态，允许后续点击
+                        self.transitionToState(.idle)
+                        
+                        LMLogger.log("⬆️ [PAN] Card state reset and layout updated, state: idle")
                     }
                 )
             } else {
                 // 未达到阈值：回弹动画
+                LMLogger.log("↩️ [PAN] Distance not enough, bouncing back")
                 UIView.animate(
                     withDuration: 0.3,
                     delay: 0,
@@ -714,17 +944,21 @@ class LMSuggestionsCarouselView: UIView {
                     animations: {
                         cardView.transform = .identity
                         cardView.alpha = 1.0
+                    },
+                    completion: { finished in
+                        LMLogger.log("↩️ [PAN] Bounce back completed (finished: \(finished))")
+                        // 转换回空闲状态
+                        self.transitionToState(.idle)
                     }
                 )
-                
-                LMLogger.log("↩️ Card bounced back - distance not enough")
             }
             
             // 重置状态
-            isDraggingCard = false
             currentDraggedCardView = nil
+            LMLogger.log("🏁 [PAN] Drag state reset")
             
         default:
+            LMLogger.log("🎯 [PAN] Gesture state: \(gesture.state.rawValue)")
             break
         }
     }
@@ -750,7 +984,6 @@ class LMSuggestionsCarouselView: UIView {
         }
         
         // 重置拖动状态标志
-        isDraggingCard = false
         currentDraggedCardView = nil
         draggedCardOriginalFrame = .zero
         hasNotifiedSwipeUpOffset = false
@@ -762,7 +995,10 @@ class LMSuggestionsCarouselView: UIView {
         scrollView.panGestureRecognizer.isEnabled = false
         scrollView.panGestureRecognizer.isEnabled = true
         
-        LMLogger.log("🔄 Gesture state reset completed (including ScrollView gestures)")
+        // 转换回空闲状态
+        gestureState = .idle
+        
+        LMLogger.log("🔄 Gesture state reset completed (including ScrollView and state machine)")
     }
     
     // MARK: - Layout
@@ -816,71 +1052,143 @@ extension LMSuggestionsCarouselView: UIGestureRecognizerDelegate {
     
     /// 允许多个手势同时识别
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        // 📊 详细日志：手势冲突判断
+        let gesture1Type = type(of: gestureRecognizer)
+        let gesture2Type = type(of: otherGestureRecognizer)
+        let gesture1View = gestureRecognizer.view.map { type(of: $0) }
+        let gesture2View = otherGestureRecognizer.view.map { type(of: $0) }
+        
+        LMLogger.log("🤝 [GESTURE] shouldRecognizeSimultaneously:")
+        LMLogger.log("🤝 [GESTURE]   Gesture 1: \(gesture1Type) on \(gesture1View?.description() ?? "nil")")
+        LMLogger.log("🤝 [GESTURE]   Gesture 2: \(gesture2Type) on \(gesture2View?.description() ?? "nil")")
+        
         // ✅ FIX: 禁止 Tap 与 ScrollView 同时识别
         // 点击 item 时应该触发选中和滚动效果，而不是同时滚动列表
         
-        // 如果是卡片上的 Tap 手势，不允许与 ScrollView 的滚动手势同时识别
-        if gestureRecognizer is UITapGestureRecognizer && gestureRecognizer.view is LMSuggestionCardView {
-            if otherGestureRecognizer.view is UIScrollView {
-                return false
-            }
-        }
+//        // 如果是卡片上的 Tap 手势，不允许与 ScrollView 的滚动手势同时识别
+//        if gestureRecognizer is UITapGestureRecognizer && gestureRecognizer.view is LMSuggestionCardView {
+//            if otherGestureRecognizer.view is UIScrollView {
+//                return false
+//            }
+//        }
+//        
+//        // 如果是卡片上的 Pan 手势，不允许与 ScrollView 的滚动手势同时识别
+//        if let panGesture = gestureRecognizer as? UIPanGestureRecognizer,
+//           panGesture.view is LMSuggestionCardView {
+//            // 检查另一个手势是否是 ScrollView 的滚动手势
+//            if otherGestureRecognizer.view is UIScrollView {
+//                return false
+//            }
+//        }
+//        
+//        // ScrollView 的滚动手势不与卡片手势同时识别
+//        if gestureRecognizer.view is UIScrollView {
+//            if otherGestureRecognizer.view is LMSuggestionCardView {
+//                return false
+//            }
+//        }
         
-        // 如果是卡片上的 Pan 手势，不允许与 ScrollView 的滚动手势同时识别
-        if let panGesture = gestureRecognizer as? UIPanGestureRecognizer,
-           panGesture.view is LMSuggestionCardView {
-            // 检查另一个手势是否是 ScrollView 的滚动手势
-            if otherGestureRecognizer.view is UIScrollView {
-                return false
-            }
-        }
-        
-        // ScrollView 的滚动手势不与卡片手势同时识别
-        if gestureRecognizer.view is UIScrollView {
-            if otherGestureRecognizer.view is LMSuggestionCardView {
-                return false
-            }
-        }
-        
+        LMLogger.log("🤝 [GESTURE]   Result: false (no simultaneous recognition)")
         return false
     }
     
     /// 手势是否应该开始
     override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        // Tap 手势：总是允许，优先级最高
+        // 📊 详细日志：手势开始判断
+        let gestureType = type(of: gestureRecognizer)
+        let gestureView = gestureRecognizer.view.map { type(of: $0) }
+        
+        LMLogger.log("🎬 [GESTURE] gestureRecognizerShouldBegin:")
+        LMLogger.log("🎬 [GESTURE]   Gesture: \(gestureType) on \(gestureView?.description() ?? "nil")")
+        LMLogger.log("🎬 [GESTURE]   Current state: \(gestureState.description)")
+        
+        // Tap 手势：只在空闲或滚动减速状态下允许
         if gestureRecognizer is UITapGestureRecognizer {
-            return true
+            switch gestureState {
+            case .idle, .scrollDecelerating:
+                LMLogger.log("🎬 [GESTURE]   Tap allowed in state: \(gestureState.description)")
+                return true
+            default:
+                LMLogger.log("🎬 [GESTURE]   Tap blocked by state: \(gestureState.description)")
+                return false
+            }
         }
         
-        // Pan 手势：只在卡片上生效，且只处理明显的垂直滑动
+        // Pan 手势：只在空闲状态下允许，且判断是否向上滑动
         if let panGesture = gestureRecognizer as? UIPanGestureRecognizer {
-            guard gestureRecognizer.view is LMSuggestionCardView else { return false }
-            
-            let velocity = panGesture.velocity(in: self)
-            let translation = panGesture.translation(in: self)
-            
-            // ✅ FIX: 使用更宽松的判断条件，避免误拦截点击
-            // 只有在明确的横向滑动时才阻止 Pan 手势
-            if abs(velocity.x) > abs(velocity.y) * 1.5 {
+            guard gestureRecognizer.view is LMSuggestionCardView else {
+                LMLogger.log("🎬 [GESTURE]   Pan not on card view, result: false")
                 return false
             }
             
-            // ✅ FIX: 只有在明确的向上滑动且移动距离足够时才触发
-            // 这样可以避免误判点击为 Pan 手势
-            if velocity.y < -50 && abs(translation.y) > 5 {
-                return true
+            // 检查状态
+            guard case .idle = gestureState else {
+                LMLogger.log("🎬 [GESTURE]   Pan blocked by state: \(gestureState.description)")
+                return false
             }
             
-            // ✅ FIX: 其他情况允许手势开始，但会在 changed 状态中判断
-            // 这样可以避免阻塞 Tap 手势
+            let translation = panGesture.translation(in: self)
+            let velocity = panGesture.velocity(in: self)
+            
+            LMLogger.log("🎬 [GESTURE]   Pan translation: \(translation)")
+            LMLogger.log("🎬 [GESTURE]   Pan velocity: \(velocity)")
+            
+            // ✅ 上滑手势判断逻辑（修复版 v2）：
+            // 关键修复：当垂直速度足够强时（> 200），允许更大的水平分量
+            // 这样可以识别快速但略带角度的上滑手势
+            let absVerticalVelocity = abs(velocity.y)
+            let absHorizontalVelocity = abs(velocity.x)
+            let isUpwardSwipe = velocity.y < -50  // 向上速度阈值
+            
+            // 分两种情况：
+            // 1. 强垂直速度（> 200）：允许水平速度达到垂直速度的 1.8 倍
+            // 2. 中等垂直速度（150-200）：要求垂直速度 > 水平速度 * 1.5
+            let hasVeryStrongVerticalVelocity = absVerticalVelocity > 200
+            let isVerticalDominant = absVerticalVelocity > absHorizontalVelocity * 1.5
+            
+            let shouldBegin: Bool
+            if hasVeryStrongVerticalVelocity {
+                // 强垂直速度：允许更大的水平分量（最多 1.8 倍）
+                shouldBegin = isUpwardSwipe && absHorizontalVelocity < absVerticalVelocity * 1.8
+            } else {
+                // 中等垂直速度：要求垂直占主导
+                shouldBegin = isUpwardSwipe && isVerticalDominant && absVerticalVelocity > 150
+            }
+            
+            LMLogger.log("🎬 [GESTURE]   isUpwardSwipe: \(isUpwardSwipe) (velocity.y < -50)")
+            LMLogger.log("🎬 [GESTURE]   absVerticalVelocity: \(absVerticalVelocity), absHorizontalVelocity: \(absHorizontalVelocity)")
+            LMLogger.log("🎬 [GESTURE]   hasVeryStrongVerticalVelocity: \(hasVeryStrongVerticalVelocity) (> 200)")
+            LMLogger.log("🎬 [GESTURE]   isVerticalDominant: \(isVerticalDominant) (absV > absH * 1.5)")
+            LMLogger.log("🎬 [GESTURE]   shouldBegin: \(shouldBegin)")
+            
+            if shouldBegin {
+                // 尝试转换到拖拽状态
+                if let cardView = gestureRecognizer.view as? LMSuggestionCardView {
+                    let success = transitionToState(.cardDragging(index: cardView.tag))
+                    LMLogger.log("🎬 [GESTURE]   Upward swipe detected, state transition: \(success)")
+                    return success
+                }
+            }
+            
+            LMLogger.log("🎬 [GESTURE]   Not upward swipe, result: false")
             return false
         }
         
+        LMLogger.log("🎬 [GESTURE]   Default result: true")
         return true
     }
     
     /// 手势是否应该要求其他手势失败
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRequireFailureOf otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        // 📊 详细日志：手势优先级判断
+        let gesture1Type = type(of: gestureRecognizer)
+        let gesture2Type = type(of: otherGestureRecognizer)
+        
+        LMLogger.log("⏳ [GESTURE] shouldRequireFailureOf:")
+        LMLogger.log("⏳ [GESTURE]   Gesture 1: \(gesture1Type)")
+        LMLogger.log("⏳ [GESTURE]   Gesture 2: \(gesture2Type)")
+        LMLogger.log("⏳ [GESTURE]   Result: false (no waiting)")
+        
         // ✅ FIX: 移除 Tap 等待 Pan 的逻辑，让 Tap 手势优先响应
         // 这样可以避免点击延迟和无响应问题
         // 原逻辑会导致：点击时需要等待 Pan 手势判断失败，造成延迟
@@ -926,4 +1234,183 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
         LMLogger.log("🗑️ Removed saved idea: \(suggestionId)")
     }
 
+}
+
+// MARK: - UIScrollViewDelegate
+extension LMSuggestionsCarouselView: UIScrollViewDelegate {
+    
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        LMLogger.log("📜 [SCROLL] Will begin dragging")
+        LMLogger.log("📜 [SCROLL] Current offset: \(scrollView.contentOffset)")
+        
+        // 转换到滚动状态
+        transitionToState(.scrolling)
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        // 📊 详细日志：滚动中（频繁触发，可选择性记录）
+        // LMLogger.log("📜 [SCROLL] Did scroll - offset: \(scrollView.contentOffset)")
+    }
+    
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        LMLogger.log("📜 [SCROLL] Will end dragging")
+        LMLogger.log("📜 [SCROLL] Velocity: \(velocity)")
+        LMLogger.log("📜 [SCROLL] Target offset: \(targetContentOffset.pointee)")
+    }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        LMLogger.log("📜 [SCROLL] Did end dragging - will decelerate: \(decelerate)")
+        LMLogger.log("📜 [SCROLL] Final offset: \(scrollView.contentOffset)")
+        
+        if decelerate {
+            // 转换到减速状态
+            transitionToState(.scrollDecelerating)
+        } else {
+            // 直接转换到空闲状态
+            transitionToState(.idle)
+        }
+    }
+    
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        LMLogger.log("📜 [SCROLL] Did end decelerating")
+        LMLogger.log("📜 [SCROLL] Final offset: \(scrollView.contentOffset)")
+        
+        // 转换到空闲状态
+        transitionToState(.idle)
+    }
+    
+    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        LMLogger.log("� [SCROLL] Did end scrolling animation")
+        LMLogger.log("📜 [SCROLL] Final offset: \(scrollView.contentOffset)")
+        
+        // 转换到空闲状态
+        transitionToState(.idle)
+    }
+    
+    /// 重置所有卡片的手势状态（已移除，使用状态机管理）
+    /// 在 ScrollView 滚动结束后不再需要手动重置手势
+    /// 状态机会自动管理手势的可用性
+}
+
+
+// MARK: - Touch Event Logging (Debug)
+extension LMSuggestionsCarouselView {
+    
+    /// 记录触摸开始事件
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesBegan(touches, with: event)
+        
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        let timestamp = Date().timeIntervalSince1970
+        
+        LMLogger.log("👆 [TOUCH] ========== TOUCH BEGAN ==========")
+        LMLogger.log("👆 [TOUCH] Timestamp: \(String(format: "%.3f", timestamp))")
+        LMLogger.log("👆 [TOUCH] Location: \(location)")
+        LMLogger.log("👆 [TOUCH] Touch count: \(touches.count)")
+        LMLogger.log("👆 [TOUCH] View: \(self.description)")
+        LMLogger.log("👆 [TOUCH] View frame: \(self.frame)")
+        LMLogger.log("👆 [TOUCH] View bounds: \(self.bounds)")
+        LMLogger.log("👆 [TOUCH] View isHidden: \(self.isHidden)")
+        LMLogger.log("👆 [TOUCH] View isUserInteractionEnabled: \(self.isUserInteractionEnabled)")
+        LMLogger.log("👆 [TOUCH] View alpha: \(self.alpha)")
+        LMLogger.log("👆 [TOUCH] Current gesture state: \(gestureState.description)")
+        LMLogger.log("👆 [TOUCH] Selected index: \(selectedIndex)")
+        LMLogger.log("👆 [TOUCH] Card views count: \(cardViews.count)")
+        
+        // 检查触摸点是否在某个卡片上
+        for (index, cardView) in cardViews.enumerated() {
+            let cardLocation = touch.location(in: cardView)
+            if cardView.bounds.contains(cardLocation) {
+                LMLogger.log("👆 [TOUCH] Touch is on card at index: \(index)")
+                LMLogger.log("👆 [TOUCH] Card frame: \(cardView.frame)")
+                LMLogger.log("👆 [TOUCH] Card isUserInteractionEnabled: \(cardView.isUserInteractionEnabled)")
+                break
+            }
+        }
+        
+        // 检查 ScrollView 的状态
+        LMLogger.log("👆 [TOUCH] ScrollView isScrollEnabled: \(scrollView.isScrollEnabled)")
+        LMLogger.log("👆 [TOUCH] ScrollView isUserInteractionEnabled: \(scrollView.isUserInteractionEnabled)")
+        LMLogger.log("👆 [TOUCH] ScrollView contentOffset: \(scrollView.contentOffset)")
+        LMLogger.log("👆 [TOUCH] ScrollView isDragging: \(scrollView.isDragging)")
+        LMLogger.log("👆 [TOUCH] ScrollView isDecelerating: \(scrollView.isDecelerating)")
+    }
+    
+    /// 记录触摸移动事件
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesMoved(touches, with: event)
+        
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        let previousLocation = touch.previousLocation(in: self)
+        let delta = CGPoint(x: location.x - previousLocation.x, y: location.y - previousLocation.y)
+        
+        // 只记录关键的移动事件（避免日志过多）
+        if abs(delta.x) > 5 || abs(delta.y) > 5 {
+            LMLogger.log("👆 [TOUCH] ========== TOUCH MOVED ==========")
+            LMLogger.log("👆 [TOUCH] Location: \(location)")
+            LMLogger.log("👆 [TOUCH] Delta: \(delta)")
+            LMLogger.log("👆 [TOUCH] Current gesture state: \(gestureState.description)")
+        }
+    }
+    
+    /// 记录触摸结束事件
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesEnded(touches, with: event)
+        
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        let timestamp = Date().timeIntervalSince1970
+        
+        LMLogger.log("👆 [TOUCH] ========== TOUCH ENDED ==========")
+        LMLogger.log("👆 [TOUCH] Timestamp: \(String(format: "%.3f", timestamp))")
+        LMLogger.log("👆 [TOUCH] Location: \(location)")
+        LMLogger.log("👆 [TOUCH] Touch count: \(touches.count)")
+        LMLogger.log("👆 [TOUCH] Current gesture state: \(gestureState.description)")
+    }
+    
+    /// 记录触摸取消事件
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+        super.touchesCancelled(touches, with: event)
+        
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        let timestamp = Date().timeIntervalSince1970
+        
+        LMLogger.log("👆 [TOUCH] ========== TOUCH CANCELLED ==========")
+        LMLogger.log("👆 [TOUCH] Timestamp: \(String(format: "%.3f", timestamp))")
+        LMLogger.log("👆 [TOUCH] Location: \(location)")
+        LMLogger.log("👆 [TOUCH] Touch count: \(touches.count)")
+        LMLogger.log("👆 [TOUCH] Current gesture state: \(gestureState.description)")
+        LMLogger.log("👆 [TOUCH] ⚠️ Touch was cancelled - possible gesture conflict or view hierarchy issue")
+    }
+    
+    /// 检查点击测试（用于调试视图层级问题）
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        let result = super.hitTest(point, with: event)
+        
+        // 只在触摸开始时记录 hitTest 结果
+        if event?.type == .touches {
+            LMLogger.log("👆 [HIT_TEST] Point: \(point)")
+            LMLogger.log("👆 [HIT_TEST] Result: \(result?.description ?? "nil")")
+            LMLogger.log("👆 [HIT_TEST] Self: \(self.description)")
+            LMLogger.log("👆 [HIT_TEST] Self isHidden: \(self.isHidden)")
+            LMLogger.log("👆 [HIT_TEST] Self isUserInteractionEnabled: \(self.isUserInteractionEnabled)")
+            LMLogger.log("👆 [HIT_TEST] Self alpha: \(self.alpha)")
+            
+            // 如果 hitTest 返回 nil，说明触摸被拦截或视图不可交互
+            if result == nil {
+                LMLogger.log("👆 [HIT_TEST] ⚠️ hitTest returned nil - touch will be ignored!")
+                LMLogger.log("👆 [HIT_TEST] Possible reasons:")
+                LMLogger.log("👆 [HIT_TEST]   1. View is hidden (isHidden = true)")
+                LMLogger.log("👆 [HIT_TEST]   2. View interaction is disabled (isUserInteractionEnabled = false)")
+                LMLogger.log("👆 [HIT_TEST]   3. View alpha is too low (alpha < 0.01)")
+                LMLogger.log("👆 [HIT_TEST]   4. Point is outside view bounds")
+                LMLogger.log("👆 [HIT_TEST]   5. Another view is blocking this view")
+            }
+        }
+        
+        return result
+    }
 }

@@ -247,8 +247,9 @@ struct LMSubscriptionTextConfig: Codable {
     var privacyPolicy: String = "Privacy Policy"
     
     // Trial Expired
-    var trialExpiredTitle: String = "Trial Expired"
-    var trialExpiredMessage: String = "Your trial membership has expired. Subscribe to continue using."
+    var trialExpiredTitle: String = "Membership Expired"
+    var trialExpiredMessage: String = "Your membership has expired. Get free trial to continue using premium features."
+    var getFreeTrial: String = "Get Free Trial"
     var subscribeNow: String = "Subscribe Now"
     var gotIt: String = "Got It"
     
