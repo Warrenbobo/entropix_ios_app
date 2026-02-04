@@ -243,10 +243,11 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
         }
         
         // 获取正确的图片方向
-        let imageOrientation = getImageOrientation()
+        let deviceOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.getCurrentDeviceOrientation()
+        let imageOrientation = getImageOrientation(for: deviceOrientation)
         let image = UIImage(cgImage: cgImage, scale: 1.0, orientation: imageOrientation)
         
-        LMLogger.log("✅ Frame captured from video stream, size: \(image.size), orientation: \(imageOrientation.rawValue)")
+        LMLogger.log("✅ Frame captured from video stream, size: \(image.size), orientation: \(imageOrientation.rawValue), deviceOrientation: \(deviceOrientation.rawValue)")
         
         // 在主线程处理图片
         DispatchQueue.main.async { [weak self] in
@@ -255,9 +256,38 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
     
     /// 根据设备方向和相机位置获取正确的图片方向
-    private func getImageOrientation() -> UIImage.Orientation {
+    private func getImageOrientation(for deviceOrientation: UIDeviceOrientation) -> UIImage.Orientation {
         let isFrontCamera = isUsingFrontCamera
-        return isFrontCamera ? .leftMirrored : .right
+        
+        // 使用与拍照一致的方向映射：先保证帧在“当前手持方向”下是正的
+        // Inspire Me 后续会基于点击时的设备方向再旋转成“home键在下方”的竖屏图
+        if isFrontCamera {
+            switch deviceOrientation {
+            case .portrait:
+                return .leftMirrored
+            case .landscapeLeft:
+                return .downMirrored
+            case .landscapeRight:
+                return .upMirrored
+            case .portraitUpsideDown:
+                return .rightMirrored
+            default:
+                return .leftMirrored
+            }
+        } else {
+            switch deviceOrientation {
+            case .portrait:
+                return .right
+            case .landscapeLeft:
+                return .up
+            case .landscapeRight:
+                return .down
+            case .portraitUpsideDown:
+                return .left
+            default:
+                return .right
+            }
+        }
     }
     
     func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {

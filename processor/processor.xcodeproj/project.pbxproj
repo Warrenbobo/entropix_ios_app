@@ -112,8 +112,6 @@
 		EACB30EB2EF63E3500EC643C /* LMFreeTrialResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30E82EF63E3500EC643C /* LMFreeTrialResponse.swift */; };
 		EACB30EC2EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30E72EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift */; };
 		EACB30F02EF6B53E00EC643C /* LMProfileItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30EF2EF6B53E00EC643C /* LMProfileItemView.swift */; };
-		EAE3BAA32F1B8B410067715C /* LMARGuidanceTestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAE3BAA12F1B8B410067715C /* LMARGuidanceTestViewController.swift */; };
-		EAE3BAA42F1B8B410067715C /* LMARGuidanceTestHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAE3BAA02F1B8B410067715C /* LMARGuidanceTestHelper.swift */; };
 		EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC942E7E548A00586EC7 /* LMSignInPage.swift */; };
 		EAFBAC992E7E5A0800586EC7 /* LMMineUserInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC982E7E5A0800586EC7 /* LMMineUserInfoView.swift */; };
 		EAFBAC9F2E7E65B000586EC7 /* LMProcessorTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC9E2E7E65B000586EC7 /* LMProcessorTopBar.swift */; };
@@ -258,8 +256,6 @@
 		EACB30E72EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionTaskDetailResponse.swift; sourceTree = "<group>"; };
 		EACB30E82EF63E3500EC643C /* LMFreeTrialResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFreeTrialResponse.swift; sourceTree = "<group>"; };
 		EACB30EF2EF6B53E00EC643C /* LMProfileItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMProfileItemView.swift; sourceTree = "<group>"; };
-		EAE3BAA02F1B8B410067715C /* LMARGuidanceTestHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceTestHelper.swift; sourceTree = "<group>"; };
-		EAE3BAA12F1B8B410067715C /* LMARGuidanceTestViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceTestViewController.swift; sourceTree = "<group>"; };
 		EAFBAC922E7E540D00586EC7 /* processor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = processor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EAFBAC942E7E548A00586EC7 /* LMSignInPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSignInPage.swift; sourceTree = "<group>"; };
 		EAFBAC982E7E5A0800586EC7 /* LMMineUserInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMMineUserInfoView.swift; sourceTree = "<group>"; };
@@ -364,7 +360,6 @@
 		EACA1BE82E7E408900C80883 = {
 			isa = PBXGroup;
 			children = (
-				EAE3BAA22F1B8B410067715C /* tests */,
 				EACA1CEC2E7E49B600C80883 /* processor */,
 				EACA1BF22E7E408900C80883 /* Products */,
 				B6D676A52273F4EC9040FD29 /* Pods */,
@@ -585,15 +580,6 @@
 				EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */,
 			);
 			path = mine;
-			sourceTree = "<group>";
-		};
-		EAE3BAA22F1B8B410067715C /* tests */ = {
-			isa = PBXGroup;
-			children = (
-				EAE3BAA02F1B8B410067715C /* LMARGuidanceTestHelper.swift */,
-				EAE3BAA12F1B8B410067715C /* LMARGuidanceTestViewController.swift */,
-			);
-			path = tests;
 			sourceTree = "<group>";
 		};
 		EAFBAC932E7E546D00586EC7 /* login */ = {
@@ -900,8 +886,6 @@
 				EAFBACC62E8F69D100586EC7 /* LMUserProfileModel.swift in Sources */,
 				EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */,
 				EA6019382EC877620067F2F7 /* LMAppleAuthManager.swift in Sources */,
-				EAE3BAA32F1B8B410067715C /* LMARGuidanceTestViewController.swift in Sources */,
-				EAE3BAA42F1B8B410067715C /* LMARGuidanceTestHelper.swift in Sources */,
 				EAAF53ED2F15449500E961DC /* LMNotificationModel.swift in Sources */,
 				EA53553C2EE57BF100610950 /* LMAuthGuard.swift in Sources */,
 				EA86406A2ED2D24800A0CD43 /* LMPhotoStorageManager.swift in Sources */,
@@ -938,15 +922,15 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = processor/processor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = WL97SW2V2L;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = processor/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Entropix;
-				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "“Entropix” Would Like to Access Your Camera, to enable smart photo-taking feature.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "“Entropix” Would Like to Access Your Photos, to select photos for updating your profile or saving photos you take.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "“Entropix” Would Like to Access Your Photos, to select photos for updating your profile or saving photos you take.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -977,15 +961,15 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = processor/processor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = WL97SW2V2L;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = processor/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Entropix;
-				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "“Entropix” Would Like to Access Your Camera, to enable smart photo-taking feature.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "“Entropix” Would Like to Access Your Photos, to select photos for updating your profile or saving photos you take.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "“Entropix” Would Like to Access Your Photos, to select photos for updating your profile or saving photos you take.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

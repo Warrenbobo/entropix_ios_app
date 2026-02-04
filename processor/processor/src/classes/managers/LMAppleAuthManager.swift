@@ -115,10 +115,11 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
                 LMUserManager.shared.updateUser(response)
                 // 新用户注册成功后，自动领取免费试用（14天）
                 LMLogger.log("🍎 Step 2: Claiming free trial for new user...")
-                self?.claimFreeTrialAfterRegistration { trialResult in
+                self?.claimFreeTrialAfterRegistration { _ in
                     DispatchQueue.main.async {
                         // 无论免费试用是否成功，都返回登录成功结果
-                        self?.completion?(.success(response))
+                        let latestUser = LMUserManager.userModel ?? response
+                        self?.completion?(.success(latestUser))
                         self?.completion = nil
                     }
                 }

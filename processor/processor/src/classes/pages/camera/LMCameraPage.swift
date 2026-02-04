@@ -51,6 +51,8 @@ class LMCameraPage: LMPageWrapper {
     var isInspireMeCapture = false
     var isARGuidanceActive = false
     var shouldCaptureNextFrame = false // 标志：是否应该捕获下一帧用于Inspire Me
+    /// Inspire Me 点击瞬间的设备方向（用于把取到的帧统一旋转成“home键在下方”的竖屏图）
+    var inspireMeCaptureDeviceOrientation: UIDeviceOrientation?
     
     // MARK: - AR Guidance (New Architecture)
     var arGuidanceView: LMARGuidanceView!
@@ -610,4 +612,3 @@ extension LMCameraPage {
         customDialog.show()
     }
 }
-

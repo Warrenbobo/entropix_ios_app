@@ -31,6 +31,9 @@ struct LMApi {
         
         /// 更新用户头像
         static let updateAvatar = "/v1/users/avatar"
+
+        /// 删除账户（提交注销原因）
+        static let deleteAccount = "/v1/users/delete-account"
     }
     
     // MARK: - Auth APIs

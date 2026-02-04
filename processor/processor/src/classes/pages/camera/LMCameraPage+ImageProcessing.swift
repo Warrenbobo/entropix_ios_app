@@ -96,6 +96,75 @@ extension LMCameraPage {
     }
 }
 
+// MARK: - Orientation Normalization
+extension LMCameraPage {
+    
+    /// 将图像统一渲染为竖屏（home键在下方）的预览样式，并固化为 `.up` 方向。
+    /// - Note: 用于 `analyzeSceneWithFastVLM` 以及提交构图任务时，避免后端/模型忽略 EXIF 方向导致的旋转问题。
+    func normalizeImageForCompositionTaskPortrait(
+        _ image: UIImage,
+        capturedDeviceOrientation: UIDeviceOrientation
+    ) -> UIImage? {
+        // 只接受有效方向，其余（faceUp/faceDown/unknown）按 portrait 处理
+        let orientation: UIDeviceOrientation
+        switch capturedDeviceOrientation {
+        case .portrait, .landscapeLeft, .landscapeRight, .portraitUpsideDown:
+            orientation = capturedDeviceOrientation
+        default:
+            orientation = .portrait
+        }
+        
+        // 将“当前手持方向”的画面旋转回 portrait（home键在下方）
+        let rotationToPortrait = -rotationAngle(for: orientation)
+        
+        let originalSize = image.size
+        let outputSize: CGSize
+        if abs(rotationToPortrait) == .pi / 2 {
+            outputSize = CGSize(width: originalSize.height, height: originalSize.width)
+        } else {
+            outputSize = originalSize
+        }
+        
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = image.scale
+        format.opaque = true
+        
+        let renderer = UIGraphicsImageRenderer(size: outputSize, format: format)
+        let rendered = renderer.image { rendererContext in
+            let context = rendererContext.cgContext
+            context.translateBy(x: outputSize.width / 2, y: outputSize.height / 2)
+            context.rotate(by: rotationToPortrait)
+            
+            // 以中心点为基准绘制，确保旋转后不偏移
+            image.draw(
+                in: CGRect(
+                    x: -originalSize.width / 2,
+                    y: -originalSize.height / 2,
+                    width: originalSize.width,
+                    height: originalSize.height
+                )
+            )
+        }
+        
+        return rendered
+    }
+    
+    private func rotationAngle(for orientation: UIDeviceOrientation) -> CGFloat {
+        switch orientation {
+        case .portrait:
+            return 0
+        case .landscapeLeft:
+            return .pi / 2
+        case .portraitUpsideDown:
+            return .pi
+        case .landscapeRight:
+            return -.pi / 2
+        default:
+            return 0
+        }
+    }
+}
+
 // MARK: - Scene Analysis
 extension LMCameraPage {
     

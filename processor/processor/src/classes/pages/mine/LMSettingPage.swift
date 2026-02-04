@@ -20,10 +20,11 @@ class LMSettingPage: LMPageWrapper {
     private let contactUsItem = LMSettingItemView()
     private let frequentQuestionsItem = LMSettingItemView()
     private let aboutItem = LMSettingItemView()
+    private let deleteAccountItem = LMSettingItemView()
     
     // Logout Button
     private let logoutButton = UIButton(type: .custom)
-    
+
     private var isUserLoggedIn: Bool {
         return false // 暂时隐藏退出登录按钮
     }
@@ -36,6 +37,7 @@ class LMSettingPage: LMPageWrapper {
         configureDefaultContentAndStyles()
         updateUIForLoginState()
     }
+
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -58,6 +60,7 @@ extension LMSettingPage {
         contentView.addSubview(contactUsItem)
         contentView.addSubview(frequentQuestionsItem)
         contentView.addSubview(aboutItem)
+        contentView.addSubview(deleteAccountItem)
         contentView.addSubview(logoutButton)
         
         setupSettingItems()
@@ -136,6 +139,18 @@ extension LMSettingPage {
         aboutItem.onTap = { [weak self] in
             self?.handleAboutTapped()
         }
+
+        // Delete Account
+        deleteAccountItem.configure(
+            icon: UIImage(systemName: "person.crop.circle.badge.xmark"),
+            iconBackgroundColor: .hexColor("#FEE2E2"),
+            title: LMText.settings.deleteAccount,
+            subtitle: LMText.settings.deleteAccountSubtitle,
+            showArrow: true
+        )
+        deleteAccountItem.onTap = { [weak self] in
+            self?.handleDeleteAccountTapped()
+        }
     }
     
     private func setupLogoutButton() {
@@ -194,9 +209,14 @@ extension LMSettingPage {
             make.top.equalTo(frequentQuestionsItem.snp.bottom).offset(16)
             make.leading.trailing.equalToSuperview().inset(16)
         }
+
+        deleteAccountItem.snp.makeConstraints { make in
+            make.top.equalTo(aboutItem.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview().inset(16)
+        }
         
         logoutButton.snp.makeConstraints { make in
-            make.top.equalTo(aboutItem.snp.bottom).offset(40)
+            make.top.equalTo(deleteAccountItem.snp.bottom).offset(40)
             make.leading.trailing.equalToSuperview().inset(16)
             make.height.equalTo(50)
             make.bottom.equalToSuperview().offset(-40)
@@ -218,9 +238,25 @@ extension LMSettingPage {
         
         // 如果未登录，需要更新布局约束
         if !isUserLoggedIn {
-            aboutItem.snp.remakeConstraints { make in
-                make.top.equalTo(frequentQuestionsItem.snp.bottom).offset(16)
+            deleteAccountItem.snp.remakeConstraints { make in
+                make.top.equalTo(aboutItem.snp.bottom).offset(16)
                 make.leading.trailing.equalToSuperview().inset(16)
+                make.bottom.equalToSuperview().offset(-40)
+            }
+            logoutButton.snp.remakeConstraints { make in
+                make.top.equalTo(deleteAccountItem.snp.bottom)
+                make.leading.trailing.equalToSuperview().inset(16)
+                make.height.equalTo(0)
+            }
+        } else {
+            deleteAccountItem.snp.remakeConstraints { make in
+                make.top.equalTo(aboutItem.snp.bottom).offset(16)
+                make.leading.trailing.equalToSuperview().inset(16)
+            }
+            logoutButton.snp.remakeConstraints { make in
+                make.top.equalTo(deleteAccountItem.snp.bottom).offset(40)
+                make.leading.trailing.equalToSuperview().inset(16)
+                make.height.equalTo(50)
                 make.bottom.equalToSuperview().offset(-40)
             }
         }
@@ -286,6 +322,14 @@ extension LMSettingPage {
         navigationController?.pushViewController(aboutPage,
                                                  animated: true)
     }
+
+    private func handleDeleteAccountTapped() {
+        guard requireLogin(action: "delete account") else {
+            return
+        }
+        let page = LMDeleteAccountPage()
+        navigationController?.pushViewController(page, animated: true)
+    }
 }
 
 // MARK: - Helper Methods
@@ -329,6 +373,349 @@ extension LMSettingPage {
         LMAlertDialog.showGeneralAlert(String(format: LMText.settings.comingSoonMessage, feature),
                                        title: LMText.settings.comingSoon,
                                        onConfirm: {})
+    }
+}
+
+// MARK: - Delete Account Page
+class LMDeleteAccountPage: LMPageWrapper {
+    
+    private let scrollView = UIScrollView()
+    private let contentView = UIView()
+    private let titleLabel = UILabel()
+    private let subtitleLabel = UILabel()
+    private let reasonsStackView = UIStackView()
+    private let noticeLabel = UILabel()
+    private let buttonStackView = UIStackView()
+    private let cancelButton = UIButton(type: .system)
+    private let confirmButton = UIButton(type: .system)
+    
+    private var reasonViews: [LMDeleteAccountReasonView] = []
+    private var selectedReasonIndex: Int?
+    private var countdownTimer: Timer?
+    private var countdownRemaining = 10
+    private var isRequesting = false
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        barTitle = LMText.settings.deleteAccount
+        setupUserInterfaceComponents()
+        configureLayoutConstraints()
+        configureDefaultContentAndStyles()
+        startCountdown()
+        updateConfirmButtonState()
+    }
+    
+    deinit {
+        invalidateCountdown()
+    }
+}
+
+// MARK: - Setup Methods
+extension LMDeleteAccountPage {
+    
+    private func setupUserInterfaceComponents() {
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentView)
+        
+        contentView.addSubview(titleLabel)
+        contentView.addSubview(subtitleLabel)
+        contentView.addSubview(reasonsStackView)
+        contentView.addSubview(noticeLabel)
+        contentView.addSubview(buttonStackView)
+        
+        titleLabel.text = LMText.settings.deleteAccountReasonTitle
+        subtitleLabel.text = LMText.settings.deleteAccountReasonSubtitle
+        
+        titleLabel.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
+        titleLabel.textColor = UIColor.label
+        titleLabel.numberOfLines = 0
+        
+        subtitleLabel.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        subtitleLabel.textColor = UIColor.systemGray
+        subtitleLabel.numberOfLines = 0
+
+        noticeLabel.text = LMText.settings.deleteAccountNotice
+        noticeLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        noticeLabel.textColor = UIColor.systemGray2
+        noticeLabel.numberOfLines = 0
+        
+        reasonsStackView.axis = .vertical
+        reasonsStackView.spacing = 12
+        reasonsStackView.distribution = .fill
+        
+        let reasons = [
+            (LMText.settings.deleteAccountReasonFeatureTitle, LMText.settings.deleteAccountReasonFeatureDetail),
+            (LMText.settings.deleteAccountReasonUsageTitle, LMText.settings.deleteAccountReasonUsageDetail),
+            (LMText.settings.deleteAccountReasonStopTitle, LMText.settings.deleteAccountReasonStopDetail),
+            (LMText.settings.deleteAccountReasonSecurityTitle, LMText.settings.deleteAccountReasonSecurityDetail)
+        ]
+        
+        for (index, reason) in reasons.enumerated() {
+            let view = LMDeleteAccountReasonView(title: reason.0, detail: reason.1)
+            view.onSelect = { [weak self] in
+                self?.selectReason(at: index)
+            }
+            reasonViews.append(view)
+            reasonsStackView.addArrangedSubview(view)
+        }
+        
+        buttonStackView.axis = .horizontal
+        buttonStackView.spacing = 12
+        buttonStackView.distribution = .fillEqually
+        
+        cancelButton.setTitle(LMText.common.cancel, for: .normal)
+        cancelButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        cancelButton.setTitleColor(UIColor.label, for: .normal)
+        cancelButton.backgroundColor = UIColor.systemGray5
+        cancelButton.layer.cornerRadius = 12
+        cancelButton.addTarget(self, action: #selector(handleCancelTapped), for: .touchUpInside)
+        
+        confirmButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        confirmButton.layer.cornerRadius = 12
+        confirmButton.addTarget(self, action: #selector(handleConfirmTapped), for: .touchUpInside)
+        
+        buttonStackView.addArrangedSubview(cancelButton)
+        buttonStackView.addArrangedSubview(confirmButton)
+    }
+    
+    private func configureLayoutConstraints() {
+        scrollView.snp.makeConstraints { make in
+            make.edges.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        contentView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+            make.width.equalToSuperview()
+        }
+        
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(24)
+            make.leading.trailing.equalToSuperview().inset(20)
+        }
+        
+        subtitleLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(8)
+            make.leading.trailing.equalToSuperview().inset(20)
+        }
+        
+        reasonsStackView.snp.makeConstraints { make in
+            make.top.equalTo(subtitleLabel.snp.bottom).offset(20)
+            make.leading.trailing.equalToSuperview().inset(16)
+        }
+        
+        noticeLabel.snp.makeConstraints { make in
+            make.top.equalTo(reasonsStackView.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview().inset(20)
+        }
+
+        buttonStackView.snp.makeConstraints { make in
+            make.top.equalTo(noticeLabel.snp.bottom).offset(20)
+            make.leading.trailing.equalToSuperview().inset(16)
+            make.height.equalTo(50)
+            make.bottom.equalToSuperview().offset(-24)
+        }
+    }
+    
+    private func configureDefaultContentAndStyles() {
+        view.backgroundColor = UIColor.systemBackground
+        scrollView.showsVerticalScrollIndicator = false
+    }
+}
+
+// MARK: - Actions
+extension LMDeleteAccountPage {
+    
+    @objc private func handleCancelTapped() {
+        navigationController?.popViewController(animated: true)
+    }
+    
+    @objc private func handleConfirmTapped() {
+        guard isConfirmEnabled(), !isRequesting else { return }
+        guard let selectedReasonIndex = selectedReasonIndex else { return }
+        isRequesting = true
+        updateConfirmButtonState()
+        
+        let reasonValue = selectedReasonIndex + 1
+        AppTheme.Toast.showLoading()
+        LMApiService.shared.deleteAccount(reason: reasonValue) { _ in
+            AppTheme.Toast.hideLoading()
+            self.isRequesting = false
+            self.updateConfirmButtonState()
+            self.showRequestReceivedDialog()
+        }
+    }
+}
+
+// MARK: - Private Helpers
+extension LMDeleteAccountPage {
+    
+    private func selectReason(at index: Int) {
+        selectedReasonIndex = index
+        for (idx, view) in reasonViews.enumerated() {
+            view.isSelectedOption = (idx == index)
+        }
+        updateConfirmButtonState()
+    }
+    
+    private func startCountdown() {
+        invalidateCountdown()
+        countdownRemaining = 10
+        updateConfirmTitleForCountdown()
+        
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            self.countdownRemaining -= 1
+            if self.countdownRemaining <= 0 {
+                timer.invalidate()
+                self.setConfirmButtonTitle(LMText.settings.deleteAccountConfirm)
+                self.updateConfirmButtonState()
+            } else {
+                self.updateConfirmTitleForCountdown()
+            }
+        }
+    }
+    
+    private func invalidateCountdown() {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+    }
+    
+    private func updateConfirmTitleForCountdown() {
+        let title = String(format: LMText.settings.deleteAccountConfirmCountdownFormat,
+                           countdownRemaining)
+        setConfirmButtonTitle(title)
+        updateConfirmButtonState()
+    }
+    
+    private func setConfirmButtonTitle(_ title: String) {
+        UIView.performWithoutAnimation {
+            confirmButton.setTitle(title, for: .normal)
+            confirmButton.layoutIfNeeded()
+        }
+    }
+    
+    private func isConfirmEnabled() -> Bool {
+        return countdownRemaining <= 0 && selectedReasonIndex != nil
+    }
+    
+    private func updateConfirmButtonState() {
+        let enabled = isConfirmEnabled() && !isRequesting
+        confirmButton.isEnabled = enabled
+        confirmButton.isUserInteractionEnabled = enabled
+        confirmButton.backgroundColor = enabled ? UIColor.systemRed : UIColor.systemGray4
+        confirmButton.setTitleColor(enabled ? UIColor.white : UIColor.systemGray, for: .normal)
+    }
+    
+    private func showRequestReceivedDialog() {
+        LMAlertDialog.showAlert(
+            title: LMText.settings.deleteAccountRequestReceivedTitle,
+            message: LMText.settings.deleteAccountRequestReceivedMessage,
+            cancelText: nil,
+            confirmText: LMText.settings.deleteAccountRequestReceivedConfirm,
+            confirmStyle: .normal,
+            onConfirm: {
+                self.navigationController?.popToRootViewController(animated: true)
+            }
+        )
+    }
+}
+
+// MARK: - Reason Option View
+private class LMDeleteAccountReasonView: UIControl {
+    
+    private let titleLabel = UILabel()
+    private let detailLabel = UILabel()
+    private let indicatorOuterView = UIView()
+    private let indicatorInnerView = UIView()
+    
+    var onSelect: (() -> Void)?
+    
+    var isSelectedOption: Bool = false {
+        didSet {
+            updateStyle()
+        }
+    }
+    
+    init(title: String, detail: String) {
+        super.init(frame: .zero)
+        setupUI()
+        configure(title: title, detail: detail)
+        updateStyle()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        layer.cornerRadius = 12
+        layer.borderWidth = 1
+        backgroundColor = UIColor.systemBackground
+        
+        indicatorOuterView.layer.cornerRadius = 10
+        indicatorOuterView.layer.borderWidth = 2
+        indicatorOuterView.layer.borderColor = UIColor.systemGray3.cgColor
+        indicatorOuterView.backgroundColor = UIColor.clear
+        
+        indicatorInnerView.layer.cornerRadius = 5
+        indicatorInnerView.backgroundColor = UIColor.systemBlue
+        
+        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        titleLabel.textColor = UIColor.label
+        titleLabel.numberOfLines = 0
+        
+        detailLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        detailLabel.textColor = UIColor.systemGray
+        detailLabel.numberOfLines = 0
+        
+        addSubview(indicatorOuterView)
+        indicatorOuterView.addSubview(indicatorInnerView)
+        addSubview(titleLabel)
+        addSubview(detailLabel)
+        
+        indicatorOuterView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(14)
+            make.top.equalToSuperview().offset(16)
+            make.size.equalTo(20)
+        }
+        
+        indicatorInnerView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(10)
+        }
+        
+        titleLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(14)
+            make.leading.equalTo(indicatorOuterView.snp.trailing).offset(12)
+            make.trailing.equalToSuperview().offset(-14)
+        }
+        
+        detailLabel.snp.makeConstraints { make in
+            make.top.equalTo(titleLabel.snp.bottom).offset(6)
+            make.leading.equalTo(titleLabel)
+            make.trailing.equalToSuperview().offset(-14)
+            make.bottom.equalToSuperview().offset(-14)
+        }
+        
+        addTarget(self, action: #selector(handleTap), for: .touchUpInside)
+    }
+    
+    private func configure(title: String, detail: String) {
+        titleLabel.text = title
+        detailLabel.text = detail
+    }
+    
+    private func updateStyle() {
+        layer.borderColor = isSelectedOption ? UIColor.systemBlue.cgColor : UIColor.systemGray5.cgColor
+        indicatorOuterView.layer.borderColor = isSelectedOption ? UIColor.systemBlue.cgColor : UIColor.systemGray3.cgColor
+        indicatorInnerView.isHidden = !isSelectedOption
+    }
+    
+    @objc private func handleTap() {
+        onSelect?()
     }
 }
 

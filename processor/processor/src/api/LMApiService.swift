@@ -261,6 +261,21 @@ class LMApiService {
             completeHandler: completion
         )
     }
+
+    /// 删除账户（提交注销原因）
+    func deleteAccount(reason: Int, completion: @escaping LMApiCallback<LMEmptyModel>) {
+        let params: [String: Any] = [
+            "reason": reason
+        ]
+        
+        LMApiClient.request(
+            LMApi.User.deleteAccount,
+            method: .post,
+            params: params,
+            type: LMEmptyModel.self,
+            completeHandler: completion
+        )
+    }
     
     // MARK: - Guest User APIs
     

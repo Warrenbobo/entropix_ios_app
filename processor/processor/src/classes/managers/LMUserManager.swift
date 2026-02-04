@@ -200,6 +200,7 @@ class LMUserManager {
                    let subscription = data.subscription {
                     if var user = LMUserManager.userModel {
                         user.subscription = subscription.planType
+                        user.subscriptionEndDate = subscription.endDate
                         self?.updateUser(user)
                         LMLogger.log("✅ Free trial claimed successfully: \(subscription.planType ?? "trial")")
                     }

@@ -362,6 +362,18 @@ class LMAlertDialog: UIView {
             self.onDismiss?()
         }
     }
+
+    /// Update confirm button state after showing dialog
+    func updateConfirmButton(title: String? = nil, enabled: Bool? = nil) {
+        if let title = title {
+            confirmButton.setTitle(title, for: .normal)
+        }
+        if let enabled = enabled {
+            confirmButton.isEnabled = enabled
+            confirmButton.isUserInteractionEnabled = enabled
+            confirmButton.alpha = enabled ? 1.0 : 0.5
+        }
+    }
 }
 
 // MARK: - Convenience Factory Methods

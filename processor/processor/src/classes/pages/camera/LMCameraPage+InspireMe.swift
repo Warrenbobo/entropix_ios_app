@@ -61,6 +61,9 @@ extension LMCameraPage {
         showProcessingOverlay()
         isInspireMeCapture = true
         
+        // 记录点击瞬间的设备方向（后续用于把帧旋转到竖屏“home键在下方”的预览样式）
+        inspireMeCaptureDeviceOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
+        
         // 从相机流中获取当前帧图片
         captureFrameFromVideoStream()
         
@@ -83,10 +86,14 @@ extension LMCameraPage {
 //        }
         
 //        LMLogger.log("✅ Image is sharp, proceeding with analysis...")
+
+        let capturedOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.getCurrentDeviceOrientation()
+        let portraitImage = normalizeImageForCompositionTaskPortrait(image, capturedDeviceOrientation: capturedOrientation) ?? image
+        inspireMeCaptureDeviceOrientation = nil
         
-        let sceneFeature = analyzeSceneWithFastVLM(image)
+        let sceneFeature = analyzeSceneWithFastVLM(portraitImage)
         
-        processAndUploadImage(image, sceneFeature: sceneFeature)
+        processAndUploadImage(portraitImage, sceneFeature: sceneFeature)
         syncInspirePointsToBackend()
     }
     
