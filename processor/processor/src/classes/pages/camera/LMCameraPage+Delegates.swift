@@ -246,7 +246,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
         let deviceOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.getCurrentDeviceOrientation()
         let imageOrientation = getImageOrientation(for: deviceOrientation)
         let image = UIImage(cgImage: cgImage, scale: 1.0, orientation: imageOrientation)
-        
+        inspireMeCaptureDeviceOrientation = nil
         LMLogger.log("✅ Frame captured from video stream, size: \(image.size), orientation: \(imageOrientation.rawValue), deviceOrientation: \(deviceOrientation.rawValue)")
         
         // 在主线程处理图片

@@ -78,22 +78,9 @@ extension LMCameraPage {
     
     func processInspireMeImage(_ image: UIImage) {
         LMLogger.log("📸 Processing Inspire Me image...")
+        let sceneFeature = analyzeSceneWithFastVLM(image)
         
-//        if detectImageBlur(image) {
-//            hideProcessingOverlay()
-//            showAlert("Image is too blurry. Please try again with better lighting or steadier hands.", style: .error)
-//            return
-//        }
-        
-//        LMLogger.log("✅ Image is sharp, proceeding with analysis...")
-
-        let capturedOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.getCurrentDeviceOrientation()
-        let portraitImage = normalizeImageForCompositionTaskPortrait(image, capturedDeviceOrientation: capturedOrientation) ?? image
-        inspireMeCaptureDeviceOrientation = nil
-        
-        let sceneFeature = analyzeSceneWithFastVLM(portraitImage)
-        
-        processAndUploadImage(portraitImage, sceneFeature: sceneFeature)
+        processAndUploadImage(image, sceneFeature: sceneFeature)
         syncInspirePointsToBackend()
     }
     
