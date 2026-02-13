@@ -166,49 +166,179 @@ struct LMPackageManager {
     
     /// 更新版本信息
     static func queryVersionConfigs(completeCallback: (() -> ())? = nil) {
-//        ApiClient.request(Api.version,
-//                          method: .get,
-//                          type: VersionModel.self) { response in
-//            if let update = response.value {
-//                PackageUtil.reviewState = update.status == 1 ? .normal : .inReview
-//                PackageUtil.upgradeModel = response.value?.package
-//                if showVersionUpgradeAlert() {
-//                    
-//                }
-//                if let qqText = update.qq {
-//                    PackageUtil.customerQQ = qqText
-//                }
-//            }
-//            PackageUtil.reviewState = .normal
-//            completeCallback?()
-//        }
+        LMApiService.shared.getAppUpdatedStatus { response in
+            guard response.requestSuccess, let data = response.value else {
+                LMLogger.log("⚠️ Failed to fetch app updated status: \(response.message ?? "Unknown error")")
+                completeCallback?()
+                return
+            }
+            
+            // 1 = 已发布，0 = 审核中
+            if let versionStatus = data.versionStatus {
+                reviewState = (versionStatus == 1) ? .normal : .inReview
+                LMLogger.log("📦 App version status: \(versionStatus) (reviewState=\(reviewState))")
+            }
+            
+            // update 字段有值且 version > 当前包版本时，显示更新弹窗
+            guard let update = data.update,
+                  let targetVersion = update.version?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !targetVersion.isEmpty,
+                  isVersion(targetVersion, greaterThan: package.version) else {
+                completeCallback?()
+                return
+            }
+            
+            showAppUpdateAlert(update) { canProceed in
+                if canProceed {
+                    completeCallback?()
+                }
+            }
+        }
     }
     
-    /// 版本更新信息
-//    private static var upgradeModel: VersionUpgradeModel?
+    // MARK: - App Update (版本更新弹窗)
     
-    /// 显示版本更新提示
-    static func showVersionUpgradeAlert() -> Bool {
-//        if let model = upgradeModel,
-//           let targetVersion = model.version,
-//           targetVersion != PackageUtil.version {
-//            let alertController = UIAlertController(title: model.title ?? "有新版本啦！",
-//                                                    message: model.content ?? "及时更新版本可以使用最新的功能，体验更佳，赶快前往更新吧～",
-//                                                    preferredStyle: .alert)
-//            let cancelAction = UIAlertAction(title: "取消", style: .default)
-//            let confirmAction = UIAlertAction(title: "立即更新",
-//                                              style: .default) { _ in
-//                if let urlString = model.downloadUrl, let url = URL(string: urlString) {
-//                    UIApplication.shared.open(url)
-//                }
-//            }
-//            if !(model.force ?? false) {
-//                alertController.addAction(cancelAction)
-//            }
-//            alertController.addAction(confirmAction)
-//            ScreenValue.showAlertController(alertController)
-//            return true
-//        }
+    private static var isShowingUpdateAlert: Bool = false
+    
+    private static func showAppUpdateAlert(_ update: LMAppUpdateInfo, completion: @escaping (Bool) -> Void) {
+        guard !isShowingUpdateAlert else { return }
+        isShowingUpdateAlert = true
+        
+        let isForceUpdate = (update.requireUpdateStatus ?? 0) == 1
+        
+        let title = update.title ?? LMText.common.newVersionAvailable
+        let message = buildUpdateMessage(update)
+        
+        let cancelText: String? = isForceUpdate ? nil : LMText.common.notNow
+        let confirmText: String = LMText.common.updateNow
+        
+        let dialog = LMAlertDialog(config: LMAlertDialogConfig(
+            title: title,
+            message: message,
+            cancelButtonText: cancelText,
+            confirmButtonText: confirmText,
+            confirmButtonStyle: .gradient,
+            onCancel: {
+                isShowingUpdateAlert = false
+                completion(true)
+            },
+            onConfirm: {
+                openUpdateURL(update.url)
+                isShowingUpdateAlert = false
+                if !isForceUpdate {
+                    completion(true)
+                } else {
+                    completion(false)
+                }
+            }
+        ))
+        
+        dialog.show(onDismiss: {
+            isShowingUpdateAlert = false
+            
+            // 强制更新：用户返回 App 时继续拦截
+            if isForceUpdate {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    showAppUpdateAlert(update, completion: completion)
+                }
+            }
+        })
+    }
+    
+    private static func openUpdateURL(_ urlString: String?) {
+        guard let urlString = urlString?.trimmingCharacters(in: .whitespacesAndNewlines),
+              let url = URL(string: urlString) else {
+            AppTheme.Toast.showText(LMText.common.invalidUpdateUrl)
+            return
+        }
+        
+        DispatchQueue.main.async {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
+    }
+    
+    private static func buildUpdateMessage(_ update: LMAppUpdateInfo) -> String {
+        let content = htmlToPlainText(update.content)
+        
+        var lines: [String] = []
+        if let content = content, !content.isEmpty {
+            lines.append(content)
+        } else {
+            let isForceUpdate = (update.requireUpdateStatus ?? 0) == 1
+            lines.append(isForceUpdate ? LMText.common.updateRequiredMessage : LMText.common.updateAvailableMessage)
+        }
+        return lines.joined(separator: "\n\n")
+    }
+    
+    private static func htmlToPlainText(_ html: String?) -> String? {
+        guard let html = html, !html.isEmpty else { return nil }
+        guard let data = html.data(using: .utf8) else { return html }
+        
+        if let attributed = try? NSAttributedString(
+            data: data,
+            options: [
+                .documentType: NSAttributedString.DocumentType.html,
+                .characterEncoding: String.Encoding.utf8.rawValue
+            ],
+            documentAttributes: nil
+        ) {
+            return attributed.string
+        }
+        
+        return html
+    }
+    
+    private static func isVersion(_ newVersion: String, greaterThan currentVersion: String) -> Bool {
+        let newComponents = versionNumberComponents(from: newVersion)
+        let currentComponents = versionNumberComponents(from: currentVersion)
+        
+        let maxCount = max(newComponents.count, currentComponents.count)
+        for index in 0..<maxCount {
+            let lhs = index < newComponents.count ? newComponents[index] : 0
+            let rhs = index < currentComponents.count ? currentComponents[index] : 0
+            if lhs != rhs {
+                return lhs > rhs
+            }
+        }
         return false
+    }
+    
+    private static func versionNumberComponents(from version: String) -> [Int] {
+        return version
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .split(whereSeparator: { !$0.isNumber })
+            .compactMap { Int($0) }
+    }
+}
+
+// MARK: - Models
+
+/// GET /v1/app/updated -> data
+struct LMAppUpdatedStatus: Codable {
+    var versionStatus: Int?
+    var update: LMAppUpdateInfo?
+}
+
+struct LMAppUpdateInfo: Codable {
+    var requireUpdateStatus: Int?
+    var title: String?
+    var content: String?
+    var version: String?
+    var url: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case requireUpdateStatus = "require_update_status"
+        case title
+        case content
+        case version
+        case url
+    }
+}
+
+private extension Optional where Wrapped == String {
+    var nonEmpty: String? {
+        guard let value = self?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !value.isEmpty else { return nil }
+        return value
     }
 }

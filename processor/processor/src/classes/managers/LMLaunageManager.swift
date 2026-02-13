@@ -182,21 +182,27 @@ class LMLaunageManager {
             entrance: LMEntranceTextConfig()
         )
         let simplifiedChineseConfig = LMAppLaunageConfig(
-            common: LMCommonTextConfig(
-                ok: "确定",
-                cancel: "取消",
-                save: "保存",
-                back: "返回",
-                done: "完成",
-                edit: "编辑",
-                delete: "删除",
-                confirm: "确认",
-                loading: "加载中...",
-                error: "错误",
-                success: "成功",
-                retry: "重试",
-                close: "关闭"
-            ),
+	            common: LMCommonTextConfig(
+	                ok: "确定",
+	                cancel: "取消",
+	                save: "保存",
+	                back: "返回",
+	                done: "完成",
+	                edit: "编辑",
+	                delete: "删除",
+	                confirm: "确认",
+	                loading: "加载中...",
+	                error: "错误",
+	                success: "成功",
+	                retry: "重试",
+	                close: "关闭",
+	                newVersionAvailable: "有新版本了",
+	                updateNow: "立即更新",
+	                notNow: "暂不更新",
+	                updateAvailableMessage: "发现新版本，更新以获得最新改进。",
+	                updateRequiredMessage: "本次更新为强制更新，更新后才能继续使用。",
+	                invalidUpdateUrl: "更新地址无效"
+	            ),
             camera: LMCameraTextConfig(
                 flash: "闪光灯",
                 ratio: "比例",

@@ -218,6 +218,9 @@ class LMProfileDisplayView: UIView {
             make.height.equalTo(48)
             make.bottom.equalToSuperview().offset(-24)
         }
+        
+        // Account Profile 页面不展示取消会员按钮，默认隐藏并收起占位高度
+        updateBottomConstraints(showButton: false)
     }
     
     /// 更新底部约束，根据按钮是否显示
@@ -286,7 +289,7 @@ class LMProfileDisplayView: UIView {
         }
         
         // 根据订阅状态显示/隐藏取消订阅按钮，并更新布局
-        updateBottomConstraints(showButton: data.isPremiumUser)
+        updateBottomConstraints(showButton: false)
     }
     
     // MARK: - Actions

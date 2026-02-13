@@ -176,8 +176,15 @@ class LMLaunchSplashPage: UIViewController {
     
     /// 继续执行用户数据加载
     private func proceedWithUserDataLoading() {
+        // 先拉取版本发布状态及更新信息（若强制更新则拦截）
+        LMPackageManager.queryVersionConfigs { [weak self] in
+            self?.continueWithUserDataLoading()
+        }
+    }
+    
+    private func continueWithUserDataLoading() {
         // 尝试加载用户数据（刷新 Token + 获取用户信息）
-        LMUserManager.loadCachedUserModelData { success in
+        LMUserManager.loadCachedUserModelData { _ in
             DispatchQueue.main.async {
                 if LMUserManager.isSignIn {
                     // 已登录，进入主页

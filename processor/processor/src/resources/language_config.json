@@ -19,7 +19,13 @@
       "leave": "Leave",
       "saving": "Saving...",
       "networkError": "Network error, please try again",
-      "pleaseSignIn": "Please sign in"
+      "pleaseSignIn": "Please sign in",
+      "newVersionAvailable": "New Version Available",
+      "updateNow": "Update Now",
+      "notNow": "Not Now",
+      "updateAvailableMessage": "A new version is available. Update to get the latest improvements.",
+      "updateRequiredMessage": "This update is required to continue using the app.",
+      "invalidUpdateUrl": "Invalid update URL"
     },
     "camera": {
       "flash": "Flash",
@@ -469,7 +475,13 @@
       "leave": "离开",
       "saving": "保存中...",
       "networkError": "网络错误，请重试",
-      "pleaseSignIn": "请登录"
+      "pleaseSignIn": "请登录",
+      "newVersionAvailable": "有新版本了",
+      "updateNow": "立即更新",
+      "notNow": "暂不更新",
+      "updateAvailableMessage": "发现新版本，更新以获得最新改进。",
+      "updateRequiredMessage": "本次更新为强制更新，更新后才能继续使用。",
+      "invalidUpdateUrl": "更新地址无效"
     },
     "camera": {
       "flash": "闪光灯",
@@ -890,7 +902,13 @@
       "leave": "離開",
       "saving": "保存中...",
       "networkError": "網絡錯誤，請重試",
-      "pleaseSignIn": "請登錄"
+      "pleaseSignIn": "請登錄",
+      "newVersionAvailable": "有新版本了",
+      "updateNow": "立即更新",
+      "notNow": "暫不更新",
+      "updateAvailableMessage": "發現新版本，更新以獲得最新改進。",
+      "updateRequiredMessage": "本次更新為強制更新，更新後才能繼續使用。",
+      "invalidUpdateUrl": "更新地址無效"
     },
     "camera": {
       "flash": "閃光燈",

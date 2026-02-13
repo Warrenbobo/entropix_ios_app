@@ -37,20 +37,14 @@ class LMAuthGuard {
     ///   - completion: 登录成功后的回调（可选）
     /// - Returns: 如果是游客返回false，已登录返回true
     @discardableResult
-    func requireLogin(from viewController: UIViewController,
+    func requireLogin(from _: UIViewController,
                      action: String,
                      completion: (() -> Void)? = nil) -> Bool {
-        
-        if isGuestUser {
-            LMLogger.log("🚫 Guest user attempting to: \(action)")
-            LMAppleAuthManager.shared.signInWithApple { result in
-                LMLogger.log("✅ Logged in user finished, guest value is: \(self.isGuestUser)")
-                completion?()
-            }
-            return false
-        }
-        
-        LMLogger.log("✅ Logged in user can: \(action)")
+
+        // 当前版本不再强制要求游客用户进行 Apple 登录。
+        // Guest 会话视为有效会话，直接放行。
+        LMLogger.log("✅ Allow action without Apple login: \(action) (guest=\(isGuestUser))")
+        completion?()
         return true
     }
     

@@ -46,6 +46,14 @@ struct LMCommonTextConfig: Codable {
     var saving: String = "Saving..."
     var networkError: String = "Network error, please try again"
     var pleaseSignIn: String = "Please sign in"
+    
+    // App Update
+    var newVersionAvailable: String = "New Version Available"
+    var updateNow: String = "Update Now"
+    var notNow: String = "Not Now"
+    var updateAvailableMessage: String = "A new version is available. Update to get the latest improvements."
+    var updateRequiredMessage: String = "This update is required to continue using the app."
+    var invalidUpdateUrl: String = "Invalid update URL"
 }
 
 // MARK: - Camera Text Config

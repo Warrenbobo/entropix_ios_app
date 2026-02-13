@@ -65,6 +65,12 @@ struct LMApi {
         /// 领取免费试用（14天）
         static let freeTrial = "/v1/subscriptions/free-trial"
     }
+
+    // MARK: - App APIs
+    struct App {
+        /// 获取当前版本发布状态及更新信息
+        static let updated = "/v1/app/updated"
+    }
     
     // MARK: - Composition APIs
     struct Composition {

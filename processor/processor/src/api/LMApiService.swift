@@ -324,6 +324,18 @@ class LMApiService {
             completeHandler: completion
         )
     }
+
+    // MARK: - App APIs
+    
+    /// 获取当前版本发布状态及更新信息
+    func getAppUpdatedStatus(completion: @escaping LMApiCallback<LMAppUpdatedStatus>) {
+        LMApiClient.request(
+            LMApi.App.updated,
+            method: .get,
+            type: LMAppUpdatedStatus.self,
+            completeHandler: completion
+        )
+    }
     
     // MARK: - Composition APIs
     
@@ -525,6 +537,8 @@ extension LMApiClient {
             "Platform": "iOS",
             "Channel": "AppStore",
             "Version": LMPackageManager.package.version,
+            "Accept-Language": LMLaunageManager.shared.currentLanguage.rawValue,
+            "Language": LMLaunageManager.shared.currentLanguage.rawValue,
             //            "Model": LMPackageManager.package.model,
             //            "PackageName": LMPackageManager.package.bundleName
         ]

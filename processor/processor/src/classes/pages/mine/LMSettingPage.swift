@@ -14,13 +14,10 @@ class LMSettingPage: LMPageWrapper {
     private let contentView = UIView()
     
     // Setting Items
-    private let accountProfileItem = LMSettingItemView()
-    private let notificationItem = LMSettingItemView()
     private let languageItem = LMSettingItemView()
     private let contactUsItem = LMSettingItemView()
     private let frequentQuestionsItem = LMSettingItemView()
     private let aboutItem = LMSettingItemView()
-    private let deleteAccountItem = LMSettingItemView()
     
     // Logout Button
     private let logoutButton = UIButton(type: .custom)
@@ -54,13 +51,10 @@ extension LMSettingPage {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        contentView.addSubview(accountProfileItem)
-        contentView.addSubview(notificationItem)
         contentView.addSubview(languageItem)
         contentView.addSubview(contactUsItem)
         contentView.addSubview(frequentQuestionsItem)
         contentView.addSubview(aboutItem)
-        contentView.addSubview(deleteAccountItem)
         contentView.addSubview(logoutButton)
         
         setupSettingItems()
@@ -68,30 +62,6 @@ extension LMSettingPage {
     }
     
     private func setupSettingItems() {
-        // Account Profile
-        accountProfileItem.configure(
-            icon: UIImage(named: "user_solid_blue"),
-            iconBackgroundColor: .hexColor("#DBE9FE"),
-            title: LMText.settings.accountProfile,
-            subtitle: LMText.settings.accountProfileSubtitle,
-            showArrow: true
-        )
-        accountProfileItem.onTap = { [weak self] in
-            self?.handleAccountProfileTapped()
-        }
-        
-        // Notification
-        notificationItem.configure(
-            icon: UIImage(named: "bullhorn_yellow"),
-            iconBackgroundColor: .hexColor("#FEF9C2"),
-            title: LMText.settings.notifications,
-            subtitle: LMText.settings.notificationSubtitle,
-            showArrow: true
-        )
-        notificationItem.onTap = { [weak self] in
-            self?.handleNotificationTapped()
-        }
-        
         // Language
         languageItem.configure(
             icon: UIImage(named: "globe_purple"),
@@ -139,18 +109,6 @@ extension LMSettingPage {
         aboutItem.onTap = { [weak self] in
             self?.handleAboutTapped()
         }
-
-        // Delete Account
-        deleteAccountItem.configure(
-            icon: UIImage(systemName: "person.crop.circle.badge.xmark"),
-            iconBackgroundColor: .hexColor("#FEE2E2"),
-            title: LMText.settings.deleteAccount,
-            subtitle: LMText.settings.deleteAccountSubtitle,
-            showArrow: true
-        )
-        deleteAccountItem.onTap = { [weak self] in
-            self?.handleDeleteAccountTapped()
-        }
     }
     
     private func setupLogoutButton() {
@@ -180,18 +138,8 @@ extension LMSettingPage {
             make.width.equalToSuperview()
         }
         
-        accountProfileItem.snp.makeConstraints { make in
-            make.top.equalToSuperview().offset(24)
-            make.leading.trailing.equalToSuperview().inset(16)
-        }
-        
-        notificationItem.snp.makeConstraints { make in
-            make.top.equalTo(accountProfileItem.snp.bottom).offset(16)
-            make.leading.trailing.equalToSuperview().inset(16)
-        }
-        
         languageItem.snp.makeConstraints { make in
-            make.top.equalTo(notificationItem.snp.bottom).offset(16)
+            make.top.equalToSuperview().offset(24)
             make.leading.trailing.equalToSuperview().inset(16)
         }
         
@@ -208,18 +156,6 @@ extension LMSettingPage {
         aboutItem.snp.makeConstraints { make in
             make.top.equalTo(frequentQuestionsItem.snp.bottom).offset(16)
             make.leading.trailing.equalToSuperview().inset(16)
-        }
-
-        deleteAccountItem.snp.makeConstraints { make in
-            make.top.equalTo(aboutItem.snp.bottom).offset(16)
-            make.leading.trailing.equalToSuperview().inset(16)
-        }
-        
-        logoutButton.snp.makeConstraints { make in
-            make.top.equalTo(deleteAccountItem.snp.bottom).offset(40)
-            make.leading.trailing.equalToSuperview().inset(16)
-            make.height.equalTo(50)
-            make.bottom.equalToSuperview().offset(-40)
         }
     }
 }
@@ -238,23 +174,15 @@ extension LMSettingPage {
         
         // 如果未登录，需要更新布局约束
         if !isUserLoggedIn {
-            deleteAccountItem.snp.remakeConstraints { make in
-                make.top.equalTo(aboutItem.snp.bottom).offset(16)
-                make.leading.trailing.equalToSuperview().inset(16)
-                make.bottom.equalToSuperview().offset(-40)
-            }
             logoutButton.snp.remakeConstraints { make in
-                make.top.equalTo(deleteAccountItem.snp.bottom)
+                make.top.equalTo(aboutItem.snp.bottom)
                 make.leading.trailing.equalToSuperview().inset(16)
                 make.height.equalTo(0)
+                make.bottom.equalToSuperview().offset(-40)
             }
         } else {
-            deleteAccountItem.snp.remakeConstraints { make in
-                make.top.equalTo(aboutItem.snp.bottom).offset(16)
-                make.leading.trailing.equalToSuperview().inset(16)
-            }
             logoutButton.snp.remakeConstraints { make in
-                make.top.equalTo(deleteAccountItem.snp.bottom).offset(40)
+                make.top.equalTo(aboutItem.snp.bottom).offset(40)
                 make.leading.trailing.equalToSuperview().inset(16)
                 make.height.equalTo(50)
                 make.bottom.equalToSuperview().offset(-40)
@@ -272,29 +200,6 @@ extension LMSettingPage {
     
     @objc private func handleLogoutButtonTapped() {
         showLogoutConfirmation()
-    }
-    
-    private func handleAccountProfileTapped() {
-        // 检查登录状态
-        guard requireLogin(action: "view account profile") else {
-            return
-        }
-        
-        // 导航到账户资料页面
-        let accountProfilePage = LMAccountProfilePage()
-        navigationController?.pushViewController(accountProfilePage, animated: true)
-    }
-    
-    private func handleNotificationTapped() {
-        // 检查登录状态
-        guard requireLogin(action: "view notifications") else {
-            return
-        }
-        
-        // 导航到通知设置页面
-        let notifications = LMNotificationsPage()
-        navigationController?.pushViewController(notifications,
-                                                 animated: true)
     }
     
     private func handleLanguageTapped() {
@@ -321,14 +226,6 @@ extension LMSettingPage {
         let aboutPage = LMAboutPage()
         navigationController?.pushViewController(aboutPage,
                                                  animated: true)
-    }
-
-    private func handleDeleteAccountTapped() {
-        guard requireLogin(action: "delete account") else {
-            return
-        }
-        let page = LMDeleteAccountPage()
-        navigationController?.pushViewController(page, animated: true)
     }
 }
 

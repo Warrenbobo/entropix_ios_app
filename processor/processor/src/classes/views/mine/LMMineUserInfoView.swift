@@ -13,14 +13,14 @@ class LMMineUserInfoView: UIView {
     var avatarTapAction: (() -> Void)?
     
     func updateUserInfo(name: String, email: String, avatar: String? = nil) {
-        nameLabel.text = name.isEmpty ? "-" : name
+        nameLabel.text = name.isEmpty ? "Guest User" : name
         emailLabel.text = email
         avatarImageView.kf.setImage(with: URL(string: avatar ?? ""),
-                                    placeholder: UIImage(systemName: "person.circle.fill"))
+                                    placeholder: UIImage(named: "app_logo_transparent_bg"))
     }
     
     func setAvatarTapAction(_ action: @escaping () -> Void) {
-        self.avatarTapAction = action
+//        self.avatarTapAction = action
     }
     
     func setAvatar(_ image: UIImage) {
@@ -51,15 +51,15 @@ class LMMineUserInfoView: UIView {
         addSubview(emailLabel)
         
         // 头像设置
-        avatarImageView.backgroundColor = UIColor.systemGray4
+//        avatarImageView.backgroundColor = UIColor.systemGray4
         avatarImageView.layer.cornerRadius = 40
         avatarImageView.clipsToBounds = true
-        avatarImageView.contentMode = .scaleAspectFill
-        avatarImageView.isUserInteractionEnabled = true
+        avatarImageView.contentMode = .scaleAspectFit
+//        avatarImageView.isUserInteractionEnabled = true
         
         // 添加头像点击手势
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(avatarTapped))
-        avatarImageView.addGestureRecognizer(tapGesture)
+//        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(avatarTapped))
+//        avatarImageView.addGestureRecognizer(tapGesture)
         
         // 姓名标签设置
         nameLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)

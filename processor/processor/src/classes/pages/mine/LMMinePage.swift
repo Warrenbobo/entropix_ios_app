@@ -9,12 +9,14 @@ import UIKit
 import SnapKit
 
 class LMMinePage: LMPageWrapper {
-    
+	    
     private let topBar = LMProcessorTopBar()
     private var scrollView = UIScrollView()
     private var stackView: UIStackView!
     // 用户信息
     private let profileView = LMMineUserInfoView()
+    // 是否展示个人中心会员卡功能
+    private let showMembershipCard = false
     // 会员及广告奖励
     private var membershipCardView = LMMembershipCardView()
     // 产品菜单
@@ -99,15 +101,19 @@ class LMMinePage: LMPageWrapper {
         }
         
         // 会员卡片组件
-        membershipCardView = LMMembershipCardView()
-        membershipCardView.setWatchAdsButtonAction { [weak self] in
-            self?.watchAdsButtonTapped()
-        }
-        membershipCardView.setUpgradeButtonAction { [weak self] in
-            self?.upgradeButtonTapped()
-        }
-        membershipCardView.setFreeTrialButtonAction { [weak self] in
-            self?.freeTrialButtonTapped()
+        if showMembershipCard {
+            membershipCardView = LMMembershipCardView()
+            membershipCardView.setWatchAdsButtonAction { [weak self] in
+                self?.watchAdsButtonTapped()
+            }
+            membershipCardView.setUpgradeButtonAction { [weak self] in
+                self?.upgradeButtonTapped()
+            }
+            membershipCardView.setFreeTrialButtonAction { [weak self] in
+                self?.freeTrialButtonTapped()
+            }
+        } else {
+            membershipCardView.isHidden = true
         }
         
         // 照片集合视图
@@ -128,7 +134,9 @@ class LMMinePage: LMPageWrapper {
         scrollView.addSubview(stackView)
         
         stackView.addArrangedSubview(profileView)
-        stackView.addArrangedSubview(membershipCardView)
+        if showMembershipCard {
+            stackView.addArrangedSubview(membershipCardView)
+        }
         stackView.addArrangedSubview(photoCollectionView)
         stackView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(20)
@@ -259,24 +267,26 @@ class LMMinePage: LMPageWrapper {
             avatar: user.avatar
         )
         
-        // 计算到期天数（从用户模型获取）
-        let expiryDays: Int? = user.daysUntilExpiration
-        
-        // 检查用户是否已领取免费试用
-        // 仅基于 subscriptionEndDate 判断：
-        // - 如果 subscriptionEndDate 为空，表示从未领取过，可以领取
-        // - 如果 subscriptionEndDate 已过期，表示会员已到期，可以重新领取
-        // - 如果 subscriptionEndDate 未过期，表示会员有效期内，不可领取
-        let hasFreeTrial = !user.isSubscriptionExpired
-        
-        // 更新会员卡片 - 使用 isPremiumUser 判断（考虑到期时间）
-        membershipCardView.updateMembershipStatus(
-            isPlusUser: user.isPremiumUser,
-            inspirePoints: user.inspirePoints,
-            expiryDays: expiryDays,
-            hasFreeTrial: hasFreeTrial,
-            subscriptionType: user.subscriptionType
-        )
+        if showMembershipCard {
+            // 计算到期天数（从用户模型获取）
+            let expiryDays: Int? = user.daysUntilExpiration
+            
+            // 检查用户是否已领取免费试用
+            // 仅基于 subscriptionEndDate 判断：
+            // - 如果 subscriptionEndDate 为空，表示从未领取过，可以领取
+            // - 如果 subscriptionEndDate 已过期，表示会员已到期，可以重新领取
+            // - 如果 subscriptionEndDate 未过期，表示会员有效期内，不可领取
+            let hasFreeTrial = !user.isSubscriptionExpired
+            
+            // 更新会员卡片 - 使用 isPremiumUser 判断（考虑到期时间）
+            membershipCardView.updateMembershipStatus(
+                isPlusUser: user.isPremiumUser,
+                inspirePoints: user.inspirePoints,
+                expiryDays: expiryDays,
+                hasFreeTrial: hasFreeTrial,
+                subscriptionType: user.subscriptionType
+            )
+        }
         
         // 刷新Gallery和Saved Ideas
         photoCollectionView.reloadData()
@@ -290,13 +300,15 @@ class LMMinePage: LMPageWrapper {
             avatar: nil
         )
         
-        // 显示免费计划，0个Inspire Points，未领取免费试用
-        membershipCardView.updateMembershipStatus(
-            isPlusUser: false,
-            inspirePoints: 0,
-            expiryDays: nil,
-            hasFreeTrial: false
-        )
+        if showMembershipCard {
+            // 显示免费计划，0个Inspire Points，未领取免费试用
+            membershipCardView.updateMembershipStatus(
+                isPlusUser: false,
+                inspirePoints: 0,
+                expiryDays: nil,
+                hasFreeTrial: false
+            )
+        }
         
         // 清空Gallery和Saved Ideas
         photoCollectionView.reloadData()
