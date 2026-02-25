@@ -271,7 +271,7 @@ class LMProfileDisplayView: UIView {
         usernameItemView.updateContent(data.username ?? "-")
         avatarItemView.updateContent("Profile Photo")
         emailAddressItemView.updateContent(data.email ?? "-")
-        dateOfBirthItemView.updateContent(data.birthDate ?? "-")
+        dateOfBirthItemView.updateContent(formatDateOfBirthForDisplay(data.birthDate) ?? "-")
         
         // Subscription 显示逻辑
         let subscriptionText = data.subscription ?? "-"
@@ -290,6 +290,30 @@ class LMProfileDisplayView: UIView {
         
         // 根据订阅状态显示/隐藏取消订阅按钮，并更新布局
         updateBottomConstraints(showButton: false)
+    }
+    
+    private func formatDateOfBirthForDisplay(_ rawValue: String?) -> String? {
+        guard let rawValue = rawValue?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !rawValue.isEmpty else {
+            return nil
+        }
+        
+        let inputFormats = ["yyyy-MM-dd", "yyyy/MM/dd"]
+        for format in inputFormats {
+            let formatter = DateFormatter()
+            formatter.dateFormat = format
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.calendar = Calendar(identifier: .gregorian)
+            if let date = formatter.date(from: rawValue) {
+                let outputFormatter = DateFormatter()
+                outputFormatter.dateFormat = "yyyy-MM-dd"
+                outputFormatter.locale = Locale(identifier: "en_US_POSIX")
+                outputFormatter.calendar = Calendar(identifier: .gregorian)
+                return outputFormatter.string(from: date)
+            }
+        }
+        
+        return rawValue
     }
     
     // MARK: - Actions

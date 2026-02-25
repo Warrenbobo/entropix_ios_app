@@ -122,6 +122,10 @@ class LMCameraPage: LMPageWrapper {
     }
     
     // MARK: - Lifecycle
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        .lightContent
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupCameraPageComponents()
@@ -420,9 +424,6 @@ class LMCameraPage: LMPageWrapper {
     // MARK: - Styling
     private func configureDefaultContentAndStyles() {
         view.backgroundColor = UIColor.black
-        if #available(iOS 13.0, *) {
-            overrideUserInterfaceStyle = .dark
-        }
     }
     
     // MARK: - Permissions

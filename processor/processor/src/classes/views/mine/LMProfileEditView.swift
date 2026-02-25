@@ -26,6 +26,11 @@ class LMProfileEditView: UIView {
         static let textFieldHeight: CGFloat = 48
     }
     
+    private enum DateOfBirthFormat {
+        static let output = "yyyy-MM-dd"
+        static let inputs = ["yyyy-MM-dd", "yyyy/MM/dd"]
+    }
+    
     // MARK: - UI Components
     private let containerView = UIView()
     private let scrollView = UIScrollView()
@@ -492,12 +497,13 @@ class LMProfileEditView: UIView {
         
         // 更新日期字段，如果有值则设置到 datePicker
         if let birthDate = data.birthDate, !birthDate.isEmpty {
-            dateOfBirthTextField.text = birthDate
-            // 尝试解析日期并设置到 datePicker
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy/MM/dd"
-            if let date = formatter.date(from: birthDate) {
-                datePicker.date = date
+            if let parsedDate = parseDateOfBirth(birthDate) {
+                datePicker.date = parsedDate
+                let formatted = formatDateOfBirth(parsedDate)
+                dateOfBirthTextField.text = formatted
+                profileData?.birthDate = formatted
+            } else {
+                dateOfBirthTextField.text = birthDate
             }
         } else {
             dateOfBirthTextField.text = nil
@@ -586,9 +592,7 @@ class LMProfileEditView: UIView {
     
     @objc private func datePickerDoneButtonTapped() {
         // 格式化日期
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy/MM/dd"
-        dateOfBirthTextField.text = formatter.string(from: datePicker.date)
+        dateOfBirthTextField.text = formatDateOfBirth(datePicker.date)
         
         // 恢复边框样式
         dateOfBirthContainerView.layer.borderColor = UIColor.systemGray4.cgColor
@@ -609,5 +613,32 @@ class LMProfileEditView: UIView {
         if let hiddenTextField = dateOfBirthContainerView.viewWithTag(999) as? UITextField {
             hiddenTextField.resignFirstResponder()
         }
+    }
+    
+    // MARK: - Date of Birth Formatting
+    
+    private func parseDateOfBirth(_ rawValue: String) -> Date? {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        
+        for format in DateOfBirthFormat.inputs {
+            let formatter = DateFormatter()
+            formatter.dateFormat = format
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.calendar = Calendar(identifier: .gregorian)
+            if let date = formatter.date(from: trimmed) {
+                return date
+            }
+        }
+        
+        return nil
+    }
+    
+    private func formatDateOfBirth(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = DateOfBirthFormat.output
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = Calendar(identifier: .gregorian)
+        return formatter.string(from: date)
     }
 }

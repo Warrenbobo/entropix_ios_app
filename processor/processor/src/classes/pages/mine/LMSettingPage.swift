@@ -12,18 +12,25 @@ class LMSettingPage: LMPageWrapper {
     
     private let scrollView = UIScrollView()
     private let contentView = UIView()
+    private let itemsStackView = UIStackView()
     
     // Setting Items
+    private let accountProfileItem = LMSettingItemView()
     private let languageItem = LMSettingItemView()
     private let contactUsItem = LMSettingItemView()
     private let frequentQuestionsItem = LMSettingItemView()
     private let aboutItem = LMSettingItemView()
+    private let deleteAccountItem = LMSettingItemView()
     
     // Logout Button
     private let logoutButton = UIButton(type: .custom)
 
     private var isUserLoggedIn: Bool {
         return false // 暂时隐藏退出登录按钮
+    }
+    
+    private var isInReviewMode: Bool {
+        LMPackageManager.reviewState == .inReview
     }
     
     override func viewDidLoad() {
@@ -33,6 +40,7 @@ class LMSettingPage: LMPageWrapper {
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
         updateUIForLoginState()
+        updateUIForReviewState()
     }
 
     
@@ -41,6 +49,7 @@ class LMSettingPage: LMPageWrapper {
         navigationController?.setNavigationBarHidden(false,
                                                      animated: true)
         updateUIForLoginState()
+        updateUIForReviewState()
     }
 }
 
@@ -51,17 +60,41 @@ extension LMSettingPage {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        contentView.addSubview(languageItem)
-        contentView.addSubview(contactUsItem)
-        contentView.addSubview(frequentQuestionsItem)
-        contentView.addSubview(aboutItem)
+        contentView.addSubview(itemsStackView)
+        itemsStackView.addArrangedSubview(accountProfileItem)
+        itemsStackView.addArrangedSubview(languageItem)
+        itemsStackView.addArrangedSubview(contactUsItem)
+        itemsStackView.addArrangedSubview(frequentQuestionsItem)
+        itemsStackView.addArrangedSubview(aboutItem)
+        itemsStackView.addArrangedSubview(deleteAccountItem)
+        
         contentView.addSubview(logoutButton)
         
+        setupItemsStackView()
         setupSettingItems()
         setupLogoutButton()
     }
     
+    private func setupItemsStackView() {
+        itemsStackView.axis = .vertical
+        itemsStackView.spacing = 16
+        itemsStackView.distribution = .fill
+        itemsStackView.alignment = .fill
+    }
+    
     private func setupSettingItems() {
+        // Account Profile
+        accountProfileItem.configure(
+            icon: UIImage(named: "user_solid_blue"),
+            iconBackgroundColor: .hexColor("#DBEAFE"),
+            title: LMText.settings.accountProfile,
+            subtitle: LMText.settings.accountProfileSubtitle,
+            showArrow: true
+        )
+        accountProfileItem.onTap = { [weak self] in
+            self?.handleAccountProfileTapped()
+        }
+        
         // Language
         languageItem.configure(
             icon: UIImage(named: "globe_purple"),
@@ -109,6 +142,18 @@ extension LMSettingPage {
         aboutItem.onTap = { [weak self] in
             self?.handleAboutTapped()
         }
+        
+        // Delete Account
+        deleteAccountItem.configure(
+            icon: UIImage(named: "trash_white"),
+            iconBackgroundColor: UIColor.systemRed,
+            title: LMText.settings.deleteAccount,
+            subtitle: LMText.settings.deleteAccountSubtitle,
+            showArrow: true
+        )
+        deleteAccountItem.onTap = { [weak self] in
+            self?.handleDeleteAccountTapped()
+        }
     }
     
     private func setupLogoutButton() {
@@ -138,23 +183,8 @@ extension LMSettingPage {
             make.width.equalToSuperview()
         }
         
-        languageItem.snp.makeConstraints { make in
+        itemsStackView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(24)
-            make.leading.trailing.equalToSuperview().inset(16)
-        }
-        
-        contactUsItem.snp.makeConstraints { make in
-            make.top.equalTo(languageItem.snp.bottom).offset(16)
-            make.leading.trailing.equalToSuperview().inset(16)
-        }
-        
-        frequentQuestionsItem.snp.makeConstraints { make in
-            make.top.equalTo(contactUsItem.snp.bottom).offset(16)
-            make.leading.trailing.equalToSuperview().inset(16)
-        }
-        
-        aboutItem.snp.makeConstraints { make in
-            make.top.equalTo(frequentQuestionsItem.snp.bottom).offset(16)
             make.leading.trailing.equalToSuperview().inset(16)
         }
     }
@@ -175,19 +205,23 @@ extension LMSettingPage {
         // 如果未登录，需要更新布局约束
         if !isUserLoggedIn {
             logoutButton.snp.remakeConstraints { make in
-                make.top.equalTo(aboutItem.snp.bottom)
+                make.top.equalTo(itemsStackView.snp.bottom)
                 make.leading.trailing.equalToSuperview().inset(16)
                 make.height.equalTo(0)
                 make.bottom.equalToSuperview().offset(-40)
             }
         } else {
             logoutButton.snp.remakeConstraints { make in
-                make.top.equalTo(aboutItem.snp.bottom).offset(40)
+                make.top.equalTo(itemsStackView.snp.bottom).offset(40)
                 make.leading.trailing.equalToSuperview().inset(16)
                 make.height.equalTo(50)
                 make.bottom.equalToSuperview().offset(-40)
             }
         }
+    }
+    
+    private func updateUIForReviewState() {
+        deleteAccountItem.isHidden = !isInReviewMode
     }
 }
 
@@ -200,6 +234,15 @@ extension LMSettingPage {
     
     @objc private func handleLogoutButtonTapped() {
         showLogoutConfirmation()
+    }
+    
+    private func handleAccountProfileTapped() {
+        guard requireLogin(action: "view account profile") else {
+            return
+        }
+        
+        let profilePage = LMAccountProfilePage()
+        navigationController?.pushViewController(profilePage, animated: true)
     }
     
     private func handleLanguageTapped() {
@@ -226,6 +269,15 @@ extension LMSettingPage {
         let aboutPage = LMAboutPage()
         navigationController?.pushViewController(aboutPage,
                                                  animated: true)
+    }
+    
+    private func handleDeleteAccountTapped() {
+        guard requireLogin(action: "delete account") else {
+            return
+        }
+        
+        let deletePage = LMDeleteAccountPage()
+        navigationController?.pushViewController(deletePage, animated: true)
     }
 }
 

@@ -165,7 +165,7 @@ struct LMProfileTextConfig: Codable {
     var nickname: String = "Nickname"
     var enterNickname: String = "Enter your nickname"
     var enterUsername: String = "Enter your username"
-    var dateFormatPlaceholder: String = "YYYY/MM/DD"
+    var dateFormatPlaceholder: String = "YYYY-MM-DD"
     var cancelSubscription: String = "Cancel Subscription"
     var editProfileData: String = "Edit Profile Data"
     

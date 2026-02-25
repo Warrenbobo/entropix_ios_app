@@ -33,6 +33,10 @@ class LMSavedIdeaDetailPage: UIViewController {
     }
     
     // MARK: - Lifecycle
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        .lightContent
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         configureViewHierarchy()
