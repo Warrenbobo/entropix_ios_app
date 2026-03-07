@@ -479,11 +479,6 @@ extension LMAccountProfilePage: ProfileEditViewDelegate {
         showImagePicker()
     }
     
-    func profileEditViewDidTapChangePassword(_ view: LMProfileEditView) {
-        let changePasswordPage = LMForgotPasswordPage()
-        navigationController?.pushViewController(changePasswordPage, animated: true)
-    }
-    
     private func showImagePicker() {
         let alert = UIAlertController(title: LMText.profile.changePhoto, message: LMText.profile.choosePhotoSource, preferredStyle: .actionSheet)
         

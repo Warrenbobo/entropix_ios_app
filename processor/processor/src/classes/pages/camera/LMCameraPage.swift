@@ -60,6 +60,9 @@ class LMCameraPage: LMPageWrapper {
     var guidanceLine: CAShapeLayer! // 引导线（在previewCanvasView.layer上，连接白色框和蓝色框）
     var referenceImageDetectionManager: LMReferenceImageDetectionManager!
     var cameraStreamDetectionManager: LMCameraStreamDetectionManager!
+    
+    /// 用于防止 Reference Image 检测回调在状态切换后“回写”旧状态（例如关闭 reference image 后仍回调）
+    var arGuidanceReferenceDetectionRequestId: UInt64 = 0
     var arGuidanceState: LMARGuidanceState = .disabled {
         didSet {
             handleARGuidanceStateChange(from: oldValue, to: arGuidanceState)

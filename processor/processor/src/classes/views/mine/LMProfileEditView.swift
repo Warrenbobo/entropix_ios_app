@@ -10,7 +10,6 @@ import UIKit
 // MARK: - ProfileEditView
 protocol ProfileEditViewDelegate: AnyObject {
     func profileEditViewDidTapChangePhoto(_ view: LMProfileEditView)
-    func profileEditViewDidTapChangePassword(_ view: LMProfileEditView)
 }
 
 class LMProfileEditView: UIView {
@@ -53,27 +52,6 @@ class LMProfileEditView: UIView {
     private let calendarIconView = UIImageView()
     private let datePicker = UIDatePicker()
     
-    // Non-editable fields container
-    private let nonEditableFieldsView = UIView()
-    private let separatorLine = UIView()
-    
-    // Non-editable field rows (初始化时创建，后续只更新值)
-    private let emailFieldView = UIView()
-    private let emailTitleLabel = UILabel()
-    private let emailValueLabel = UILabel()
-    
-    private let subscriptionFieldView = UIView()
-    private let subscriptionTitleLabel = UILabel()
-    private let subscriptionValueLabel = UILabel()
-    
-    private let inspirePointsFieldView = UIView()
-    private let inspirePointsTitleLabel = UILabel()
-    private let inspirePointsValueLabel = UILabel()
-    
-    private let passwordFieldView = UIView()
-    private let passwordTitleLabel = UILabel()
-    private let changePasswordButton = UIButton()
-    
     private var profileData: LMUserModel?
     
     override init(frame: CGRect) {
@@ -98,7 +76,6 @@ class LMProfileEditView: UIView {
         scrollView.addSubview(contentView)
         
         setupEditableFields()
-        setupNonEditableFields()
     }
     
     private func setupEditableFields() {
@@ -138,49 +115,6 @@ class LMProfileEditView: UIView {
         contentView.addSubview(dateOfBirthLabel)
         contentView.addSubview(dateOfBirthContainerView)
         setupDateOfBirthField()
-    }
-    
-    private func setupNonEditableFields() {
-        contentView.addSubview(nonEditableFieldsView)
-        nonEditableFieldsView.backgroundColor = UIColor.clear
-        
-        // Separator line
-        separatorLine.backgroundColor = UIColor.systemGray5
-        nonEditableFieldsView.addSubview(separatorLine)
-        
-        // Email field
-        setupNonEditableFieldRow(
-            fieldView: emailFieldView,
-            titleLabel: emailTitleLabel,
-            valueLabel: emailValueLabel,
-            title: LMText.profile.emailAddress,
-            value: ""
-        )
-        nonEditableFieldsView.addSubview(emailFieldView)
-        
-        // Subscription field
-        setupNonEditableFieldRow(
-            fieldView: subscriptionFieldView,
-            titleLabel: subscriptionTitleLabel,
-            valueLabel: subscriptionValueLabel,
-            title: LMText.profile.subscriptionType,
-            value: ""
-        )
-        nonEditableFieldsView.addSubview(subscriptionFieldView)
-        
-        // Inspire Points field
-        setupNonEditableFieldRow(
-            fieldView: inspirePointsFieldView,
-            titleLabel: inspirePointsTitleLabel,
-            valueLabel: inspirePointsValueLabel,
-            title: LMText.profile.inspirePoints,
-            value: ""
-        )
-        nonEditableFieldsView.addSubview(inspirePointsFieldView)
-        
-        // Password field (with button)
-        setupPasswordFieldRow()
-        nonEditableFieldsView.addSubview(passwordFieldView)
     }
     
     private func setupLabel(_ label: UILabel, text: String) {
@@ -260,71 +194,6 @@ class LMProfileEditView: UIView {
         hiddenTextField.isHidden = true
         hiddenTextField.tag = 999
         dateOfBirthContainerView.addSubview(hiddenTextField)
-    }
-    
-    private func setupNonEditableFieldRow(
-        fieldView: UIView,
-        titleLabel: UILabel,
-        valueLabel: UILabel,
-        title: String,
-        value: String
-    ) {
-        // Title label - 固定宽度，优先显示
-        titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        titleLabel.textColor = UIColor.systemGray
-        titleLabel.setContentHuggingPriority(.required, for: .horizontal)
-        titleLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-        
-        // Value label - 可压缩，右对齐
-        valueLabel.text = value
-        valueLabel.font = UIFont.systemFont(ofSize: 14)
-        valueLabel.textColor = UIColor.systemGray2
-        valueLabel.textAlignment = .right
-        valueLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        valueLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        
-        fieldView.addSubview(titleLabel)
-        fieldView.addSubview(valueLabel)
-        
-        titleLabel.snp.makeConstraints { make in
-            make.leading.centerY.equalToSuperview()
-            make.width.equalTo(Constants.titleLabelWidth)
-        }
-        
-        valueLabel.snp.makeConstraints { make in
-            make.trailing.centerY.equalToSuperview()
-            make.leading.equalTo(titleLabel.snp.trailing).offset(8)
-        }
-    }
-    
-    private func setupPasswordFieldRow() {
-        // Title label
-        passwordTitleLabel.text = LMText.auth.password
-        passwordTitleLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
-        passwordTitleLabel.textColor = UIColor.systemGray
-        passwordTitleLabel.setContentHuggingPriority(.required, for: .horizontal)
-        passwordTitleLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-        
-        // Change password button
-        changePasswordButton.setTitle(LMText.profile.changePassword, for: .normal)
-        changePasswordButton.setTitleColor(UIColor.systemBlue, for: .normal)
-        changePasswordButton.titleLabel?.font = UIFont.systemFont(ofSize: 14)
-        changePasswordButton.contentHorizontalAlignment = .right
-        changePasswordButton.addTarget(self, action: #selector(changePasswordButtonTapped), for: .touchUpInside)
-        
-        passwordFieldView.addSubview(passwordTitleLabel)
-        passwordFieldView.addSubview(changePasswordButton)
-        
-        passwordTitleLabel.snp.makeConstraints { make in
-            make.leading.centerY.equalToSuperview()
-            make.width.equalTo(Constants.titleLabelWidth)
-        }
-        
-        changePasswordButton.snp.makeConstraints { make in
-            make.trailing.centerY.equalToSuperview()
-            make.leading.equalTo(passwordTitleLabel.snp.trailing).offset(8)
-        }
     }
     
     @objc private func textFieldDidBeginEditing(_ textField: UITextField) {
@@ -411,6 +280,7 @@ class LMProfileEditView: UIView {
             make.top.equalTo(dateOfBirthLabel.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview().inset(Constants.horizontalPadding)
             make.height.equalTo(Constants.textFieldHeight)
+            make.bottom.equalToSuperview().offset(-40)
         }
         
         dateOfBirthTextField.snp.makeConstraints { make in
@@ -425,44 +295,6 @@ class LMProfileEditView: UIView {
             make.size.equalTo(24)
         }
         
-        // Non-editable fields container
-        nonEditableFieldsView.snp.makeConstraints { make in
-            make.top.equalTo(dateOfBirthContainerView.snp.bottom).offset(32)
-            make.leading.trailing.equalToSuperview().inset(Constants.horizontalPadding)
-            make.bottom.equalToSuperview().offset(-40)
-        }
-        
-        // Non-editable fields layout
-        separatorLine.snp.makeConstraints { make in
-            make.top.equalToSuperview()
-            make.leading.trailing.equalToSuperview()
-            make.height.equalTo(1)
-        }
-        
-        emailFieldView.snp.makeConstraints { make in
-            make.top.equalTo(separatorLine.snp.bottom).offset(Constants.verticalSpacing)
-            make.leading.trailing.equalToSuperview()
-            make.height.equalTo(Constants.fieldHeight)
-        }
-        
-        subscriptionFieldView.snp.makeConstraints { make in
-            make.top.equalTo(emailFieldView.snp.bottom).offset(Constants.verticalSpacing)
-            make.leading.trailing.equalToSuperview()
-            make.height.equalTo(Constants.fieldHeight)
-        }
-        
-        inspirePointsFieldView.snp.makeConstraints { make in
-            make.top.equalTo(subscriptionFieldView.snp.bottom).offset(Constants.verticalSpacing)
-            make.leading.trailing.equalToSuperview()
-            make.height.equalTo(Constants.fieldHeight)
-        }
-        
-        passwordFieldView.snp.makeConstraints { make in
-            make.top.equalTo(inspirePointsFieldView.snp.bottom).offset(Constants.verticalSpacing)
-            make.leading.trailing.equalToSuperview()
-            make.height.equalTo(Constants.fieldHeight)
-            make.bottom.lessThanOrEqualToSuperview()
-        }
     }
     
     // MARK: - Styles
@@ -507,18 +339,6 @@ class LMProfileEditView: UIView {
             }
         } else {
             dateOfBirthTextField.text = nil
-        }
-        
-        // Update non-editable field values (只更新值，不重建视图)
-        let emailText = data.email?.trimmingCharacters(in: .whitespacesAndNewlines)
-        emailValueLabel.text = (emailText?.isEmpty ?? true) ? "-" : emailText
-        subscriptionValueLabel.text = data.subscription ?? ""
-        
-        // Inspire Points 显示逻辑
-        if data.isPremiumUser {
-            inspirePointsValueLabel.text = LMText.profile.unlimited
-        } else {
-            inspirePointsValueLabel.text = "\(data.inspirePoints ?? 0)"
         }
     }
     
@@ -573,10 +393,6 @@ class LMProfileEditView: UIView {
     
     @objc private func changePhotoButtonTapped() {
         delegate?.profileEditViewDidTapChangePhoto(self)
-    }
-    
-    @objc private func changePasswordButtonTapped() {
-        delegate?.profileEditViewDidTapChangePassword(self)
     }
     
     @objc private func dateOfBirthContainerTapped() {

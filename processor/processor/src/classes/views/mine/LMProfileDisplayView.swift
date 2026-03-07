@@ -39,9 +39,6 @@ class LMProfileDisplayView: UIView {
     private let nicknameItemView = LMProfileItemView(title: "Nickname")
     private let usernameItemView = LMProfileItemView(title: "Username")
     private let avatarItemView = LMProfileItemView(title: "Avatar", content: "Profile Photo")
-    private let subscriptionItemView = LMProfileItemView(title: "Subscription")
-    private let inspirePointsItemView = LMProfileItemView(title: "Inspire Points")
-    private let emailAddressItemView = LMProfileItemView(title: "Email Address")
     private let dateOfBirthItemView = LMProfileItemView(title: "Date of Birth")
     
     // Cancel subscription button
@@ -108,13 +105,7 @@ class LMProfileDisplayView: UIView {
         fieldsContainerView.addSubview(nicknameItemView)
         fieldsContainerView.addSubview(usernameItemView)
         fieldsContainerView.addSubview(avatarItemView)
-        fieldsContainerView.addSubview(subscriptionItemView)
-        fieldsContainerView.addSubview(inspirePointsItemView)
-        fieldsContainerView.addSubview(emailAddressItemView)
         fieldsContainerView.addSubview(dateOfBirthItemView)
-        
-        // 设置 Subscription 项目的代理（可点击）
-        subscriptionItemView.delegate = self
     }
     
     private func setupCancelSubscriptionButton() {
@@ -190,23 +181,8 @@ class LMProfileDisplayView: UIView {
             make.leading.trailing.equalToSuperview()
         }
         
-        subscriptionItemView.snp.makeConstraints { make in
-            make.top.equalTo(avatarItemView.snp.bottom)
-            make.leading.trailing.equalToSuperview()
-        }
-        
-        inspirePointsItemView.snp.makeConstraints { make in
-            make.top.equalTo(subscriptionItemView.snp.bottom)
-            make.leading.trailing.equalToSuperview()
-        }
-        
-        emailAddressItemView.snp.makeConstraints { make in
-            make.top.equalTo(inspirePointsItemView.snp.bottom)
-            make.leading.trailing.equalToSuperview()
-        }
-        
         dateOfBirthItemView.snp.makeConstraints { make in
-            make.top.equalTo(emailAddressItemView.snp.bottom)
+            make.top.equalTo(avatarItemView.snp.bottom)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
         }
@@ -270,23 +246,7 @@ class LMProfileDisplayView: UIView {
         nicknameItemView.updateContent(data.nickname ?? "-")
         usernameItemView.updateContent(data.username ?? "-")
         avatarItemView.updateContent("Profile Photo")
-        emailAddressItemView.updateContent(data.email ?? "-")
         dateOfBirthItemView.updateContent(formatDateOfBirthForDisplay(data.birthDate) ?? "-")
-        
-        // Subscription 显示逻辑
-        let subscriptionText = data.subscription ?? "-"
-        if data.isPremiumUser {
-            subscriptionItemView.configure(title: "Subscription", content: subscriptionText, type: .button)
-        } else {
-            subscriptionItemView.configure(title: "Subscription", content: subscriptionText, type: .text)
-        }
-        
-        // Inspire Points 显示逻辑
-        if data.isPremiumUser {
-            inspirePointsItemView.updateContent("Unlimited")
-        } else {
-            inspirePointsItemView.updateContent("\(data.inspirePoints ?? 0)")
-        }
         
         // 根据订阅状态显示/隐藏取消订阅按钮，并更新布局
         updateBottomConstraints(showButton: false)
@@ -324,14 +284,5 @@ class LMProfileDisplayView: UIView {
     
     @objc private func startEditProfileDataButtonTapped() {
         delegate?.profileDisplayViewDidTapEditProfileData(self)
-    }
-}
-
-// MARK: - LMProfileItemViewDelegate
-extension LMProfileDisplayView: LMProfileItemViewDelegate {
-    func profileItemViewDidTap(_ itemView: LMProfileItemView) {
-        if itemView === subscriptionItemView {
-            delegate?.profileDisplayViewDidTapSubscription(self)
-        }
     }
 }

@@ -54,6 +54,15 @@ class LMReferenceImageDetectionManager: LMPersonDetectionManagerDelegate {
         personDetectionManager.startDetection()
         personDetectionManager.processImage(image, shouldRotateToPortrait: isCurrentImageLandscape)
     }
+    
+    /// 取消当前正在进行的检测（如果有）
+    /// 注意：Vision 请求无法强制中断，但会清空 completion，避免回调影响已切换的页面状态
+    func cancelCurrentDetection() {
+        currentCompletion = nil
+        personDetectionManager.stopDetection()
+        isCurrentImageLandscape = false
+        LMLogger.log("🛑 [Reference Detection] Current detection cancelled")
+    }
 
     // MARK: - LMPersonDetectionManagerDelegate
 

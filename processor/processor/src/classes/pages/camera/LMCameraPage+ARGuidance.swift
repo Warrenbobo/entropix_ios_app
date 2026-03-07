@@ -487,6 +487,10 @@ extension LMCameraPage {
     }
     
     func stopARGuidanceSession() {
+        // 防止 Reference Image 检测的异步回调在 AR Guidance 关闭后回写旧状态
+        arGuidanceReferenceDetectionRequestId &+= 1
+        referenceImageDetectionManager?.cancelCurrentDetection()
+        
         arGuidanceState = .disabled
         stopRealtimePersonDetection()
         arGuidanceView.hideOrShowAllGuidance(true)
@@ -523,6 +527,13 @@ extension LMCameraPage {
             LMLogger.log("✅ Reference检测完成，bbox: \(bbox)")
             
         case .activeGuidance:
+            guard currentCameraState == .compositionSelected,
+                  currentReferenceImage != nil,
+                  referenceImageInitialOrientation != nil else {
+                LMLogger.log("⚠️ [AR Guidance] activeGuidance entered without valid reference context, stopping session")
+                stopARGuidanceSession()
+                return
+            }
             isARGuidanceActive = true
             startRealtimePersonDetection()
             arGuidanceView.hideOrShowAllGuidance(false)
@@ -593,9 +604,28 @@ extension LMCameraPage {
         LMLogger.log("✅ [AR Guidance] Starting person detection in reference image...")
 
         // 每次都执行新的检测，不使用缓存
+        arGuidanceReferenceDetectionRequestId &+= 1
+        let requestId = arGuidanceReferenceDetectionRequestId
+        
         referenceImageDetectionManager.detectPersonInReferenceImage(image) { [weak self] bbox in
             guard let self = self else { return }
 
+            // 忽略已过期的检测回调（例如用户已关闭 reference image / 已退出 compositionSelected）
+            guard requestId == self.arGuidanceReferenceDetectionRequestId else {
+                LMLogger.log("🧯 [AR Guidance] Ignoring stale reference detection callback (requestId=\(requestId))")
+                return
+            }
+            
+            guard self.currentCameraState == .compositionSelected else {
+                LMLogger.log("🧯 [AR Guidance] Ignoring reference detection callback - not in compositionSelected state")
+                return
+            }
+            
+            guard case .waitingForReferenceDetection = self.arGuidanceState else {
+                LMLogger.log("🧯 [AR Guidance] Ignoring reference detection callback - state changed: \(self.arGuidanceState)")
+                return
+            }
+            
             LMLogger.log("📦 [AR Guidance] Detection callback received, bbox: \(String(describing: bbox))")
 
             guard let bbox = bbox else {
@@ -662,7 +692,8 @@ extension LMCameraPage {
     
     /// 停止实时人物检测
     func stopRealtimePersonDetection() {
-        cameraStreamDetectionManager.stopRealtimeDetection()
+        // 关闭检测时同时重置方向匹配状态，避免后续误触发恢复检测
+        cameraStreamDetectionManager?.setOrientationMatched(false)
         hideLiveBox() // 使用新的方法隐藏独立的蓝色框
         LMLogger.log("⏹️ 停止实时人物检测")
     }
@@ -1164,6 +1195,8 @@ extension LMCameraPage {
     /// 处理AR引导的视频帧
     func processARGuidanceFrame(_ sampleBuffer: CMSampleBuffer) {
         guard isARGuidanceActive else { return }
+        guard currentCameraState == .compositionSelected else { return }
+        guard currentReferenceImage != nil, referenceImageInitialOrientation != nil else { return }
         guard arGuidanceState == .activeGuidance else { return }
         
         // 检查方向是否与图片方向类型匹配
