@@ -13,6 +13,7 @@ class LMMinePage: LMPageWrapper {
     private let topBar = LMProcessorTopBar()
     private var scrollView = UIScrollView()
     private var stackView: UIStackView!
+    private var floatingCameraButton: LMFloatingCameraButton?
     // 用户信息
     private let profileView = LMMineUserInfoView()
     // 是否展示个人中心会员卡功能
@@ -53,6 +54,7 @@ class LMMinePage: LMPageWrapper {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        updateNavigationPresentation()
         refreshUserData()
     }
     
@@ -68,6 +70,9 @@ class LMMinePage: LMPageWrapper {
     
     private func setupCustomNavigationBar() {
         topBar.setTitle(LMText.profile.profile)
+        topBar.setBackButtonAction { [weak self] in
+            self?.navigationController?.popViewController(animated: true)
+        }
         topBar.setMoreButtonAction { [weak self] in
             self?.moreButtonTapped()
         }
@@ -152,12 +157,25 @@ class LMMinePage: LMPageWrapper {
         floatingButton.setCameraButtonAction {
             self.cameraButtonTapped()
         }
+        floatingCameraButton = floatingButton
         view.addSubview(floatingButton)
         floatingButton.snp.makeConstraints { make in
             make.bottom.equalTo(-(AppTheme.Screen.safeAreaBottom + 30))
             make.trailing.equalTo(-20)
             make.size.equalTo(60)
         }
+    }
+
+    private func updateNavigationPresentation() {
+        let isPushed: Bool
+        if let rootController = navigationController?.viewControllers.first {
+            isPushed = rootController !== self
+        } else {
+            isPushed = false
+        }
+
+        topBar.setBackButtonHidden(!isPushed)
+        floatingCameraButton?.isHidden = isPushed
     }
     
     private func moreButtonTapped() {

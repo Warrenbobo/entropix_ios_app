@@ -57,25 +57,30 @@ extension LMCameraPage: LMCameraPreviewViewDelegate {
 extension LMCameraPage: LMCameraControlsViewDelegate {
     
     func cameraControlsView(_ view: LMCameraControlsView, didChangeFlashMode mode: LMFlashMode) {
+        guard ensureCameraPermissionForInteraction() else { return }
         LMLogger.log("⚡ Flash mode: \(mode.displayName)")
     }
     
     func cameraControlsView(_ view: LMCameraControlsView, didChangeAspectRatio ratio: LMAspectRatio) {
+        guard ensureCameraPermissionForInteraction() else { return }
         LMLogger.log("📐 Aspect ratio: \(ratio.displayName)")
         // 更新预览画布的尺寸，而不是改变相机的输出尺寸
         updatePreviewCanvasAspectRatio(ratio)
     }
     
     func cameraControlsView(_ view: LMCameraControlsView, didChangeTimer duration: LMTimerDuration) {
+        guard ensureCameraPermissionForInteraction() else { return }
         LMLogger.log("⏱️ Timer: \(duration.displayName)")
     }
     
     func cameraControlsView(_ view: LMCameraControlsView, didToggleLivePhoto enabled: Bool) {
+        guard ensureCameraPermissionForInteraction() else { return }
         LMLogger.log("📸 Live Photo: \(enabled ? "ON" : "OFF")")
         configureLivePhotosMode(enabled)
     }
     
     func cameraControlsView(_ view: LMCameraControlsView, didToggleGrid enabled: Bool) {
+        guard ensureCameraPermissionForInteraction() else { return }
         LMLogger.log("🔲 Grid: \(enabled ? "ON" : "OFF")")
         cameraPreviewView.setGridVisibility(enabled)
     }
@@ -108,6 +113,7 @@ extension LMCameraPage: LMCameraControlsViewDelegate {
 extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     
     func cameraBottomControlsViewDidTapARGuidanceButton() {
+        guard ensureCameraPermissionForInteraction() else { return }
         let isActive = cameraBottomControlsView.isARGuidanceActive()
         LMLogger.log("🎯 AR Guidance: \(isActive ? "ON" : "OFF")")
         
@@ -177,11 +183,13 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     }
     
     func cameraBottomControlsViewDidTapUnavailableARGuidance() {
+        guard ensureCameraPermissionForInteraction() else { return }
         // 不做任何处理，unavailable 状态下点击无效果
         LMLogger.log("⚠️ User tapped unavailable AR Guidance button - ignored")
     }
     
     func cameraBottomControlsViewDidTapCaptureButton() {
+        guard ensureCameraPermissionForInteraction() else { return }
         let timerDuration = cameraControlsView.getCurrentTimerDuration().seconds
         
         if timerDuration > 0 {
@@ -193,6 +201,7 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     }
     
     func cameraBottomControlsViewDidTapFlipCameraButton() {
+        guard ensureCameraPermissionForInteraction() else { return }
         LMLogger.log("🔄 Flipping camera")
         switchCameraPosition()
     }
@@ -300,6 +309,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
 extension LMCameraPage: LMInspireMeButtonViewDelegate {
     
     func inspireMeButtonViewDidTapButton() {
+        guard ensureCameraPermissionForInteraction() else { return }
         LMLogger.log("🎯 Inspire Me button tapped")
         
         let subscriptionStatus = LMStoreManager.shared.currentSubscriptionStatus
@@ -316,13 +326,13 @@ extension LMCameraPage: LMInspireMeButtonViewDelegate {
     }
     
     func inspireMeButtonViewDidTapQuestionButton() {
+        guard ensureCameraPermissionForInteraction() else { return }
         LMLogger.log("❓ Inspire Me question button tapped")
-        
-        // 显示 Inspire Me 功能说明
-        AppTheme.Toast.showText(LMText.camera.inspireMeHint)
+        showTutorialFromStart()
     }
     
     func inspireMeButtonViewDidTapDisabledButton() {
+        guard ensureCameraPermissionForInteraction() else { return }
         LMLogger.log("⚠️ Inspire Me button tapped while using front camera")
         
         // 显示前摄不可用提示

@@ -78,6 +78,8 @@ extension LMCameraPage {
     
     func processInspireMeImage(_ image: UIImage) {
         LMLogger.log("📸 Processing Inspire Me image...")
+        currentProcessingSceneryImage = image
+        updateProcessingOverlaySceneryImage(image)
         let sceneFeature = analyzeSceneWithFastVLM(image)
         
         processAndUploadImage(image, sceneFeature: sceneFeature)
@@ -132,75 +134,95 @@ extension LMCameraPage {
     func showProcessingOverlay() {
         hideProcessingOverlay()
         
-        // 创建半透明遮罩，但不阻止用户交互
         let overlayView = UIView()
-        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        overlayView.backgroundColor = .black
         overlayView.tag = ViewTag.processingOverlay.rawValue
-        overlayView.isUserInteractionEnabled = false // 遮罩本身不拦截交互
+        overlayView.isUserInteractionEnabled = false
+        overlayView.clipsToBounds = true
+        previewCanvasView.addSubview(overlayView)
         
-        // 创建加载指示器容器
+        let sceneryImageView = UIImageView()
+        sceneryImageView.contentMode = .scaleAspectFill
+        sceneryImageView.clipsToBounds = true
+        sceneryImageView.image = currentProcessingSceneryImage
+        overlayView.addSubview(sceneryImageView)
+        
+        let dimmingView = UIView()
+        dimmingView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
+        overlayView.addSubview(dimmingView)
+        
         let indicatorContainer = UIView()
-        indicatorContainer.backgroundColor = UIColor.black.withAlphaComponent(0.8)
-        indicatorContainer.layer.cornerRadius = 16
+        indicatorContainer.backgroundColor = UIColor.black.withAlphaComponent(0.52)
+        indicatorContainer.layer.cornerRadius = 18
         indicatorContainer.clipsToBounds = true
+        overlayView.addSubview(indicatorContainer)
         
         let spinner = UIActivityIndicatorView(style: .large)
         spinner.color = .white
         spinner.startAnimating()
         
         let label = UILabel()
-        label.text = LMText.camera.analyzingScene
+        label.text = LMText.camera.processingInspiring
         label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
         label.textAlignment = .center
         label.numberOfLines = 0
         
         indicatorContainer.addSubview(spinner)
         indicatorContainer.addSubview(label)
-        overlayView.addSubview(indicatorContainer)
-        view.addSubview(overlayView)
         
-        // 布局
         overlayView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        sceneryImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        
+        dimmingView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
         
         indicatorContainer.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.width.equalTo(200)
+            make.width.equalTo(204)
             make.height.equalTo(120)
         }
         
         spinner.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalToSuperview().offset(24)
+            make.top.equalToSuperview().offset(22)
         }
         
         label.snp.makeConstraints { make in
-            make.top.equalTo(spinner.snp.bottom).offset(16)
+            make.top.equalTo(spinner.snp.bottom).offset(14)
             make.leading.trailing.equalToSuperview().inset(16)
-            make.bottom.lessThanOrEqualToSuperview().offset(-16)
+            make.bottom.lessThanOrEqualToSuperview().offset(-18)
         }
         
-        // 添加淡入动画
         overlayView.alpha = 0
         UIView.animate(withDuration: 0.2) {
             overlayView.alpha = 1
         }
-        
-        // 不禁用整个视图的交互，用户仍然可以操作相机
-        // view.isUserInteractionEnabled = false // ❌ 移除这行
+    }
+    
+    func updateProcessingOverlaySceneryImage(_ image: UIImage) {
+        currentProcessingSceneryImage = image
+        guard let overlayView = previewCanvasView.viewWithTag(ViewTag.processingOverlay.rawValue),
+              let sceneryImageView = overlayView.subviews.compactMap({ $0 as? UIImageView }).first else {
+            return
+        }
+        sceneryImageView.image = image
     }
     
     func hideProcessingOverlay() {
-        if let overlayView = view.viewWithTag(ViewTag.processingOverlay.rawValue) {
-            // 添加淡出动画
+        currentProcessingSceneryImage = nil
+        if let overlayView = previewCanvasView.viewWithTag(ViewTag.processingOverlay.rawValue) {
             UIView.animate(withDuration: 0.2, animations: {
                 overlayView.alpha = 0
             }) { _ in
                 overlayView.removeFromSuperview()
             }
         }
-        // view.isUserInteractionEnabled = true // ❌ 移除这行
     }
 }

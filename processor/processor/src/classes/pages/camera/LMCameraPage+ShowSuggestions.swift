@@ -109,6 +109,7 @@ extension LMCameraPage {
         
         currentCameraState = .showingSuggestions
         currentTaskId = taskId
+        jobIdToPlaceholderRank.removeAll()
         if let suggestionsList = suggestions {
             currentSuggestions = suggestionsList
         }
@@ -127,6 +128,7 @@ extension LMCameraPage {
         
         // 显示构图轮播
         showSuggestionsCarousel()
+        suggestionsCarouselView?.resetPlaceholderProgressState()
         
         // 立即更新轮播视图的数据（如果有初始数据）
         if !currentSuggestions.isEmpty {
@@ -184,6 +186,7 @@ extension LMCameraPage {
         // 清理数据
         currentTaskId = nil
         currentSuggestions.removeAll()
+        jobIdToPlaceholderRank.removeAll()
         
         // 应用布局变化
         UIView.animate(
@@ -256,6 +259,58 @@ extension LMCameraPage {
     }
 }
 
+// MARK: - Placeholder Job Mapping
+extension LMCameraPage {
+    
+    private static var failedJobStatuses: Set<String> {
+        ["failed", "timeout", "timed_out", "error", "cancelled"]
+    }
+    
+    private func syncPlaceholderJobMapping(with jobIds: [String]) {
+        let placeholderRanks = currentSuggestions
+            .filter { $0.ready != true }
+            .compactMap { $0.rank }
+            .sorted()
+        
+        guard placeholderRanks.count == jobIds.count, !placeholderRanks.isEmpty else {
+            return
+        }
+        
+        let newMapping = Dictionary(uniqueKeysWithValues: zip(jobIds, placeholderRanks))
+        if newMapping != jobIdToPlaceholderRank {
+            jobIdToPlaceholderRank = newMapping
+            LMLogger.log("🔗 Synced placeholder job mapping: \(newMapping)")
+        }
+    }
+    
+    private func cleanupPlaceholderJobMapping() {
+        let validRanks = Set(currentSuggestions.filter { $0.ready != true }.compactMap { $0.rank })
+        jobIdToPlaceholderRank = jobIdToPlaceholderRank.filter { validRanks.contains($0.value) }
+    }
+    
+    private func removeFailedPlaceholder(using suggestions: [LMCompositionSuggestion], jobId: String) {
+        var failedRanks = Set(suggestions.compactMap { $0.rank })
+        if failedRanks.isEmpty, let mappedRank = jobIdToPlaceholderRank[jobId] {
+            failedRanks.insert(mappedRank)
+        }
+        guard !failedRanks.isEmpty else { return }
+        
+        let originalCount = currentSuggestions.count
+        currentSuggestions.removeAll { suggestion in
+            guard suggestion.ready != true, let rank = suggestion.rank else { return false }
+            return failedRanks.contains(rank)
+        }
+        
+        for failedRank in failedRanks {
+            jobIdToPlaceholderRank = jobIdToPlaceholderRank.filter { $0.value != failedRank }
+        }
+        
+        guard currentSuggestions.count != originalCount else { return }
+        suggestionsCarouselView?.updateSuggestions(currentSuggestions)
+        LMLogger.log("🧹 Removed failed placeholder cards for ranks: \(failedRanks.sorted())")
+    }
+}
+
 // MARK: - AI Generation Polling (Job-based)
 extension LMCameraPage {
     
@@ -314,6 +369,7 @@ extension LMCameraPage {
         }
         
         LMLogger.log("📋 Got \(jobIds.count) jobs, all_completed: \(response.allCompleted ?? false)")
+        syncPlaceholderJobMapping(with: jobIds)
         
         // 检查 all_completed，如果已完成则进行最后一次兜底轮询
         if response.allCompleted == true {
@@ -353,9 +409,14 @@ extension LMCameraPage {
                        !suggestions.isEmpty {
                         LMLogger.log("✅ [Final Fetch] Job \(jobId) done with \(suggestions.count) suggestions")
                         
-                        // 在主线程更新 UI
                         DispatchQueue.main.async {
                             self.updateSuggestionsWithNewData(suggestions)
+                        }
+                    } else if let jobStatus = data.job?.status?.lowercased(),
+                              Self.failedJobStatuses.contains(jobStatus) {
+                        LMLogger.log("❌ [Final Fetch] Job \(jobId) failed with status: \(jobStatus)")
+                        DispatchQueue.main.async {
+                            self.removeFailedPlaceholder(using: data.suggestions ?? [], jobId: jobId)
                         }
                     } else {
                         LMLogger.log("⏳ [Final Fetch] Job \(jobId) status: \(data.job?.status ?? "unknown")")
@@ -387,9 +448,14 @@ extension LMCameraPage {
                    !suggestions.isEmpty {
                     LMLogger.log("✅ Job \(jobId) done with \(suggestions.count) suggestions - updating immediately")
                     
-                    // 在主线程立即更新 UI
                     DispatchQueue.main.async {
                         self.updateSuggestionsWithNewData(suggestions)
+                    }
+                } else if let jobStatus = data.job?.status?.lowercased(),
+                          Self.failedJobStatuses.contains(jobStatus) {
+                    LMLogger.log("❌ Job \(jobId) failed with status: \(jobStatus)")
+                    DispatchQueue.main.async {
+                        self.removeFailedPlaceholder(using: data.suggestions ?? [], jobId: jobId)
                     }
                 } else {
                     LMLogger.log("⏳ Job \(jobId) status: \(data.job?.status ?? "unknown")")
@@ -427,6 +493,7 @@ extension LMCameraPage {
         
         // 按 rank 排序
         currentSuggestions.sort { ($0.rank ?? 0) < ($1.rank ?? 0) }
+        cleanupPlaceholderJobMapping()
         
         // ✅ CRITICAL: Always update carousel when new data arrives, regardless of visibility
         // Polling should update UI even when carousel is hidden (e.g., in Reference Image state)
@@ -484,6 +551,7 @@ extension LMCameraPage {
             
             // ✅ CRITICAL FIX: Only refresh full list if final count ≠ initial count
             // This is the ONLY scenario where full list refresh is allowed during polling
+            cleanupPlaceholderJobMapping()
             if let carouselView = suggestionsCarouselView {
                 carouselView.updateSuggestions(currentSuggestions)
                 LMLogger.log("✅ Full list refreshed after cleanup (count changed: \(originalCount) → \(currentSuggestions.count)), carousel visible: \(!carouselView.isHidden)")

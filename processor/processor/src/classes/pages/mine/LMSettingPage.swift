@@ -50,6 +50,7 @@ class LMSettingPage: LMPageWrapper {
                                                      animated: true)
         updateUIForLoginState()
         updateUIForReviewState()
+        refreshAppUpdateIndicator()
     }
 }
 
@@ -222,6 +223,18 @@ extension LMSettingPage {
     
     private func updateUIForReviewState() {
         deleteAccountItem.isHidden = !isInReviewMode
+    }
+}
+
+extension LMSettingPage {
+    
+    private func refreshAppUpdateIndicator() {
+        aboutItem.setBadgeVisible(LMPackageManager.hasAvailableAppUpdate)
+        LMPackageManager.refreshAppUpdateStatus { [weak self] hasUpdate in
+            DispatchQueue.main.async {
+                self?.aboutItem.setBadgeVisible(hasUpdate)
+            }
+        }
     }
 }
 
@@ -677,6 +690,7 @@ class LMSettingItemView: UIView {
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
     private let arrowImageView = UIImageView()
+    private let badgeView = UIView()
     
     var onTap: (() -> Void)?
     
@@ -699,6 +713,7 @@ class LMSettingItemView: UIView {
         containerView.addSubview(titleLabel)
         containerView.addSubview(subtitleLabel)
         containerView.addSubview(arrowImageView)
+        iconContainerView.addSubview(badgeView)
     }
     
     private func setupLayout() {
@@ -716,6 +731,12 @@ class LMSettingItemView: UIView {
         iconImageView.snp.makeConstraints { make in
             make.center.equalToSuperview()
             make.size.equalTo(20)
+        }
+        
+        badgeView.snp.makeConstraints { make in
+            make.size.equalTo(10)
+            make.top.equalToSuperview().offset(-2)
+            make.trailing.equalToSuperview().offset(2)
         }
         
         titleLabel.snp.makeConstraints { make in
@@ -747,6 +768,12 @@ class LMSettingItemView: UIView {
         layer.shadowOpacity = 0.1
         
         iconContainerView.layer.cornerRadius = 8
+        
+        badgeView.backgroundColor = .systemRed
+        badgeView.layer.cornerRadius = 5
+        badgeView.layer.borderWidth = 1.5
+        badgeView.layer.borderColor = UIColor.systemBackground.cgColor
+        badgeView.isHidden = true
         
         iconImageView.tintColor = .white
         iconImageView.contentMode = .scaleAspectFit
@@ -789,5 +816,9 @@ class LMSettingItemView: UIView {
         titleLabel.text = title
         subtitleLabel.text = subtitle
         arrowImageView.isHidden = !showArrow
+    }
+    
+    func setBadgeVisible(_ visible: Bool) {
+        badgeView.isHidden = !visible
     }
 }

@@ -53,6 +53,8 @@ class LMCameraPage: LMPageWrapper {
     var shouldCaptureNextFrame = false // 标志：是否应该捕获下一帧用于Inspire Me
     /// Inspire Me 点击瞬间的设备方向（用于把取到的帧统一旋转成“home键在下方”的竖屏图）
     var inspireMeCaptureDeviceOrientation: UIDeviceOrientation?
+    var currentProcessingSceneryImage: UIImage?
+    var isShowingPermissionSettingsAlert = false
     
     // MARK: - AR Guidance (New Architecture)
     var arGuidanceView: LMARGuidanceView!
@@ -88,12 +90,17 @@ class LMCameraPage: LMPageWrapper {
         case compositionSelected // 已选择构图（AR 引导）
     }
     
-    var currentCameraState: CameraState = .normal
+    var currentCameraState: CameraState = .normal {
+        didSet {
+            updateLeadingNavigationControl()
+        }
+    }
     
     // MARK: - Show Suggestions Properties
     var suggestionsCarouselView: LMSuggestionsCarouselView?
     var currentTaskId: String?
     var currentSuggestions: [LMCompositionSuggestion] = []
+    var jobIdToPlaceholderRank: [String: Int] = [:]
     var isPolling: Bool = false // 标志：是否正在执行轮询请求
     
     // MARK: - Reference Image Properties
@@ -148,11 +155,13 @@ class LMCameraPage: LMPageWrapper {
         
         // 如果是从 Saved Idea 进入，自动进入 Composition Selected 状态
         handleNavigationSource()
+        registerAppLifecycleObservers()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        updateLeadingNavigationControl()
         
         // 启动设备方向检测
         LMDeviceOrientationManager.shared.startMonitoring()
@@ -179,6 +188,42 @@ class LMCameraPage: LMPageWrapper {
         }
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        presentHomeCameraAppUpdateIfNeeded(forceRefresh: false)
+    }
+    
+    private func registerAppLifecycleObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleApplicationDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleApplicationDidBecomeActive() {
+        guard isViewLoaded, view.window != nil else { return }
+        presentHomeCameraAppUpdateIfNeeded(forceRefresh: false)
+    }
+
+    private func presentHomeCameraAppUpdateIfNeeded(forceRefresh: Bool) {
+        guard let rootController = navigationController?.viewControllers.first,
+              rootController === self else {
+            return
+        }
+
+        guard case .normal = navigationSource else { return }
+
+        LMPackageManager.queryVersionConfigs(forceRefresh: forceRefresh) { [weak self] in
+            guard let self = self else { return }
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self, self.view.window != nil else { return }
+                LMPackageManager.presentCachedAppUpdateIfNeeded(from: self)
+            }
+        }
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         stopCameraSession()
@@ -191,6 +236,7 @@ class LMCameraPage: LMPageWrapper {
     }
     
     deinit {
+        NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
         // 页面真正销毁时，完全清理 AR 引导资源
         fullCleanupARGuidance()
         LMLogger.log("🗑️ LMCameraPage deinit")
@@ -261,6 +307,7 @@ class LMCameraPage: LMPageWrapper {
         
         backButton.setImage(UIImage(named: "left_arrow_white"), for: .normal)
         backButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
+        backButton.imageView?.contentMode = .scaleAspectFit
         backButton.addTarget(self, action: #selector(handleGiveUpAndBackButtonTapped), for: .touchUpInside)
     }
     
@@ -316,8 +363,8 @@ class LMCameraPage: LMPageWrapper {
         inspireMeButtonView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-10)
-            make.width.equalTo(130)
-            make.height.equalTo(70)
+            make.width.equalTo(172)
+            make.height.equalTo(60)
         }
         
         setupInitialPreviewCanvasLayout()
@@ -484,31 +531,99 @@ class LMCameraPage: LMPageWrapper {
         }
     }
     
+    @discardableResult
+    func ensureCameraPermissionForInteraction() -> Bool {
+        let cameraAuthStatus = AVCaptureDevice.authorizationStatus(for: .video)
+
+        switch cameraAuthStatus {
+        case .authorized:
+            return true
+        case .notDetermined:
+            LMLogger.log("📱 Camera interaction requires permission request")
+            checkCameraPermissionAndSetup()
+            return false
+        case .denied, .restricted:
+            LMLogger.log("⚠️ Camera interaction blocked due to denied/restricted permission")
+            showPermissionSettingsAlert()
+            return false
+        @unknown default:
+            LMLogger.log("⚠️ Camera interaction blocked due to unknown permission status")
+            showPermissionSettingsAlert()
+            return false
+        }
+    }
+    
     /// 处理权限被拒绝的情况
     private func handlePermissionDenied() {
-        LMAlertDialog.showAlert(title: LMText.camera.cameraAccessDenied,
-                                message: LMText.camera.cameraAccessRequired,
-                                confirmText: LMText.common.ok) { [weak self] in
-            self?.navigationController?.popViewController(animated: true)
-        }
+        showPermissionSettingsAlert()
     }
     
     /// 显示前往设置的提示
     func showPermissionSettingsAlert() {
+        guard !isShowingPermissionSettingsAlert else {
+            LMLogger.log("⚠️ Permission settings alert is already visible")
+            return
+        }
+        
+        isShowingPermissionSettingsAlert = true
+        
         LMAlertDialog.showAlert(
             title: LMText.camera.cameraAccessRequiredTitle,
             message: LMText.camera.cameraAccessRequiredMessage,
             cancelText: LMText.common.cancel,
             confirmText: LMText.common.openSettings,
-            onConfirm: {
+            confirmStyle: .gradient,
+            onConfirm: { [weak self] in
+                self?.isShowingPermissionSettingsAlert = false
                 if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(settingsURL)
                 }
             },
             onCancel: { [weak self] in
-                // 返回上一页
-                self?.navigationController?.popViewController(animated: true)
+                guard let self = self else { return }
+                self.isShowingPermissionSettingsAlert = false
+                if let rootController = self.navigationController?.viewControllers.first,
+                   rootController !== self {
+                    self.navigationController?.popViewController(animated: true)
+                }
             })
+    }
+
+    private func shouldShowProfileEntryButton() -> Bool {
+        let isNormalNavigationSource: Bool
+        switch navigationSource {
+        case .normal:
+            isNormalNavigationSource = true
+        case .savedIdea:
+            isNormalNavigationSource = false
+        }
+
+        let isRootCameraPage: Bool
+        if let rootController = navigationController?.viewControllers.first {
+            isRootCameraPage = (rootController === self)
+        } else {
+            isRootCameraPage = false
+        }
+
+        return currentCameraState == .normal &&
+        isNormalNavigationSource &&
+        isRootCameraPage
+    }
+
+    func updateLeadingNavigationControl() {
+        guard isViewLoaded else { return }
+
+        if shouldShowProfileEntryButton() {
+            backButton.setImage(UIImage(named: "user_white_fill"), for: .normal)
+            backButton.imageEdgeInsets = .zero
+            backButton.tintColor = .white
+            backButton.accessibilityLabel = LMText.profile.profile
+        } else {
+            backButton.setImage(UIImage(named: "left_arrow_white"), for: .normal)
+            backButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
+            backButton.tintColor = .white
+            backButton.accessibilityLabel = LMText.common.back
+        }
     }
     
     /// 公开方法：检查相机权限状态（供外部调用）
@@ -539,6 +654,12 @@ class LMCameraPage: LMPageWrapper {
     // MARK: - Actions
     @objc func handleGiveUpAndBackButtonTapped() {
         LMLogger.log("🔙 Back button tapped")
+
+        if shouldShowProfileEntryButton() {
+            let profilePage = LMMinePage()
+            navigationController?.pushViewController(profilePage, animated: true)
+            return
+        }
         
         // 根据当前状态决定返回行为
         switch currentCameraState {

@@ -160,14 +160,10 @@ extension LMNewInstallerPage {
     }
     
     private func handleAppleLoginSuccess() {
-        // 导航到主应用界面
-        if let mainRootPage = AppTheme.Screen.mainPage {
-            AppTheme.Screen.window()?.rootViewController = mainRootPage
-        }
+        LMPackageManager.switchToHomeRootController()
     }
     
     private func handleAppleSignInError(message: String) {
         AppTheme.Toast.showText(message)
     }
 }
-

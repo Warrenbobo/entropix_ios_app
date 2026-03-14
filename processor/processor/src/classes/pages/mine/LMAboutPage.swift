@@ -24,6 +24,7 @@ class LMAboutPage: LMPageWrapper {
     // App Version Section
     private let appVersionTitleLabel = UILabel()
     private let appVersionValueLabel = UILabel()
+    private let appUpdateButton = UIButton(type: .system)
     private let appVersionContainer = UIView()
     
     // Privacy Policy Section
@@ -47,6 +48,13 @@ class LMAboutPage: LMPageWrapper {
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
+        updateAppUpdateUI(hasUpdate: LMPackageManager.hasAvailableAppUpdate)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+        refreshAppUpdateState()
     }
 }
 
@@ -75,6 +83,7 @@ extension LMAboutPage {
         
         appVersionContainer.addSubview(appVersionTitleLabel)
         appVersionContainer.addSubview(appVersionValueLabel)
+        appVersionContainer.addSubview(appUpdateButton)
         
         privacyPolicyContainer.addSubview(privacyPolicyTitleLabel)
         privacyPolicyContainer.addSubview(privacyPolicyButton)
@@ -142,6 +151,13 @@ extension LMAboutPage {
         appVersionValueLabel.textAlignment = .right
         appVersionValueLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         appVersionValueLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        
+        appUpdateButton.setTitle(LMText.settings.appStoreUpdateLink, for: .normal)
+        appUpdateButton.setTitleColor(.systemBlue, for: .normal)
+        appUpdateButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        appUpdateButton.contentHorizontalAlignment = .right
+        appUpdateButton.addTarget(self, action: #selector(handleAppUpdateButtonTapped), for: .touchUpInside)
+        appUpdateButton.isHidden = true
     }
     
     private func setupPrivacyPolicySection() {
@@ -253,9 +269,15 @@ extension LMAboutPage {
             make.leading.equalToSuperview().offset(24)
         }
         
-        appVersionValueLabel.snp.makeConstraints { make in
+        appUpdateButton.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
             make.trailing.equalToSuperview().offset(-24)
+            make.height.equalTo(44)
+        }
+        
+        appVersionValueLabel.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.trailing.equalTo(appUpdateButton.snp.leading).offset(-12)
             make.leading.greaterThanOrEqualTo(appVersionTitleLabel.snp.trailing).offset(16)
         }
         
@@ -327,6 +349,23 @@ extension LMAboutPage {
     }
 }
 
+extension LMAboutPage {
+    
+    private func refreshAppUpdateState() {
+        updateAppUpdateUI(hasUpdate: LMPackageManager.hasAvailableAppUpdate)
+        LMPackageManager.refreshAppUpdateStatus { [weak self] hasUpdate in
+            DispatchQueue.main.async {
+                self?.updateAppUpdateUI(hasUpdate: hasUpdate)
+            }
+        }
+    }
+    
+    private func updateAppUpdateUI(hasUpdate: Bool) {
+        appUpdateButton.isHidden = !hasUpdate
+        appUpdateButton.setTitle(hasUpdate ? LMText.settings.appStoreUpdateLink : nil, for: .normal)
+    }
+}
+
 // MARK: - Action Handlers
 extension LMAboutPage {
     
@@ -341,6 +380,10 @@ extension LMAboutPage {
     @objc private func handleTermsOfServiceButtonTapped() {
         showTermsOfService()
     }
+    
+    @objc private func handleAppUpdateButtonTapped() {
+        LMPackageManager.openCurrentAvailableUpdateURL()
+    }
 }
 
 // MARK: - Navigation Methods
@@ -349,7 +392,7 @@ extension LMAboutPage {
     private func showPrivacyPolicy() {
         // 可以打开网页或显示本地内容
         if let url = URL(string: LMApi.Terms.privacy) {
-            openWebPage(url: url, title: "Privacy Policy")
+            openWebPage(url: url)
         } else {
             showLocalPrivacyPolicy()
         }
@@ -358,13 +401,13 @@ extension LMAboutPage {
     private func showTermsOfService() {
         // 可以打开网页或显示本地内容
         if let url = URL(string: LMApi.Terms.service) {
-            openWebPage(url: url, title: "Terms of Service")
+            openWebPage(url: url)
         } else {
             showLocalTermsOfService()
         }
     }
     
-    private func openWebPage(url: URL, title: String) {
+    private func openWebPage(url: URL) {
         // 这里可以使用Safari或者内置的WebView
         if #available(iOS 10.0, *) {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
@@ -376,7 +419,7 @@ extension LMAboutPage {
     private func showLocalPrivacyPolicy() {
         let alert = UIAlertController(
             title: LMText.settings.privacyPolicy,
-            message: "Privacy Policy content would be displayed here. This could be loaded from a local file or shown in a dedicated view controller.",
+            message: LMText.settings.privacyPolicyUnavailableMessage,
             preferredStyle: .alert
         )
         
@@ -387,7 +430,7 @@ extension LMAboutPage {
     private func showLocalTermsOfService() {
         let alert = UIAlertController(
             title: LMText.settings.termsOfService,
-            message: "Terms of Service content would be displayed here. This could be loaded from a local file or shown in a dedicated view controller.",
+            message: LMText.settings.termsOfServiceUnavailableMessage,
             preferredStyle: .alert
         )
         

@@ -30,6 +30,19 @@ struct LMPackageManager {
     
     // APP包信息
     static var package: LMPackageModel = LMPackageModel.defaultModel()
+    private static var cachedAppUpdatedStatus: LMAppUpdatedStatus?
+    private static var ignoredNonRequiredUpdateIdentity: String?
+    private static var hasPresentedNonRequiredUpdateThisSession = false
+    private static var isShowingUpdateAlert = false
+    
+    static var hasAvailableAppUpdate: Bool {
+        isUpdateAvailable(in: cachedAppUpdatedStatus)
+    }
+    
+    static var currentAppUpdateInfo: LMAppUpdateInfo? {
+        guard isUpdateAvailable(in: cachedAppUpdatedStatus) else { return nil }
+        return cachedAppUpdatedStatus?.update
+    }
     
     // MARK: - Guest Trial Management (游客模式管理)
     
@@ -82,6 +95,17 @@ struct LMPackageManager {
     /// 切换当前窗口的根视图
     public static func switchWindowSceneContent(_ controller: UIViewController) {
         window?.rootViewController = controller
+    }
+
+    /// 当前版本的默认首页：Basic Camera
+    public static func makeHomeRootController() -> UIViewController {
+        let cameraPage = LMCameraPage()
+        return LMNavigationWrapper(rootViewController: cameraPage)
+    }
+
+    /// 切换到默认首页
+    public static func switchToHomeRootController() {
+        switchWindowSceneContent(makeHomeRootController())
     }
     
     
@@ -165,89 +189,115 @@ struct LMPackageManager {
     }
     
     /// 更新版本信息
-    static func queryVersionConfigs(completeCallback: (() -> ())? = nil) {
+    static func queryVersionConfigs(forceRefresh: Bool = true,
+                                    completeCallback: (() -> ())? = nil) {
+        fetchAppUpdateStatus(forceRefresh: forceRefresh) { _ in
+            completeCallback?()
+        }
+    }
+    
+    static func refreshAppUpdateStatus(completion: ((Bool) -> Void)? = nil) {
+        fetchAppUpdateStatus(forceRefresh: true) { status in
+            completion?(isUpdateAvailable(in: status))
+        }
+    }
+    
+    static func presentCachedAppUpdateIfNeeded(from presenter: UIViewController) {
+        guard let update = currentAppUpdateInfo else { return }
+        guard !isShowingUpdateAlert else { return }
+        
+        if update.isForceUpdate {
+            showAppUpdateAlert(update, from: presenter)
+            return
+        }
+        
+        guard !hasPresentedNonRequiredUpdateThisSession else { return }
+        guard !isIgnoredNonRequiredUpdate(update) else { return }
+        hasPresentedNonRequiredUpdateThisSession = true
+        showAppUpdateAlert(update, from: presenter)
+    }
+    
+    static func openCurrentAvailableUpdateURL() {
+        openUpdateURL(currentAppUpdateInfo?.url)
+    }
+    
+    private static func fetchAppUpdateStatus(forceRefresh: Bool,
+                                             completion: ((LMAppUpdatedStatus?) -> Void)? = nil) {
+        if !forceRefresh, let cachedAppUpdatedStatus = cachedAppUpdatedStatus {
+            completion?(cachedAppUpdatedStatus)
+            return
+        }
+        
         LMApiService.shared.getAppUpdatedStatus { response in
             guard response.requestSuccess, let data = response.value else {
                 LMLogger.log("⚠️ Failed to fetch app updated status: \(response.message ?? "Unknown error")")
-                completeCallback?()
+                cachedAppUpdatedStatus = nil
+                completion?(nil)
                 return
             }
             
-            // 1 = 已发布，0 = 审核中
+            cachedAppUpdatedStatus = data
+            
             if let versionStatus = data.versionStatus {
                 reviewState = (versionStatus == 1) ? .normal : .inReview
                 LMLogger.log("📦 App version status: \(versionStatus) (reviewState=\(reviewState))")
             }
             
-            // update 字段有值且 version > 当前包版本时，显示更新弹窗
-            guard let update = data.update,
-                  let targetVersion = update.version?.trimmingCharacters(in: .whitespacesAndNewlines),
-                  !targetVersion.isEmpty,
-                  isVersion(targetVersion, greaterThan: package.version) else {
-                completeCallback?()
-                return
-            }
-            
-            showAppUpdateAlert(update) { canProceed in
-                if canProceed {
-                    completeCallback?()
-                }
-            }
+            completion?(data)
         }
     }
     
-    // MARK: - App Update (版本更新弹窗)
+    private static func isUpdateAvailable(in status: LMAppUpdatedStatus?) -> Bool {
+        guard let status = status,
+              status.versionStatus == 1,
+              status.update != nil else {
+            return false
+        }
+        return true
+    }
     
-    private static var isShowingUpdateAlert: Bool = false
+    private static func isIgnoredNonRequiredUpdate(_ update: LMAppUpdateInfo) -> Bool {
+        ignoredNonRequiredUpdateIdentity == update.updateIdentity
+    }
     
-    private static func showAppUpdateAlert(_ update: LMAppUpdateInfo, completion: @escaping (Bool) -> Void) {
+    private static func showAppUpdateAlert(_ update: LMAppUpdateInfo,
+                                           from _: UIViewController) {
         guard !isShowingUpdateAlert else { return }
         isShowingUpdateAlert = true
         
-        let isForceUpdate = (update.requireUpdateStatus ?? 0) == 1
-        
-        let title = update.title ?? LMText.common.newVersionAvailable
+        let isForceUpdate = update.isForceUpdate
+        let title = isForceUpdate ? LMText.common.updateRequiredTitle : LMText.common.updateAvailableTitle
         let message = buildUpdateMessage(update)
-        
-        let cancelText: String? = isForceUpdate ? nil : LMText.common.notNow
-        let confirmText: String = LMText.common.updateNow
+        let cancelText = isForceUpdate ? LMText.common.exit : LMText.common.later
         
         let dialog = LMAlertDialog(config: LMAlertDialogConfig(
             title: title,
             message: message,
             cancelButtonText: cancelText,
-            confirmButtonText: confirmText,
+            confirmButtonText: LMText.common.updateNow,
             confirmButtonStyle: .gradient,
             onCancel: {
                 isShowingUpdateAlert = false
-                completion(true)
+                if isForceUpdate {
+                    exit(0)
+                } else {
+                    ignoredNonRequiredUpdateIdentity = update.updateIdentity
+                }
             },
             onConfirm: {
-                openUpdateURL(update.url)
                 isShowingUpdateAlert = false
-                if !isForceUpdate {
-                    completion(true)
-                } else {
-                    completion(false)
-                }
+                openUpdateURL(update.url)
             }
         ))
         
         dialog.show(onDismiss: {
             isShowingUpdateAlert = false
-            
-            // 强制更新：用户返回 App 时继续拦截
-            if isForceUpdate {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    showAppUpdateAlert(update, completion: completion)
-                }
-            }
         })
     }
     
     private static func openUpdateURL(_ urlString: String?) {
-        guard let urlString = urlString?.trimmingCharacters(in: .whitespacesAndNewlines),
-              let url = URL(string: urlString) else {
+        let resolvedURLString = urlString.nonEmpty ?? AppConfigs.AppStore.updateURL
+        guard let url = URL(string: resolvedURLString) else {
             AppTheme.Toast.showText(LMText.common.invalidUpdateUrl)
             return
         }
@@ -258,16 +308,10 @@ struct LMPackageManager {
     }
     
     private static func buildUpdateMessage(_ update: LMAppUpdateInfo) -> String {
-        let content = htmlToPlainText(update.content)
-        
-        var lines: [String] = []
-        if let content = content, !content.isEmpty {
-            lines.append(content)
-        } else {
-            let isForceUpdate = (update.requireUpdateStatus ?? 0) == 1
-            lines.append(isForceUpdate ? LMText.common.updateRequiredMessage : LMText.common.updateAvailableMessage)
-        }
-        return lines.joined(separator: "\n\n")
+        let intro = update.isForceUpdate ? LMText.common.updateRequiredIntro : LMText.common.updateWhatsNew
+        let content = htmlToPlainText(update.content)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let body = (content?.isEmpty == false) ? content! : LMText.common.updateFallbackContent
+        return intro + "\n\n" + body
     }
     
     private static func htmlToPlainText(_ html: String?) -> String? {
@@ -286,28 +330,6 @@ struct LMPackageManager {
         }
         
         return html
-    }
-    
-    private static func isVersion(_ newVersion: String, greaterThan currentVersion: String) -> Bool {
-        let newComponents = versionNumberComponents(from: newVersion)
-        let currentComponents = versionNumberComponents(from: currentVersion)
-        
-        let maxCount = max(newComponents.count, currentComponents.count)
-        for index in 0..<maxCount {
-            let lhs = index < newComponents.count ? newComponents[index] : 0
-            let rhs = index < currentComponents.count ? currentComponents[index] : 0
-            if lhs != rhs {
-                return lhs > rhs
-            }
-        }
-        return false
-    }
-    
-    private static func versionNumberComponents(from version: String) -> [Int] {
-        return version
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .split(whereSeparator: { !$0.isNumber })
-            .compactMap { Int($0) }
     }
 }
 
@@ -332,6 +354,18 @@ struct LMAppUpdateInfo: Codable {
         case content
         case version
         case url
+    }
+}
+
+private extension LMAppUpdateInfo {
+    var isForceUpdate: Bool {
+        (requireUpdateStatus ?? 0) == 1
+    }
+    
+    var updateIdentity: String {
+        [version.nonEmpty, url.nonEmpty, content.nonEmpty]
+            .compactMap { $0 }
+            .joined(separator: "|")
     }
 }
 

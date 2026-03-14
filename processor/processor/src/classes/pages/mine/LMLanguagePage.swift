@@ -259,8 +259,7 @@ extension LMLanguagePage {
     }
     
     private func showLanguageChangedAlert() {
-        let rootController = LMMinePage()
-        LMPackageManager.switchWindowSceneContent(LMNavigationWrapper(rootViewController: rootController))
+        LMPackageManager.switchToHomeRootController()
         AppTheme.Toast.showText(LMText.settings.languageChangedSuccess)
     }
 }

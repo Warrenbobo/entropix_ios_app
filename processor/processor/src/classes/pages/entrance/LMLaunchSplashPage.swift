@@ -176,10 +176,7 @@ class LMLaunchSplashPage: UIViewController {
     
     /// 继续执行用户数据加载
     private func proceedWithUserDataLoading() {
-        // 先拉取版本发布状态及更新信息（若强制更新则拦截）
-        LMPackageManager.queryVersionConfigs { [weak self] in
-            self?.continueWithUserDataLoading()
-        }
+        continueWithUserDataLoading()
     }
     
     private func continueWithUserDataLoading() {
@@ -189,8 +186,7 @@ class LMLaunchSplashPage: UIViewController {
                 if LMUserManager.isSignIn {
                     // 已登录，进入主页
                     LMLogger.log("✅ User already signed in, entering home page")
-                    let rootController = LMNavigationWrapper(rootViewController: LMMinePage())
-                    LMPackageManager.switchWindowSceneContent(rootController)
+                    LMPackageManager.switchToHomeRootController()
                 } else {
                     // 未登录，尝试 Guest 注册和登录
                     LMLogger.log("👤 No user signed in, attempting guest registration and login")
@@ -241,8 +237,7 @@ class LMLaunchSplashPage: UIViewController {
                     LMUserManager.shared.updateUser(loginData.user)
                     
                     // 进入主页
-                    let rootController = LMNavigationWrapper(rootViewController: LMMinePage())
-                    LMPackageManager.switchWindowSceneContent(rootController)
+                    LMPackageManager.switchToHomeRootController()
                     
                 } else {
                     LMLogger.log("❌ Guest login failed: \(response.message ?? "Unknown error")")

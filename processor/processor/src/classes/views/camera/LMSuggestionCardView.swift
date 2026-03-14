@@ -10,6 +10,12 @@ import UIKit
 import SnapKit
 import Kingfisher
 
+private struct LMPlaceholderVirtualProgressPresentation {
+    let progress: Float
+    let percentageText: String
+    let stageText: String
+}
+
 protocol LMSuggestionCardViewDelegate: AnyObject {
     func suggestionCardView(_ cardView: LMSuggestionCardView, didToggleFavorite isFavorite: Bool)
 }
@@ -51,8 +57,9 @@ class LMSuggestionCardView: UIView {
     }() // Placeholder 图标（居中显示）
     private let heartButton = UIButton()
     private let loadingView = UIView()
-    private let loadingSpinner = UIActivityIndicatorView(style: .medium)
-    private let loadingLabel = UILabel()
+    private let loadingStageLabel = UILabel()
+    private let loadingPercentageLabel = UILabel()
+    private let loadingProgressView = UIProgressView(progressViewStyle: .default)
     private let aigcBadgeImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "aigc")
@@ -67,6 +74,8 @@ class LMSuggestionCardView: UIView {
     private var suggestion: LMCompositionSuggestion?
     private var isFavorite: Bool = false
     private var currentImageUrl: String? = nil // ✅ Track current image URL to prevent redundant loads
+    private var virtualProgressTimer: Timer?
+    private var virtualProgressStartDate: Date?
     
     // MARK: - Initialization
     override init(frame: CGRect) {
@@ -104,16 +113,23 @@ class LMSuggestionCardView: UIView {
         heartButton.isHidden = true // 默认隐藏
         
         // 加载视图设置
-        loadingView.backgroundColor = UIColor.systemPurple.withAlphaComponent(0.9)
+        loadingView.backgroundColor = UIColor.hexColor("#6F5CFF", alpha: 0.96)
         loadingView.layer.cornerRadius = Self.adaptiveSize(12)
         
-        loadingSpinner.color = UIColor.white
-        loadingSpinner.hidesWhenStopped = true
+        loadingStageLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(14), weight: .semibold)
+        loadingStageLabel.textColor = UIColor.white
+        loadingStageLabel.textAlignment = .center
+        loadingStageLabel.numberOfLines = 1
         
-        loadingLabel.text = LMText.camera.generating
-        loadingLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(12), weight: .medium)
-        loadingLabel.textColor = UIColor.white
-        loadingLabel.textAlignment = .center
+        loadingPercentageLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(12), weight: .medium)
+        loadingPercentageLabel.textColor = UIColor.white.withAlphaComponent(0.88)
+        loadingPercentageLabel.textAlignment = .right
+        
+        loadingProgressView.progressTintColor = .white
+        loadingProgressView.trackTintColor = UIColor.white.withAlphaComponent(0.26)
+        loadingProgressView.layer.cornerRadius = 3
+        loadingProgressView.clipsToBounds = true
+        loadingProgressView.transform = CGAffineTransform(scaleX: 1, y: 1.6)
         
         // 按层级添加子视图
         addSubview(backgroundImageView)  // 底层：拉伸背景
@@ -123,8 +139,9 @@ class LMSuggestionCardView: UIView {
         addSubview(aigcBadgeImageView)   // AIGC 标识图
         addSubview(heartButton)
         addSubview(loadingView)
-        loadingView.addSubview(loadingSpinner)
-        loadingView.addSubview(loadingLabel)
+        loadingView.addSubview(loadingStageLabel)
+        loadingView.addSubview(loadingPercentageLabel)
+        loadingView.addSubview(loadingProgressView)
         
         // 设置初始状态
         loadingView.isHidden = true
@@ -171,21 +188,27 @@ class LMSuggestionCardView: UIView {
             make.edges.equalToSuperview()
         }
         
-        // 加载指示器约束
-        loadingSpinner.snp.makeConstraints { make in
-            make.centerX.equalToSuperview()
+        loadingStageLabel.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(Self.adaptiveSize(14))
+            make.trailing.equalToSuperview().offset(-Self.adaptiveSize(14))
             make.centerY.equalToSuperview().offset(-Self.adaptiveSize(10))
         }
         
-        // 加载标签约束
-        loadingLabel.snp.makeConstraints { make in
-            make.top.equalTo(loadingSpinner.snp.bottom).offset(Self.adaptiveSize(8))
-            make.leading.trailing.equalToSuperview().inset(Self.adaptiveSize(8))
+        loadingProgressView.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview().inset(Self.adaptiveSize(14))
+            make.top.equalTo(loadingStageLabel.snp.bottom).offset(Self.adaptiveSize(14))
+            make.height.equalTo(Self.adaptiveSize(4))
+        }
+        
+        loadingPercentageLabel.snp.makeConstraints { make in
+            make.top.equalTo(loadingProgressView.snp.bottom).offset(Self.adaptiveSize(10))
+            make.trailing.equalTo(loadingProgressView)
+            make.leading.greaterThanOrEqualToSuperview().offset(Self.adaptiveSize(14))
         }
     }
     
     // MARK: - Public Methods
-    func configure(with suggestion: LMCompositionSuggestion, isFavorite: Bool = false) {
+    func configure(with suggestion: LMCompositionSuggestion, isFavorite: Bool = false, placeholderProgressStartDate: Date? = nil) {
         self.suggestion = suggestion
         self.isFavorite = isFavorite
         
@@ -193,7 +216,7 @@ class LMSuggestionCardView: UIView {
         aigcBadgeImageView.isHidden = !suggestion.isAIGC
         
         if suggestion.ready != true {
-            showLoadingState()
+            showLoadingState(progressStartDate: placeholderProgressStartDate)
         } else {
             hideLoadingState()
             
@@ -245,27 +268,102 @@ class LMSuggestionCardView: UIView {
     }
     
     // MARK: - Private Methods
-    private func showLoadingState() {
+    private func showLoadingState(progressStartDate: Date?) {
         loadingView.isHidden = false
-        loadingSpinner.startAnimating()
         heartButton.isHidden = true
+        placeholderImageView.isHidden = true
         
-        // 隐藏背景图片、模糊效果和主图片
+        if let progressStartDate = progressStartDate {
+            virtualProgressStartDate = progressStartDate
+        } else if virtualProgressStartDate == nil {
+            virtualProgressStartDate = Date()
+        }
+        
+        updateVirtualProgressPresentation()
+        startVirtualProgressTimerIfNeeded()
+        
         backgroundImageView.isHidden = true
         blurEffectView.isHidden = true
         imageView.isHidden = true
     }
     
     private func hideLoadingState() {
+        stopVirtualProgressTimer()
         loadingView.isHidden = true
-        loadingSpinner.stopAnimating()
         
-        // 显示背景图片、模糊效果和主图片
         backgroundImageView.isHidden = false
         blurEffectView.isHidden = false
         imageView.isHidden = false
         
         updateSelectionState(animated: false)
+    }
+    
+    private func startVirtualProgressTimerIfNeeded() {
+        guard virtualProgressTimer == nil else { return }
+        let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.updateVirtualProgressPresentation()
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        virtualProgressTimer = timer
+    }
+    
+    private func stopVirtualProgressTimer() {
+        virtualProgressTimer?.invalidate()
+        virtualProgressTimer = nil
+    }
+    
+    private func updateVirtualProgressPresentation() {
+        let presentation = placeholderProgressPresentation()
+        loadingStageLabel.text = presentation.stageText
+        loadingPercentageLabel.text = presentation.percentageText
+        loadingProgressView.setProgress(presentation.progress, animated: false)
+    }
+    
+    private func placeholderProgressPresentation() -> LMPlaceholderVirtualProgressPresentation {
+        let startDate = virtualProgressStartDate ?? Date()
+        let elapsed = max(0, Date().timeIntervalSince(startDate))
+        let progress: Float
+        if elapsed <= 5 {
+            progress = Float((elapsed / 5.0) * 0.30)
+        } else if elapsed <= 15 {
+            progress = Float(0.30 + ((elapsed - 5.0) / 10.0) * 0.55)
+        } else if elapsed <= 20 {
+            progress = Float(0.85 + ((elapsed - 15.0) / 5.0) * 0.14)
+        } else {
+            progress = 0.99
+        }
+        
+        let clampedProgress = min(progress, 0.99)
+        let percentageValue = min(Int(round(clampedProgress * 100)), 99)
+        let stageText: String
+        switch elapsed {
+        case ..<0.84:
+            stageText = LMText.camera.virtualProgressScenery
+        case ..<1.67:
+            stageText = LMText.camera.virtualProgressScenery + " ✔"
+        case ..<2.50:
+            stageText = LMText.camera.virtualProgressPose
+        case ..<3.34:
+            stageText = LMText.camera.virtualProgressPose + " ✔"
+        case ..<4.17:
+            stageText = LMText.camera.virtualProgressAngle
+        case ..<5.00:
+            stageText = LMText.camera.virtualProgressAngle + " ✔"
+        case ..<10.00:
+            stageText = LMText.camera.virtualProgressAnalyzing
+        case ..<18.00:
+            stageText = LMText.camera.virtualProgressGenerating
+        case ..<20.00:
+            stageText = LMText.camera.virtualProgressRating
+        default:
+            stageText = LMText.camera.virtualProgressLoading
+        }
+        
+        return LMPlaceholderVirtualProgressPresentation(
+            progress: clampedProgress,
+            percentageText: "\(percentageValue)%",
+            stageText: stageText
+        )
     }
     
     private func loadImageFromURL(_ urlString: String) {
@@ -305,6 +403,10 @@ class LMSuggestionCardView: UIView {
         }
         
         delegate?.suggestionCardView(self, didToggleFavorite: newFavoriteState)
+    }
+    
+    deinit {
+        stopVirtualProgressTimer()
     }
     
     private func addHeartBeatAnimation() {

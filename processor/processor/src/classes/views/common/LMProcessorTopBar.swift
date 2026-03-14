@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SnapKit
 
 class LMProcessorTopBar: UIView {
     
@@ -16,11 +17,14 @@ class LMProcessorTopBar: UIView {
     }
     
     var moreButtonAction: (() -> Void)?
+    var backButtonAction: (() -> Void)?
     
     private let backgroundView = UIView()
     private let contentView = UIView()
     private let titleLabel = UILabel()
+    private let backButton = UIButton()
     private let moreButton = UIButton()
+    private var titleLeadingConstraint: Constraint?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -43,7 +47,13 @@ class LMProcessorTopBar: UIView {
         titleLabel.font = UIFont.systemFont(ofSize: 24, weight: .bold)
         titleLabel.textColor = UIColor.label
         titleLabel.textAlignment = .left
-        
+
+        contentView.addSubview(backButton)
+        backButton.setImage(UIImage(named: "left_arrow_dark"), for: .normal)
+        backButton.tintColor = UIColor.label
+        backButton.isHidden = true
+        backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
+
         contentView.addSubview(moreButton)
         moreButton.setImage(UIImage(named: "more_option"), for: .normal)
         moreButton.addTarget(self, action: #selector(moreButtonTapped), for: .touchUpInside)
@@ -60,8 +70,13 @@ class LMProcessorTopBar: UIView {
             make.height.equalTo(44)
             make.bottom.equalToSuperview()
         }
-        titleLabel.snp.makeConstraints { make in
+        backButton.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(20)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(24)
+        }
+        titleLabel.snp.makeConstraints { make in
+            titleLeadingConstraint = make.leading.equalToSuperview().offset(20).constraint
             make.centerY.equalToSuperview()
             make.trailing.lessThanOrEqualTo(moreButton.snp.leading).offset(-16)
         }
@@ -75,6 +90,10 @@ class LMProcessorTopBar: UIView {
     @objc private func moreButtonTapped() {
         moreButtonAction?()
     }
+
+    @objc private func backButtonTapped() {
+        backButtonAction?()
+    }
     
     func setTitle(_ title: String) {
         self.title = title
@@ -82,6 +101,19 @@ class LMProcessorTopBar: UIView {
     
     func setMoreButtonAction(_ action: @escaping () -> Void) {
         self.moreButtonAction = action
+    }
+
+    func setBackButtonAction(_ action: @escaping () -> Void) {
+        self.backButtonAction = action
+    }
+
+    func setBackButtonHidden(_ hidden: Bool) {
+        backButton.isHidden = hidden
+        titleLeadingConstraint?.update(offset: hidden ? 20 : 56)
+    }
+
+    func setMoreButtonHidden(_ hidden: Bool) {
+        moreButton.isHidden = hidden
     }
     
     func setBackgroundColor(_ color: UIColor) {

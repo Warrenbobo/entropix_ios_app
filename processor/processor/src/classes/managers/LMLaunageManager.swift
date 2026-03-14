@@ -199,9 +199,17 @@ class LMLaunageManager {
 	                newVersionAvailable: "有新版本了",
 	                updateNow: "立即更新",
 	                notNow: "暂不更新",
+	                later: "稍后",
+	                update: "更新",
+	                exit: "退出",
+	                updateAvailableTitle: "发现新版本",
+	                updateRequiredTitle: "需要更新",
+	                updateWhatsNew: "更新内容",
+	                updateRequiredIntro: "为确保最佳体验：",
 	                updateAvailableMessage: "发现新版本，更新以获得最新改进。",
 	                updateRequiredMessage: "本次更新为强制更新，更新后才能继续使用。",
-	                invalidUpdateUrl: "更新地址无效"
+	                invalidUpdateUrl: "更新地址无效",
+	                updateFallbackContent: "- 修复了一些已知问题。\n- 优化了交互体验。"
 	            ),
             camera: LMCameraTextConfig(
                 flash: "闪光灯",
@@ -221,6 +229,14 @@ class LMLaunageManager {
                 allSuggestionsReady: "所有建议已就绪！",
                 generationFailed: "生成失败，请重试。",
                 generationTimeout: "生成超时，显示可用建议。",
+                processingInspiring: "Inspiring",
+                virtualProgressScenery: "Scenery",
+                virtualProgressPose: "Pose",
+                virtualProgressAngle: "Angle",
+                virtualProgressAnalyzing: "Analyzing...",
+                virtualProgressGenerating: "Generating...",
+                virtualProgressRating: "Rating...",
+                virtualProgressLoading: "Loading...",
                 compositionSuggestions: "构图建议"
             ),
             profile: LMProfileTextConfig(
@@ -385,6 +401,9 @@ class LMLaunageManager {
                 downloaded: "已下载",
                 selectLanguage: "选择语言",
                 view: "查看",
+                appStoreUpdateLink: "更新",
+                privacyPolicyUnavailableMessage: "隐私政策内容暂时无法显示。",
+                termsOfServiceUnavailableMessage: "服务条款内容暂时无法显示。",
                 back: " 返回",
                 goShot: "去拍摄",
                 deleting: "删除中...",

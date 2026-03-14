@@ -574,9 +574,7 @@ extension LMSignInPage {
     }
     
     private func navigateToMainApplicationInterface() {
-        // 跳转到主界面
-        let mainPage = LMNavigationWrapper(rootViewController: LMMinePage())
-        AppTheme.Screen.window()?.rootViewController = mainPage
+        LMPackageManager.switchToHomeRootController()
     }
     
     private func presentInvalidCredentialsAlert() {

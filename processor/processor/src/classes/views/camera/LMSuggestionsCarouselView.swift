@@ -82,6 +82,7 @@ class LMSuggestionsCarouselView: UIView {
     private var selectedIndex: Int = -1 // -1 表示未选中任何卡片
     private var isUpdatingSuggestions: Bool = false // 防止并发更新
     private var lastDataHash: Int = 0 // 上次数据的哈希值，用于检测数据是否真正变化
+    private var placeholderProgressStartDates: [String: Date] = [:]
     
     // MARK: - Constants
     // 基准尺寸（基于 iPhone 15 Pro 393pt 宽度设计，放大 1.1 倍）
@@ -206,6 +207,7 @@ class LMSuggestionsCarouselView: UIView {
         let previousSelectedIndex = selectedIndex
         
         self.suggestions = suggestions
+        cleanupPlaceholderProgressState()
         
         // 同步加载已保存的 Saved Ideas ID 集合（避免异步导致的状态问题）
         // 对于小数据量，同步操作更可靠
@@ -277,6 +279,42 @@ class LMSuggestionsCarouselView: UIView {
         }
     }
     
+    private func placeholderProgressKey(for suggestion: LMCompositionSuggestion, index: Int) -> String {
+        if let id = suggestion.id, !id.isEmpty {
+            return "id:\(id)"
+        }
+        if let rank = suggestion.rank {
+            return "rank:\(rank)"
+        }
+        return "index:\(index)"
+    }
+    
+    private func placeholderProgressStartDate(for suggestion: LMCompositionSuggestion, index: Int) -> Date? {
+        guard suggestion.ready != true else { return nil }
+        let key = placeholderProgressKey(for: suggestion, index: index)
+        if let existing = placeholderProgressStartDates[key] {
+            return existing
+        }
+        let startDate = Date()
+        placeholderProgressStartDates[key] = startDate
+        return startDate
+    }
+    
+    private func cleanupPlaceholderProgressState() {
+        let validKeys = Set(suggestions.enumerated().filter { $0.element.ready != true }.map { placeholderProgressKey(for: $0.element, index: $0.offset) })
+        placeholderProgressStartDates = placeholderProgressStartDates.filter { validKeys.contains($0.key) }
+    }
+    
+    private func configureCardView(_ cardView: LMSuggestionCardView, with suggestion: LMCompositionSuggestion, index: Int) {
+        let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
+        cardView.tag = index
+        cardView.configure(
+            with: suggestion,
+            isFavorite: isFavorite,
+            placeholderProgressStartDate: placeholderProgressStartDate(for: suggestion, index: index)
+        )
+    }
+    
     /// 加载已保存的 Saved Ideas ID 集合（同步版本，仅用于非关键路径）
     private func loadSavedIdeaIds() {
         let savedIdeas = LMPhotoStorageManager.shared.fetchAllSavedIdeas()
@@ -295,12 +333,7 @@ class LMSuggestionsCarouselView: UIView {
             // ✅ FIX: 同步更新现有卡片的数据，避免异步导致的 tag 不一致
             for (index, cardView) in cardViews.enumerated() {
                 let suggestion = suggestions[index]
-                let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
-                
-                // 同步更新 tag，避免点击时找不到正确的索引
-                cardView.tag = index
-                // 异步加载图片，避免阻塞主线程
-                cardView.configure(with: suggestion, isFavorite: isFavorite)
+                configureCardView(cardView, with: suggestion, index: index)
             }
             
             // 创建新卡片（只在数量增加时才创建）
@@ -327,10 +360,7 @@ class LMSuggestionsCarouselView: UIView {
             // ✅ FIX: 同步更新剩余卡片的数据
             for (index, cardView) in cardViews.enumerated() {
                 let suggestion = suggestions[index]
-                let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
-                
-                cardView.tag = index
-                cardView.configure(with: suggestion, isFavorite: isFavorite)
+                configureCardView(cardView, with: suggestion, index: index)
             }
             
             LMLogger.log("➖ Removed \(existingCount - newCount) card views")
@@ -340,10 +370,7 @@ class LMSuggestionsCarouselView: UIView {
             // ✅ FIX: 同步更新 tag，异步加载图片
             for (index, cardView) in cardViews.enumerated() {
                 let suggestion = suggestions[index]
-                let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
-                
-                cardView.tag = index
-                cardView.configure(with: suggestion, isFavorite: isFavorite)
+                configureCardView(cardView, with: suggestion, index: index)
             }
             
             LMLogger.log("🔄 Updated data for \(cardViews.count) existing card views")
@@ -425,6 +452,10 @@ class LMSuggestionsCarouselView: UIView {
         }
     }
     
+    func resetPlaceholderProgressState() {
+        placeholderProgressStartDates.removeAll()
+    }
+    
     func addGeneratingCard() {
         let generatingSuggestion = LMCompositionSuggestion(
             id: UUID().uuidString,
@@ -464,10 +495,10 @@ class LMSuggestionsCarouselView: UIView {
         
         // ✅ CRITICAL: Update card asynchronously to prevent blocking during scroll
         let cardView = cardViews[index]
-        let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
+        let progressStartDate = placeholderProgressStartDate(for: suggestion, index: index)
         
         DispatchQueue.main.async {
-            cardView.configure(with: suggestion, isFavorite: isFavorite)
+            cardView.configure(with: suggestion, isFavorite: suggestion.id.map { self.favoriteSuggestionIds.contains($0) } ?? false, placeholderProgressStartDate: progressStartDate)
         }
         
         // ✅ 更新数据哈希，避免下次 updateSuggestions 误判为数据未变化
@@ -491,10 +522,10 @@ class LMSuggestionsCarouselView: UIView {
             
             // ✅ CRITICAL: Update card asynchronously
             let cardView = cardViews[index]
-            let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
+            let progressStartDate = placeholderProgressStartDate(for: suggestion, index: index)
             
             DispatchQueue.main.async {
-                cardView.configure(with: suggestion, isFavorite: isFavorite)
+                cardView.configure(with: suggestion, isFavorite: suggestion.id.map { self.favoriteSuggestionIds.contains($0) } ?? false, placeholderProgressStartDate: progressStartDate)
             }
         }
         
@@ -516,8 +547,7 @@ class LMSuggestionsCarouselView: UIView {
     
     private func createCardView(for suggestion: LMCompositionSuggestion, at index: Int) -> LMSuggestionCardView {
         let cardView = LMSuggestionCardView(frame: .zero)
-        let isFavorite = suggestion.id.map { favoriteSuggestionIds.contains($0) } ?? false
-        cardView.configure(with: suggestion, isFavorite: isFavorite)
+        configureCardView(cardView, with: suggestion, index: index)
         cardView.delegate = self
         cardView.tag = index
         

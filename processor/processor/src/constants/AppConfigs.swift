@@ -27,4 +27,8 @@ struct AppConfigs {
         // 激励视频广告
         static let rewardVideoAdId = ""
     }
+    
+    struct AppStore {
+        static let updateURL = "https://apps.apple.com/app/id6757949319"
+    }
 }
