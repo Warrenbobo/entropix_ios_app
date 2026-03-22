@@ -647,6 +647,7 @@ extension LMCameraPage {
         
         currentCameraState = .compositionSelected
         currentSuggestion = suggestion
+        clearLineArtOverlay()
         currentReferenceImage = image
         
         // 确保 Inspire Me 按钮隐藏
@@ -694,6 +695,7 @@ extension LMCameraPage {
     func enterCompositionSelectedStateFromSavedIdea(item: GalleryItem) {
         currentCameraState = .compositionSelected
         inspireMeButtonView.isHidden = true
+        clearLineArtOverlay()
         showReferenceImageFromSavedIdea(item: item)
         cameraBottomControlsView.setARGuidanceActive(true)
         configureARGuidanceFeatures(true)
@@ -980,6 +982,7 @@ extension LMCameraPage {
             // 清除参考图相关数据
             referenceImageInitialOrientation = nil
             currentReferenceImage = nil
+            clearLineArtOverlay()
             currentReferenceBbox = nil
             
             // 返回到 Saved Idea 页面
@@ -1009,6 +1012,7 @@ extension LMCameraPage {
             // 清除参考图初始方向（防止旋转手机时误触发AR引导）
             referenceImageInitialOrientation = nil
             currentReferenceImage = nil
+            clearLineArtOverlay()
             currentReferenceBbox = nil
             
             // 显示构图轮播（会自动重置手势状态）

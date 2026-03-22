@@ -57,8 +57,7 @@ extension LMCameraPage {
         guard validateCameraState() else {
             return
         }
-        
-        showProcessingOverlay()
+
         isInspireMeCapture = true
         
         // 记录点击瞬间的设备方向（后续用于把帧旋转到竖屏“home键在下方”的预览样式）
@@ -132,74 +131,69 @@ extension LMCameraPage {
 extension LMCameraPage {
     
     func showProcessingOverlay() {
+        showProcessingOverlay(with: currentProcessingSceneryImage)
+    }
+
+    func showProcessingOverlay(with image: UIImage?) {
         hideProcessingOverlay()
-        
+
+        currentProcessingSceneryImage = image
+
         let overlayView = UIView()
-        overlayView.backgroundColor = .black
+        overlayView.backgroundColor = .clear
         overlayView.tag = ViewTag.processingOverlay.rawValue
         overlayView.isUserInteractionEnabled = false
         overlayView.clipsToBounds = true
         previewCanvasView.addSubview(overlayView)
-        
+
         let sceneryImageView = UIImageView()
         sceneryImageView.contentMode = .scaleAspectFill
         sceneryImageView.clipsToBounds = true
         sceneryImageView.image = currentProcessingSceneryImage
         overlayView.addSubview(sceneryImageView)
-        
+
         let dimmingView = UIView()
         dimmingView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
         overlayView.addSubview(dimmingView)
-        
-        let indicatorContainer = UIView()
-        indicatorContainer.backgroundColor = UIColor.black.withAlphaComponent(0.52)
-        indicatorContainer.layer.cornerRadius = 18
-        indicatorContainer.clipsToBounds = true
-        overlayView.addSubview(indicatorContainer)
-        
+
         let spinner = UIActivityIndicatorView(style: .large)
         spinner.color = .white
+        spinner.transform = CGAffineTransform(scaleX: 1.65, y: 1.65)
         spinner.startAnimating()
-        
+
         let label = UILabel()
         label.text = LMText.camera.processingInspiring
         label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        label.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         label.textAlignment = .center
         label.numberOfLines = 0
-        
-        indicatorContainer.addSubview(spinner)
-        indicatorContainer.addSubview(label)
-        
+
+        overlayView.addSubview(spinner)
+        overlayView.addSubview(label)
+
         overlayView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        
+
         sceneryImageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        
+
         dimmingView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        
-        indicatorContainer.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.width.equalTo(204)
-            make.height.equalTo(120)
-        }
-        
+
         spinner.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalToSuperview().offset(22)
+            make.centerY.equalToSuperview().offset(-20)
         }
-        
+
         label.snp.makeConstraints { make in
-            make.top.equalTo(spinner.snp.bottom).offset(14)
-            make.leading.trailing.equalToSuperview().inset(16)
-            make.bottom.lessThanOrEqualToSuperview().offset(-18)
+            make.top.equalTo(spinner.snp.bottom).offset(22)
+            make.centerX.equalToSuperview()
+            make.leading.trailing.equalToSuperview().inset(24)
         }
-        
+
         overlayView.alpha = 0
         UIView.animate(withDuration: 0.2) {
             overlayView.alpha = 1

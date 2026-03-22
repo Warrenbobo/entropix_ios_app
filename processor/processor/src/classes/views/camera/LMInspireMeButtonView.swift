@@ -67,9 +67,11 @@ extension LMInspireMeButtonView {
         titleLabel.textColor = .white
         titleLabel.textAlignment = .center
 
-        let questionConfig = UIImage.SymbolConfiguration(pointSize: 18, weight: .bold)
-        questionButton.setImage(UIImage(systemName: "questionmark.circle.fill", withConfiguration: questionConfig), for: .normal)
-        questionButton.tintColor = .white
+        let questionImage = UIImage(named: "question_circle")?.withRenderingMode(.alwaysOriginal)
+            ?? UIImage(systemName: "questionmark.circle.fill")
+        questionButton.setImage(questionImage, for: .normal)
+        questionButton.tintColor = nil
+        questionButton.imageView?.contentMode = .scaleAspectFit
         questionButton.isUserInteractionEnabled = true
         questionButton.addTarget(self, action: #selector(handleQuestionButtonTapped), for: .touchUpInside)
 

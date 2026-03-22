@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import AVFoundation
 
 class LMSavedIdeaDetailPage: UIViewController {
     
@@ -16,6 +17,7 @@ class LMSavedIdeaDetailPage: UIViewController {
     
     // MARK: - UI Components
     private let photoImageView = UIImageView()
+    private let watermarkImageView = UIImageView()
     private let backButtonContainer = UIView()
     private let backIconImageView = UIImageView()
     private let backLabel = UILabel()
@@ -48,6 +50,11 @@ class LMSavedIdeaDetailPage: UIViewController {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
     }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateWatermarkFrame()
+    }
     
     // MARK: - View Hierarchy Configuration
     private func configureViewHierarchy() {
@@ -57,6 +64,12 @@ class LMSavedIdeaDetailPage: UIViewController {
         photoImageView.image = savedIdea.image
         photoImageView.contentMode = .scaleAspectFit
         view.addSubview(photoImageView)
+
+        watermarkImageView.image = UIImage(named: AppConfigs.Assets.watermarkBrand)
+        watermarkImageView.contentMode = .scaleAspectFit
+        watermarkImageView.alpha = 0.82
+        watermarkImageView.isUserInteractionEnabled = false
+        photoImageView.addSubview(watermarkImageView)
         
         // Back Button Container - 胶囊形状容器
         backButtonContainer.backgroundColor = UIColor(white: 0.25, alpha: 0.85)
@@ -147,6 +160,26 @@ class LMSavedIdeaDetailPage: UIViewController {
     private func setupActions() {
         likeButton.addTarget(self, action: #selector(likeButtonTapped), for: .touchUpInside)
         goShotButton.addTarget(self, action: #selector(goShotButtonTapped), for: .touchUpInside)
+    }
+
+    private func updateWatermarkFrame() {
+        guard let image = photoImageView.image,
+              let watermarkImage = watermarkImageView.image else {
+            watermarkImageView.isHidden = true
+            return
+        }
+
+        let displayedImageRect = LMImageAssetProcessor.displayedImageRect(
+            for: image.size,
+            inside: photoImageView.bounds
+        )
+        let watermarkFrame = LMImageAssetProcessor.watermarkFrame(
+            watermarkSize: watermarkImage.size,
+            inside: displayedImageRect
+        )
+
+        watermarkImageView.frame = watermarkFrame
+        watermarkImageView.isHidden = watermarkFrame.isEmpty
     }
     
     private func updateLikeButtonAppearance() {

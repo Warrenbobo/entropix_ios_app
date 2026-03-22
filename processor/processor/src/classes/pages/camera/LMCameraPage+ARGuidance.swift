@@ -67,6 +67,37 @@ enum LMARGuidanceError: Error {
 
 // MARK: - AR Guidance Extension
 extension LMCameraPage {
+
+    private func prepareLineArtOverlay(for image: UIImage) {
+        if let currentReferenceLineArtImage {
+            arGuidanceView.setLineArtImage(currentReferenceLineArtImage)
+            return
+        }
+
+        arGuidanceLineArtRequestId &+= 1
+        let requestId = arGuidanceLineArtRequestId
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let lineArtImage = LMImageAssetProcessor.generateLineArt(from: image)
+
+            DispatchQueue.main.async {
+                guard let self = self,
+                      requestId == self.arGuidanceLineArtRequestId else {
+                    return
+                }
+
+                self.currentReferenceLineArtImage = lineArtImage
+                self.arGuidanceView.setLineArtImage(lineArtImage)
+                LMLogger.log("✅ [AR Guidance] LineArt overlay prepared")
+            }
+        }
+    }
+
+    func clearLineArtOverlay() {
+        arGuidanceLineArtRequestId &+= 1
+        currentReferenceLineArtImage = nil
+        arGuidanceView.clearLineArtImage()
+    }
     
     // MARK: - Setup
     
@@ -415,6 +446,7 @@ extension LMCameraPage {
             return
         }
         LMLogger.log("✅ [AR Guidance] Reference image exists, size: \(referenceImage.size)")
+        prepareLineArtOverlay(for: referenceImage)
         
         // 根据图片宽高比判断初始方向（仅在未设置时计算）
         if referenceImageInitialOrientation == nil {
@@ -499,6 +531,7 @@ extension LMCameraPage {
         isCurrentlyAligned = false // 重置对齐状态
         lastLiveBoxBounds = nil // 清除保存的蓝框位置
         arGuidanceStartTime = nil // 清除开始时间
+        arGuidanceView.setLineArtImage(currentReferenceLineArtImage)
         // 注意：不清除 referenceImageInitialOrientation，以便用户重新开启时可以恢复
         // referenceImageInitialOrientation 只在退出 compositionSelected 状态时清除
         
@@ -1171,6 +1204,7 @@ extension LMCameraPage {
         cameraStreamDetectionManager?.reset()
         referenceImageInitialOrientation = nil
         currentReferenceImage = nil
+        clearLineArtOverlay()
         currentReferenceBbox = nil
         isCurrentlyAligned = false // 重置对齐状态
         lastLiveBoxBounds = nil // 清除保存的蓝框位置

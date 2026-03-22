@@ -491,8 +491,9 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     }
     
     private func saveToPhotoLibrary() {
+        let watermarkedImage = LMImageAssetProcessor.watermarkedImage(from: photoData.image)
         UIImageWriteToSavedPhotosAlbum(
-            photoData.image,
+            watermarkedImage,
             self,
             #selector(image(_:didFinishSavingWithError:contextInfo:)),
             nil
@@ -516,15 +517,31 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
         LMLogger.log("📹 Saving Live Photo to library...")
         LMLogger.log("📹 Image size: \(photoData.image.size)")
         LMLogger.log("📹 Video path: \(videoURL.path)")
+
+        let photoResourceData: Data?
+        if let originalImageData = photoData.imageData,
+           let watermarkedImageData = LMImageAssetProcessor.watermarkedImageDataPreservingMetadata(
+            from: photoData.image,
+            originalImageData: originalImageData
+           ) {
+            photoResourceData = watermarkedImageData
+            LMLogger.log("✅ Live Photo cover watermark applied with preserved metadata")
+        } else if let originalImageData = photoData.imageData {
+            photoResourceData = originalImageData
+            LMLogger.log("⚠️ Failed to watermark Live Photo cover, falling back to original still image data")
+        } else {
+            photoResourceData = nil
+            LMLogger.log("⚠️ Missing original Live Photo still image data, falling back to original flow")
+        }
         
         // 使用 PHAssetCreationRequest 保存 Live Photo
         PHPhotoLibrary.shared().performChanges({
             let creationRequest = PHAssetCreationRequest.forAsset()
             
             // 添加图片资源（优先使用原始数据以保留元数据）
-            if let imageData = self.photoData.imageData {
-                creationRequest.addResource(with: .photo, data: imageData, options: nil)
-                LMLogger.log("✅ Using original image data with metadata")
+            if let photoResourceData {
+                creationRequest.addResource(with: .photo, data: photoResourceData, options: nil)
+                LMLogger.log("✅ Using Live Photo still image data for save")
             } else if let imageData = self.photoData.image.jpegData(compressionQuality: 1.0) {
                 creationRequest.addResource(with: .photo, data: imageData, options: nil)
                 LMLogger.log("⚠️ Using JPEG encoded data (metadata may be lost)")

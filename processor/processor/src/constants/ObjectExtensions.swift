@@ -7,6 +7,10 @@
 
 import Foundation
 import UIKit
+import AVFoundation
+import CoreImage
+import ImageIO
+import UniformTypeIdentifiers
 
 /// 渐变方向枚举（常见方向，可按需扩展）
 enum GradientDirection {
@@ -138,6 +142,171 @@ extension UIImage {
         return renderer.image { context in
             gradientLayer.render(in: context.cgContext)
         }
+    }
+
+    func lmNormalizedImage() -> UIImage {
+        guard imageOrientation != .up else {
+            return self
+        }
+
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = scale
+        format.opaque = false
+
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            draw(in: CGRect(origin: .zero, size: size))
+        }
+    }
+
+    func lmScaledToFit(maxDimension: CGFloat) -> UIImage {
+        let normalizedImage = lmNormalizedImage()
+        let longestEdge = max(normalizedImage.size.width, normalizedImage.size.height)
+
+        guard longestEdge > 0, longestEdge > maxDimension else {
+            return normalizedImage
+        }
+
+        let scaleRatio = maxDimension / longestEdge
+        let targetSize = CGSize(width: normalizedImage.size.width * scaleRatio,
+                                height: normalizedImage.size.height * scaleRatio)
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = 1
+        format.opaque = false
+
+        return UIGraphicsImageRenderer(size: targetSize, format: format).image { _ in
+            normalizedImage.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+    }
+}
+
+final class LMImageAssetProcessor {
+
+    private static let ciContext = CIContext(options: nil)
+
+    private init() {}
+
+    static func generateLineArt(from image: UIImage) -> UIImage? {
+        let workingImage = image.lmScaledToFit(maxDimension: 1536)
+        guard let ciImage = CIImage(image: workingImage) else {
+            return nil
+        }
+
+        let monochromeImage = ciImage.applyingFilter(
+            "CIColorControls",
+            parameters: [
+                kCIInputSaturationKey: 0.0,
+                kCIInputContrastKey: 1.35,
+                kCIInputBrightnessKey: 0.02
+            ]
+        )
+        let edgeImage = monochromeImage.applyingFilter(
+            "CIEdges",
+            parameters: [
+                kCIInputIntensityKey: 7.2
+            ]
+        )
+        let alphaMaskImage = edgeImage
+            .applyingFilter("CIMaskToAlpha")
+            .cropped(to: ciImage.extent)
+
+        guard let cgImage = ciContext.createCGImage(alphaMaskImage, from: alphaMaskImage.extent) else {
+            return nil
+        }
+
+        return UIImage(cgImage: cgImage, scale: workingImage.scale, orientation: .up)
+    }
+
+    static func watermarkedImage(from image: UIImage,
+                                 widthRatio: CGFloat = 0.24,
+                                 paddingRatio: CGFloat = 0.035,
+                                 alpha: CGFloat = 0.82) -> UIImage {
+        let normalizedImage = image.lmNormalizedImage()
+
+        guard let watermarkImage = UIImage(named: AppConfigs.Assets.watermarkBrand) else {
+            return normalizedImage
+        }
+
+        let targetWidth = max(CGFloat(72), normalizedImage.size.width * widthRatio)
+        let targetHeight = targetWidth * watermarkImage.size.height / max(watermarkImage.size.width, 1)
+        let padding = max(CGFloat(16), min(normalizedImage.size.width, normalizedImage.size.height) * paddingRatio)
+        let watermarkRect = CGRect(
+            x: normalizedImage.size.width - targetWidth - padding,
+            y: normalizedImage.size.height - targetHeight - padding,
+            width: targetWidth,
+            height: targetHeight
+        )
+
+        let format = UIGraphicsImageRendererFormat.default()
+        format.scale = normalizedImage.scale
+        format.opaque = false
+
+        return UIGraphicsImageRenderer(size: normalizedImage.size, format: format).image { _ in
+            normalizedImage.draw(in: CGRect(origin: .zero, size: normalizedImage.size))
+            watermarkImage.draw(in: watermarkRect, blendMode: .normal, alpha: alpha)
+        }
+    }
+
+    static func watermarkedImageDataPreservingMetadata(from image: UIImage,
+                                                       originalImageData: Data,
+                                                       widthRatio: CGFloat = 0.24,
+                                                       paddingRatio: CGFloat = 0.035,
+                                                       alpha: CGFloat = 0.82) -> Data? {
+        let watermarkedImage = watermarkedImage(from: image,
+                                                widthRatio: widthRatio,
+                                                paddingRatio: paddingRatio,
+                                                alpha: alpha).lmNormalizedImage()
+
+        guard let cgImage = watermarkedImage.cgImage,
+              let source = CGImageSourceCreateWithData(originalImageData as CFData, nil),
+              let sourceType = CGImageSourceGetType(source) else {
+            return nil
+        }
+
+        let originalProperties = (CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]) ?? [:]
+        var destinationProperties = originalProperties
+        destinationProperties[kCGImagePropertyOrientation] = 1
+        destinationProperties[kCGImagePropertyPixelWidth] = Int(cgImage.width)
+        destinationProperties[kCGImagePropertyPixelHeight] = Int(cgImage.height)
+
+        let destinationData = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(destinationData, sourceType, 1, nil) else {
+            return nil
+        }
+
+        CGImageDestinationAddImage(destination, cgImage, destinationProperties as CFDictionary)
+
+        guard CGImageDestinationFinalize(destination) else {
+            return nil
+        }
+
+        return destinationData as Data
+    }
+
+    static func watermarkFrame(watermarkSize: CGSize,
+                               inside imageRect: CGRect,
+                               widthRatio: CGFloat = 0.24,
+                               paddingRatio: CGFloat = 0.04) -> CGRect {
+        guard watermarkSize.width > 0,
+              watermarkSize.height > 0,
+              imageRect.width > 0,
+              imageRect.height > 0 else {
+            return .zero
+        }
+
+        let targetWidth = max(CGFloat(56), imageRect.width * widthRatio)
+        let targetHeight = targetWidth * watermarkSize.height / watermarkSize.width
+        let padding = max(CGFloat(12), min(imageRect.width, imageRect.height) * paddingRatio)
+
+        return CGRect(
+            x: imageRect.maxX - targetWidth - padding,
+            y: imageRect.maxY - targetHeight - padding,
+            width: targetWidth,
+            height: targetHeight
+        )
+    }
+
+    static func displayedImageRect(for imageSize: CGSize, inside bounds: CGRect) -> CGRect {
+        AVMakeRect(aspectRatio: imageSize, insideRect: bounds)
     }
 }
 

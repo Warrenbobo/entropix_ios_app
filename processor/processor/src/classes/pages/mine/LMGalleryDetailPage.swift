@@ -372,7 +372,8 @@ class LMGalleryDetailPage: UIViewController {
         if galleryItem.isLivePhoto {
             saveLivePhotoToLibrary()
         } else {
-            UIImageWriteToSavedPhotosAlbum(image, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
+            let watermarkedImage = LMImageAssetProcessor.watermarkedImage(from: image)
+            UIImageWriteToSavedPhotosAlbum(watermarkedImage, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
         }
     }
     
@@ -403,14 +404,32 @@ class LMGalleryDetailPage: UIViewController {
         LMLogger.log("📹 Saving Live Photo to library from Gallery...")
         LMLogger.log("📸 Image path: \(imagePath)")
         LMLogger.log("📹 Video path: \(videoPath)")
+
+        let originalImageData = try? Data(contentsOf: imageURL)
+        let photoResourceData: Data?
+        if let image = galleryItem.image,
+           let originalImageData,
+           let watermarkedImageData = LMImageAssetProcessor.watermarkedImageDataPreservingMetadata(
+            from: image,
+            originalImageData: originalImageData
+           ) {
+            photoResourceData = watermarkedImageData
+            LMLogger.log("✅ Gallery Live Photo cover watermark applied with preserved metadata")
+        } else {
+            photoResourceData = nil
+            LMLogger.log("⚠️ Failed to watermark Gallery Live Photo cover, falling back to original still image file")
+        }
         
         PHPhotoLibrary.shared().performChanges({
             let creationRequest = PHAssetCreationRequest.forAsset()
             
-            // 使用原始图片文件（包含 Live Photo 元数据）
-            let imageOptions = PHAssetResourceCreationOptions()
-            imageOptions.shouldMoveFile = false
-            creationRequest.addResource(with: .photo, fileURL: imageURL, options: imageOptions)
+            if let photoResourceData {
+                creationRequest.addResource(with: .photo, data: photoResourceData, options: nil)
+            } else {
+                let imageOptions = PHAssetResourceCreationOptions()
+                imageOptions.shouldMoveFile = false
+                creationRequest.addResource(with: .photo, fileURL: imageURL, options: imageOptions)
+            }
             
             // 添加配对视频资源
             let videoOptions = PHAssetResourceCreationOptions()

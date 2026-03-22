@@ -71,8 +71,10 @@ class LMCameraPage: LMPageWrapper {
         }
     }
     var currentReferenceImage: UIImage?
+    var currentReferenceLineArtImage: UIImage?
     var currentReferenceBbox: CGRect?
     var referenceImageInitialOrientation: UIDeviceOrientation? // 保存referenceImage的初始方向
+    var arGuidanceLineArtRequestId: UInt64 = 0
     var isCurrentlyAligned: Bool = false // 当前是否处于对齐状态
     var lastLiveBoxBounds: CGRect? // 保存最后的蓝框位置，用于从对齐状态恢复
     var arGuidanceStartTime: Date? // AR引导开始时间，用于延迟显示蓝框

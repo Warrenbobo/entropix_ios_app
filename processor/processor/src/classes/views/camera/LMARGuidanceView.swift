@@ -13,6 +13,15 @@ import UIKit
 class LMARGuidanceView: UIView {
     
     // MARK: - Properties
+
+    private let lineArtImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleToFill
+        imageView.alpha = 0.32
+        imageView.isHidden = true
+        imageView.isUserInteractionEnabled = false
+        return imageView
+    }()
     
     /// 白色静态框（Reference Image中的人物位置）
     private var referencePersonBox: UIView = {
@@ -97,6 +106,7 @@ class LMARGuidanceView: UIView {
         )
         
         // 3. 添加子视图到视图层级（不包含引导线，引导线已移到外部管理）
+        addSubview(lineArtImageView)
         addSubview(referencePersonBox)
         addSubview(successBox)
         addSubview(successCheckmark)
@@ -109,6 +119,11 @@ class LMARGuidanceView: UIView {
         successCheckmark.center = CGPoint(x: -1000, y: -1000)
         
         print("[AR Guidance] 初始化完成 - 白色框尺寸: \(refSize)")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        lineArtImageView.frame = bounds
     }
     
     // MARK: - Public Methods - Reference Box (白色静态框)
@@ -274,6 +289,16 @@ class LMARGuidanceView: UIView {
             print("[AR Guidance] 隐藏绿色成功框")
         }
     }
+
+    func setLineArtImage(_ image: UIImage?) {
+        lineArtImageView.image = image
+        lineArtImageView.isHidden = image == nil || !isOrientationMatched
+    }
+
+    func clearLineArtImage() {
+        lineArtImageView.image = nil
+        lineArtImageView.isHidden = true
+    }
     
     // MARK: - Private Helper Methods
     
@@ -401,6 +426,7 @@ class LMARGuidanceView: UIView {
     /// - Parameter matched: 是否匹配
     func setOrientationMatched(_ matched: Bool) {
         isOrientationMatched = matched
+        lineArtImageView.isHidden = !matched || lineArtImageView.image == nil
         hideOrShowAllGuidance(!matched)
         print("[AR Guidance] 方向匹配 - \(matched)")
     }
@@ -408,6 +434,7 @@ class LMARGuidanceView: UIView {
     /// 隐藏所有引导元素（仅控制本视图内的元素，蓝色框和引导线由外部控制）
     /// 仅隐藏使用
     func hideOrShowAllGuidance(_ hidden: Bool = false) {
+        lineArtImageView.isHidden = hidden || lineArtImageView.image == nil || !isOrientationMatched
         referencePersonBox.isHidden = hidden
         // 绿框和对号也需要隐藏
         if hidden {

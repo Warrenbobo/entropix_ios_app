@@ -260,6 +260,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
         
         // 在主线程处理图片
         DispatchQueue.main.async { [weak self] in
+            self?.showProcessingOverlay(with: image)
             self?.processInspireMeImage(image)
         }
     }
