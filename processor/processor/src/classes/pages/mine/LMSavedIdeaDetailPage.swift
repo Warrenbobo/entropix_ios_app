@@ -216,14 +216,14 @@ class LMSavedIdeaDetailPage: UIViewController {
         // Navigate to camera page with this idea as reference
         LMLogger.log("📸 Go Shot with idea: \(savedIdea.id)")
         
-        // 使用便利初始化方法，传递 Saved Idea 数据
+        // 使用便利初始化方法，传递已保存构图数据
         let cameraPage = LMCameraPage(fromSavedIdea: savedIdea)
         navigationController?.pushViewController(cameraPage, animated: true)
     }
     
     private func showUnlikeConfirmation() {
         let dialog = LMAlertDialog.deleteConfirmation(
-            title: LMText.profile.removeSavedIdeaConfirm,
+            title: String(format: LMText.profile.removeSavedIdeaConfirm, LMText.profile.savedIdeas),
             message: LMText.profile.actionCannotBeRecall
         ) { [weak self] in
             self?.performUnlike()
@@ -232,7 +232,7 @@ class LMSavedIdeaDetailPage: UIViewController {
     }
     
     private func performUnlike() {
-        LMLogger.log("💔 Unliking saved idea: \(savedIdea.id)")
+        LMLogger.log("💔 Unliking saved composition: \(savedIdea.id)")
         
         // Show loading indicator
         let loadingAlert = UIAlertController(title: nil, message: LMText.settings.deleting, preferredStyle: .alert)
@@ -253,7 +253,7 @@ class LMSavedIdeaDetailPage: UIViewController {
             DispatchQueue.main.async {
                 loadingAlert.dismiss(animated: true) {
                     if success {
-                        LMLogger.log("✅ Saved idea deleted successfully from storage")
+                        LMLogger.log("✅ Saved composition deleted successfully from storage")
                         
                         // Update UI
                         self.isLiked = false
@@ -262,8 +262,8 @@ class LMSavedIdeaDetailPage: UIViewController {
                         // Navigate back to refresh the list
                         self.navigationController?.popViewController(animated: true)
                     } else {
-                        LMLogger.log("❌ Failed to delete saved idea from storage")
-                        self.showError(message: LMText.profile.failedToRemoveSavedIdea)
+                        LMLogger.log("❌ Failed to delete saved composition from storage")
+                        self.showError(message: String(format: LMText.profile.failedToRemoveSavedIdea, LMText.profile.savedIdeas))
                     }
                 }
             }

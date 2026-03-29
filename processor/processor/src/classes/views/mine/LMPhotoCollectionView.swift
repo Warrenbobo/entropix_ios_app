@@ -86,7 +86,7 @@ extension LMPhotoCollectionView {
         galleryTabButton.isSelected = true
         galleryTabButton.addTarget(self, action: #selector(galleryTabButtonTapped), for: .touchUpInside)
         
-        // Saved Ideas Tab Button
+        // Saved compositions tab button
         savedIdeasTabButton.setTitle(LMText.profile.savedIdeas, for: .normal)
         savedIdeasTabButton.setTitleColor(UIColor.systemBlue, for: .selected)
         savedIdeasTabButton.setTitleColor(UIColor.systemGray, for: .normal)
@@ -326,5 +326,4 @@ extension LMPhotoCollectionView: UIScrollViewDelegate {
         }
     }
 }
-
 

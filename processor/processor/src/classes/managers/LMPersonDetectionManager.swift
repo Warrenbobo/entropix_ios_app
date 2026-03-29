@@ -150,40 +150,7 @@ class LMPersonDetectionManager {
     /// - Parameter cgImage: 原始CGImage
     /// - Returns: 旋转后的CGImage
     private func rotateImageToPortrait(_ cgImage: CGImage) -> CGImage? {
-        let width = cgImage.width
-        let height = cgImage.height
-        
-        let rotatedWidth = height
-        let rotatedHeight = width
-        
-        let colorSpace = cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB()
-        let bitmapInfo = cgImage.bitmapInfo.rawValue
-        
-        guard let context = CGContext(
-            data: nil,
-            width: rotatedWidth,
-            height: rotatedHeight,
-            bitsPerComponent: cgImage.bitsPerComponent,
-            bytesPerRow: 0,
-            space: colorSpace,
-            bitmapInfo: bitmapInfo
-        ) else {
-            return nil
-        }
-        
-        context.translateBy(x: CGFloat(rotatedWidth) / 2, y: CGFloat(rotatedHeight) / 2)
-        context.rotate(by: -.pi / 2)
-        context.draw(
-            cgImage,
-            in: CGRect(
-                x: -CGFloat(width) / 2,
-                y: -CGFloat(height) / 2,
-                width: CGFloat(width),
-                height: CGFloat(height)
-            )
-        )
-        
-        return context.makeImage()
+        LMARGuidancePolicy.makePortraitCanvasImage(from: cgImage, shouldRotateToPortrait: true)
     }
     
     // MARK: - Private Methods

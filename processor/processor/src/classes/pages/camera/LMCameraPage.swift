@@ -12,6 +12,16 @@ import MetalPerformanceShaders
 import CoreML
 import CoreMotion
 
+#if DEBUG
+typealias LMInspireMeDebugCompositionSubmitter = (
+    _ originalImage: UIImage,
+    _ compressedImage: UIImage,
+    _ embeddings: [Float],
+    _ aspectRatio: String,
+    _ completion: @escaping LMApiCallback<LMCompositionTaskResponse>
+) -> Void
+#endif
+
 struct LMCameraConstants {
     
     static let bottomControlsHeight: CGFloat = 90
@@ -53,8 +63,16 @@ class LMCameraPage: LMPageWrapper {
     var shouldCaptureNextFrame = false // 标志：是否应该捕获下一帧用于Inspire Me
     /// Inspire Me 点击瞬间的设备方向（用于把取到的帧统一旋转成“home键在下方”的竖屏图）
     var inspireMeCaptureDeviceOrientation: UIDeviceOrientation?
+    var latestPreviewPixelBuffer: CVPixelBuffer?
+    let previewFrameAccessQueue = DispatchQueue(label: "com.framaist.preview-frame-access", qos: .userInitiated)
     var currentProcessingSceneryImage: UIImage?
     var isShowingPermissionSettingsAlert = false
+#if DEBUG
+    var debugShouldBypassInspireMePermissionCheck = false
+    var debugShouldTreatInspireMeCaptureSessionAsRunning = false
+    var debugInspireMeSceneFeatureOverride: ((UIImage) -> [Float]?)?
+    var debugInspireMeCompositionSubmitter: LMInspireMeDebugCompositionSubmitter?
+#endif
     
     // MARK: - AR Guidance (New Architecture)
     var arGuidanceView: LMARGuidanceView!
@@ -75,6 +93,7 @@ class LMCameraPage: LMPageWrapper {
     var currentReferenceBbox: CGRect?
     var referenceImageInitialOrientation: UIDeviceOrientation? // 保存referenceImage的初始方向
     var arGuidanceLineArtRequestId: UInt64 = 0
+    var preferredARGuidanceButtonState: LMARGuidanceButtonState = .box
     var isCurrentlyAligned: Bool = false // 当前是否处于对齐状态
     var lastLiveBoxBounds: CGRect? // 保存最后的蓝框位置，用于从对齐状态恢复
     var arGuidanceStartTime: Date? // AR引导开始时间，用于延迟显示蓝框
@@ -109,11 +128,12 @@ class LMCameraPage: LMPageWrapper {
     var referenceImageContainerView: UIView? // 持久化的参考图容器
     var referenceImageView: UIImageView? // 参考图
     var referenceCloseButton: UIButton? // 关闭按钮
+    var referenceImageOrientationObserver: NSObjectProtocol?
     
     // MARK: - Navigation Source Tracking
     enum NavigationSource {
         case normal              // 从普通入口进入（Menu Bar）
-        case savedIdea(GalleryItem) // 从 Saved Idea Detail 的 Go Shot 进入
+        case savedIdea(GalleryItem) // 从已保存构图详情页的 Go Shot 进入
     }
     var navigationSource: NavigationSource = .normal
     
@@ -126,11 +146,11 @@ class LMCameraPage: LMPageWrapper {
     
     // MARK: - Initialization
     
-    /// 便利初始化方法：从 Saved Idea 进入
+    /// 便利初始化方法：从已保存构图进入
     convenience init(fromSavedIdea item: GalleryItem) {
         self.init()
         self.navigationSource = .savedIdea(item)
-        LMLogger.log("📸 Camera initialized from Saved Idea: \(item.id)")
+        LMLogger.log("📸 Camera initialized from saved composition: \(item.id)")
     }
     
     // MARK: - Lifecycle
@@ -155,7 +175,7 @@ class LMCameraPage: LMPageWrapper {
         // 确保视图层级正确
         ensureCorrectViewHierarchy()
         
-        // 如果是从 Saved Idea 进入，自动进入 Composition Selected 状态
+        // 如果是从已保存构图进入，自动进入 Composition Selected 状态
         handleNavigationSource()
         registerAppLifecycleObservers()
     }
@@ -210,6 +230,14 @@ class LMCameraPage: LMPageWrapper {
     }
 
     private func presentHomeCameraAppUpdateIfNeeded(forceRefresh: Bool) {
+#if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--arguidance-runtime-harness")
+            || ProcessInfo.processInfo.arguments.contains("--processing-runtime-harness")
+            || ProcessInfo.processInfo.arguments.contains("--inspireme-runtime-harness") {
+            return
+        }
+#endif
+
         guard let rootController = navigationController?.viewControllers.first,
               rootController === self else {
             return
@@ -239,6 +267,7 @@ class LMCameraPage: LMPageWrapper {
     
     deinit {
         NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
+        stopObservingDeviceOrientation()
         // 页面真正销毁时，完全清理 AR 引导资源
         fullCleanupARGuidance()
         LMLogger.log("🗑️ LMCameraPage deinit")
@@ -482,6 +511,15 @@ class LMCameraPage: LMPageWrapper {
     
     /// 检查相机权限并设置
     private func checkCameraPermissionAndSetup() {
+#if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--processing-runtime-harness")
+            || ProcessInfo.processInfo.arguments.contains("--arguidance-runtime-harness")
+            || ProcessInfo.processInfo.arguments.contains("--inspireme-runtime-harness") {
+            LMLogger.log("🧪 Skipping camera permission/setup for runtime harness launch")
+            return
+        }
+#endif
+
         let cameraAuthStatus = AVCaptureDevice.authorizationStatus(for: .video)
         
         switch cameraAuthStatus {
@@ -681,9 +719,9 @@ class LMCameraPage: LMPageWrapper {
             // 判断导航来源
             switch navigationSource {
             case .savedIdea:
-                // 从 Saved Idea 进入，点击返回应该返回到 Saved Idea Detail 页面
+                // 从已保存构图进入，点击返回应该返回到已保存构图详情页
                 navigateBack()
-                LMLogger.log("🔙 Returned to Saved Idea Detail from Composition Selected")
+                LMLogger.log("🔙 Returned to saved composition detail from Composition Selected")
                 
             case .normal:
                 // 从 Show Suggestions 进入，点击返回应该返回到 Show Suggestions 列表
@@ -702,7 +740,7 @@ class LMCameraPage: LMPageWrapper {
     private func handleNavigationSource() {
         switch navigationSource {
         case .savedIdea(let item):
-            // 从 Saved Idea 进入，自动进入 Composition Selected 状态
+            // 从已保存构图进入，自动进入 Composition Selected 状态
             // 延迟执行，确保相机会话已启动
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.enterCompositionSelectedStateFromSavedIdea(item: item)

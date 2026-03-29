@@ -78,7 +78,8 @@ extension LMCameraPage {
         let requestId = arGuidanceLineArtRequestId
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let lineArtImage = LMImageAssetProcessor.generateLineArt(from: image)
+            let canvasImage = image.lmARGuidanceCanvasImage()
+            let lineArtImage = LMImageAssetProcessor.generateLineArt(from: canvasImage)
 
             DispatchQueue.main.async {
                 guard let self = self,
@@ -96,6 +97,7 @@ extension LMCameraPage {
     func clearLineArtOverlay() {
         arGuidanceLineArtRequestId &+= 1
         currentReferenceLineArtImage = nil
+        arGuidanceView.setReferenceGuideReady(false)
         arGuidanceView.clearLineArtImage()
     }
     
@@ -319,6 +321,11 @@ extension LMCameraPage {
               let arGuidanceView = arGuidanceView,
               let guidanceLine = guidanceLine else { return }
         
+        guard preferredARGuidanceButtonState == .box else {
+            guidanceLine.isHidden = true
+            return
+        }
+        
         // 蓝色框的中心点（已经在previewCanvasView坐标系中）
         let liveBoxFrame = livePersonBox.frame
         let liveBoxCenterInCanvas = CGPoint(
@@ -346,9 +353,17 @@ extension LMCameraPage {
     // MARK: - Configuration
     
     func configureARGuidanceFeatures(_ enabled: Bool) {
-        if enabled {
+        configureARGuidanceMode(enabled ? .box : .off)
+    }
+
+    func configureARGuidanceMode(_ buttonState: LMARGuidanceButtonState) {
+        preferredARGuidanceButtonState = buttonState == .unavailable ? preferredARGuidanceButtonState : buttonState
+        arGuidanceView.setGuidanceDisplayState(buttonState)
+        
+        switch buttonState {
+        case .box, .lineArt:
             startARGuidanceSession()
-        } else {
+        case .off, .unavailable:
             stopARGuidanceSession()
         }
     }
@@ -373,15 +388,20 @@ extension LMCameraPage {
     /// 当画布比例变化时更新 AR Guidance 的位置
     /// 此方法在 updatePreviewCanvasAspectRatio 完成后调用
     func updateARGuidanceForAspectRatioChange() {
-        // 检查是否有参考图和 bbox
-        guard let referenceImage = currentReferenceImage,
-              let referenceBbox = currentReferenceBbox else {
-            LMLogger.log("📐 [AR Guidance] No reference image or bbox, skipping aspect ratio update")
+        guard let referenceImage = currentReferenceImage else {
+            LMLogger.log("📐 [AR Guidance] No reference image, skipping aspect ratio update")
             return
         }
         
         // 检查 AR Guidance 是否激活
-        guard arGuidanceState == .activeGuidance || arGuidanceState == .referenceDetected(bbox: referenceBbox) else {
+        let isReferenceDetectedState: Bool
+        if let referenceBbox = currentReferenceBbox {
+            isReferenceDetectedState = arGuidanceState == .referenceDetected(bbox: referenceBbox)
+        } else {
+            isReferenceDetectedState = false
+        }
+
+        guard arGuidanceState == .activeGuidance || isReferenceDetectedState else {
             LMLogger.log("📐 [AR Guidance] AR Guidance not active, skipping aspect ratio update")
             return
         }
@@ -391,6 +411,16 @@ extension LMCameraPage {
         
         // 1. 更新 ARGuidanceView 的尺寸
         updateARGuidanceViewSize()
+
+        guard preferredARGuidanceButtonState.requiresReferenceDetection else {
+            LMLogger.log("📐 [AR Guidance] Updated line art canvas for new aspect ratio")
+            return
+        }
+
+        guard let referenceBbox = currentReferenceBbox else {
+            LMLogger.log("📐 [AR Guidance] Missing reference bbox for box guidance update")
+            return
+        }
         
         // 2. 重新计算白色框的位置
         let canvasBbox = convertBboxToCanvas(bbox: referenceBbox, imageSize: referenceImage.size)
@@ -450,20 +480,8 @@ extension LMCameraPage {
         
         // 根据图片宽高比判断初始方向（仅在未设置时计算）
         if referenceImageInitialOrientation == nil {
-            let imageWidth = referenceImage.size.width
-            let imageHeight = referenceImage.size.height
-            let isImagePortrait = imageHeight >= imageWidth
-            
-            // 保存referenceImage的初始方向（基于图片宽高比）
-            if isImagePortrait {
-                // 图片是竖向的（高>宽），初始方向为竖屏
-                referenceImageInitialOrientation = .portrait
-                LMLogger.log("📱 [AR Guidance] Image is portrait (H:\(imageHeight) > W:\(imageWidth)), saved initial orientation: portrait")
-            } else {
-                // 图片是横向的（宽>高），初始方向为横屏
-                referenceImageInitialOrientation = .landscapeRight
-                LMLogger.log("📱 [AR Guidance] Image is landscape (W:\(imageWidth) > H:\(imageHeight)), saved initial orientation: landscapeRight")
-            }
+            referenceImageInitialOrientation = LMARGuidancePolicy.referenceOrientation(for: referenceImage.size)
+            LMLogger.log("📱 [AR Guidance] Saved reference orientation \(referenceImageInitialOrientation!.rawValue) for image size: \(referenceImage.size)")
         } else {
             LMLogger.log("📱 [AR Guidance] Using existing referenceImageInitialOrientation: \(referenceImageInitialOrientation!.rawValue)")
         }
@@ -485,12 +503,13 @@ extension LMCameraPage {
         
         // 方向匹配：检测人物并显示引导
         arGuidanceView.setOrientationMatched(true)
+        arGuidanceView.setReferenceGuideReady(currentReferenceBbox != nil)
         
         // 🔧 修复：在启动 AR Guidance 时，根据当前设备方向初始化 arGuidanceView 的 transform
         // 这确保了即使设备在进入 AR Guidance 时已经处于非 portrait 方向，transform 也能正确设置
         updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
         LMLogger.log("📐 [AR Guidance] Initial transform set for orientation: \(currentOrientation.rawValue), transform: \(arGuidanceView.transform)")
-        
+
         // 检查是否已有检测结果（用户关闭后重新开启的情况）
         if let existingBbox = currentReferenceBbox {
             LMLogger.log("✅ [AR Guidance] Restoring from existing bbox: \(existingBbox)")
@@ -503,6 +522,7 @@ extension LMCameraPage {
             
             // 恢复白色框
             arGuidanceView.setReferenceBoxBounds(bbox: canvasBbox)
+            arGuidanceView.setReferenceGuideReady(true)
             arGuidanceView.showReferenceBox()
             
             // 更新状态并启动实时检测
@@ -512,6 +532,7 @@ extension LMCameraPage {
             LMLogger.log("✅ [AR Guidance] Session restored with existing bbox, isARGuidanceActive: \(isARGuidanceActive)")
         } else {
             LMLogger.log("✅ [AR Guidance] Orientation matched, starting person detection...")
+            arGuidanceView.setReferenceGuideReady(false)
             detectPersonAndShowGuidance(in: referenceImage)
             isARGuidanceActive = true
             LMLogger.log("✅ [AR Guidance] Session started, isARGuidanceActive: \(isARGuidanceActive)")
@@ -531,7 +552,6 @@ extension LMCameraPage {
         isCurrentlyAligned = false // 重置对齐状态
         lastLiveBoxBounds = nil // 清除保存的蓝框位置
         arGuidanceStartTime = nil // 清除开始时间
-        arGuidanceView.setLineArtImage(currentReferenceLineArtImage)
         // 注意：不清除 referenceImageInitialOrientation，以便用户重新开启时可以恢复
         // referenceImageInitialOrientation 只在退出 compositionSelected 状态时清除
         
@@ -567,8 +587,15 @@ extension LMCameraPage {
                 stopARGuidanceSession()
                 return
             }
-            isARGuidanceActive = true
-            startRealtimePersonDetection()
+            isARGuidanceActive = preferredARGuidanceButtonState.isEnabledGuidance
+            arGuidanceView.setGuidanceDisplayState(preferredARGuidanceButtonState)
+            arGuidanceView.setReferenceGuideReady(currentReferenceBbox != nil)
+            if preferredARGuidanceButtonState == .box {
+                startRealtimePersonDetection()
+            } else {
+                stopRealtimePersonDetection()
+                hideLiveBox()
+            }
             arGuidanceView.hideOrShowAllGuidance(false)
             
         case .paused:
@@ -601,17 +628,8 @@ extension LMCameraPage {
         
         // 根据图片宽高比判断初始方向（如果还没有设置）
         if referenceImageInitialOrientation == nil {
-            let imageWidth = image.size.width
-            let imageHeight = image.size.height
-            let isImagePortrait = imageHeight >= imageWidth
-            
-            if isImagePortrait {
-                referenceImageInitialOrientation = .portrait
-                LMLogger.log("📱 [AR Guidance] detectPersonAndShowGuidance - Image is portrait, saved initial orientation: portrait")
-            } else {
-                referenceImageInitialOrientation = .landscapeRight
-                LMLogger.log("📱 [AR Guidance] detectPersonAndShowGuidance - Image is landscape, saved initial orientation: landscapeRight")
-            }
+            referenceImageInitialOrientation = LMARGuidancePolicy.referenceOrientation(for: image.size)
+            LMLogger.log("📱 [AR Guidance] detectPersonAndShowGuidance - saved reference orientation: \(referenceImageInitialOrientation!.rawValue)")
         }
         
         // 检查方向是否与图片方向类型匹配
@@ -634,6 +652,7 @@ extension LMCameraPage {
         // 方向匹配：检测人物
         arGuidanceState = .waitingForReferenceDetection
         arGuidanceView.setOrientationMatched(true)
+        arGuidanceView.setReferenceGuideReady(false)
         LMLogger.log("✅ [AR Guidance] Starting person detection in reference image...")
 
         // 每次都执行新的检测，不使用缓存
@@ -688,6 +707,7 @@ extension LMCameraPage {
             
             // 使用完整的 bbox 设置白色框（位置和尺寸）
             self.arGuidanceView.setReferenceBoxBounds(bbox: canvasBbox)
+            self.arGuidanceView.setReferenceGuideReady(true)
             
             // 显示白色框
             self.arGuidanceView.showReferenceBox()
@@ -736,6 +756,11 @@ extension LMCameraPage {
     ///   - bbox: 检测到的bbox（归一化坐标，Vision 坐标系统）
     ///   - confidence: 置信度
     private func handleRealtimeDetectionResult(bbox: CGRect?, confidence: Float) {
+        guard preferredARGuidanceButtonState == .box else {
+            hideLiveBox()
+            return
+        }
+        
         // 检查是否在初始延迟期间（1秒内不显示蓝框）
         let isInInitialDelay: Bool
         if let startTime = arGuidanceStartTime {
@@ -868,6 +893,12 @@ extension LMCameraPage {
     
     /// 从对齐状态恢复到非对齐状态（显示蓝白框+引导线）
     private func restoreToNonAlignedState() {
+        guard preferredARGuidanceButtonState == .box else {
+            arGuidanceView.hideSuccessBox()
+            hideLiveBox()
+            return
+        }
+        
         isCurrentlyAligned = false
         
         // 隐藏绿色框
@@ -908,17 +939,32 @@ extension LMCameraPage {
         guard isMatched else {
             return
         }
-        switch orientation {
-        case .landscapeRight:
-            arGuidanceView.transform = CGAffineTransform(rotationAngle: -.pi)
-        case .landscapeLeft:
-            arGuidanceView.transform = .identity
-        case .portraitUpsideDown:
-            arGuidanceView.transform = CGAffineTransform(rotationAngle: .pi)
-        case .portrait:
-            arGuidanceView.transform = .identity
-        default:
-            break
+
+        let referenceAxis = currentReferenceImage.map { LMARGuidancePolicy.referenceAxis(for: $0.size) }
+        let angle = LMARGuidancePolicy.guidanceRotationAngle(
+            referenceAxis: referenceAxis,
+            deviceOrientation: orientation
+        )
+        arGuidanceView.transform = CGAffineTransform(rotationAngle: angle)
+    }
+
+    private func restoreARGuidanceAfterOrientationRecovery(logContext: String) {
+        arGuidanceView.setOrientationMatched(true)
+
+        let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
+        updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
+
+        if currentReferenceBbox != nil {
+            arGuidanceState = .activeGuidance
+            arGuidanceView.setReferenceGuideReady(true)
+            arGuidanceView.hideOrShowAllGuidance(false)
+            LMLogger.log("✅ [AR Guidance] \(logContext) - restored reference guidance")
+        } else if let referenceImage = currentReferenceImage {
+            LMLogger.log("✅ [AR Guidance] \(logContext) - starting person detection")
+            arGuidanceView.setReferenceGuideReady(false)
+            detectPersonAndShowGuidance(in: referenceImage)
+        } else {
+            LMLogger.log("⚠️ [AR Guidance] \(logContext) - missing reference image, cannot restore guidance")
         }
     }
     
@@ -955,27 +1001,8 @@ extension LMCameraPage {
                     LMLogger.log("⚠️ Orientation mismatch, not restoring AR guidance")
                     return
                 }
-                
-                // 恢复AR引导
-                if self.currentReferenceBbox != nil {
-                    // 已经检测到人物，恢复到activeGuidance状态
-                    self.arGuidanceState = .activeGuidance
-                    self.arGuidanceView.setOrientationMatched(true)
-                    
-                    // 🔧 修复：恢复时也需要设置正确的 transform
-                    let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
-                    self.updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
-                    
-                    self.arGuidanceView.hideOrShowAllGuidance(false)
-                    LMLogger.log("✅ [AR Guidance] Restored AR guidance after camera switch")
-                } else {
-                    // 还没有检测到人物，需要触发人物检测
-                    self.arGuidanceView.setOrientationMatched(true)
-                    LMLogger.log("✅ [AR Guidance] Starting person detection after camera switch")
-                    if let referenceImage = self.currentReferenceImage {
-                        self.detectPersonAndShowGuidance(in: referenceImage)
-                    }
-                }
+
+                self.restoreARGuidanceAfterOrientationRecovery(logContext: "Camera switch recovery")
             }
         }
     }
@@ -995,28 +1022,8 @@ extension LMCameraPage {
                         LMLogger.log("⚠️ 延迟恢复时发现方向已不匹配，取消恢复")
                         return
                     }
-                    
-                    // 从方向不匹配状态恢复
-                    if self.currentReferenceBbox != nil {
-                        // 已经检测到人物，恢复到activeGuidance状态
-                        self.arGuidanceState = .activeGuidance
-                        self.arGuidanceView.setOrientationMatched(true)
-                        
-                        // 🔧 修复：恢复时重新设置 transform（因为延迟 1 秒后方向可能已变化）
-                        let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
-                        self.updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
-                        
-                        self.arGuidanceView.hideOrShowAllGuidance(false)
-                        LMLogger.log("✅ 方向匹配恢复 - 恢复AR引导")
-                    } else {
-                        // 还没有检测到人物，需要触发人物检测
-                        self.arGuidanceView.setOrientationMatched(true)
-                        LMLogger.log("✅ 方向匹配恢复 - 开始人物检测")
-                        // 触发人物检测
-                        if let referenceImage = self.currentReferenceImage {
-                            self.detectPersonAndShowGuidance(in: referenceImage)
-                        }
-                    }
+
+                    self.restoreARGuidanceAfterOrientationRecovery(logContext: "Orientation recovery")
                 }
             }
         } else {
@@ -1028,6 +1035,14 @@ extension LMCameraPage {
                 // 立即隐藏所有引导框
                 arGuidanceView.hideOrShowAllGuidance(true)
                 LMLogger.log("⚠️ 方向不匹配 - 立即暂停AR引导并隐藏所有引导框")
+            } else if case .waitingForReferenceDetection = arGuidanceState {
+                arGuidanceReferenceDetectionRequestId &+= 1
+                referenceImageDetectionManager?.cancelCurrentDetection()
+                arGuidanceState = .orientationMismatch
+                arGuidanceView.setOrientationMatched(false)
+                stopRealtimePersonDetection()
+                arGuidanceView.hideOrShowAllGuidance(true)
+                LMLogger.log("⚠️ 方向不匹配 - 取消Reference检测并隐藏所有引导框")
             } else if case .referenceDetected = arGuidanceState {
                 arGuidanceState = .orientationMismatch
                 arGuidanceView.setOrientationMatched(false)
@@ -1115,9 +1130,12 @@ extension LMCameraPage {
         }
         
         let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
+        let isMatched = LMARGuidancePolicy.shouldShowGuidance(
+            referenceOrientation: initialOrientation,
+            deviceOrientation: currentOrientation
+        )
         let isCurrentPortrait = (currentOrientation == .portrait || currentOrientation == .portraitUpsideDown)
         let isInitialPortrait = (initialOrientation == .portrait || initialOrientation == .portraitUpsideDown)
-        let isMatched = (isCurrentPortrait == isInitialPortrait)
         
         LMLogger.log("📱 [Orientation Check] Initial: \(initialOrientation.rawValue) (portrait: \(isInitialPortrait)), Current: \(currentOrientation.rawValue) (portrait: \(isCurrentPortrait)), Matched: \(isMatched)")
         
@@ -1141,6 +1159,8 @@ extension LMCameraPage {
     /// 显示对齐成功指示器（使用绿色校准框）
     /// 注意：不再停止AR引导，而是保持检测以便在超出阈值时恢复
     func showAlignmentSuccessWithGreenFrame() {
+        guard preferredARGuidanceButtonState == .box else { return }
+        
         // 检查是否已经显示绿色框
         guard arGuidanceView.successBox.isHidden else {
             return
@@ -1202,6 +1222,7 @@ extension LMCameraPage {
         arGuidanceState = .disabled
         stopRealtimePersonDetection()
         cameraStreamDetectionManager?.reset()
+        preferredARGuidanceButtonState = .box
         referenceImageInitialOrientation = nil
         currentReferenceImage = nil
         clearLineArtOverlay()
@@ -1229,6 +1250,7 @@ extension LMCameraPage {
     /// 处理AR引导的视频帧
     func processARGuidanceFrame(_ sampleBuffer: CMSampleBuffer) {
         guard isARGuidanceActive else { return }
+        guard preferredARGuidanceButtonState == .box else { return }
         guard currentCameraState == .compositionSelected else { return }
         guard currentReferenceImage != nil, referenceImageInitialOrientation != nil else { return }
         guard arGuidanceState == .activeGuidance else { return }
@@ -1242,3 +1264,124 @@ extension LMCameraPage {
         }
     }
 }
+
+#if DEBUG
+struct LMARGuidanceRuntimeSnapshot {
+    let cameraState: LMCameraPage.CameraState
+    let guidanceState: LMARGuidanceState
+    let preferredDisplayState: LMARGuidanceButtonState
+    let bottomControlsDisplayState: LMARGuidanceButtonState
+    let referenceObserverActive: Bool
+    let referenceImageVisible: Bool
+    let referenceImageAngle: CGFloat
+    let guidanceViewAngle: CGFloat
+    let referenceBoxHidden: Bool
+    let lineArtHidden: Bool
+    let hasReferenceGuideReady: Bool
+    let hasLineArtImage: Bool
+}
+
+extension LMCameraPage {
+    func debugPrepareShowSuggestions(with suggestions: [LMCompositionSuggestion]) {
+        stopPollingAIGCSuggestions()
+        stopObservingDeviceOrientation()
+        if isARGuidanceActive || arGuidanceState != .disabled {
+            stopARGuidanceSession()
+        }
+
+        referenceImageContainerView?.transform = .identity
+        referenceImageContainerView?.isHidden = true
+
+        currentTaskId = "debug-runtime-harness"
+        currentSuggestions = suggestions
+        currentSuggestion = nil
+        jobIdToPlaceholderRank.removeAll()
+        currentCameraState = .showingSuggestions
+        currentReferenceImage = nil
+        referenceImageInitialOrientation = nil
+        currentReferenceBbox = nil
+        clearLineArtOverlay()
+
+        inspireMeButtonView.isHidden = true
+        bottomControlsHeightConstraint?.update(offset: 44)
+        cameraBottomControlsView.setLayoutMode(.compact, animated: false)
+        cameraBottomControlsView.resetARGuidance()
+        showSuggestionsCarousel()
+        ensureCorrectViewHierarchy()
+        view.layoutIfNeeded()
+    }
+
+    func debugInjectSyntheticLineArtImage(_ image: UIImage?) {
+        arGuidanceReferenceDetectionRequestId &+= 1
+        referenceImageDetectionManager?.cancelCurrentDetection()
+        arGuidanceLineArtRequestId &+= 1
+
+        currentReferenceBbox = nil
+        currentReferenceLineArtImage = image
+        arGuidanceView.setLineArtImage(image)
+        arGuidanceView.setReferenceGuideReady(false)
+        arGuidanceView.setGuidanceDisplayState(preferredARGuidanceButtonState)
+        view.layoutIfNeeded()
+    }
+
+    func debugInjectSyntheticGuidance(bbox: CGRect, lineArtImage: UIImage? = nil) {
+        guard let referenceImage = currentReferenceImage else { return }
+
+        arGuidanceReferenceDetectionRequestId &+= 1
+        referenceImageDetectionManager?.cancelCurrentDetection()
+        arGuidanceLineArtRequestId &+= 1
+
+        currentReferenceBbox = bbox
+        if let lineArtImage {
+            currentReferenceLineArtImage = lineArtImage
+        }
+        arGuidanceView.setLineArtImage(currentReferenceLineArtImage)
+
+        updateARGuidanceViewSize()
+        let canvasBbox = convertBboxToCanvas(bbox: bbox, imageSize: referenceImage.size)
+        arGuidanceView.setReferenceBoxBounds(bbox: canvasBbox)
+        arGuidanceView.setReferenceGuideReady(true)
+        arGuidanceView.setGuidanceDisplayState(preferredARGuidanceButtonState)
+
+        let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
+        let isMatched = isCurrentOrientationMatched()
+        arGuidanceView.setOrientationMatched(isMatched)
+        if isMatched {
+            updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
+            if preferredARGuidanceButtonState == .box {
+                arGuidanceView.showReferenceBox()
+            }
+        }
+
+        arGuidanceState = isMatched ? .activeGuidance : .orientationMismatch
+        view.layoutIfNeeded()
+    }
+
+    func debugSnapshot() -> LMARGuidanceRuntimeSnapshot {
+        LMARGuidanceRuntimeSnapshot(
+            cameraState: currentCameraState,
+            guidanceState: arGuidanceState,
+            preferredDisplayState: preferredARGuidanceButtonState,
+            bottomControlsDisplayState: cameraBottomControlsView.getARGuidanceState(),
+            referenceObserverActive: referenceImageOrientationObserver != nil,
+            referenceImageVisible: !(referenceImageContainerView?.isHidden ?? true),
+            referenceImageAngle: debugReferenceImageRotationAngle(),
+            guidanceViewAngle: debugGuidanceViewRotationAngle(),
+            referenceBoxHidden: arGuidanceView?.isReferenceBoxHidden() ?? true,
+            lineArtHidden: arGuidanceView?.debugIsLineArtHidden ?? true,
+            hasReferenceGuideReady: arGuidanceView?.debugHasReferenceGuideReady ?? false,
+            hasLineArtImage: arGuidanceView?.debugHasLineArtImage ?? false
+        )
+    }
+
+    private func debugReferenceImageRotationAngle() -> CGFloat {
+        guard let containerView = referenceImageContainerView else { return 0 }
+        return atan2(containerView.transform.b, containerView.transform.a)
+    }
+
+    private func debugGuidanceViewRotationAngle() -> CGFloat {
+        guard let arGuidanceView else { return 0 }
+        return atan2(arGuidanceView.transform.b, arGuidanceView.transform.a)
+    }
+}
+#endif

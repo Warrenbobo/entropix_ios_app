@@ -143,6 +143,7 @@ extension LMCameraPage {
                     DispatchQueue.main.async {
                         self.currentCameraDevice = newCamera
                         self.isUsingFrontCamera.toggle()
+                        self.clearLatestPreviewPixelBuffer()
                         self.updateInspireMeButtonState()
                         
                         // 处理AR引导状态

@@ -116,12 +116,12 @@ class LMSuggestionCardView: UIView {
         loadingView.backgroundColor = UIColor.hexColor("#6F5CFF", alpha: 0.96)
         loadingView.layer.cornerRadius = Self.adaptiveSize(12)
         
-        loadingStageLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(14), weight: .semibold)
+        loadingStageLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(9), weight: .semibold)
         loadingStageLabel.textColor = UIColor.white
         loadingStageLabel.textAlignment = .center
         loadingStageLabel.numberOfLines = 1
         
-        loadingPercentageLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(12), weight: .medium)
+        loadingPercentageLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(7), weight: .medium)
         loadingPercentageLabel.textColor = UIColor.white.withAlphaComponent(0.88)
         loadingPercentageLabel.textAlignment = .right
         

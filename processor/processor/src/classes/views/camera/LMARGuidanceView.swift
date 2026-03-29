@@ -14,10 +14,12 @@ class LMARGuidanceView: UIView {
     
     // MARK: - Properties
 
+    private var guidanceDisplayState: LMARGuidanceButtonState = .off
+
     private let lineArtImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleToFill
-        imageView.alpha = 0.32
+        imageView.alpha = 0.82
         imageView.isHidden = true
         imageView.isUserInteractionEnabled = false
         return imageView
@@ -51,6 +53,10 @@ class LMARGuidanceView: UIView {
     
     /// 方向匹配状态
     private var isOrientationMatched: Bool = false
+
+    /// 与白色校准框共享的参考引导就绪状态
+    /// 只有当 Reference Image 的人物检测已经拿到稳定 bbox 后，LineArt 才允许显示
+    private var isReferenceGuideReady: Bool = false
     
     // MARK: - Size Constants
     
@@ -183,6 +189,10 @@ class LMARGuidanceView: UIView {
     
     /// 显示白色框
     func showReferenceBox() {
+        guard guidanceDisplayState == .box, isOrientationMatched else {
+            referencePersonBox.isHidden = true
+            return
+        }
         referencePersonBox.isHidden = false
         referencePersonBox.alpha = 1.0  // 确保 alpha 为 1
         
@@ -224,6 +234,11 @@ class LMARGuidanceView: UIView {
     
     /// 显示绿色成功框（复用白色框的位置和尺寸，绿框常驻，对号图标3秒后消失）
     func showSuccessBox() {
+        guard guidanceDisplayState == .box, isOrientationMatched else {
+            successBox.isHidden = true
+            successCheckmark.isHidden = true
+            return
+        }
         // 清除之前的图层
         successBox.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         
@@ -292,12 +307,17 @@ class LMARGuidanceView: UIView {
 
     func setLineArtImage(_ image: UIImage?) {
         lineArtImageView.image = image
-        lineArtImageView.isHidden = image == nil || !isOrientationMatched
+        applyGuidanceVisibility()
     }
 
     func clearLineArtImage() {
         lineArtImageView.image = nil
-        lineArtImageView.isHidden = true
+        applyGuidanceVisibility()
+    }
+
+    func setReferenceGuideReady(_ ready: Bool) {
+        isReferenceGuideReady = ready
+        applyGuidanceVisibility()
     }
     
     // MARK: - Private Helper Methods
@@ -426,21 +446,71 @@ class LMARGuidanceView: UIView {
     /// - Parameter matched: 是否匹配
     func setOrientationMatched(_ matched: Bool) {
         isOrientationMatched = matched
-        lineArtImageView.isHidden = !matched || lineArtImageView.image == nil
         hideOrShowAllGuidance(!matched)
         print("[AR Guidance] 方向匹配 - \(matched)")
+    }
+
+    func setGuidanceDisplayState(_ state: LMARGuidanceButtonState) {
+        guidanceDisplayState = state
+        applyGuidanceVisibility()
     }
     
     /// 隐藏所有引导元素（仅控制本视图内的元素，蓝色框和引导线由外部控制）
     /// 仅隐藏使用
     func hideOrShowAllGuidance(_ hidden: Bool = false) {
-        lineArtImageView.isHidden = hidden || lineArtImageView.image == nil || !isOrientationMatched
-        referencePersonBox.isHidden = hidden
-        // 绿框和对号也需要隐藏
-        if hidden {
+        applyGuidanceVisibility(hideAll: hidden)
+        print("[AR Guidance] 所有引导元素 \(hidden ? "隐藏" : "显示")")
+    }
+
+    private func applyGuidanceVisibility(hideAll: Bool = false) {
+        let shouldHide = hideAll || !isOrientationMatched
+        let shouldHideReferenceBox = LMARGuidancePolicy.shouldHideReferenceBox(
+            displayState: guidanceDisplayState,
+            orientationMatched: isOrientationMatched,
+            hideAll: hideAll
+        )
+        let shouldHideLineArt = LMARGuidancePolicy.shouldHideLineArt(
+            displayState: guidanceDisplayState,
+            orientationMatched: isOrientationMatched,
+            hideAll: hideAll,
+            hasLineArtImage: lineArtImageView.image != nil,
+            hasReferenceGuideReady: isReferenceGuideReady
+        )
+        
+        switch guidanceDisplayState {
+        case .unavailable, .off:
+            lineArtImageView.isHidden = true
+            referencePersonBox.isHidden = true
+            successBox.isHidden = true
+            successCheckmark.isHidden = true
+        case .box:
+            lineArtImageView.isHidden = shouldHideLineArt
+            referencePersonBox.isHidden = shouldHideReferenceBox
+            if shouldHide {
+                successBox.isHidden = true
+                successCheckmark.isHidden = true
+            }
+        case .lineArt:
+            lineArtImageView.isHidden = shouldHideLineArt
+            referencePersonBox.isHidden = true
             successBox.isHidden = true
             successCheckmark.isHidden = true
         }
-        print("[AR Guidance] 所有引导元素 \(hidden ? "隐藏" : "显示")")
     }
 }
+
+#if DEBUG
+extension LMARGuidanceView {
+    var debugIsLineArtHidden: Bool {
+        lineArtImageView.isHidden
+    }
+
+    var debugHasReferenceGuideReady: Bool {
+        isReferenceGuideReady
+    }
+
+    var debugHasLineArtImage: Bool {
+        lineArtImageView.image != nil
+    }
+}
+#endif

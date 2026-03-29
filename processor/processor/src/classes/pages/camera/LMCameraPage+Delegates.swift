@@ -114,19 +114,19 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     
     func cameraBottomControlsViewDidTapARGuidanceButton() {
         guard ensureCameraPermissionForInteraction() else { return }
-        let isActive = cameraBottomControlsView.isARGuidanceActive()
-        LMLogger.log("🎯 AR Guidance: \(isActive ? "ON" : "OFF")")
+        let buttonState = cameraBottomControlsView.getARGuidanceState()
+        preferredARGuidanceButtonState = buttonState == .unavailable ? preferredARGuidanceButtonState : buttonState
+        LMLogger.log("🎯 AR Guidance state: \(buttonState.logName)")
         
         // 隐藏 Step 3 引导（用户点击了 AR Guidance 按钮）
         hideARGuidanceGuide()
         
-        // 如果关闭 AR Guidance，隐藏 Step 4 引导
-        if !isActive {
+        // 仅 Box 模式需要 Step 4 引导
+        if buttonState != .box {
             hideAlignBoxesGuide()
         }
         
-        // 如果开启 AR Guidance，显示 Step 4 引导
-        if isActive {
+        if buttonState == .box {
             // 延迟显示 Step 4，等待 AR Guidance 初始化完成
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.showAlignBoxesGuideIfNeeded()
@@ -134,23 +134,24 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
         }
         
         // 如果在 Show Suggestions 状态下开启 AR Guidance，需要先显示 Reference Image
-        if isActive && currentCameraState == .showingSuggestions {
+        if buttonState.isEnabledGuidance && currentCameraState == .showingSuggestions {
             // 检查是否有选中的构图和对应的卡片视图
             guard let selectedCardView = suggestionsCarouselView?.getSelectedCardView(),
                   let selectedSuggestion = suggestionsCarouselView?.getSelectedSuggestion(),
                   let image = selectedCardView.displayedImage else {
                 LMLogger.log("⚠️ No suggestion selected or image not loaded, cannot enable AR Guidance")
-                // 将 AR Guidance 状态改回 available（关闭状态）
-                cameraBottomControlsView.setARGuidanceAvailable(true)
+                cameraBottomControlsView.setARGuidanceState(.off)
+                preferredARGuidanceButtonState = .off
                 AppTheme.Toast.showText(LMText.camera.selectCompositionFirst)
                 return
             }
             
             // 进入 Composition Selected 状态并显示 Reference Image
             enterCompositionSelectedStateFromSuggestion(with: selectedSuggestion, image: image)
+            return
         }
         
-        configureARGuidanceFeatures(isActive)
+        configureARGuidanceMode(buttonState)
     }
     
     /// 从Show Suggestions进入Composition Selected状态
@@ -158,28 +159,7 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     ///   - suggestion: 选中的构图方案
     ///   - image: 从卡片视图获取的已显示图片
     private func enterCompositionSelectedStateFromSuggestion(with suggestion: LMCompositionSuggestion, image: UIImage) {
-        // 设置当前Reference Image
-        currentReferenceImage = image
-        currentSuggestion = suggestion
-        
-        // 更新状态
-        currentCameraState = .compositionSelected
-        
-        // 隐藏Suggestions轮播
-        suggestionsCarouselView?.isHidden = true
-        
-        // 显示Reference Image（左下角）
-        // TODO: 实现Reference Image显示逻辑
-        
-        // 检测人物并显示AR引导
-        detectPersonAndShowGuidance(in: image)
-        
-        // 尝试显示 Step 3 引导
-        showARGuidanceGuideIfNeeded()
-        // 尝试显示 Step 4 引导（如果 Step 3 已显示过且 AR Guidance 已开启）
-        tryShowAlignBoxesGuideAfterDelay()
-        
-        LMLogger.log("✅ 从Show Suggestions进入Composition Selected状态")
+        enterCompositionSelectedState(with: suggestion, image: image)
     }
     
     func cameraBottomControlsViewDidTapUnavailableARGuidance() {
@@ -211,6 +191,10 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
 extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        if let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) {
+            cacheLatestPreviewPixelBuffer(imageBuffer)
+        }
+
         // 处理 Inspire Me 功能的帧捕获
         if shouldCaptureNextFrame {
             handleInspireMeFrameCapture(sampleBuffer)
@@ -232,31 +216,29 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             LMLogger.log("❌ Failed to get image buffer from sample buffer")
             DispatchQueue.main.async { [weak self] in
+                self?.isInspireMeCapture = false
+                self?.inspireMeCaptureDeviceOrientation = nil
                 self?.hideProcessingOverlay()
                 AppTheme.Toast.showText(LMText.camera.failedToCaptureFrame)
             }
             return
         }
-        
-        // 转换为 UIImage
-        let ciImage = CIImage(cvPixelBuffer: imageBuffer)
-        let context = CIContext()
-        
-        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+
+        let deviceOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.getCurrentDeviceOrientation()
+
+        guard let image = makeInspireMeImage(from: imageBuffer, deviceOrientation: deviceOrientation) else {
             LMLogger.log("❌ Failed to create CGImage from CIImage")
             DispatchQueue.main.async { [weak self] in
+                self?.isInspireMeCapture = false
+                self?.inspireMeCaptureDeviceOrientation = nil
                 self?.hideProcessingOverlay()
                 AppTheme.Toast.showText(LMText.camera.failedToProcessFrame)
             }
             return
         }
-        
-        // 获取正确的图片方向
-        let deviceOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.getCurrentDeviceOrientation()
-        let imageOrientation = getImageOrientation(for: deviceOrientation)
-        let image = UIImage(cgImage: cgImage, scale: 1.0, orientation: imageOrientation)
+
         inspireMeCaptureDeviceOrientation = nil
-        LMLogger.log("✅ Frame captured from video stream, size: \(image.size), orientation: \(imageOrientation.rawValue), deviceOrientation: \(deviceOrientation.rawValue)")
+        LMLogger.log("✅ Frame captured from video stream, size: \(image.size), deviceOrientation: \(deviceOrientation.rawValue)")
         
         // 在主线程处理图片
         DispatchQueue.main.async { [weak self] in
@@ -266,7 +248,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
     
     /// 根据设备方向和相机位置获取正确的图片方向
-    private func getImageOrientation(for deviceOrientation: UIDeviceOrientation) -> UIImage.Orientation {
+    func getImageOrientation(for deviceOrientation: UIDeviceOrientation) -> UIImage.Orientation {
         let isFrontCamera = isUsingFrontCamera
         
         // 使用与拍照一致的方向映射：先保证帧在“当前手持方向”下是正的
@@ -310,7 +292,13 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
 extension LMCameraPage: LMInspireMeButtonViewDelegate {
     
     func inspireMeButtonViewDidTapButton() {
+#if DEBUG
+        if !debugShouldBypassInspireMePermissionCheck {
+            guard ensureCameraPermissionForInteraction() else { return }
+        }
+#else
         guard ensureCameraPermissionForInteraction() else { return }
+#endif
         LMLogger.log("🎯 Inspire Me button tapped")
         
         let subscriptionStatus = LMStoreManager.shared.currentSubscriptionStatus

@@ -57,11 +57,11 @@ class LMIdeasPageView: UIView {
     }
     
     private func loadSampleData() {
-        // 从 LMPhotoStorageManager 加载真实的 Saved Ideas 数据
+        // 从 LMPhotoStorageManager 加载真实的已保存构图数据
         loadRealSavedIdeas()
     }
     
-    /// 从存储加载真实的 Saved Ideas
+    /// 从存储加载真实的已保存构图
     private func loadRealSavedIdeas() {
         let manager = LMPhotoStorageManager.shared
         let savedIdeas = manager.fetchAllSavedIdeas()
@@ -69,11 +69,11 @@ class LMIdeasPageView: UIView {
         // 转换为 GalleryItem
         savedIdeasImages = savedIdeas.compactMap { $0.toGalleryItem() }
         
-        LMLogger.log("💡 Loaded \(savedIdeasImages.count) saved ideas")
+        LMLogger.log("💡 Loaded \(savedIdeasImages.count) saved compositions")
         
         // 如果没有数据，显示空状态
         if savedIdeasImages.isEmpty {
-            showEmptyState(message: "No saved ideas yet")
+            showEmptyState(message: LMText.profile.noSavedIdeasYet)
         } else {
             hideEmptyState()
         }
@@ -131,14 +131,14 @@ extension LMIdeasPageView: UICollectionViewDelegateFlowLayout {
     
     private func handleItemSelection(item: GalleryItem) {
         // 处理图片选择
-        print("Selected saved idea: \(item.title ?? "Unknown") with ID: \(item.id)")
+        print("Selected saved composition: \(item.title ?? "Unknown") with ID: \(item.id)")
         
         // 这里可以导航到详情页面或执行其他操作
         showItemDetail(item: item)
     }
     
     private func showItemDetail(item: GalleryItem) {
-        // 导航到Saved Idea详情页
+        // 导航到已保存构图详情页
         if let parentViewController = findViewController() {
             let detailPage = LMSavedIdeaDetailPage(item: item)
             parentViewController.navigationController?.pushViewController(detailPage, animated: true)
@@ -175,7 +175,7 @@ extension LMIdeasPageView {
     
     /// 重新加载数据
     func reloadData() {
-        // 从存储加载真实的 Saved Ideas 数据
+        // 从存储加载真实的已保存构图数据
         loadRealSavedIdeas()
         
         // 刷新集合视图
@@ -241,7 +241,7 @@ extension LMIdeasPageView {
             make.centerX.equalToSuperview()
         }
         
-        LMLogger.log("💡 Saved Ideas empty state shown: \(message)")
+        LMLogger.log("💡 Saved compositions empty state shown: \(message)")
     }
     
     /// 隐藏空状态提示

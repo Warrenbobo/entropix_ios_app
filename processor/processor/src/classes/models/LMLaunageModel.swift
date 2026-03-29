@@ -88,7 +88,7 @@ struct LMCameraTextConfig: Codable {
     var allSuggestionsReady: String = "All suggestions ready!"
     var generationFailed: String = "Generation failed. Please try again."
     var generationTimeout: String = "Generation timeout. Showing available suggestions."
-    var processingInspiring: String = "Inspiring"
+    var processingInspiring: String = "Inspiring..."
     var virtualProgressScenery: String = "Scenery"
     var virtualProgressPose: String = "Pose"
     var virtualProgressAngle: String = "Angle"
@@ -142,7 +142,7 @@ struct LMCameraTextConfig: Codable {
     var tutorialTapButtonDescription: String = "Tap to scan the scenery. AI will tell you how to take photo on this scenery."
     var tutorialViewAndSelectTitle: String = "View and Select"
     var tutorialViewAndSelectDescription: String = "Browse the ideas find the one you want to replicate. Swipe up to Select."
-    var tutorialViewAndSelectNote: String = "You can also \"Like\" the idea and retrive later from \"Saved Idea\" Page."
+    var tutorialViewAndSelectNote: String = "You can also \"Like\" the idea and find it later in \"%@\"."
     var tutorialAlignGuidanceTitle: String = "Align the Guidance"
     var tutorialAlignGuidanceDescription: String = "Follow the template and align the AR guidance to perfectly replicate."
     var tutorialSavePhotoTitle: String = "Save the Photo"
@@ -169,6 +169,7 @@ struct LMProfileTextConfig: Codable {
     var accountProfile: String = "Account Profile"
     var gallery: String = "Gallery"
     var savedIdeas: String = "Saved Ideas"
+    var noSavedIdeasYet: String = "No saved ideas yet"
     
     // Membership Card
     var plusPlan: String = "Plus Plan"
@@ -233,9 +234,9 @@ struct LMProfileTextConfig: Codable {
     // Gallery & Saved Ideas
     var deletePhotoConfirm: String = "Are you sure to delete this photo from gallery?"
     var actionCannotBeUndone: String = "This action cannot be undone."
-    var removeSavedIdeaConfirm: String = "Remove this photo from Saved Idea?"
+    var removeSavedIdeaConfirm: String = "Remove this photo from \"%@\"?"
     var actionCannotBeRecall: String = "This action cannot be recall."
-    var failedToRemoveSavedIdea: String = "Failed to remove saved idea. Please try again."
+    var failedToRemoveSavedIdea: String = "Failed to remove this photo from \"%@\". Please try again."
 }
 
 // MARK: - Subscription Text Config

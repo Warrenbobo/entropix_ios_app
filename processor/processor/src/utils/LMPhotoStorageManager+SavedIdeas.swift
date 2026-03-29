@@ -11,9 +11,9 @@ import UIKit
 
 extension LMPhotoStorageManager {
     
-    // MARK: - Save Idea
+    // MARK: - Save Composition
     
-    /// Save a composition suggestion as a saved idea
+    /// Save a composition suggestion as a saved composition
     /// - Parameters:
     ///   - suggestion: The composition suggestion to save
     ///   - image: Optional image data
@@ -59,7 +59,7 @@ extension LMPhotoStorageManager {
         // Save context
         do {
             try context.save()
-            LMLogger.log("✅ Saved idea successfully with ID: \(ideaId)")
+            LMLogger.log("✅ Saved composition successfully with ID: \(ideaId)")
             return ideaEntity
         } catch {
             LMLogger.log("❌ Failed to save idea to Core Data: \(error.localizedDescription)")
@@ -67,9 +67,9 @@ extension LMPhotoStorageManager {
         }
     }
     
-    // MARK: - Fetch Saved Ideas
+    // MARK: - Fetch Saved Compositions
     
-    /// Fetch all saved ideas for current user
+    /// Fetch all saved compositions for current user
     /// - Returns: Array of SavedIdeaEntity
     func fetchAllSavedIdeas() -> [SavedIdeaEntity] {
         let fetchRequest: NSFetchRequest<SavedIdeaEntity> = SavedIdeaEntity.fetchRequest()
@@ -83,15 +83,15 @@ extension LMPhotoStorageManager {
         
         do {
             let ideas = try context.fetch(fetchRequest)
-            LMLogger.log("💡 Fetched \(ideas.count) saved ideas from storage")
+            LMLogger.log("💡 Fetched \(ideas.count) saved compositions from storage")
             return ideas
         } catch {
-            LMLogger.log("❌ Failed to fetch saved ideas: \(error.localizedDescription)")
+            LMLogger.log("❌ Failed to fetch saved compositions: \(error.localizedDescription)")
             return []
         }
     }
     
-    /// Fetch saved idea by ID
+    /// Fetch saved composition by ID
     /// - Parameter id: Idea ID
     /// - Returns: SavedIdeaEntity or nil
     func fetchSavedIdea(byId id: String) -> SavedIdeaEntity? {
@@ -103,7 +103,7 @@ extension LMPhotoStorageManager {
             let ideas = try context.fetch(fetchRequest)
             return ideas.first
         } catch {
-            LMLogger.log("❌ Failed to fetch saved idea by ID: \(error.localizedDescription)")
+            LMLogger.log("❌ Failed to fetch saved composition by ID: \(error.localizedDescription)")
             return nil
         }
     }
@@ -115,15 +115,15 @@ extension LMPhotoStorageManager {
         return fetchSavedIdea(byId: suggestionId) != nil
     }
     
-    // MARK: - Delete Saved Idea
+    // MARK: - Delete Saved Composition
     
-    /// Delete a saved idea (soft delete)
+    /// Delete a saved composition (soft delete)
     /// - Parameter id: Idea ID
     /// - Returns: Success or failure
     @discardableResult
     func deleteSavedIdea(byId id: String) -> Bool {
         guard let idea = fetchSavedIdea(byId: id) else {
-            LMLogger.log("❌ Saved idea not found with ID: \(id)")
+            LMLogger.log("❌ Saved composition not found with ID: \(id)")
             return false
         }
         
@@ -132,21 +132,21 @@ extension LMPhotoStorageManager {
         
         do {
             try context.save()
-            LMLogger.log("✅ Saved idea marked as deleted: \(id)")
+            LMLogger.log("✅ Saved composition marked as deleted: \(id)")
             return true
         } catch {
-            LMLogger.log("❌ Failed to delete saved idea: \(error.localizedDescription)")
+            LMLogger.log("❌ Failed to delete saved composition: \(error.localizedDescription)")
             return false
         }
     }
     
-    /// Permanently delete a saved idea and its files
+    /// Permanently delete a saved composition and its files
     /// - Parameter id: Idea ID
     /// - Returns: Success or failure
     @discardableResult
     func permanentlyDeleteSavedIdea(byId id: String) -> Bool {
         guard let idea = fetchSavedIdea(byId: id) else {
-            LMLogger.log("❌ Saved idea not found with ID: \(id)")
+            LMLogger.log("❌ Saved composition not found with ID: \(id)")
             return false
         }
         
@@ -160,10 +160,10 @@ extension LMPhotoStorageManager {
         
         do {
             try context.save()
-            LMLogger.log("✅ Saved idea permanently deleted: \(id)")
+            LMLogger.log("✅ Saved composition permanently deleted: \(id)")
             return true
         } catch {
-            LMLogger.log("❌ Failed to permanently delete saved idea: \(error.localizedDescription)")
+            LMLogger.log("❌ Failed to permanently delete saved composition: \(error.localizedDescription)")
             return false
         }
     }
@@ -191,7 +191,7 @@ extension LMPhotoStorageManager {
     
     // MARK: - Sync Status
     
-    /// Mark saved idea as synced with server
+    /// Mark saved composition as synced with server
     /// - Parameters:
     ///   - id: Idea ID
     ///   - serverId: Server-assigned ID
@@ -206,15 +206,15 @@ extension LMPhotoStorageManager {
         
         do {
             try context.save()
-            LMLogger.log("✅ Saved idea marked as synced: \(id)")
+            LMLogger.log("✅ Saved composition marked as synced: \(id)")
             return true
         } catch {
-            LMLogger.log("❌ Failed to mark saved idea as synced: \(error.localizedDescription)")
+            LMLogger.log("❌ Failed to mark saved composition as synced: \(error.localizedDescription)")
             return false
         }
     }
     
-    /// Get unsynced saved ideas
+    /// Get unsynced saved compositions
     /// - Returns: Array of SavedIdeaEntity that need to be synced
     func fetchUnsyncedSavedIdeas() -> [SavedIdeaEntity] {
         let fetchRequest: NSFetchRequest<SavedIdeaEntity> = SavedIdeaEntity.fetchRequest()
@@ -223,10 +223,10 @@ extension LMPhotoStorageManager {
         
         do {
             let ideas = try context.fetch(fetchRequest)
-            LMLogger.log("📤 Found \(ideas.count) unsynced saved ideas")
+            LMLogger.log("📤 Found \(ideas.count) unsynced saved compositions")
             return ideas
         } catch {
-            LMLogger.log("❌ Failed to fetch unsynced saved ideas: \(error.localizedDescription)")
+            LMLogger.log("❌ Failed to fetch unsynced saved compositions: \(error.localizedDescription)")
             return []
         }
     }

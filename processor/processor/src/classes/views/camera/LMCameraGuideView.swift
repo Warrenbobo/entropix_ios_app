@@ -359,7 +359,7 @@ final class LMCameraGuideView: UIView {
                                                 size: CGSize(width: 84, height: 112),
                                                 cornerRadius: 10)
         let noteLabel = UILabel()
-        noteLabel.text = LMText.camera.tutorialViewAndSelectNote
+        noteLabel.text = String(format: LMText.camera.tutorialViewAndSelectNote, LMText.profile.savedIdeas)
         noteLabel.textColor = UIColor.white.withAlphaComponent(0.95)
         noteLabel.font = UIFont.italicSystemFont(ofSize: 12)
         noteLabel.numberOfLines = 0

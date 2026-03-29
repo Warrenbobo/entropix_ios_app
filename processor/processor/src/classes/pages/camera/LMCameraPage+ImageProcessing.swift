@@ -170,6 +170,11 @@ extension LMCameraPage {
     
     /// 使用 EVA02 分析场景
     func analyzeSceneWithFastVLM(_ image: UIImage) -> [Float]? {
+#if DEBUG
+        if let debugInspireMeSceneFeatureOverride {
+            return debugInspireMeSceneFeatureOverride(image)
+        }
+#endif
         LMLogger.log("🔍 Analyzing scene with EVA02...")
         
         do {
@@ -254,28 +259,26 @@ extension LMCameraPage {
         
         // PRD 3.13.3.4: 压缩图像，长边≤1080px
         guard let compressedImage = compressImage(image, maxLongSide: 1080) else {
-            hideProcessingOverlay()
-            isInspireMeCapture = false
-            AppTheme.Toast.showText(LMText.camera.imageCompressionFailed)
+            DispatchQueue.main.async { [weak self] in
+                self?.hideProcessingOverlay()
+                self?.isInspireMeCapture = false
+                AppTheme.Toast.showText(LMText.camera.imageCompressionFailed)
+            }
             return
         }
         
         let aspectRatio = calculateAspectRatio(compressedImage)
         
         guard let embeddings = sceneFeature else {
-            hideProcessingOverlay()
-            isInspireMeCapture = false
-            AppTheme.Toast.showText(LMText.camera.analysisFailed)
+            DispatchQueue.main.async { [weak self] in
+                self?.hideProcessingOverlay()
+                self?.isInspireMeCapture = false
+                AppTheme.Toast.showText(LMText.camera.analysisFailed)
+            }
             return
         }
-        
-        LMCompositionService.shared.submitCompositionTask(
-            originalImage: image,
-            compressedImage: compressedImage,
-            embeddings: embeddings,
-            aspectRatio: aspectRatio,
-            sceneType: nil
-        ) { [weak self] response in
+
+        let handleResponse: LMApiCallback<LMCompositionTaskResponse> = { [weak self] response in
             self?.hideProcessingOverlay()
             self?.isInspireMeCapture = false
             
@@ -285,15 +288,36 @@ extension LMCameraPage {
             } else {
                 LMLogger.log("❌ Task submission failed: \(response.message ?? "Unknown error")")
                 
-                // 检查是否为订阅失效错误
                 if self?.isSubscriptionExpiredError(response) == true {
                     self?.showSubscriptionExpiredAlert()
                 } else {
-                    // 使用后端返回的 message，无需本地硬编码
                     let errorMessage = response.message ?? LMText.camera.analysisFailed
                     AppTheme.Toast.showText(errorMessage)
                 }
             }
+        }
+
+#if DEBUG
+        if let debugInspireMeCompositionSubmitter {
+            debugInspireMeCompositionSubmitter(
+                image,
+                compressedImage,
+                embeddings,
+                aspectRatio,
+                handleResponse
+            )
+            return
+        }
+#endif
+        
+        LMCompositionService.shared.submitCompositionTask(
+            originalImage: image,
+            compressedImage: compressedImage,
+            embeddings: embeddings,
+            aspectRatio: aspectRatio,
+            sceneType: nil
+        ) { response in
+            handleResponse(response)
         }
     }
     

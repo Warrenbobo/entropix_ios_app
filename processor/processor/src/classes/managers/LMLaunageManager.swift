@@ -229,7 +229,7 @@ class LMLaunageManager {
                 allSuggestionsReady: "所有建议已就绪！",
                 generationFailed: "生成失败，请重试。",
                 generationTimeout: "生成超时，显示可用建议。",
-                processingInspiring: "Inspiring",
+                processingInspiring: "Inspiring...",
                 virtualProgressScenery: "Scenery",
                 virtualProgressPose: "Pose",
                 virtualProgressAngle: "Angle",
@@ -237,13 +237,15 @@ class LMLaunageManager {
                 virtualProgressGenerating: "Generating...",
                 virtualProgressRating: "Rating...",
                 virtualProgressLoading: "Loading...",
-                compositionSuggestions: "构图建议"
+                compositionSuggestions: "构图建议",
+                tutorialViewAndSelectNote: "你也可以先“点赞”，稍后再到“%@”里找回。"
             ),
             profile: LMProfileTextConfig(
                 profile: "个人资料",
                 accountProfile: "账户资料",
                 gallery: "图库",
-                savedIdeas: "已保存的创意",
+                savedIdeas: "已保存的 AI 构图创意",
+                noSavedIdeasYet: "暂无已保存的 AI 构图创意",
                 plusPlan: "Plus 会员",
                 freePlan: "免费版",
                 unlimitedInspires: "无限灵感",
@@ -274,7 +276,9 @@ class LMLaunageManager {
                 cancelSubscriptionMessage: "确定要取消订阅吗？您将失去高级功能的访问权限。",
                 keepSubscription: "保留订阅",
                 subscriptionCancelled: "订阅已取消",
-                subscriptionCancelledMessage: "您的订阅已成功取消。"
+                subscriptionCancelledMessage: "您的订阅已成功取消。",
+                removeSavedIdeaConfirm: "要从“%@”中移除这张照片吗？",
+                failedToRemoveSavedIdea: "从“%@”中移除这张照片失败，请重试。"
             ),
             subscription: LMSubscriptionTextConfig(
                 subscriptionTitle: "订阅",

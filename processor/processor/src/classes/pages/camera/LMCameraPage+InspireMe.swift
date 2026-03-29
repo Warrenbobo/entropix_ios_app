@@ -8,6 +8,88 @@
 import UIKit
 import CoreML
 import AVFoundation
+import CoreImage
+
+private enum LMProcessingOverlayViewTag {
+    static let sceneryImageView = 10_001
+    static let blurImageView = 10_002
+    static let dimmingView = 10_003
+    static let spinnerView = 10_004
+    static let label = 10_005
+}
+
+private let lmInspireMeFrameCIContext = CIContext(options: nil)
+
+private final class LMProcessingSpinnerView: UIView {
+
+    private let trackLayer = CAShapeLayer()
+    private let indicatorLayer = CAShapeLayer()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        backgroundColor = .clear
+
+        trackLayer.fillColor = UIColor.clear.cgColor
+        trackLayer.strokeColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        trackLayer.lineWidth = 4
+        layer.addSublayer(trackLayer)
+
+        indicatorLayer.fillColor = UIColor.clear.cgColor
+        indicatorLayer.strokeColor = UIColor.white.cgColor
+        indicatorLayer.lineWidth = 4
+        indicatorLayer.lineCap = .round
+        indicatorLayer.strokeStart = 0.0
+        indicatorLayer.strokeEnd = 0.24
+        layer.addSublayer(indicatorLayer)
+
+        let rotation = CABasicAnimation(keyPath: "transform.rotation.z")
+        rotation.fromValue = 0
+        rotation.toValue = Double.pi * 2
+        rotation.duration = 1.0
+        rotation.repeatCount = .infinity
+        rotation.timingFunction = CAMediaTimingFunction(name: .linear)
+        layer.add(rotation, forKey: "lm.processing.spinner.rotation")
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        let inset: CGFloat = 2
+        let path = UIBezierPath(ovalIn: bounds.insetBy(dx: inset, dy: inset)).cgPath
+        trackLayer.frame = bounds
+        trackLayer.path = path
+
+        indicatorLayer.frame = bounds
+        indicatorLayer.path = path
+    }
+}
+
+#if DEBUG
+private extension LMProcessingSpinnerView {
+    var debugStrokeWidth: CGFloat {
+        indicatorLayer.lineWidth
+    }
+}
+
+struct LMProcessingRuntimeSnapshot {
+    let overlayVisible: Bool
+    let sceneryImageVisible: Bool
+    let blurImageVisible: Bool
+    let dimmingAlpha: CGFloat
+    let spinnerSize: CGSize
+    let spinnerStrokeWidth: CGFloat
+    let labelText: String
+    let labelFontSize: CGFloat
+    let labelKerning: CGFloat
+    let overlayFrame: CGRect
+    let previewCanvasFrame: CGRect
+}
+#endif
 
 // MARK: - Inspire Me Feature
 extension LMCameraPage {
@@ -28,7 +110,18 @@ extension LMCameraPage {
         }
         
         // 检查相机会话是否正在运行
-        guard let captureSession = captureSession, captureSession.isRunning else {
+        let isCaptureSessionRunning: Bool
+#if DEBUG
+        if debugShouldTreatInspireMeCaptureSessionAsRunning {
+            isCaptureSessionRunning = true
+        } else {
+            isCaptureSessionRunning = captureSession?.isRunning == true
+        }
+#else
+        isCaptureSessionRunning = captureSession?.isRunning == true
+#endif
+
+        guard isCaptureSessionRunning else {
             LMLogger.log("⚠️ Camera session is not running")
             AppTheme.Toast.showText(LMText.camera.cameraNotReady)
             return false
@@ -62,11 +155,13 @@ extension LMCameraPage {
         
         // 记录点击瞬间的设备方向（后续用于把帧旋转到竖屏“home键在下方”的预览样式）
         inspireMeCaptureDeviceOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
-        
-        // 从相机流中获取当前帧图片
-        captureFrameFromVideoStream()
-        
-        LMLogger.log("📸 Inspire Me capturing frame from video stream")
+
+        if captureCurrentPreviewFrameAndStartProcessing() {
+            LMLogger.log("📸 Inspire Me froze the current preview frame immediately")
+        } else {
+            captureFrameFromVideoStream()
+            LMLogger.log("📸 Inspire Me fallback: waiting for next video frame")
+        }
     }
     
     /// 从视频流中捕获当前帧
@@ -74,15 +169,64 @@ extension LMCameraPage {
         // 设置标志，让视频流代理捕获下一帧
         shouldCaptureNextFrame = true
     }
+
+    @discardableResult
+    private func captureCurrentPreviewFrameAndStartProcessing() -> Bool {
+        guard let image = makeInspireMeImageFromLatestPreviewFrame() else {
+            return false
+        }
+
+        showProcessingOverlay(with: image)
+        processInspireMeImage(image)
+        inspireMeCaptureDeviceOrientation = nil
+        return true
+    }
+
+    func cacheLatestPreviewPixelBuffer(_ pixelBuffer: CVPixelBuffer) {
+        previewFrameAccessQueue.sync {
+            latestPreviewPixelBuffer = pixelBuffer
+        }
+    }
+
+    func clearLatestPreviewPixelBuffer() {
+        previewFrameAccessQueue.sync {
+            latestPreviewPixelBuffer = nil
+        }
+    }
+
+    func makeInspireMeImage(
+        from pixelBuffer: CVPixelBuffer,
+        deviceOrientation: UIDeviceOrientation
+    ) -> UIImage? {
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        guard let cgImage = lmInspireMeFrameCIContext.createCGImage(ciImage, from: ciImage.extent) else {
+            return nil
+        }
+
+        let imageOrientation = getImageOrientation(for: deviceOrientation)
+        return UIImage(cgImage: cgImage, scale: 1.0, orientation: imageOrientation)
+    }
+
+    private func makeInspireMeImageFromLatestPreviewFrame() -> UIImage? {
+        let latestPixelBuffer = previewFrameAccessQueue.sync { latestPreviewPixelBuffer }
+        guard let latestPixelBuffer else {
+            return nil
+        }
+
+        let deviceOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.getCurrentDeviceOrientation()
+        return makeInspireMeImage(from: latestPixelBuffer, deviceOrientation: deviceOrientation)
+    }
     
     func processInspireMeImage(_ image: UIImage) {
         LMLogger.log("📸 Processing Inspire Me image...")
         currentProcessingSceneryImage = image
-        updateProcessingOverlaySceneryImage(image)
-        let sceneFeature = analyzeSceneWithFastVLM(image)
-        
-        processAndUploadImage(image, sceneFeature: sceneFeature)
         syncInspirePointsToBackend()
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self else { return }
+            let sceneFeature = self.analyzeSceneWithFastVLM(image)
+            self.processAndUploadImage(image, sceneFeature: sceneFeature)
+        }
     }
     
     func syncInspirePointsToBackend() {
@@ -129,6 +273,27 @@ extension LMCameraPage {
 
 // MARK: - Processing Overlay
 extension LMCameraPage {
+
+    private func makeProcessingBlurredImage(from image: UIImage?) -> UIImage? {
+        guard let image else { return nil }
+
+        let normalizedImage = image.lmNormalizedImage()
+        guard let ciImage = CIImage(image: normalizedImage) else {
+            return normalizedImage
+        }
+
+        let clampedImage = ciImage.clampedToExtent()
+        let blurredImage = clampedImage
+            .applyingFilter("CIGaussianBlur", parameters: [kCIInputRadiusKey: 8.0])
+            .cropped(to: ciImage.extent)
+
+        let context = CIContext(options: nil)
+        guard let cgImage = context.createCGImage(blurredImage, from: ciImage.extent) else {
+            return normalizedImage
+        }
+
+        return UIImage(cgImage: cgImage, scale: normalizedImage.scale, orientation: .up)
+    }
     
     func showProcessingOverlay() {
         showProcessingOverlay(with: currentProcessingSceneryImage)
@@ -149,27 +314,59 @@ extension LMCameraPage {
         let sceneryImageView = UIImageView()
         sceneryImageView.contentMode = .scaleAspectFill
         sceneryImageView.clipsToBounds = true
+        sceneryImageView.tag = LMProcessingOverlayViewTag.sceneryImageView
         sceneryImageView.image = currentProcessingSceneryImage
         overlayView.addSubview(sceneryImageView)
 
+        let blurImageView = UIImageView()
+        blurImageView.contentMode = .scaleAspectFill
+        blurImageView.clipsToBounds = true
+        blurImageView.tag = LMProcessingOverlayViewTag.blurImageView
+        blurImageView.image = makeProcessingBlurredImage(from: currentProcessingSceneryImage)
+        blurImageView.alpha = 0.8
+        overlayView.addSubview(blurImageView)
+
         let dimmingView = UIView()
-        dimmingView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
+        dimmingView.backgroundColor = UIColor(
+            red: 64.0 / 255.0,
+            green: 64.0 / 255.0,
+            blue: 64.0 / 255.0,
+            alpha: 0.6
+        )
+        dimmingView.tag = LMProcessingOverlayViewTag.dimmingView
         overlayView.addSubview(dimmingView)
 
-        let spinner = UIActivityIndicatorView(style: .large)
-        spinner.color = .white
-        spinner.transform = CGAffineTransform(scaleX: 1.65, y: 1.65)
-        spinner.startAnimating()
+        let contentStackView = UIStackView()
+        contentStackView.axis = .vertical
+        contentStackView.alignment = .center
+        contentStackView.distribution = .fill
+        contentStackView.spacing = 16
+
+        let spinner = LMProcessingSpinnerView()
+        spinner.tag = LMProcessingOverlayViewTag.spinnerView
 
         let label = UILabel()
-        label.text = LMText.camera.processingInspiring
+        label.tag = LMProcessingOverlayViewTag.label
         label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        label.font = UIFont.systemFont(ofSize: 18, weight: .medium)
         label.textAlignment = .center
         label.numberOfLines = 0
+        label.layer.shadowColor = UIColor.black.withAlphaComponent(0.8).cgColor
+        label.layer.shadowOffset = CGSize(width: 0, height: 2)
+        label.layer.shadowRadius = 4
+        label.layer.shadowOpacity = 1
+        label.attributedText = NSAttributedString(
+            string: LMText.camera.processingInspiring,
+            attributes: [
+                .kern: 0.5,
+                .foregroundColor: UIColor.white,
+                .font: UIFont.systemFont(ofSize: 18, weight: .medium)
+            ]
+        )
 
-        overlayView.addSubview(spinner)
-        overlayView.addSubview(label)
+        contentStackView.addArrangedSubview(spinner)
+        contentStackView.addArrangedSubview(label)
+        overlayView.addSubview(contentStackView)
 
         overlayView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -179,19 +376,25 @@ extension LMCameraPage {
             make.edges.equalToSuperview()
         }
 
+        blurImageView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
         dimmingView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
 
-        spinner.snp.makeConstraints { make in
+        contentStackView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.centerY.equalToSuperview().offset(-20)
+            make.centerY.equalToSuperview()
+        }
+
+        spinner.snp.makeConstraints { make in
+            make.width.height.equalTo(40)
         }
 
         label.snp.makeConstraints { make in
-            make.top.equalTo(spinner.snp.bottom).offset(22)
-            make.centerX.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(24)
+            make.leading.trailing.equalToSuperview()
         }
 
         overlayView.alpha = 0
@@ -203,10 +406,12 @@ extension LMCameraPage {
     func updateProcessingOverlaySceneryImage(_ image: UIImage) {
         currentProcessingSceneryImage = image
         guard let overlayView = previewCanvasView.viewWithTag(ViewTag.processingOverlay.rawValue),
-              let sceneryImageView = overlayView.subviews.compactMap({ $0 as? UIImageView }).first else {
+              let sceneryImageView = overlayView.viewWithTag(LMProcessingOverlayViewTag.sceneryImageView) as? UIImageView,
+              let blurImageView = overlayView.viewWithTag(LMProcessingOverlayViewTag.blurImageView) as? UIImageView else {
             return
         }
         sceneryImageView.image = image
+        blurImageView.image = makeProcessingBlurredImage(from: image)
     }
     
     func hideProcessingOverlay() {
@@ -220,3 +425,88 @@ extension LMCameraPage {
         }
     }
 }
+
+#if DEBUG
+extension LMCameraPage {
+
+    @MainActor
+    func debugShowProcessingOverlay(with image: UIImage) {
+        loadViewIfNeeded()
+        view.layoutIfNeeded()
+        currentCameraState = .inspireMeProcessing
+        showProcessingOverlay(with: image)
+        view.layoutIfNeeded()
+    }
+
+    @MainActor
+    func debugHideProcessingOverlayForRuntimeHarness() {
+        hideProcessingOverlay()
+        view.layoutIfNeeded()
+    }
+
+    @MainActor
+    func debugProcessingSnapshot() -> LMProcessingRuntimeSnapshot {
+        loadViewIfNeeded()
+        view.layoutIfNeeded()
+
+        guard let overlayView = previewCanvasView.viewWithTag(ViewTag.processingOverlay.rawValue) else {
+            return LMProcessingRuntimeSnapshot(
+                overlayVisible: false,
+                sceneryImageVisible: false,
+                blurImageVisible: false,
+                dimmingAlpha: 0,
+                spinnerSize: .zero,
+                spinnerStrokeWidth: 0,
+                labelText: "",
+                labelFontSize: 0,
+                labelKerning: 0,
+                overlayFrame: .zero,
+                previewCanvasFrame: previewCanvasView.frame
+            )
+        }
+
+        overlayView.layoutIfNeeded()
+
+        let sceneryImageView = overlayView.viewWithTag(LMProcessingOverlayViewTag.sceneryImageView) as? UIImageView
+        let blurImageView = overlayView.viewWithTag(LMProcessingOverlayViewTag.blurImageView) as? UIImageView
+        let dimmingView = overlayView.viewWithTag(LMProcessingOverlayViewTag.dimmingView)
+        let spinnerView = overlayView.viewWithTag(LMProcessingOverlayViewTag.spinnerView) as? LMProcessingSpinnerView
+        let label = overlayView.viewWithTag(LMProcessingOverlayViewTag.label) as? UILabel
+        let labelKerning = (label?.attributedText?.attribute(.kern, at: 0, effectiveRange: nil) as? CGFloat) ?? 0
+
+        return LMProcessingRuntimeSnapshot(
+            overlayVisible: overlayView.superview != nil && !overlayView.isHidden && overlayView.alpha > 0.01,
+            sceneryImageVisible: (sceneryImageView?.image != nil) && !(sceneryImageView?.isHidden ?? true),
+            blurImageVisible: (blurImageView?.image != nil) && !(blurImageView?.isHidden ?? true),
+            dimmingAlpha: dimmingView?.backgroundColor?.cgColor.alpha ?? 0,
+            spinnerSize: spinnerView?.bounds.size ?? .zero,
+            spinnerStrokeWidth: spinnerView?.debugStrokeWidth ?? 0,
+            labelText: label?.text ?? label?.attributedText?.string ?? "",
+            labelFontSize: label?.font.pointSize ?? 0,
+            labelKerning: labelKerning,
+            overlayFrame: overlayView.frame,
+            previewCanvasFrame: previewCanvasView.frame
+        )
+    }
+
+    @MainActor
+    func debugSaveVisibleProcessingSnapshot(named fileName: String) -> URL? {
+        loadViewIfNeeded()
+        view.layoutIfNeeded()
+
+        let renderer = UIGraphicsImageRenderer(bounds: view.bounds)
+        let image = renderer.image { _ in
+            view.drawHierarchy(in: view.bounds, afterScreenUpdates: true)
+        }
+
+        guard let data = image.pngData() else { return nil }
+        let url = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(fileName)
+        do {
+            try data.write(to: url, options: .atomic)
+            return url
+        } catch {
+            return nil
+        }
+    }
+}
+#endif

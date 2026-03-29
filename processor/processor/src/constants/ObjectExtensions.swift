@@ -5,12 +5,15 @@
 //  Created by muz on 2025/9/20.
 //
 
+import Accelerate
 import Foundation
 import UIKit
 import AVFoundation
 import CoreImage
+import CoreImage.CIFilterBuiltins
 import ImageIO
 import UniformTypeIdentifiers
+import Vision
 
 /// 渐变方向枚举（常见方向，可按需扩展）
 enum GradientDirection {
@@ -177,6 +180,25 @@ extension UIImage {
             normalizedImage.draw(in: CGRect(origin: .zero, size: targetSize))
         }
     }
+
+    func lmARGuidanceCanvasImage() -> UIImage {
+        let normalizedImage = lmNormalizedImage()
+
+        let shouldRotate = LMARGuidancePolicy.shouldRotateReferenceImageToPortrait(imageSize: normalizedImage.size)
+        guard shouldRotate else {
+            return normalizedImage
+        }
+
+        guard let cgImage = normalizedImage.cgImage,
+              let portraitCanvasImage = LMARGuidancePolicy.makePortraitCanvasImage(
+                from: cgImage,
+                shouldRotateToPortrait: shouldRotate
+              ) else {
+            return normalizedImage
+        }
+
+        return UIImage(cgImage: portraitCanvasImage, scale: normalizedImage.scale, orientation: .up)
+    }
 }
 
 final class LMImageAssetProcessor {
@@ -187,33 +209,305 @@ final class LMImageAssetProcessor {
 
     static func generateLineArt(from image: UIImage) -> UIImage? {
         let workingImage = image.lmScaledToFit(maxDimension: 1536)
-        guard let ciImage = CIImage(image: workingImage) else {
+        guard let cgImage = workingImage.cgImage,
+              let personMask = generatePersonMask(for: cgImage) else {
             return nil
         }
 
-        let monochromeImage = ciImage.applyingFilter(
-            "CIColorControls",
-            parameters: [
-                kCIInputSaturationKey: 0.0,
-                kCIInputContrastKey: 1.35,
-                kCIInputBrightnessKey: 0.02
-            ]
-        )
-        let edgeImage = monochromeImage.applyingFilter(
-            "CIEdges",
-            parameters: [
-                kCIInputIntensityKey: 7.2
-            ]
-        )
-        let alphaMaskImage = edgeImage
-            .applyingFilter("CIMaskToAlpha")
-            .cropped(to: ciImage.extent)
-
-        guard let cgImage = ciContext.createCGImage(alphaMaskImage, from: alphaMaskImage.extent) else {
+        let rgba = generateLineart(image: cgImage, personMask: personMask)
+        guard !rgba.isEmpty,
+              let lineArtCGImage = makeCGImage(from: rgba, width: cgImage.width, height: cgImage.height) else {
             return nil
         }
 
-        return UIImage(cgImage: cgImage, scale: workingImage.scale, orientation: .up)
+        return UIImage(cgImage: lineArtCGImage, scale: workingImage.scale, orientation: .up)
+    }
+
+    private static func generatePersonMask(for image: CGImage) -> CVPixelBuffer? {
+        let request = VNGeneratePersonSegmentationRequest()
+        request.qualityLevel = .accurate
+        request.outputPixelFormat = kCVPixelFormatType_OneComponent8
+
+        do {
+            let handler = VNImageRequestHandler(cgImage: image, options: [:])
+            try handler.perform([request])
+            return (request.results?.first as? VNPixelBufferObservation)?.pixelBuffer
+        } catch {
+            return nil
+        }
+    }
+
+    private static func generateLineart(
+        image: CGImage,
+        personMask: CVPixelBuffer,
+        blurSigma: Double = 1.0,
+        edgeThresholdPercentile: Double = 0.85,
+        dilationRadius: Int = 0
+    ) -> [UInt8] {
+        let width = image.width
+        let height = image.height
+        let imageExtent = CGRect(x: 0, y: 0, width: width, height: height)
+        let ciInput = CIImage(cgImage: image)
+
+        var maskCI = CIImage(cvPixelBuffer: personMask)
+        let scaleX = CGFloat(width) / maskCI.extent.width
+        let scaleY = CGFloat(height) / maskCI.extent.height
+        maskCI = maskCI.transformed(by: CGAffineTransform(scaleX: scaleX, y: scaleY))
+
+        let maskGray8 = renderGray8(maskCI, width: width, height: height)
+        guard maskGray8.count == width * height else {
+            return []
+        }
+
+        let blendFilter = CIFilter.blendWithMask()
+        blendFilter.inputImage = ciInput
+        blendFilter.backgroundImage = CIImage(color: CIColor.black).cropped(to: imageExtent)
+        blendFilter.maskImage = maskCI
+        guard let maskedCI = blendFilter.outputImage else {
+            return []
+        }
+
+        let blurredCI = maskedCI
+            .applyingGaussianBlur(sigma: blurSigma)
+            .cropped(to: imageExtent)
+
+        guard let blurredCGImage = ciContext.createCGImage(blurredCI, from: imageExtent) else {
+            return []
+        }
+
+        let blurredGray = rgbaToGrayFloat(renderRGBA(blurredCGImage, width: width, height: height))
+        guard blurredGray.count == width * height else {
+            return []
+        }
+
+        var magnitude = sobelMagnitude(gray: blurredGray, width: width, height: height)
+
+        for index in 0..<(width * height) where maskGray8[index] < 128 {
+            magnitude[index] = 0
+        }
+
+        var maxValue: Float = 0
+        vDSP_maxv(magnitude, 1, &maxValue, vDSP_Length(width * height))
+        if maxValue > 0 {
+            var normalized = [Float](repeating: 0, count: width * height)
+            var divisor = maxValue
+            vDSP_vsdiv(magnitude, 1, &divisor, &normalized, 1, vDSP_Length(width * height))
+            var scale: Float = 255
+            vDSP_vsmul(normalized, 1, &scale, &magnitude, 1, vDSP_Length(width * height))
+        }
+
+        let clampedPercentile = min(max(edgeThresholdPercentile, 0), 1)
+        let nonzero = magnitude.filter { $0 > 0 }.sorted()
+        let threshold: Float
+        if nonzero.isEmpty {
+            threshold = 128
+        } else {
+            let index = Int(Double(nonzero.count - 1) * clampedPercentile)
+            threshold = nonzero[max(0, min(index, nonzero.count - 1))]
+        }
+
+        var binary = [UInt8](repeating: 0, count: width * height)
+        for index in 0..<(width * height) {
+            binary[index] = magnitude[index] >= threshold ? 255 : 0
+        }
+
+        if dilationRadius > 0 {
+            binary = maxFilter(binary, width: width, height: height, radius: dilationRadius)
+        }
+
+        var rgba = [UInt8](repeating: 0, count: width * height * 4)
+        for index in 0..<(width * height) {
+            let value = binary[index]
+            let rgbaIndex = index * 4
+            rgba[rgbaIndex] = value
+            rgba[rgbaIndex + 1] = value
+            rgba[rgbaIndex + 2] = value
+            rgba[rgbaIndex + 3] = value
+        }
+        return rgba
+    }
+
+    private static func renderGray8(_ ciImage: CIImage, width: Int, height: Int) -> [UInt8] {
+        guard let cgImage = ciContext.createCGImage(ciImage, from: CGRect(x: 0, y: 0, width: width, height: height)) else {
+            return []
+        }
+
+        var buffer = [UInt8](repeating: 0, count: width * height)
+        let colorSpace = CGColorSpaceCreateDeviceGray()
+        guard let context = CGContext(
+            data: &buffer,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.none.rawValue
+        ) else {
+            return buffer
+        }
+
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return buffer
+    }
+
+    private static func renderRGBA(_ cgImage: CGImage, width: Int, height: Int) -> [UInt8] {
+        var buffer = [UInt8](repeating: 0, count: width * height * 4)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: &buffer,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+        ) else {
+            return []
+        }
+
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return buffer
+    }
+
+    private static func rgbaToGrayFloat(_ rgba: [UInt8]) -> [Float] {
+        let count = rgba.count / 4
+        var gray = [Float](repeating: 0, count: count)
+        for index in 0..<count {
+            let rgbaIndex = index * 4
+            let red = Float(rgba[rgbaIndex]) / 255.0
+            let green = Float(rgba[rgbaIndex + 1]) / 255.0
+            let blue = Float(rgba[rgbaIndex + 2]) / 255.0
+            gray[index] = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+        }
+        return gray
+    }
+
+    private static func sobelMagnitude(gray: [Float], width: Int, height: Int) -> [Float] {
+        let count = width * height
+        var source = gray
+        var gradientX = [Float](repeating: 0, count: count)
+        var gradientY = [Float](repeating: 0, count: count)
+        var gxKernel: [Float] = [-1, 0, 1, -2, 0, 2, -1, 0, 1]
+        var gyKernel: [Float] = [-1, -2, -1, 0, 0, 0, 1, 2, 1]
+        let rowBytes = width * MemoryLayout<Float>.size
+
+        source.withUnsafeMutableBytes { sourceBytes in
+            gradientX.withUnsafeMutableBytes { gxBytes in
+                gradientY.withUnsafeMutableBytes { gyBytes in
+                    var sourceBuffer = vImage_Buffer(
+                        data: sourceBytes.baseAddress,
+                        height: vImagePixelCount(height),
+                        width: vImagePixelCount(width),
+                        rowBytes: rowBytes
+                    )
+                    var gxBuffer = vImage_Buffer(
+                        data: gxBytes.baseAddress,
+                        height: vImagePixelCount(height),
+                        width: vImagePixelCount(width),
+                        rowBytes: rowBytes
+                    )
+                    var gyBuffer = vImage_Buffer(
+                        data: gyBytes.baseAddress,
+                        height: vImagePixelCount(height),
+                        width: vImagePixelCount(width),
+                        rowBytes: rowBytes
+                    )
+                    vImageConvolve_PlanarF(
+                        &sourceBuffer,
+                        &gxBuffer,
+                        nil,
+                        0,
+                        0,
+                        &gxKernel,
+                        3,
+                        3,
+                        0,
+                        vImage_Flags(kvImageEdgeExtend)
+                    )
+                    vImageConvolve_PlanarF(
+                        &sourceBuffer,
+                        &gyBuffer,
+                        nil,
+                        0,
+                        0,
+                        &gyKernel,
+                        3,
+                        3,
+                        0,
+                        vImage_Flags(kvImageEdgeExtend)
+                    )
+                }
+            }
+        }
+
+        var gxSquared = [Float](repeating: 0, count: count)
+        var gySquared = [Float](repeating: 0, count: count)
+        vDSP_vsq(gradientX, 1, &gxSquared, 1, vDSP_Length(count))
+        vDSP_vsq(gradientY, 1, &gySquared, 1, vDSP_Length(count))
+
+        var magnitudeSquared = [Float](repeating: 0, count: count)
+        vDSP_vadd(gxSquared, 1, gySquared, 1, &magnitudeSquared, 1, vDSP_Length(count))
+
+        var magnitude = [Float](repeating: 0, count: count)
+        for index in 0..<count {
+            magnitude[index] = sqrt(magnitudeSquared[index])
+        }
+        return magnitude
+    }
+
+    private static func maxFilter(_ source: [UInt8], width: Int, height: Int, radius: Int) -> [UInt8] {
+        let kernelSize = vImagePixelCount(radius * 2 + 1)
+        var input = source
+        var output = [UInt8](repeating: 0, count: width * height)
+
+        input.withUnsafeMutableBytes { inputBytes in
+            output.withUnsafeMutableBytes { outputBytes in
+                var inputBuffer = vImage_Buffer(
+                    data: inputBytes.baseAddress,
+                    height: vImagePixelCount(height),
+                    width: vImagePixelCount(width),
+                    rowBytes: width
+                )
+                var outputBuffer = vImage_Buffer(
+                    data: outputBytes.baseAddress,
+                    height: vImagePixelCount(height),
+                    width: vImagePixelCount(width),
+                    rowBytes: width
+                )
+                vImageMax_Planar8(
+                    &inputBuffer,
+                    &outputBuffer,
+                    nil,
+                    0,
+                    0,
+                    kernelSize,
+                    kernelSize,
+                    vImage_Flags(kvImageEdgeExtend)
+                )
+            }
+        }
+
+        return output
+    }
+
+    private static func makeCGImage(from rgba: [UInt8], width: Int, height: Int) -> CGImage? {
+        guard let provider = CGDataProvider(data: Data(rgba) as CFData) else {
+            return nil
+        }
+
+        return CGImage(
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bitsPerPixel: 32,
+            bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .defaultIntent
+        )
     }
 
     static func watermarkedImage(from image: UIImage,

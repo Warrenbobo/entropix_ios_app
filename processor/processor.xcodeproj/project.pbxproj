@@ -33,6 +33,7 @@
 		EA56DDA72EC0833D000AB522 /* LMCompositionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */; };
 		EA56DDB72EC08E1D000AB522 /* LMCameraPage+Delegates.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAE2EC08E1D000AB522 /* LMCameraPage+Delegates.swift */; };
 		EA56DDB82EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAC2EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift */; };
+		F0A1B2C32F1A000100000001 /* LMARGuidanceMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */; };
 		EA56DDBA2EC08E1D000AB522 /* LMCameraPage+Capture.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAD2EC08E1D000AB522 /* LMCameraPage+Capture.swift */; };
 		EA56DDBC2EC08E1D000AB522 /* LMCameraPage+ImageProcessing.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAF2EC08E1D000AB522 /* LMCameraPage+ImageProcessing.swift */; };
 		EA56DDBD2EC08E1D000AB522 /* LMCameraPage+InspireMe.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDB02EC08E1D000AB522 /* LMCameraPage+InspireMe.swift */; };
@@ -175,6 +176,7 @@
 		EA56DDA02EC08078000AB522 /* LMPersonDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPersonDetectionManager.swift; sourceTree = "<group>"; };
 		EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionService.swift; sourceTree = "<group>"; };
 		EA56DDAC2EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+ARGuidance.swift"; sourceTree = "<group>"; };
+		F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceMode.swift; sourceTree = "<group>"; };
 		EA56DDAD2EC08E1D000AB522 /* LMCameraPage+Capture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+Capture.swift"; sourceTree = "<group>"; };
 		EA56DDAE2EC08E1D000AB522 /* LMCameraPage+Delegates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+Delegates.swift"; sourceTree = "<group>"; };
 		EA56DDAF2EC08E1D000AB522 /* LMCameraPage+ImageProcessing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+ImageProcessing.swift"; sourceTree = "<group>"; };
@@ -550,6 +552,7 @@
 			isa = PBXGroup;
 			children = (
 				EAFBACB62E7E7D1F00586EC7 /* LMCameraPage.swift */,
+				F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */,
 				EA7F25A92F066E850008E091 /* LMCameraPage+Guide.swift */,
 				EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */,
 				EA56DDAC2EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift */,
@@ -789,6 +792,7 @@
 				EAFBACBC2E7E7E7500586EC7 /* LMCameraPreviewView.swift in Sources */,
 				EA56DDBF2EC08E82000AB522 /* LMCameraPage+Session.swift in Sources */,
 				EAFBACBD2E7E7E7500586EC7 /* LMCameraBottomControlsView.swift in Sources */,
+				F0A1B2C32F1A000100000001 /* LMARGuidanceMode.swift in Sources */,
 				EACA1CF22E7E49B600C80883 /* LMApiResponseModel.swift in Sources */,
 				EACA1CF32E7E49B600C80883 /* processor.xcdatamodeld in Sources */,
 				EA8629B92EB5F7C000F2B00E /* LMLaunageManager.swift in Sources */,

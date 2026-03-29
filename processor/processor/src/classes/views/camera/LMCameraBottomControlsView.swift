@@ -37,13 +37,7 @@ class LMCameraBottomControlsView: UIView {
     weak var delegate: LMCameraBottomControlsViewDelegate?
     
     // AR Guidance 状态管理
-    enum ARGuidanceState {
-        case unavailable  // 不可用（灰色）
-        case available    // 可用但关闭（白色 off）
-        case active       // 可用且开启（白色 on）
-    }
-    
-    private var arGuidanceState: ARGuidanceState = .unavailable
+    private var arGuidanceState: LMARGuidanceButtonState = .unavailable
     
     // 约束引用，用于动态调整
     private var captureButtonSizeConstraint: Constraint?
@@ -100,6 +94,7 @@ extension LMCameraBottomControlsView {
         
         // 翻转相机按钮 - 仅用于显示图标，不处理点击
         flipCameraButton.setImage(UIImage(named: "flip_camera"), for: .normal)
+        flipCameraButton.imageView?.contentMode = .scaleAspectFit
         flipCameraButton.isUserInteractionEnabled = false // 禁用按钮交互
         
         // 翻转相机标签
@@ -120,6 +115,7 @@ extension LMCameraBottomControlsView {
         arGuidanceContainer.addSubview(arGuidanceLabel)
         arGuidanceContainer.isUserInteractionEnabled = true
         arGuidanceButton.isUserInteractionEnabled = false
+        arGuidanceButton.imageView?.contentMode = .scaleAspectFit
         
         // AR Guidance 标签
         arGuidanceLabel.text = LMLaunageManager.shared.camera.arGuidance
@@ -194,16 +190,24 @@ extension LMCameraBottomControlsView {
     private func configureDefaultContentAndStyles() {
         backgroundColor = UIColor.clear
     }
+
+    private func imageName(for state: LMARGuidanceButtonState) -> String {
+        switch state {
+        case .unavailable:
+            return "users_viewfinder_gray"
+        case .off:
+            return "users_viewfinder_off_white"
+        case .box:
+            return AppConfigs.Assets.arGuidanceBox
+        case .lineArt:
+            return AppConfigs.Assets.arGuidanceLineArt
+        }
+    }
     
     private func updateARGuidanceAppearance() {
-        switch arGuidanceState {
-        case .unavailable:
-            arGuidanceButton.setImage(UIImage(named: "users_viewfinder_gray"), for: .normal)
-        case .available:
-            arGuidanceButton.setImage(UIImage(named: "users_viewfinder_off_white"), for: .normal)
-        case .active:
-            arGuidanceButton.setImage(UIImage(named: "users_viewfinder_white"), for: .normal)
-        }
+        arGuidanceButton.setImage(UIImage(named: imageName(for: arGuidanceState)), for: .normal)
+        arGuidanceButton.alpha = arGuidanceState.buttonAlpha
+        arGuidanceLabel.alpha = arGuidanceState.labelAlpha
     }
 }
 
@@ -225,20 +229,12 @@ extension LMCameraBottomControlsView {
             return
         }
         
-        // 在 available 和 active 之间切换
-        switch arGuidanceState {
-        case .available:
-            arGuidanceState = .active
-        case .active:
-            arGuidanceState = .available
-        case .unavailable:
-            break
-        }
+        arGuidanceState = arGuidanceState.nextState
         
         updateARGuidanceAppearance()
         delegate?.cameraBottomControlsViewDidTapARGuidanceButton()
         
-        LMLogger.log("🎯 AR Guidance toggled to: \(arGuidanceState == .active ? "ON" : "OFF")")
+        LMLogger.log("🎯 AR Guidance toggled to: \(arGuidanceState.logName)")
     }
     
     @objc private func handleCaptureButtonTouchDown() {
@@ -261,7 +257,7 @@ extension LMCameraBottomControlsView {
     func setARGuidanceAvailable(_ available: Bool) {
         if available {
             // Inspire Me 成功，设置为可用但默认关闭
-            arGuidanceState = .available
+            arGuidanceState = .off
         } else {
             // Inspire Me 未使用或失败，设置为不可用
             arGuidanceState = .unavailable
@@ -275,23 +271,29 @@ extension LMCameraBottomControlsView {
     /// - Parameter active: true 表示开启，false 表示关闭
     func setARGuidanceActive(_ active: Bool) {
         if active {
-            arGuidanceState = .active
+            arGuidanceState = .box
         } else {
-            arGuidanceState = .available
+            arGuidanceState = .off
         }
         updateARGuidanceAppearance()
-        LMLogger.log("🎯 AR Guidance set to: \(active ? "Active" : "Available")")
+        LMLogger.log("🎯 AR Guidance set to: \(active ? "Box" : "Off")")
+    }
+
+    func setARGuidanceState(_ state: LMARGuidanceButtonState) {
+        arGuidanceState = state
+        updateARGuidanceAppearance()
+        LMLogger.log("🎯 AR Guidance state set to: \(state.logName)")
     }
     
     /// 获取 AR Guidance 当前是否激活
     /// - Returns: true 表示激活（开启状态），false 表示未激活
     func isARGuidanceActive() -> Bool {
-        return arGuidanceState == .active
+        return arGuidanceState.isEnabledGuidance
     }
     
     /// 获取 AR Guidance 当前状态
     /// - Returns: 当前状态枚举值
-    func getARGuidanceState() -> ARGuidanceState {
+    func getARGuidanceState() -> LMARGuidanceButtonState {
         return arGuidanceState
     }
     

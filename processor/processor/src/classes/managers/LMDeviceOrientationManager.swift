@@ -106,6 +106,12 @@ class LMDeviceOrientationManager {
     func getCurrentRotationAngle() -> CGFloat {
         return calculateRotationAngle(for: currentOrientation)
     }
+
+#if DEBUG
+    func debugForceOrientation(_ orientation: UIDeviceOrientation) {
+        currentOrientation = orientation
+    }
+#endif
     
     // MARK: - Private Methods
     

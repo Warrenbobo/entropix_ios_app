@@ -209,7 +209,7 @@ class LMSuggestionsCarouselView: UIView {
         self.suggestions = suggestions
         cleanupPlaceholderProgressState()
         
-        // 同步加载已保存的 Saved Ideas ID 集合（避免异步导致的状态问题）
+        // 同步加载已保存构图 ID 集合（避免异步导致的状态问题）
         // 对于小数据量，同步操作更可靠
         loadSavedIdeaIds()
         
@@ -264,7 +264,7 @@ class LMSuggestionsCarouselView: UIView {
         return hasher.finalize()
     }
     
-    /// 加载已保存的 Saved Ideas ID 集合（异步版本，避免阻塞主线程）
+    /// 加载已保存构图 ID 集合（异步版本，避免阻塞主线程）
     private func loadSavedIdeaIdsAsync(completion: @escaping () -> Void) {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let savedIdeas = LMPhotoStorageManager.shared.fetchAllSavedIdeas()
@@ -273,7 +273,7 @@ class LMSuggestionsCarouselView: UIView {
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 self.favoriteSuggestionIds = ids
-                LMLogger.log("💡 Loaded \(ids.count) saved idea IDs (async)")
+                LMLogger.log("💡 Loaded \(ids.count) saved composition IDs (async)")
                 completion()
             }
         }
@@ -315,11 +315,11 @@ class LMSuggestionsCarouselView: UIView {
         )
     }
     
-    /// 加载已保存的 Saved Ideas ID 集合（同步版本，仅用于非关键路径）
+    /// 加载已保存构图 ID 集合（同步版本，仅用于非关键路径）
     private func loadSavedIdeaIds() {
         let savedIdeas = LMPhotoStorageManager.shared.fetchAllSavedIdeas()
         favoriteSuggestionIds = Set(savedIdeas.compactMap { $0.id })
-        LMLogger.log("💡 Loaded \(favoriteSuggestionIds.count) saved idea IDs")
+        LMLogger.log("💡 Loaded \(favoriteSuggestionIds.count) saved composition IDs")
     }
     
     /// 智能更新卡片视图：复用现有卡片，只更新数据，避免重复创建
@@ -1252,16 +1252,16 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
         delegate?.suggestionsCarouselView(self, didToggleFavorite: suggestion, at: index)
     }
     
-    /// 保存构图方案为 Saved Idea
+    /// 保存构图方案为已保存构图
     private func saveSuggestionAsIdea(suggestion: LMCompositionSuggestion, image: UIImage? = nil) {
         LMPhotoStorageManager.shared.saveSuggestionAsIdea(suggestion: suggestion, image: image)
-        LMLogger.log("💾 Saved idea without image: \(suggestion.id ?? "unknown")")
+        LMLogger.log("💾 Saved composition without image: \(suggestion.id ?? "unknown")")
     }
     
-    /// 删除已保存的 Idea
+    /// 删除已保存构图
     private func removeSavedIdea(suggestionId: String) {
         LMPhotoStorageManager.shared.deleteSavedIdea(byId: suggestionId)
-        LMLogger.log("🗑️ Removed saved idea: \(suggestionId)")
+        LMLogger.log("🗑️ Removed saved composition: \(suggestionId)")
     }
 
 }

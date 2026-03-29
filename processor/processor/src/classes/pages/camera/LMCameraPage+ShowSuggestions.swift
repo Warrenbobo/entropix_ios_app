@@ -10,12 +10,19 @@ extension LMCameraPage {
     
     /// 开始监听设备方向变化（订阅通知）
     func startObservingDeviceOrientation() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleDeviceOrientationChangeNotification(_:)),
-            name: .devicePhysicalOrientationDidChange,
-            object: nil
-        )
+        guard referenceImageOrientationObserver == nil else {
+            updateReferenceImageRotation()
+            LMLogger.log("📱 Reference image orientation observer already active")
+            return
+        }
+
+        referenceImageOrientationObserver = NotificationCenter.default.addObserver(
+            forName: .devicePhysicalOrientationDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleDeviceOrientationChangeNotification(notification)
+        }
         
         // 立即应用当前方向
         updateReferenceImageRotation()
@@ -25,11 +32,9 @@ extension LMCameraPage {
     
     /// 停止监听设备方向变化（取消订阅通知）
     func stopObservingDeviceOrientation() {
-        NotificationCenter.default.removeObserver(
-            self,
-            name: .devicePhysicalOrientationDidChange,
-            object: nil
-        )
+        guard let referenceImageOrientationObserver else { return }
+        NotificationCenter.default.removeObserver(referenceImageOrientationObserver)
+        self.referenceImageOrientationObserver = nil
         LMLogger.log("📱 Stopped observing device orientation notifications")
     }
     
@@ -180,7 +185,7 @@ extension LMCameraPage {
         // 重置 AR Guidance 状态
         cameraBottomControlsView.resetARGuidance()
         if isARGuidanceActive {
-            configureARGuidanceFeatures(false)
+            stopARGuidanceSession()
         }
         
         // 清理数据
@@ -667,10 +672,11 @@ extension LMCameraPage {
         
         LMLogger.log("✅ [Composition Selected] Reference image loaded for AR Guidance")
         
-        // 自动开启 AR Guidance
-        cameraBottomControlsView.setARGuidanceActive(true)
-        LMLogger.log("🎯 [Composition Selected] Calling configureARGuidanceFeatures(true)...")
-        configureARGuidanceFeatures(true)
+        let initialARGuidanceState = LMARGuidancePolicy.stateForReferenceImageEntry(from: preferredARGuidanceButtonState)
+        preferredARGuidanceButtonState = initialARGuidanceState
+        cameraBottomControlsView.setARGuidanceState(initialARGuidanceState)
+        LMLogger.log("🎯 [Composition Selected] Applying AR Guidance state: \(initialARGuidanceState.logName)")
+        configureARGuidanceMode(initialARGuidanceState)
         
         // 应用布局变化
         UIView.animate(
@@ -685,25 +691,31 @@ extension LMCameraPage {
             // 动画完成后显示 Step 3 引导（用户第一次进入 Camera w/ composition selected 状态）
             self?.showARGuidanceGuideIfNeeded()
             // 尝试显示 Step 4 引导（如果 Step 3 已显示过且 AR Guidance 已开启）
-            self?.tryShowAlignBoxesGuideAfterDelay()
+            if initialARGuidanceState == .box {
+                self?.tryShowAlignBoxesGuideAfterDelay()
+            }
         }
         
         LMLogger.log("📐 [Composition Selected] State entered - AR Guidance should be starting")
     }
     
-    /// 进入 Camera with Composition Selected 状态（从 Saved Idea 进入）
+    /// 进入 Camera with Composition Selected 状态（从已保存构图进入）
     func enterCompositionSelectedStateFromSavedIdea(item: GalleryItem) {
         currentCameraState = .compositionSelected
         inspireMeButtonView.isHidden = true
+        let initialARGuidanceState = LMARGuidancePolicy.stateForReferenceImageEntry(from: preferredARGuidanceButtonState)
+        preferredARGuidanceButtonState = initialARGuidanceState
         clearLineArtOverlay()
         showReferenceImageFromSavedIdea(item: item)
-        cameraBottomControlsView.setARGuidanceActive(true)
-        configureARGuidanceFeatures(true)
+        cameraBottomControlsView.setARGuidanceState(initialARGuidanceState)
+        configureARGuidanceMode(initialARGuidanceState)
         // 尝试显示 Step 3 引导
         showARGuidanceGuideIfNeeded()
         // 尝试显示 Step 4 引导（如果 Step 3 已显示过且 AR Guidance 已开启）
-        tryShowAlignBoxesGuideAfterDelay()
-        LMLogger.log("📐 Entered Composition Selected state from Saved Idea - ID: \(item.id), AR Guidance auto-enabled")
+        if initialARGuidanceState == .box {
+            tryShowAlignBoxesGuideAfterDelay()
+        }
+        LMLogger.log("📐 Entered Composition Selected state from saved composition - ID: \(item.id), AR Guidance state: \(initialARGuidanceState.logName)")
     }
     
     /// 初始化参考图组件（在页面加载时调用一次，长期持有）
@@ -819,7 +831,7 @@ extension LMCameraPage {
         LMLogger.log("✅ Reference image displayed - Size: \(newSize), Aspect Ratio: \(aspectRatio)")
     }
     
-    /// 显示参考图（从 Saved Idea 进入）
+    /// 显示参考图（从已保存构图进入）
     /// 从go shrt 进入时
     func showReferenceImageFromSavedIdea(item: GalleryItem) {
         guard let containerView = referenceImageContainerView,
@@ -828,15 +840,15 @@ extension LMCameraPage {
             return
         }
         
-        // 使用 Saved Idea 的图片
+        // 使用已保存构图的图片
         guard let image = item.image else {
-            LMLogger.log("❌ Saved Idea image is nil")
+            LMLogger.log("❌ Saved composition image is nil")
             return
         }
         
         // 保存当前参考图（用于 AR 引导）
         currentReferenceImage = image
-        LMLogger.log("✅ Current reference image set from Saved Idea")
+        LMLogger.log("✅ Current reference image set from saved composition")
         
         // 计算图片宽高比
         let aspectRatio = image.size.width / image.size.height
@@ -862,7 +874,7 @@ extension LMCameraPage {
         // 确保视图层级正确
         ensureCorrectViewHierarchy()
         
-        LMLogger.log("✅ Reference image displayed from Saved Idea - Size: \(newSize), Aspect Ratio: \(aspectRatio)")
+        LMLogger.log("✅ Reference image displayed from saved composition - Size: \(newSize), Aspect Ratio: \(aspectRatio)")
     }
     
     /// 根据屏幕宽度自适应计算参考图尺寸
@@ -963,8 +975,8 @@ extension LMCameraPage {
         // 判断导航来源
         switch navigationSource {
         case .savedIdea:
-            // 从 Saved Idea 进入，关闭参考图应该返回到 Saved Idea 页面
-            LMLogger.log("🔙 Closing reference image from Saved Idea - navigating back")
+            // 从已保存构图进入，关闭参考图应该返回到已保存构图详情页
+            LMLogger.log("🔙 Closing reference image from saved composition - navigating back")
             
             // 清理状态
             containerView.isHidden = true
@@ -985,10 +997,10 @@ extension LMCameraPage {
             clearLineArtOverlay()
             currentReferenceBbox = nil
             
-            // 返回到 Saved Idea 页面
+            // 返回到已保存构图详情页
             navigationController?.popViewController(animated: true)
             
-            LMLogger.log("✅ Navigated back to Saved Idea page")
+            LMLogger.log("✅ Navigated back to saved composition detail")
             
         case .normal:
             // ✅ 不停止 polling - polling 应该在后台持续运行直到所有任务完成
