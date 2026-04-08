@@ -12,6 +12,9 @@ import Photos
 
 class LMAccountProfilePage: LMPageWrapper {
     
+    override var usesMineNavigationBarStyle: Bool { true }
+    override var mineNavigationLayoutMode: LMMineNavigationLayoutMode { .manualNavigatorHeightOffset }
+    
     // MARK: - Properties
     private var userProfileData = LMUserModel.sample(userId: "")
     private var isEditingMode = false
@@ -23,17 +26,24 @@ class LMAccountProfilePage: LMPageWrapper {
     private let scrollView = UIScrollView()
     private let contentView = UIView()
     
-    // Custom Navigation Bar Right
-    private let actionButton = UIButton()
-    
     // View State Views
     private let displayView = LMProfileDisplayView()
     private let editView = LMProfileEditView()
     
+    override func configureMineNavigationBar(_ navigationBar: LMProcessorTopBar) {
+        navigationBar.setTrailingButtonTitle(LMText.common.save)
+        navigationBar.setTrailingButtonTitleColor(.systemBlue)
+        navigationBar.setTrailingButtonFont(UIFont.systemFont(ofSize: 16, weight: .bold))
+        navigationBar.setTrailingButtonAction { [weak self] in
+            self?.handleSaveButtonTapped()
+        }
+        navigationBar.setTrailingButtonHidden(true)
+        navigationBar.setTrailingButtonEnabled(true)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         barTitle = LMText.profile.accountProfile
-        setupCustomNavigationBar()
         setupUserInterfaceComponents()
         configureLayoutConstraints()
         configureDefaultContentAndStyles()
@@ -60,7 +70,7 @@ class LMAccountProfilePage: LMPageWrapper {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
         
         // 添加键盘通知监听
         NotificationCenter.default.addObserver(
@@ -114,7 +124,7 @@ class LMAccountProfilePage: LMPageWrapper {
     
     private func updateTexts() {
         barTitle = LMText.profile.accountProfile
-        actionButton.setTitle(LMText.common.save, for: .normal)
+        mineNavigationBar.setTrailingButtonTitle(LMText.common.save)
     }
     
     @objc private func userDataDidChange() {
@@ -159,18 +169,6 @@ class LMAccountProfilePage: LMPageWrapper {
 
 // MARK: - Setup Methods
 extension LMAccountProfilePage {
-    
-    private func setupCustomNavigationBar() {
-        actionButton.setTitle(LMText.common.save, for: .normal)
-        actionButton.contentMode = .right
-        actionButton.frame = CGRect(origin: .zero, size: CGSize(width: 50, height: 44))
-        actionButton.setTitleColor(UIColor.systemBlue, for: .normal)
-        actionButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        actionButton.addTarget(self, action: #selector(handleSaveButtonTapped), for: .touchUpInside)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: actionButton)
-        // 初始状态隐藏保存按钮（显示模式下不需要）
-        actionButton.isHidden = true
-    }
     
     private func setupUserInterfaceComponents() {
         view.addSubview(scrollView)
@@ -226,7 +224,7 @@ extension LMAccountProfilePage {
         isEditingMode = false
         displayView.isHidden = false
         editView.isHidden = true
-        actionButton.isHidden = true
+        mineNavigationBar.setTrailingButtonHidden(true)
         
         // 确保布局更新
         DispatchQueue.main.async {
@@ -238,7 +236,7 @@ extension LMAccountProfilePage {
         isEditingMode = true
         displayView.isHidden = true
         editView.isHidden = false
-        actionButton.isHidden = false
+        mineNavigationBar.setTrailingButtonHidden(false)
         
         // 确保布局更新并滚动到顶部
         DispatchQueue.main.async {
@@ -277,19 +275,19 @@ extension LMAccountProfilePage {
     /// 保存用户资料到服务器
     private func saveProfileToServer(_ data: LMUserModel) {
         isSaving = true
-        actionButton.isEnabled = false
+        mineNavigationBar.setTrailingButtonEnabled(false)
         AppTheme.Toast.showText(LMText.common.saving)
         
         LMApiService.shared.updateProfile(
             username: data.username,
             nickname: data.nickname,
-            language: LMLaunageManager.shared.currentLanguage.rawValue,
+            language: LMLaunageManager.shared.currentLanguage.apiLanguageCode,
             dateOfBirth: data.birthDate
         ) { [weak self] response in
             guard let self = self else { return }
             
             self.isSaving = false
-            self.actionButton.isEnabled = true
+            self.mineNavigationBar.setTrailingButtonEnabled(true)
             
             if response.requestSuccess, let updatedUser = response.value {
                 // 更新本地用户数据
@@ -522,16 +520,16 @@ extension LMAccountProfilePage: ProfileEditViewDelegate {
                     if granted {
                         self?.presentImagePicker(sourceType: .camera)
                     } else {
-                        self?.showPermissionDeniedAlert(for: "Camera")
+                        self?.showPermissionDeniedAlert(for: LMText.profile.camera)
                     }
                 }
             }
             
         case .denied, .restricted:
-            showPermissionDeniedAlert(for: "Camera")
+            showPermissionDeniedAlert(for: LMText.profile.camera)
             
         @unknown default:
-            showPermissionDeniedAlert(for: "Camera")
+            showPermissionDeniedAlert(for: LMText.profile.camera)
         }
     }
     
@@ -550,16 +548,16 @@ extension LMAccountProfilePage: ProfileEditViewDelegate {
                     if newStatus == .authorized || newStatus == .limited {
                         self?.presentImagePicker(sourceType: .photoLibrary)
                     } else {
-                        self?.showPermissionDeniedAlert(for: "Photo Library")
+                        self?.showPermissionDeniedAlert(for: LMText.profile.photoLibrary)
                     }
                 }
             }
             
         case .denied, .restricted:
-            showPermissionDeniedAlert(for: "Photo Library")
+            showPermissionDeniedAlert(for: LMText.profile.photoLibrary)
             
         @unknown default:
-            showPermissionDeniedAlert(for: "Photo Library")
+            showPermissionDeniedAlert(for: LMText.profile.photoLibrary)
         }
     }
     

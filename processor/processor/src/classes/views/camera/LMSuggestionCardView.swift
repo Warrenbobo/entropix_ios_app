@@ -11,7 +11,6 @@ import SnapKit
 import Kingfisher
 
 private struct LMPlaceholderVirtualProgressPresentation {
-    let progress: Float
     let percentageText: String
     let stageText: String
 }
@@ -57,9 +56,10 @@ class LMSuggestionCardView: UIView {
     }() // Placeholder 图标（居中显示）
     private let heartButton = UIButton()
     private let loadingView = UIView()
+    private let loadingGradientLayer = CAGradientLayer()
     private let loadingStageLabel = UILabel()
     private let loadingPercentageLabel = UILabel()
-    private let loadingProgressView = UIProgressView(progressViewStyle: .default)
+    private let loadingActivityIndicator = UIActivityIndicatorView(style: .large)
     private let aigcBadgeImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "aigc")
@@ -113,23 +113,32 @@ class LMSuggestionCardView: UIView {
         heartButton.isHidden = true // 默认隐藏
         
         // 加载视图设置
-        loadingView.backgroundColor = UIColor.hexColor("#6F5CFF", alpha: 0.96)
+        loadingView.backgroundColor = .clear
         loadingView.layer.cornerRadius = Self.adaptiveSize(12)
+        loadingView.layer.masksToBounds = true
         
-        loadingStageLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(9), weight: .semibold)
-        loadingStageLabel.textColor = UIColor.white
+        loadingGradientLayer.colors = [
+            UIColor.hexColor("#AB6FFF").cgColor,
+            UIColor.hexColor("#CD7BEF").cgColor,
+            UIColor.hexColor("#F08CCB").cgColor
+        ]
+        loadingGradientLayer.locations = [0.0, 0.52, 1.0]
+        loadingGradientLayer.startPoint = CGPoint(x: 0.0, y: 0.0)
+        loadingGradientLayer.endPoint = CGPoint(x: 1.0, y: 1.0)
+        loadingView.layer.insertSublayer(loadingGradientLayer, at: 0)
+        
+        loadingStageLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(9.5), weight: .semibold)
+        loadingStageLabel.textColor = UIColor.white.withAlphaComponent(0.98)
         loadingStageLabel.textAlignment = .center
         loadingStageLabel.numberOfLines = 1
         
-        loadingPercentageLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(7), weight: .medium)
-        loadingPercentageLabel.textColor = UIColor.white.withAlphaComponent(0.88)
-        loadingPercentageLabel.textAlignment = .right
+        loadingPercentageLabel.font = UIFont.systemFont(ofSize: Self.adaptiveSize(14), weight: .bold)
+        loadingPercentageLabel.textColor = UIColor.white
+        loadingPercentageLabel.textAlignment = .center
         
-        loadingProgressView.progressTintColor = .white
-        loadingProgressView.trackTintColor = UIColor.white.withAlphaComponent(0.26)
-        loadingProgressView.layer.cornerRadius = 3
-        loadingProgressView.clipsToBounds = true
-        loadingProgressView.transform = CGAffineTransform(scaleX: 1, y: 1.6)
+        loadingActivityIndicator.color = .white
+        loadingActivityIndicator.hidesWhenStopped = false
+        loadingActivityIndicator.transform = CGAffineTransform(scaleX: 0.665, y: 0.665)
         
         // 按层级添加子视图
         addSubview(backgroundImageView)  // 底层：拉伸背景
@@ -139,9 +148,9 @@ class LMSuggestionCardView: UIView {
         addSubview(aigcBadgeImageView)   // AIGC 标识图
         addSubview(heartButton)
         addSubview(loadingView)
+        loadingView.addSubview(loadingActivityIndicator)
         loadingView.addSubview(loadingStageLabel)
         loadingView.addSubview(loadingPercentageLabel)
-        loadingView.addSubview(loadingProgressView)
         
         // 设置初始状态
         loadingView.isHidden = true
@@ -188,23 +197,28 @@ class LMSuggestionCardView: UIView {
             make.edges.equalToSuperview()
         }
         
-        loadingStageLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(Self.adaptiveSize(14))
-            make.trailing.equalToSuperview().offset(-Self.adaptiveSize(14))
-            make.centerY.equalToSuperview().offset(-Self.adaptiveSize(10))
-        }
-        
-        loadingProgressView.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(Self.adaptiveSize(14))
-            make.top.equalTo(loadingStageLabel.snp.bottom).offset(Self.adaptiveSize(14))
-            make.height.equalTo(Self.adaptiveSize(4))
+        loadingActivityIndicator.snp.makeConstraints { make in
+            make.centerX.equalToSuperview()
+            make.centerY.equalToSuperview().offset(-Self.adaptiveSize(24))
+            make.size.equalTo(Self.adaptiveSize(24))
         }
         
         loadingPercentageLabel.snp.makeConstraints { make in
-            make.top.equalTo(loadingProgressView.snp.bottom).offset(Self.adaptiveSize(10))
-            make.trailing.equalTo(loadingProgressView)
-            make.leading.greaterThanOrEqualToSuperview().offset(Self.adaptiveSize(14))
+            make.centerX.equalToSuperview()
+            make.top.equalTo(loadingActivityIndicator.snp.bottom).offset(Self.adaptiveSize(8))
         }
+        
+        loadingStageLabel.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(Self.adaptiveSize(14))
+            make.trailing.equalToSuperview().offset(-Self.adaptiveSize(14))
+            make.top.equalTo(loadingPercentageLabel.snp.bottom).offset(Self.adaptiveSize(6))
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        loadingGradientLayer.frame = loadingView.bounds
+        loadingGradientLayer.cornerRadius = loadingView.layer.cornerRadius
     }
     
     // MARK: - Public Methods
@@ -270,6 +284,7 @@ class LMSuggestionCardView: UIView {
     // MARK: - Private Methods
     private func showLoadingState(progressStartDate: Date?) {
         loadingView.isHidden = false
+        loadingActivityIndicator.startAnimating()
         heartButton.isHidden = true
         placeholderImageView.isHidden = true
         
@@ -290,6 +305,7 @@ class LMSuggestionCardView: UIView {
     private func hideLoadingState() {
         stopVirtualProgressTimer()
         loadingView.isHidden = true
+        loadingActivityIndicator.stopAnimating()
         
         backgroundImageView.isHidden = false
         blurEffectView.isHidden = false
@@ -316,7 +332,6 @@ class LMSuggestionCardView: UIView {
         let presentation = placeholderProgressPresentation()
         loadingStageLabel.text = presentation.stageText
         loadingPercentageLabel.text = presentation.percentageText
-        loadingProgressView.setProgress(presentation.progress, animated: false)
     }
     
     private func placeholderProgressPresentation() -> LMPlaceholderVirtualProgressPresentation {
@@ -340,15 +355,15 @@ class LMSuggestionCardView: UIView {
         case ..<0.84:
             stageText = LMText.camera.virtualProgressScenery
         case ..<1.67:
-            stageText = LMText.camera.virtualProgressScenery + " ✔"
+            stageText = LMText.camera.virtualProgressScenery + " ✓"
         case ..<2.50:
             stageText = LMText.camera.virtualProgressPose
         case ..<3.34:
-            stageText = LMText.camera.virtualProgressPose + " ✔"
+            stageText = LMText.camera.virtualProgressPose + " ✓"
         case ..<4.17:
             stageText = LMText.camera.virtualProgressAngle
         case ..<5.00:
-            stageText = LMText.camera.virtualProgressAngle + " ✔"
+            stageText = LMText.camera.virtualProgressAngle + " ✓"
         case ..<10.00:
             stageText = LMText.camera.virtualProgressAnalyzing
         case ..<18.00:
@@ -360,7 +375,6 @@ class LMSuggestionCardView: UIView {
         }
         
         return LMPlaceholderVirtualProgressPresentation(
-            progress: clampedProgress,
             percentageText: "\(percentageValue)%",
             stageText: stageText
         )

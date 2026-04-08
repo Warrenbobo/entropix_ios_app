@@ -7,6 +7,11 @@
 
 import UIKit
 
+enum LMCompositionTaskResultEventType: String {
+    case like = "Like"
+    case shot = "Shot"
+}
+
 class LMCompositionService {
     
     static let shared = LMCompositionService()
@@ -18,6 +23,7 @@ class LMCompositionService {
     typealias CompositionStatusResponse = LMCompositionSuggestionsResponse
     typealias ConfirmSuggestionResponse = LMConfirmSuggestionResponse
     typealias CompositionHistoryResponse = LMCompositionResultsResponse
+    typealias CompositionTaskResultResponse = LMEmptyModel
     
     // MARK: - 提交构图任务
     
@@ -77,6 +83,29 @@ class LMCompositionService {
         LMApiService.shared.confirmSuggestion(
             taskId: taskId,
             suggestionId: suggestionId,
+            completion: completion
+        )
+    }
+    
+    /// 上报 Suggestion 任务结果
+    /// - Parameters:
+    ///   - taskId: 任务ID
+    ///   - eventType: 事件类型（如 Shot）
+    ///   - suggestionId: 建议ID
+    ///   - finalized: 是否为任务结束上报
+    ///   - completion: 完成回调
+    func reportSuggestionTaskResult(
+        taskId: String,
+        eventType: LMCompositionTaskResultEventType? = nil,
+        suggestionId: String? = nil,
+        finalized: Bool,
+        completion: @escaping LMApiCallback<CompositionTaskResultResponse>
+    ) {
+        LMApiService.shared.reportSuggestionTaskResult(
+            taskId: taskId,
+            eventType: eventType,
+            suggestionId: suggestionId,
+            finalized: finalized,
             completion: completion
         )
     }

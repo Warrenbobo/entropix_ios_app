@@ -10,8 +10,11 @@ import SnapKit
 
 class LMSettingPage: LMPageWrapper {
     
+    override var usesMineNavigationBarStyle: Bool { true }
+    
     private let scrollView = UIScrollView()
     private let contentView = UIView()
+    private let itemsContainerView = UIView()
     private let itemsStackView = UIStackView()
     
     // Setting Items
@@ -46,7 +49,7 @@ class LMSettingPage: LMPageWrapper {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(false,
+        navigationController?.setNavigationBarHidden(true,
                                                      animated: true)
         updateUIForLoginState()
         updateUIForReviewState()
@@ -61,7 +64,8 @@ extension LMSettingPage {
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        contentView.addSubview(itemsStackView)
+        contentView.addSubview(itemsContainerView)
+        itemsContainerView.addSubview(itemsStackView)
         itemsStackView.addArrangedSubview(accountProfileItem)
         itemsStackView.addArrangedSubview(languageItem)
         itemsStackView.addArrangedSubview(contactUsItem)
@@ -78,7 +82,7 @@ extension LMSettingPage {
     
     private func setupItemsStackView() {
         itemsStackView.axis = .vertical
-        itemsStackView.spacing = 16
+        itemsStackView.spacing = 0
         itemsStackView.distribution = .fill
         itemsStackView.alignment = .fill
     }
@@ -155,6 +159,8 @@ extension LMSettingPage {
         deleteAccountItem.onTap = { [weak self] in
             self?.handleDeleteAccountTapped()
         }
+        
+        updateItemSeparators()
     }
     
     private func setupLogoutButton() {
@@ -184,9 +190,13 @@ extension LMSettingPage {
             make.width.equalToSuperview()
         }
         
-        itemsStackView.snp.makeConstraints { make in
+        itemsContainerView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(24)
             make.leading.trailing.equalToSuperview().inset(16)
+        }
+        
+        itemsStackView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
     }
 }
@@ -195,9 +205,14 @@ extension LMSettingPage {
 extension LMSettingPage {
     
     private func configureDefaultContentAndStyles() {
-        view.backgroundColor = UIColor.systemBackground
-        scrollView.backgroundColor = UIColor.clear
+        view.backgroundColor = .white
+        scrollView.backgroundColor = .white
         scrollView.showsVerticalScrollIndicator = false
+        contentView.backgroundColor = .white
+        
+        itemsContainerView.backgroundColor = .white
+        itemsContainerView.layer.cornerRadius = 0
+        itemsContainerView.layer.masksToBounds = false
     }
     
     private func updateUIForLoginState() {
@@ -223,6 +238,31 @@ extension LMSettingPage {
     
     private func updateUIForReviewState() {
         deleteAccountItem.isHidden = !isInReviewMode
+        updateItemSeparators()
+    }
+}
+
+extension LMSettingPage {
+    
+    private var orderedSettingItems: [LMSettingItemView] {
+        [
+            accountProfileItem,
+            languageItem,
+            contactUsItem,
+            frequentQuestionsItem,
+            aboutItem,
+            deleteAccountItem
+        ]
+    }
+    
+    private func updateItemSeparators() {
+        let visibleItems = orderedSettingItems.filter { !$0.isHidden }
+        orderedSettingItems.forEach { item in
+            item.setSeparatorHidden(true)
+        }
+        visibleItems.enumerated().forEach { index, item in
+            item.setSeparatorHidden(index == visibleItems.count - 1)
+        }
     }
 }
 
@@ -340,6 +380,8 @@ extension LMSettingPage {
 
 // MARK: - Delete Account Page
 class LMDeleteAccountPage: LMPageWrapper {
+    
+    override var usesMineNavigationBarStyle: Bool { true }
     
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -691,6 +733,7 @@ class LMSettingItemView: UIView {
     private let subtitleLabel = UILabel()
     private let arrowImageView = UIImageView()
     private let badgeView = UIView()
+    private let separatorView = UIView()
     
     var onTap: (() -> Void)?
     
@@ -714,18 +757,19 @@ class LMSettingItemView: UIView {
         containerView.addSubview(subtitleLabel)
         containerView.addSubview(arrowImageView)
         iconContainerView.addSubview(badgeView)
+        containerView.addSubview(separatorView)
     }
     
     private func setupLayout() {
         containerView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
-            make.height.greaterThanOrEqualTo(70)
+            make.height.greaterThanOrEqualTo(84)
         }
         
         iconContainerView.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
-            make.size.equalTo(40)
+            make.size.equalTo(48)
         }
         
         iconImageView.snp.makeConstraints { make in
@@ -741,33 +785,35 @@ class LMSettingItemView: UIView {
         
         titleLabel.snp.makeConstraints { make in
             make.leading.equalTo(iconContainerView.snp.trailing).offset(16)
-            make.top.equalToSuperview().offset(16)
+            make.top.equalToSuperview().offset(18)
             make.trailing.lessThanOrEqualTo(arrowImageView.snp.leading).offset(-16)
         }
         
         subtitleLabel.snp.makeConstraints { make in
             make.leading.equalTo(titleLabel)
-            make.top.equalTo(titleLabel.snp.bottom).offset(4)
+            make.top.equalTo(titleLabel.snp.bottom).offset(6)
             make.trailing.lessThanOrEqualTo(arrowImageView.snp.leading).offset(-16)
-            make.bottom.equalToSuperview().offset(-16)
+            make.bottom.equalToSuperview().offset(-18)
         }
         
         arrowImageView.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-16)
             make.centerY.equalToSuperview()
-            make.size.equalTo(16)
+            make.size.equalTo(15)
+        }
+        
+        separatorView.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview()
+            make.height.equalTo(1.0 / UIScreen.main.scale)
         }
     }
     
     private func setupStyles() {
-        backgroundColor = UIColor.systemBackground
-        layer.cornerRadius = 12
-        layer.shadowColor = UIColor.black.cgColor
-        layer.shadowOffset = CGSize(width: 0, height: 1)
-        layer.shadowRadius = 3
-        layer.shadowOpacity = 0.1
+        backgroundColor = UIColor.clear
+        containerView.backgroundColor = .white
         
-        iconContainerView.layer.cornerRadius = 8
+        iconContainerView.layer.cornerRadius = 14
         
         badgeView.backgroundColor = .systemRed
         badgeView.layer.cornerRadius = 5
@@ -775,10 +821,12 @@ class LMSettingItemView: UIView {
         badgeView.layer.borderColor = UIColor.systemBackground.cgColor
         badgeView.isHidden = true
         
+        separatorView.backgroundColor = UIColor.systemGray6
+        
         iconImageView.tintColor = .white
         iconImageView.contentMode = .scaleAspectFit
         
-        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        titleLabel.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         titleLabel.textColor = UIColor.label
         titleLabel.numberOfLines = 1
         
@@ -798,15 +846,6 @@ class LMSettingItemView: UIView {
     }
     
     @objc private func handleTap() {
-        // 添加点击动画
-        UIView.animate(withDuration: 0.1, animations: {
-            self.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-        }) { _ in
-            UIView.animate(withDuration: 0.1) {
-                self.transform = CGAffineTransform.identity
-            }
-        }
-        
         onTap?()
     }
     
@@ -820,5 +859,9 @@ class LMSettingItemView: UIView {
     
     func setBadgeVisible(_ visible: Bool) {
         badgeView.isHidden = !visible
+    }
+    
+    func setSeparatorHidden(_ hidden: Bool) {
+        separatorView.isHidden = hidden
     }
 }

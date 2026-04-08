@@ -11,6 +11,8 @@ import Toast_Swift
 
 class LMContactUsPage: LMPageWrapper {
     
+    override var usesMineNavigationBarStyle: Bool { true }
+    
     // MARK: - UI Components
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -392,7 +394,7 @@ extension LMContactUsPage {
     }
     
     @objc private func handleDiscordCopyButtonTapped() {
-        copyToClipboard(text: "https://discord.gg/9M8AQ8NKDM", message: "Discord invite link copied!")
+        copyToClipboard(text: "https://discord.gg/9M8AQ8NKDM", message: LMText.settings.discordInviteLinkCopied)
     }
     
     @objc private func handleEmailContainerTapped() {
@@ -400,7 +402,7 @@ extension LMContactUsPage {
     }
     
     @objc private func handleEmailCopyButtonTapped() {
-        copyToClipboard(text: "contact@entropixai.com", message: "Email address copied!")
+        copyToClipboard(text: "contact@entropixai.com", message: LMText.settings.emailAddressCopied)
     }
 }
 

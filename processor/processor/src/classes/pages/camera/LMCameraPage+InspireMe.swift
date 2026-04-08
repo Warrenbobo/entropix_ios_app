@@ -303,6 +303,7 @@ extension LMCameraPage {
         hideProcessingOverlay()
 
         currentProcessingSceneryImage = image
+        currentCameraState = .inspireMeProcessing
 
         let overlayView = UIView()
         overlayView.backgroundColor = .clear
@@ -421,6 +422,9 @@ extension LMCameraPage {
                 overlayView.alpha = 0
             }) { _ in
                 overlayView.removeFromSuperview()
+                if self.currentCameraState == .inspireMeProcessing {
+                    self.currentCameraState = .normal
+                }
             }
         }
     }

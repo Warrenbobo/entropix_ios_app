@@ -254,7 +254,7 @@ class LMLaunchSplashPage: UIViewController {
     /// Guest 用户注册和登录
     private func registerAndLoginAsGuest() {
         // 获取当前语言
-        let language = LMLaunageManager.shared.currentLanguage.rawValue
+        let language = LMLaunageManager.shared.currentLanguage.apiLanguageCode
         LMLogger.log("🌐 Language: \(language)")
 
         // 先尝试注册 Guest 用户（如果已存在会返回现有用户）

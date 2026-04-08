@@ -100,6 +100,9 @@ struct LMApi {
         /// 分页获取历史构图结果
         static let results = "/v1/composition/results"
         
+        /// 上报 Suggestion 任务结果
+        static let suggestionResults = "/v1/composition/suggestions/results"
+        
         /// 确认建议图
         static let confirm = "/v1/composition/suggestions/confirm"
     }

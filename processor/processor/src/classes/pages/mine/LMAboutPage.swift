@@ -9,6 +9,8 @@ import UIKit
 import SnapKit
 
 class LMAboutPage: LMPageWrapper {
+    
+    override var usesMineNavigationBarStyle: Bool { true }
 
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -48,7 +50,7 @@ class LMAboutPage: LMPageWrapper {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
         refreshAppUpdateState()
     }
 }

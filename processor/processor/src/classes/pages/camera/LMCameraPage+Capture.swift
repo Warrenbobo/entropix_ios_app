@@ -191,6 +191,7 @@ extension LMCameraPage: AVCapturePhotoCaptureDelegate {
         capturedImage = rotateImage(capturedImage, forDeviceOrientation: deviceOrientation, isFrontCamera: isUsingFrontCamera)
         
         LMLogger.log("✅ Photo captured successfully, size: \(capturedImage.size)")
+        reportCurrentSuggestionShotIfNeeded()
         
         // 检查是否正在等待 Live Photo 视频处理
         if Self.isWaitingForLivePhotoVideo {

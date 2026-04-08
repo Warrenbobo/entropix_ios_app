@@ -33,7 +33,6 @@
 		EA56DDA72EC0833D000AB522 /* LMCompositionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */; };
 		EA56DDB72EC08E1D000AB522 /* LMCameraPage+Delegates.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAE2EC08E1D000AB522 /* LMCameraPage+Delegates.swift */; };
 		EA56DDB82EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAC2EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift */; };
-		F0A1B2C32F1A000100000001 /* LMARGuidanceMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */; };
 		EA56DDBA2EC08E1D000AB522 /* LMCameraPage+Capture.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAD2EC08E1D000AB522 /* LMCameraPage+Capture.swift */; };
 		EA56DDBC2EC08E1D000AB522 /* LMCameraPage+ImageProcessing.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAF2EC08E1D000AB522 /* LMCameraPage+ImageProcessing.swift */; };
 		EA56DDBD2EC08E1D000AB522 /* LMCameraPage+InspireMe.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDB02EC08E1D000AB522 /* LMCameraPage+InspireMe.swift */; };
@@ -144,6 +143,7 @@
 		EAFBADC62EA4C34300586EC7 /* LMFAQPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */; };
 		EAFBADC82EA4C90E00586EC7 /* LMNotificationsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */; };
 		ED1A82AB7EA3BF2D0B7016C1 /* Pods_processor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */; };
+		F0A1B2C32F1A000100000001 /* LMARGuidanceMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -176,7 +176,6 @@
 		EA56DDA02EC08078000AB522 /* LMPersonDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPersonDetectionManager.swift; sourceTree = "<group>"; };
 		EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionService.swift; sourceTree = "<group>"; };
 		EA56DDAC2EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+ARGuidance.swift"; sourceTree = "<group>"; };
-		F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceMode.swift; sourceTree = "<group>"; };
 		EA56DDAD2EC08E1D000AB522 /* LMCameraPage+Capture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+Capture.swift"; sourceTree = "<group>"; };
 		EA56DDAE2EC08E1D000AB522 /* LMCameraPage+Delegates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+Delegates.swift"; sourceTree = "<group>"; };
 		EA56DDAF2EC08E1D000AB522 /* LMCameraPage+ImageProcessing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+ImageProcessing.swift"; sourceTree = "<group>"; };
@@ -289,6 +288,7 @@
 		EAFBADC32EA36E5900586EC7 /* LMIdeasPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMIdeasPageView.swift; sourceTree = "<group>"; };
 		EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFAQPage.swift; sourceTree = "<group>"; };
 		EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationsPage.swift; sourceTree = "<group>"; };
+		F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceMode.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -732,9 +732,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -926,7 +930,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = processor/processor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = WL97SW2V2L;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -944,7 +948,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.entropix.inspirecam;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -965,7 +969,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = processor/processor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = WL97SW2V2L;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -983,7 +987,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.entropix.inspirecam;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

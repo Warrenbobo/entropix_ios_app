@@ -114,6 +114,7 @@ extension LMCameraPage {
         
         currentCameraState = .showingSuggestions
         currentTaskId = taskId
+        preferredARGuidanceButtonState = .box
         jobIdToPlaceholderRank.removeAll()
         if let suggestionsList = suggestions {
             currentSuggestions = suggestionsList
@@ -187,6 +188,7 @@ extension LMCameraPage {
         if isARGuidanceActive {
             stopARGuidanceSession()
         }
+        preferredARGuidanceButtonState = .box
         
         // 清理数据
         currentTaskId = nil
@@ -205,6 +207,102 @@ extension LMCameraPage {
         }
         
         LMLogger.log("📐 Exited Show Suggestions state, AR Guidance reset to unavailable")
+    }
+    
+    func reportCurrentSuggestionShotIfNeeded() {
+        guard currentCameraState == .compositionSelected else { return }
+        guard case .normal = navigationSource else {
+            LMLogger.log("⏭️ [Task Result] Skip Shot report - navigation source is not task-backed suggestion flow")
+            return
+        }
+        guard let taskId = currentTaskId, !taskId.isEmpty else {
+            LMLogger.log("⚠️ [Task Result] Skip Shot report - missing task_id")
+            return
+        }
+        guard let suggestionId = currentSuggestion?.id, !suggestionId.isEmpty else {
+            LMLogger.log("⚠️ [Task Result] Skip Shot report - missing suggestion_id")
+            return
+        }
+        
+        reportSuggestionTaskResult(
+            taskId: taskId,
+            eventType: .shot,
+            suggestionId: suggestionId,
+            finalized: false
+        )
+    }
+
+    func reportSuggestionLikeIfNeeded(_ suggestion: LMCompositionSuggestion) {
+        guard case .normal = navigationSource else {
+            LMLogger.log("⏭️ [Task Result] Skip Like report - navigation source is not task-backed suggestion flow")
+            return
+        }
+        guard let taskId = currentTaskId, !taskId.isEmpty else {
+            LMLogger.log("⚠️ [Task Result] Skip Like report - missing task_id")
+            return
+        }
+        guard let suggestionId = suggestion.id, !suggestionId.isEmpty else {
+            LMLogger.log("⚠️ [Task Result] Skip Like report - missing suggestion_id")
+            return
+        }
+        guard LMPhotoStorageManager.shared.isSuggestionSaved(suggestionId: suggestionId) else {
+            LMLogger.log("⏭️ [Task Result] Skip Like report - suggestion is no longer liked")
+            return
+        }
+        
+        reportSuggestionTaskResult(
+            taskId: taskId,
+            eventType: .like,
+            suggestionId: suggestionId,
+            finalized: false
+        )
+    }
+    
+    func reportCurrentTaskFinalizedIfNeeded() {
+        guard case .normal = navigationSource else {
+            LMLogger.log("⏭️ [Task Result] Skip finalized report - navigation source is not task-backed suggestion flow")
+            return
+        }
+        guard let taskId = currentTaskId, !taskId.isEmpty else {
+            LMLogger.log("⚠️ [Task Result] Skip finalized report - missing task_id")
+            return
+        }
+        
+        reportSuggestionTaskResult(
+            taskId: taskId,
+            eventType: nil,
+            suggestionId: nil,
+            finalized: true
+        )
+    }
+    
+    private func reportSuggestionTaskResult(
+        taskId: String,
+        eventType: LMCompositionTaskResultEventType?,
+        suggestionId: String?,
+        finalized: Bool
+    ) {
+        var logComponents = ["task_id=\(taskId)", "finalized=\(finalized)"]
+        if let eventType {
+            logComponents.append("event_type=\(eventType.rawValue)")
+        }
+        if let suggestionId, !suggestionId.isEmpty {
+            logComponents.append("suggestion_id=\(suggestionId)")
+        }
+        LMLogger.log("📤 [Task Result] Uploading \(logComponents.joined(separator: ", "))")
+        
+        LMCompositionService.shared.reportSuggestionTaskResult(
+            taskId: taskId,
+            eventType: eventType,
+            suggestionId: suggestionId,
+            finalized: finalized
+        ) { response in
+            if response.requestSuccess {
+                LMLogger.log("✅ [Task Result] Upload succeeded")
+            } else {
+                LMLogger.log("❌ [Task Result] Upload failed: \(response.message ?? "Unknown error")")
+            }
+        }
     }
 }
 
@@ -593,8 +691,7 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
                                  at index: Int) {
         LMLogger.log("❤️ Toggling favorite for suggestion: \(suggestion.id ?? "unknown")")
         
-        // TODO: 调用 API 保存/取消收藏
-        // 暂时只显示反馈
+        reportSuggestionLikeIfNeeded(suggestion)
         AppTheme.Toast.showText(LMText.camera.suggestionSavedToFavorites)
     }
     
@@ -986,15 +1083,15 @@ extension LMCameraPage {
             // 重置 AR Guidance 为不可用状态
             cameraBottomControlsView.resetARGuidance()
             
-            // 如果 AR Guidance 正在运行，停止它
-            if isARGuidanceActive {
-                configureARGuidanceFeatures(false)
-            }
+            // 先清理 LineArt 资源，再停止 AR Guidance，避免清理过程中把 Box 重新显示出来
+            clearLineArtOverlay()
+            
+            // 停止 AR Guidance 会话，确保残留引导元素被清理
+            stopARGuidanceSession()
             
             // 清除参考图相关数据
             referenceImageInitialOrientation = nil
             currentReferenceImage = nil
-            clearLineArtOverlay()
             currentReferenceBbox = nil
             
             // 返回到已保存构图详情页
@@ -1016,15 +1113,15 @@ extension LMCameraPage {
             // 重置 AR Guidance 为不可用状态（灰色）
             cameraBottomControlsView.resetARGuidance()
             
-            // 如果 AR Guidance 正在运行，停止它
-            if isARGuidanceActive {
-                configureARGuidanceFeatures(false)
-            }
+            // 先清理 LineArt 资源，再停止 AR Guidance，避免清理过程中把 Box 重新显示出来
+            clearLineArtOverlay()
+            
+            // 停止 AR Guidance 会话，确保残留引导元素被清理
+            stopARGuidanceSession()
             
             // 清除参考图初始方向（防止旋转手机时误触发AR引导）
             referenceImageInitialOrientation = nil
             currentReferenceImage = nil
-            clearLineArtOverlay()
             currentReferenceBbox = nil
             
             // 显示构图轮播（会自动重置手势状态）

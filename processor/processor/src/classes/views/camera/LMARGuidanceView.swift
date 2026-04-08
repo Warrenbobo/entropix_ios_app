@@ -496,6 +496,7 @@ class LMARGuidanceView: UIView {
             successBox.isHidden = true
             successCheckmark.isHidden = true
         }
+
     }
 }
 

@@ -17,14 +17,12 @@ class LMGalleryPageView: UIView {
         super.init(frame: frame)
         setupUserInterfaceComponents()
         configureLayoutConstraints()
-        loadSampleData()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupUserInterfaceComponents()
         configureLayoutConstraints()
-        loadSampleData()
     }
     
     private func createCollectionView() -> UICollectionView {
@@ -68,7 +66,7 @@ class LMGalleryPageView: UIView {
         
         // 如果没有数据，显示空状态
         if galleryImages.isEmpty {
-            showEmptyState(message: "No photos yet")
+            showEmptyState(message: LMText.profile.noPhotosYet)
         } else {
             hideEmptyState()
         }

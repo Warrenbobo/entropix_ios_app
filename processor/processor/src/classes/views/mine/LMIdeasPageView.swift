@@ -17,14 +17,12 @@ class LMIdeasPageView: UIView {
         super.init(frame: frame)
         setupUserInterfaceComponents()
         configureLayoutConstraints()
-        loadSampleData()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         setupUserInterfaceComponents()
         configureLayoutConstraints()
-        loadSampleData()
     }
     
     private func createCollectionView() -> UICollectionView {

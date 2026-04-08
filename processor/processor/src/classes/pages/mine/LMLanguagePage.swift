@@ -11,6 +11,9 @@ import Toast_Swift
 
 class LMLanguagePage: LMPageWrapper {
     
+    override var usesMineNavigationBarStyle: Bool { true }
+    override var mineNavigationLayoutMode: LMMineNavigationLayoutMode { .manualNavigatorHeightOffset }
+    
     // MARK: - UI Components
     private let contentView = UIView()
     

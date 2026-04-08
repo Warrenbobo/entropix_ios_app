@@ -23,21 +23,21 @@ enum StoreError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .productNotFound:
-            return "The subscription plan is not available at this time."
+            return LMText.subscription.productNotAvailable
         case .purchaseFailed(let error):
-            return "Purchase failed: \(error.localizedDescription)"
+            return String(format: LMText.subscription.purchaseFailedFormat, error.localizedDescription)
         case .purchaseCancelled:
-            return "Purchase was cancelled."
+            return LMText.subscription.purchaseCancelled
         case .verificationFailed:
-            return "Unable to verify your purchase. Please try again."
+            return LMText.subscription.unableToVerifyPurchase
         case .networkError:
-            return "Network connection error. Please check your internet connection."
+            return LMText.common.networkError
         case .serverError(let message):
             return message
         case .invalidReceipt:
-            return "Invalid purchase receipt. Please contact support."
+            return LMText.subscription.invalidPurchaseReceipt
         case .restorationFailed:
-            return "Unable to restore purchases. Please try again."
+            return LMText.subscription.restorePurchasesFailed
         }
     }
 }
@@ -156,11 +156,11 @@ class LMStoreManager {
             
         case .pending:
             LMLogger.log("⏳ Purchase pending")
-            throw StoreError.purchaseFailed(underlying: NSError(domain: "StoreKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Purchase is pending approval"]))
+            throw StoreError.purchaseFailed(underlying: NSError(domain: "StoreKit", code: -1, userInfo: [NSLocalizedDescriptionKey: LMText.subscription.purchasePendingApproval]))
             
         @unknown default:
             LMLogger.log("❌ Unknown purchase result")
-            throw StoreError.purchaseFailed(underlying: NSError(domain: "StoreKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown purchase result"]))
+            throw StoreError.purchaseFailed(underlying: NSError(domain: "StoreKit", code: -1, userInfo: [NSLocalizedDescriptionKey: LMText.subscription.unknownPurchaseResult]))
         }
     }
     

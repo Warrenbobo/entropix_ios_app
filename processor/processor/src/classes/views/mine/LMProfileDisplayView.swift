@@ -36,10 +36,10 @@ class LMProfileDisplayView: UIView {
     private let fieldsContainerView = UIView()
     
     // Profile Item Views - 按图片顺序
-    private let nicknameItemView = LMProfileItemView(title: "Nickname")
-    private let usernameItemView = LMProfileItemView(title: "Username")
-    private let avatarItemView = LMProfileItemView(title: "Avatar", content: "Profile Photo")
-    private let dateOfBirthItemView = LMProfileItemView(title: "Date of Birth")
+    private let nicknameItemView = LMProfileItemView(title: LMText.profile.nickname)
+    private let usernameItemView = LMProfileItemView(title: LMText.profile.username)
+    private let avatarItemView = LMProfileItemView(title: LMText.profile.avatar, content: LMText.profile.profilePhoto)
+    private let dateOfBirthItemView = LMProfileItemView(title: LMText.profile.dateOfBirth)
     
     // Cancel subscription button
     private let cancelSubscriptionButton = UIButton()
@@ -245,7 +245,7 @@ class LMProfileDisplayView: UIView {
         // Update Profile Item Views
         nicknameItemView.updateContent(data.nickname ?? "-")
         usernameItemView.updateContent(data.username ?? "-")
-        avatarItemView.updateContent("Profile Photo")
+        avatarItemView.updateContent(LMText.profile.profilePhoto)
         dateOfBirthItemView.updateContent(formatDateOfBirthForDisplay(data.birthDate) ?? "-")
         
         // 根据订阅状态显示/隐藏取消订阅按钮，并更新布局

@@ -10,6 +10,8 @@ import SnapKit
 
 class LMNotificationsPage: LMPageWrapper {
     
+    override var usesMineNavigationBarStyle: Bool { true }
+    
     // MARK: - UI Components
     private let tableView = UITableView()
     private let refreshControl = UIRefreshControl()
@@ -31,7 +33,7 @@ class LMNotificationsPage: LMPageWrapper {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(false, animated: animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
     }
     
     deinit {
@@ -93,7 +95,7 @@ extension LMNotificationsPage {
     
     private func configureLayoutConstraints() {
         tableView.snp.makeConstraints { make in
-            make.top.bottom.equalToSuperview()
+            make.top.bottom.equalTo(view.safeAreaLayoutGuide)
             make.leading.equalTo(12)
             make.trailing.equalTo(-12)
         }

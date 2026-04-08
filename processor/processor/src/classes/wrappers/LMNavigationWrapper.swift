@@ -18,6 +18,8 @@ class LMNavigationWrapper: UINavigationController {
     private func setupContentAppearance() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
+        appearance.backgroundEffect = nil
+        appearance.backgroundColor = AppTheme.ThemeColor.background
         appearance.shadowImage = UIImage()
         appearance.shadowColor = nil
         
@@ -29,13 +31,21 @@ class LMNavigationWrapper: UINavigationController {
             .font: UIFont.systemFont(ofSize: 34, weight: .bold),
             .foregroundColor: AppTheme.ThemeColor.text,
         ]
-        navigationBar.standardAppearance = appearance
-        navigationBar.scrollEdgeAppearance = appearance
-        navigationBar.compactAppearance = appearance
+
+        let buttonAppearance = createPlainBarButtonAppearance()
+        appearance.buttonAppearance = buttonAppearance
+        appearance.backButtonAppearance = buttonAppearance.copy()
+        appearance.prominentButtonAppearance = buttonAppearance.copy()
+
+        applyNavigationBarAppearance(appearance)
         navigationBar.prefersLargeTitles = false
         
+        navigationBar.isTranslucent = false
         navigationBar.backgroundColor = AppTheme.ThemeColor.background
         navigationBar.tintColor = AppTheme.ThemeColor.buttonText
+        if #available(iOS 16.0, *) {
+            navigationBar.preferredBehavioralStyle = .pad
+        }
     }
     
     override func pushViewController(_ viewController: UIViewController, animated: Bool) {
@@ -48,6 +58,27 @@ class LMNavigationWrapper: UINavigationController {
 
 
 extension LMNavigationWrapper {
+    
+    private func createPlainBarButtonAppearance() -> UIBarButtonItemAppearance {
+        let appearance = UIBarButtonItemAppearance(style: .plain)
+        [appearance.normal, appearance.highlighted, appearance.disabled, appearance.focused].forEach { state in
+            state.backgroundImage = UIImage()
+            state.backgroundImagePositionAdjustment = .zero
+            state.titleTextAttributes = [
+                .foregroundColor: AppTheme.ThemeColor.buttonText
+            ]
+        }
+        return appearance
+    }
+    
+    private func applyNavigationBarAppearance(_ appearance: UINavigationBarAppearance) {
+        navigationBar.standardAppearance = appearance
+        navigationBar.scrollEdgeAppearance = appearance
+        navigationBar.compactAppearance = appearance
+        if #available(iOS 15.0, *) {
+            navigationBar.compactScrollEdgeAppearance = appearance
+        }
+    }
     
     /// 设置导航栏标题对齐方式
     func setNavigationBarTitleAlignment(_ alignment: NSTextAlignment) {
@@ -64,9 +95,7 @@ extension LMNavigationWrapper {
         largeTitleAttributes[.paragraphStyle] = paragraphStyle
         appearance.largeTitleTextAttributes = largeTitleAttributes
         
-        navigationBar.standardAppearance = appearance
-        navigationBar.scrollEdgeAppearance = appearance
-        navigationBar.compactAppearance = appearance
+        applyNavigationBarAppearance(appearance)
     }
     
     /// 设置导航栏标题字体和颜色
@@ -81,9 +110,7 @@ extension LMNavigationWrapper {
             .paragraphStyle: existingParagraphStyle
         ]
         
-        navigationBar.standardAppearance = appearance
-        navigationBar.scrollEdgeAppearance = appearance
-        navigationBar.compactAppearance = appearance
+        applyNavigationBarAppearance(appearance)
     }
     
     /// 设置导航栏背景透明度
@@ -92,15 +119,15 @@ extension LMNavigationWrapper {
         
         if alpha < 1.0 {
             appearance.configureWithTransparentBackground()
+            appearance.backgroundEffect = nil
             appearance.backgroundColor = AppTheme.ThemeColor.background.withAlphaComponent(alpha)
         } else {
             appearance.configureWithOpaqueBackground()
+            appearance.backgroundEffect = nil
             appearance.backgroundColor = AppTheme.ThemeColor.background
         }
         
-        navigationBar.standardAppearance = appearance
-        navigationBar.scrollEdgeAppearance = appearance
-        navigationBar.compactAppearance = appearance
+        applyNavigationBarAppearance(appearance)
     }
     
     func resetNavigationBarAppearanceToDefault() {

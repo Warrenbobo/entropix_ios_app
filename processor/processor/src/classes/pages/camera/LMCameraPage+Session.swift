@@ -174,6 +174,8 @@ extension LMCameraPage {
     }
     
     func updateInspireMeButtonState() {
+        guard isViewLoaded, inspireMeButtonView != nil else { return }
+
         // Inspire Me 按钮仅在 normal 状态下显示
         // 在 showingSuggestions 和 compositionSelected 状态下，无论前后摄都不显示
         guard currentCameraState == .normal else {

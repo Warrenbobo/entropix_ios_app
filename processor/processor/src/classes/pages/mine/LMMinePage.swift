@@ -21,7 +21,9 @@ class LMMinePage: LMPageWrapper {
     // 会员及广告奖励
     private var membershipCardView = LMMembershipCardView()
     // 产品菜单
-    private var photoCollectionView = LMPhotoCollectionView()
+    private lazy var photoCollectionView = LMPhotoCollectionView()
+    private var isMineVisible = false
+    private var needsPhotoCollectionReload = true
     
     // 悬浮菜单相关
     private var floatingMenuContainer: UIView = UIView()
@@ -53,9 +55,24 @@ class LMMinePage: LMPageWrapper {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        setMineChromeHidden(false)
         navigationController?.setNavigationBarHidden(true, animated: animated)
         updateNavigationPresentation()
         refreshUserData()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        isMineVisible = true
+        DispatchQueue.main.async { [weak self] in
+            self?.reloadPhotoCollectionIfNeeded()
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        isMineVisible = false
+        setMineChromeHidden(true)
     }
     
     deinit {
@@ -176,6 +193,13 @@ class LMMinePage: LMPageWrapper {
 
         topBar.setBackButtonHidden(!isPushed)
         floatingCameraButton?.isHidden = isPushed
+        floatingMenuContainer.isHidden = !isFloatingMenuVisible
+    }
+    
+    private func setMineChromeHidden(_ hidden: Bool) {
+        topBar.isHidden = hidden
+        floatingCameraButton?.isHidden = hidden
+        floatingMenuContainer.isHidden = hidden || !isFloatingMenuVisible
     }
     
     private func moreButtonTapped() {
@@ -280,7 +304,7 @@ class LMMinePage: LMPageWrapper {
     
     private func updateUIForLoggedInUser(_ user: LMUserModel) {
         profileView.updateUserInfo(
-            name: user.nickname ?? user.username ?? "User",
+            name: user.nickname ?? user.username ?? LMText.profile.defaultUserName,
             email: (user.email?.isEmpty ?? true) ? "-" : user.email!,
             avatar: user.avatar
         )
@@ -306,14 +330,13 @@ class LMMinePage: LMPageWrapper {
             )
         }
         
-        // 刷新Gallery和Saved Ideas
-        photoCollectionView.reloadData()
+        schedulePhotoCollectionReload()
     }
     
     private func updateUIForLoggedOutUser() {
         // 未登录状态显示默认内容
         profileView.updateUserInfo(
-            name: "Sign-in",
+            name: LMText.auth.signIn,
             email: "",
             avatar: nil
         )
@@ -328,7 +351,20 @@ class LMMinePage: LMPageWrapper {
             )
         }
         
-        // 清空Gallery和Saved Ideas
+        schedulePhotoCollectionReload()
+    }
+
+    private func schedulePhotoCollectionReload() {
+        needsPhotoCollectionReload = true
+        guard isMineVisible else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.reloadPhotoCollectionIfNeeded()
+        }
+    }
+
+    private func reloadPhotoCollectionIfNeeded() {
+        guard isMineVisible, needsPhotoCollectionReload else { return }
+        needsPhotoCollectionReload = false
         photoCollectionView.reloadData()
     }
     

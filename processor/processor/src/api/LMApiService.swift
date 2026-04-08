@@ -505,6 +505,36 @@ class LMApiService {
         )
     }
     
+    /// 上报 Suggestion 任务结果
+    func reportSuggestionTaskResult(
+        taskId: String,
+        eventType: LMCompositionTaskResultEventType? = nil,
+        suggestionId: String? = nil,
+        finalized: Bool,
+        completion: @escaping LMApiCallback<LMEmptyModel>
+    ) {
+        var params: [String: Any] = [
+            "task_id": taskId,
+            "finalized": finalized
+        ]
+        
+        if let eventType {
+            params["event_type"] = eventType.rawValue
+        }
+        
+        if let suggestionId, !suggestionId.isEmpty {
+            params["suggestion_id"] = suggestionId
+        }
+        
+        LMApiClient.request(
+            LMApi.Composition.suggestionResults,
+            method: .post,
+            params: params,
+            type: LMEmptyModel.self,
+            completeHandler: completion
+        )
+    }
+    
     // MARK: - Private Helper Methods
     
     /// 格式化输出文件上传请求的日志
@@ -537,8 +567,8 @@ extension LMApiClient {
             "Platform": "iOS",
             "Channel": "AppStore",
             "Version": LMPackageManager.package.version,
-            "Accept-Language": LMLaunageManager.shared.currentLanguage.rawValue,
-            "Language": LMLaunageManager.shared.currentLanguage.rawValue,
+            "Accept-Language": LMLaunageManager.shared.currentLanguage.apiLanguageCode,
+            "Language": LMLaunageManager.shared.currentLanguage.apiLanguageCode,
             //            "Model": LMPackageManager.package.model,
             //            "PackageName": LMPackageManager.package.bundleName
         ]

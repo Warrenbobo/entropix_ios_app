@@ -39,6 +39,8 @@ class LMPhotoCollectionView: UIView {
     private let ideasPageView = LMIdeasPageView()
     
     private var currentTab: TabType = .gallery
+    private var hasLoadedGalleryData = false
+    private var hasLoadedIdeasData = false
     private var heightConstraint: Constraint?
     
     // 回调，用于通知父视图高度变化
@@ -202,6 +204,7 @@ extension LMPhotoCollectionView {
         guard currentTab != tab else { return }
         
         currentTab = tab
+        loadData(for: tab)
         
         // 更新按钮状态
         galleryTabButton.isSelected = (tab == .gallery)
@@ -246,21 +249,35 @@ extension LMPhotoCollectionView {
     
     /// 重新加载数据
     func reloadData() {
-        // 检查登录状态
-        let isLoggedIn = LMUserManager.shared.isLoggedIn
-        
-        if isLoggedIn {
-            // 已登录，加载用户数据
-            galleryPageView.reloadData()
-            ideasPageView.reloadData()
-        } else {
-            // 未登录，显示提示信息
+        hasLoadedGalleryData = false
+        hasLoadedIdeasData = false
+
+        guard LMUserManager.shared.isLoggedIn else {
             galleryPageView.showSignInPrompt()
             ideasPageView.showSignInPrompt()
+            updateContentHeight()
+            return
         }
+
+        loadData(for: currentTab, force: true)
         
         // 更新高度
         updateContentHeight()
+    }
+
+    private func loadData(for tab: TabType, force: Bool = false) {
+        guard LMUserManager.shared.isLoggedIn else { return }
+
+        switch tab {
+        case .gallery:
+            guard force || !hasLoadedGalleryData else { return }
+            galleryPageView.reloadData()
+            hasLoadedGalleryData = true
+        case .savedIdeas:
+            guard force || !hasLoadedIdeasData else { return }
+            ideasPageView.reloadData()
+            hasLoadedIdeasData = true
+        }
     }
     
     private func updateContentHeight() {
@@ -296,6 +313,7 @@ extension LMPhotoCollectionView: UIScrollViewDelegate {
         
         if newTab != currentTab {
             currentTab = newTab
+            loadData(for: newTab)
             
             // 更新按钮状态
             galleryTabButton.isSelected = (newTab == .gallery)
@@ -321,9 +339,10 @@ extension LMPhotoCollectionView: UIScrollViewDelegate {
                 self.layoutIfNeeded()
             }
             
+            updateContentHeight()
+            
             // 通知父视图tab变化
             onTabChanged?(newTab)
         }
     }
 }
-

@@ -12,6 +12,9 @@ import Toast_Swift
 
 class LMSubscriptionPage: LMPageWrapper {
     
+    override var usesMineNavigationBarStyle: Bool { true }
+    override var mineNavigationLayoutMode: LMMineNavigationLayoutMode { .manualNavigatorHeightOffset }
+    
     // MARK: - UI Components
     private let scrollView = UIScrollView()
     private let contentView = UIView()
@@ -54,7 +57,7 @@ class LMSubscriptionPage: LMPageWrapper {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(false,
+        navigationController?.setNavigationBarHidden(true,
                                                      animated: animated)
         updateUIForSubscriptionStatus()
     }
@@ -104,20 +107,20 @@ class LMSubscriptionPage: LMPageWrapper {
         let freePlan = SubscriptionPlan(
             planType: .free,
             title: SubscriptionPlanType.free.title,
-            subtitle: "Perfect for trying out",
+            subtitle: LMText.subscription.freePlanSubtitle,
             price: "$0",
             originalPrice: nil,
             discount: nil,
-            period: "Forever",
-            adsInfo: "Google AdSense + 5 Request / ad-session",
+            period: LMText.subscription.freePlanPeriod,
+            adsInfo: LMText.subscription.freePlanAdsInfo,
             description: "",
             features: [
-                "Up to 15 suggestions including 2 'on-location suggestions' for each request",
-                "AR Camera"
+                LMText.subscription.freePlanFeatureSuggestions,
+                LMText.subscription.freePlanFeatureARCamera
             ],
             gradientColors: [.white, .white],
             textColor: UIColor.hexColor("#09244F"),
-            buttonTitle: "Current Plan",
+            buttonTitle: LMText.subscription.currentPlan,
             isSelected: false,
             isDisabled: false,
             popularBadge: nil,
@@ -134,24 +137,24 @@ class LMSubscriptionPage: LMPageWrapper {
             subtitle: nil,
             price: "$9",
             originalPrice: "$15",
-            discount: "40% OFF",
-            period: "per month",
+            discount: LMText.subscription.plusPlanDiscount,
+            period: LMText.subscription.plusPlanPeriod,
             adsInfo: nil,
-            description: "Monthly Auto-Renewable Subscription",
+            description: LMText.subscription.plusPlanDescription,
             features: [
-                "Unlimited Inspires",
-                "Unlimited suggestions including 5 'on-location suggestions' for each Inspire",
-                "AR Camera with advanced features",
-                "Premium real-time image filters",
-                "Ad-free experience",
-                "Priority support"
+                LMText.subscription.plusPlanFeatureUnlimitedInspires,
+                LMText.subscription.plusPlanFeatureUnlimitedSuggestions,
+                LMText.subscription.plusPlanFeatureAdvancedARCamera,
+                LMText.subscription.plusPlanFeaturePremiumFilters,
+                LMText.subscription.plusPlanFeatureAdFree,
+                LMText.subscription.plusPlanFeaturePrioritySupport
             ],
             gradientColors: [UIColor.hexColor("#667eea"), UIColor.hexColor("#764ba2")],
             textColor: .white,
-            buttonTitle: "Start Monthly Subscription",
+            buttonTitle: LMText.subscription.startMonthlySubscription,
             isSelected: true,
             isDisabled: false,
-            popularBadge: "Most Popular",
+            popularBadge: LMText.subscription.mostPopular,
             showCountdown: true,
             showProgress: false,
             progressValue: nil,
@@ -165,23 +168,23 @@ class LMSubscriptionPage: LMPageWrapper {
             subtitle: nil,
             price: "$79",
             originalPrice: "$199",
-            discount: "60% OFF",
-            period: "one-time payment",
+            discount: LMText.subscription.lifelongPlanDiscount,
+            period: LMText.subscription.lifelongPlanPeriod,
             adsInfo: nil,
-            description: "Lifetime access to all features",
+            description: LMText.subscription.lifelongPlanDescription,
             features: [
-                "Everything in all plans",
-                "Lifetime access to all current and future features for no extra cost",
-                "Exclusive AI models and advanced features in the future",
-                "VIP support and early access to new features",
-                "Never expires or downgrades"
+                LMText.subscription.lifelongPlanFeatureEverything,
+                LMText.subscription.lifelongPlanFeatureLifetimeAccess,
+                LMText.subscription.lifelongPlanFeatureExclusiveModels,
+                LMText.subscription.lifelongPlanFeatureVIPSupport,
+                LMText.subscription.lifelongPlanFeatureNeverExpires
             ],
             gradientColors: [UIColor.hexColor("#ff6b6b"), UIColor.hexColor("#ee5a24")],
             textColor: .white,
-            buttonTitle: "Get Lifetime Access",
+            buttonTitle: LMText.subscription.getLifetimeAccess,
             isSelected: false,
             isDisabled: false,
-            popularBadge: "Co-founder Promotion",
+            popularBadge: LMText.subscription.coFounderPromotion,
             showCountdown: false,
             showProgress: true,
             progressValue: 0.67,
@@ -344,7 +347,7 @@ extension LMSubscriptionPage: LMSubscriptionDialogViewDelegate {
         
         isProcessingPurchase = true
         await MainActor.run {
-            showLoadingOverlay(message: "Processing purchase...")
+            showLoadingOverlay(message: LMText.subscription.processingPurchase)
         }
         
         do {

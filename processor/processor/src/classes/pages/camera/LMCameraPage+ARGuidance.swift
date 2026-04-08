@@ -54,13 +54,13 @@ enum LMARGuidanceError: Error {
     var localizedDescription: String {
         switch self {
         case .noPersonDetected:
-            return "No person detected in the reference image"
+            return LMText.camera.arGuidanceNoPersonDetected
         case .multiplePersonsDetected:
-            return "Multiple persons detected"
+            return LMText.camera.arGuidanceMultiplePersonsDetected
         case .detectionFailed:
-            return "Person detection failed"
+            return LMText.camera.arGuidanceDetectionFailed
         case .orientationMismatch:
-            return "Device orientation does not match reference image"
+            return LMText.camera.arGuidanceRotateToMatchReference
         }
     }
 }
@@ -559,12 +559,57 @@ extension LMCameraPage {
     }
     
     // MARK: - State Management
+
+    private func setARGuidanceFeedbackLoadingVisible(_ visible: Bool) {
+        guard isARGuidanceFeedbackLoadingVisible != visible else { return }
+        isARGuidanceFeedbackLoadingVisible = visible
+
+        if visible {
+            AppTheme.Toast.showLoading()
+        } else {
+            AppTheme.Toast.hideLoading()
+        }
+    }
+
+    private func showARGuidanceFeedbackToast(_ message: String,
+                                             signature: String,
+                                             minimumInterval: TimeInterval = 1.2) {
+        let now = Date()
+        if lastARGuidanceFeedbackSignature == signature,
+           let lastTime = lastARGuidanceFeedbackTime,
+           now.timeIntervalSince(lastTime) < minimumInterval {
+            return
+        }
+
+        lastARGuidanceFeedbackSignature = signature
+        lastARGuidanceFeedbackTime = now
+//        AppTheme.Toast.showText(message)
+    }
+
+    private func localizedARGuidanceFeedbackMessage(for error: Error) -> String {
+        guard let guidanceError = error as? LMARGuidanceError else {
+            let fallback = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+            return fallback.isEmpty ? LMText.camera.arGuidanceDetectionFailed : fallback
+        }
+
+        switch guidanceError {
+        case .noPersonDetected:
+            return LMText.camera.arGuidanceNoPersonDetected
+        case .multiplePersonsDetected:
+            return LMText.camera.arGuidanceMultiplePersonsDetected
+        case .detectionFailed:
+            return LMText.camera.arGuidanceDetectionFailed
+        case .orientationMismatch:
+            return LMText.camera.arGuidanceRotateToMatchReference
+        }
+    }
     
     /// 处理AR引导状态变化
     func handleARGuidanceStateChange(from oldState: LMARGuidanceState, to newState: LMARGuidanceState) {
         LMLogger.log("📊 AR Guidance状态变化: \(oldState) -> \(newState)")
         switch newState {
         case .disabled:
+            setARGuidanceFeedbackLoadingVisible(false)
             stopRealtimePersonDetection()
             arGuidanceView.hideOrShowAllGuidance(true)
             // 注意：不在这里清除 currentReferenceImage 和 currentReferenceBbox
@@ -572,14 +617,16 @@ extension LMCameraPage {
             // 这样用户关闭 AR Guidance 后重新开启时可以恢复
             
         case .waitingForReferenceDetection:
-            // TODO: 显示检测中的提示（使用Toast或加载动画）
+            setARGuidanceFeedbackLoadingVisible(true)
             LMLogger.log("🔍 正在检测Reference Image中的人物...")
             
         case .referenceDetected(let bbox):
+            setARGuidanceFeedbackLoadingVisible(false)
             currentReferenceBbox = bbox
             LMLogger.log("✅ Reference检测完成，bbox: \(bbox)")
             
         case .activeGuidance:
+            setARGuidanceFeedbackLoadingVisible(false)
             guard currentCameraState == .compositionSelected,
                   currentReferenceImage != nil,
                   referenceImageInitialOrientation != nil else {
@@ -599,21 +646,30 @@ extension LMCameraPage {
             arGuidanceView.hideOrShowAllGuidance(false)
             
         case .paused:
+            setARGuidanceFeedbackLoadingVisible(false)
             // 暂停状态：隐藏UI，但保留所有状态和检测器
             stopRealtimePersonDetection()
             arGuidanceView.hideOrShowAllGuidance(true)
             LMLogger.log("⏸️ AR引导已暂停（保留所有状态）")
             
         case .orientationMismatch:
+            setARGuidanceFeedbackLoadingVisible(false)
             stopRealtimePersonDetection()
             arGuidanceView.hideOrShowAllGuidance(true)
-            // TODO: 显示Toast提示 "请旋转设备以匹配参考图方向"
+            if !isUsingFrontCamera {
+                showARGuidanceFeedbackToast(
+                    LMText.camera.arGuidanceRotateToMatchReference,
+                    signature: "orientationMismatch"
+                )
+            }
             LMLogger.log("⚠️ 方向不匹配，请旋转设备")
             
         case .error(let error):
+            setARGuidanceFeedbackLoadingVisible(false)
             stopRealtimePersonDetection()
             arGuidanceView.hideOrShowAllGuidance(true)
-            // TODO: 显示错误Toast
+            let message = localizedARGuidanceFeedbackMessage(for: error)
+            showARGuidanceFeedbackToast(message, signature: "error:\(message)")
             LMLogger.log("❌ AR Guidance错误: \(error.localizedDescription)")
         }
     }
@@ -949,6 +1005,16 @@ extension LMCameraPage {
     }
 
     private func restoreARGuidanceAfterOrientationRecovery(logContext: String) {
+        guard currentCameraState == .compositionSelected,
+              isARGuidanceActive,
+              arGuidanceState != .disabled,
+              currentReferenceImage != nil,
+              preferredARGuidanceButtonState.isEnabledGuidance else {
+            arGuidanceView.hideOrShowAllGuidance(true)
+            LMLogger.log("⚠️ [AR Guidance] \(logContext) - skipped restore because reference context is inactive")
+            return
+        }
+
         arGuidanceView.setOrientationMatched(true)
 
         let currentOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()

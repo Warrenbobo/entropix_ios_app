@@ -16,11 +16,11 @@ enum SubscriptionPlanType {
     var title: String {
         switch self {
         case .free:
-            return "Free Plan"
+            return LMText.subscription.freePlanTitle
         case .plus:
-            return "Plus Plan"
+            return LMText.subscription.plusPlanTitle
         case .lifelong:
-            return "Life-long Plan"
+            return LMText.subscription.lifelongPlanTitle
         }
     }
 }

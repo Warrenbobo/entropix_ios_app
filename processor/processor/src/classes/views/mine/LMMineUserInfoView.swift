@@ -13,7 +13,7 @@ class LMMineUserInfoView: UIView {
     var avatarTapAction: (() -> Void)?
     
     func updateUserInfo(name: String, email: String, avatar: String? = nil) {
-        nameLabel.text = name.isEmpty ? "Guest User" : name
+        nameLabel.text = name.isEmpty ? LMText.profile.guestUser : name
         emailLabel.text = email
         avatarImageView.kf.setImage(with: URL(string: avatar ?? ""),
                                     placeholder: UIImage(named: "app_logo_transparent_bg"))
@@ -92,8 +92,8 @@ class LMMineUserInfoView: UIView {
     }
     
     private func configureDefaultContent() {
-        nameLabel.text = "Alex Johnson"
-        emailLabel.text = "alex.j@email.com"
+        nameLabel.text = LMText.profile.guestUser
+        emailLabel.text = ""
         avatarImageView.image = UIImage(systemName: "person.circle.fill")
         avatarImageView.tintColor = UIColor.systemGray3
     }

@@ -16,19 +16,14 @@ public class SavedIdeaEntity: NSManagedObject {
     func toGalleryItem() -> GalleryItem? {
         guard let id = self.id else { return nil }
         
-        // Try to load image from path first, then from data
+        // Prefer thumbnail first to avoid decoding full-size files during grid loading
         var image: UIImage?
-        if let imagePath = self.imagePath {
-            image = UIImage(contentsOfFile: imagePath)
-        }
-        
-        if image == nil, let imageData = self.imageData {
-            image = UIImage(data: imageData)
-        }
-        
-        // If still no image, try thumbnail
-        if image == nil, let thumbnailData = self.thumbnailData {
+        if let thumbnailData = self.thumbnailData {
             image = UIImage(data: thumbnailData)
+        } else if let imageData = self.imageData {
+            image = UIImage(data: imageData)
+        } else if let imagePath = self.imagePath {
+            image = UIImage(contentsOfFile: imagePath)
         }
         
         return GalleryItem(

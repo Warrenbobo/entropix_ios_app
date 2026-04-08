@@ -97,6 +97,9 @@ class LMCameraPage: LMPageWrapper {
     var isCurrentlyAligned: Bool = false // 当前是否处于对齐状态
     var lastLiveBoxBounds: CGRect? // 保存最后的蓝框位置，用于从对齐状态恢复
     var arGuidanceStartTime: Date? // AR引导开始时间，用于延迟显示蓝框
+    var isARGuidanceFeedbackLoadingVisible = false
+    var lastARGuidanceFeedbackSignature: String?
+    var lastARGuidanceFeedbackTime: Date?
     
     // MARK: - AR Guidance (Legacy - 保留兼容)
     var personDetectionManager: LMPersonDetectionManager?
@@ -114,6 +117,7 @@ class LMCameraPage: LMPageWrapper {
     var currentCameraState: CameraState = .normal {
         didSet {
             updateLeadingNavigationControl()
+            updateInspireMeButtonState()
         }
     }
     
@@ -394,8 +398,8 @@ class LMCameraPage: LMPageWrapper {
         inspireMeButtonView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-10)
-            make.width.equalTo(172)
-            make.height.equalTo(60)
+            make.width.equalTo(144)
+            make.height.equalTo(48)
         }
         
         setupInitialPreviewCanvasLayout()
@@ -707,6 +711,7 @@ class LMCameraPage: LMPageWrapper {
             // 在 Show Suggestions 状态，点击返回需要确认是否退出
             showLeaveConfirmation { [weak self] shouldLeave in
                 if shouldLeave {
+                    self?.reportCurrentTaskFinalizedIfNeeded()
                     self?.exitShowSuggestionsState()
                     self?.navigateBack()
                 }

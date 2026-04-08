@@ -20,6 +20,17 @@ enum LMLanguageType: String, Codable {
         case .traditionalChinese: return "中文-繁"
         }
     }
+
+    var apiLanguageCode: String {
+        switch self {
+        case .english:
+            return "en"
+        case .simplifiedChinese:
+            return "zh-CN"
+        case .traditionalChinese:
+            return "zh-TW"
+        }
+    }
 }
 
 // MARK: - Language Manager
@@ -238,14 +249,18 @@ class LMLaunageManager {
                 virtualProgressRating: "Rating...",
                 virtualProgressLoading: "Loading...",
                 compositionSuggestions: "构图建议",
-                tutorialViewAndSelectNote: "你也可以先“点赞”，稍后再到“%@”里找回。"
+                tutorialViewAndSelectNote: "你也可以先点赞，稍后再到“%@”里找回。",
+                arGuidanceRotateToMatchReference: "请旋转设备以匹配参考图方向。",
+                arGuidanceNoPersonDetected: "参考图中未检测到人物，请更换一张参考图。",
+                arGuidanceMultiplePersonsDetected: "参考图中检测到多个人物，请更换一张参考图。",
+                arGuidanceDetectionFailed: "参考图解析失败，请重试。"
             ),
             profile: LMProfileTextConfig(
                 profile: "个人资料",
                 accountProfile: "账户资料",
                 gallery: "图库",
-                savedIdeas: "已保存的 AI 构图创意",
-                noSavedIdeasYet: "暂无已保存的 AI 构图创意",
+                savedIdeas: "已赞",
+                noSavedIdeasYet: "暂无已赞构图",
                 plusPlan: "Plus 会员",
                 freePlan: "免费版",
                 unlimitedInspires: "无限灵感",
@@ -278,7 +293,11 @@ class LMLaunageManager {
                 subscriptionCancelled: "订阅已取消",
                 subscriptionCancelledMessage: "您的订阅已成功取消。",
                 removeSavedIdeaConfirm: "要从“%@”中移除这张照片吗？",
-                failedToRemoveSavedIdea: "从“%@”中移除这张照片失败，请重试。"
+                failedToRemoveSavedIdea: "从“%@”中移除这张照片失败，请重试。",
+                profilePhoto: "头像照片",
+                guestUser: "访客用户",
+                defaultUserName: "用户",
+                noPhotosYet: "暂无照片"
             ),
             subscription: LMSubscriptionTextConfig(
                 subscriptionTitle: "订阅",
@@ -320,7 +339,45 @@ class LMLaunageManager {
                 trialExpiredMessage: "您的会员已到期。领取免费试用以继续使用高级功能。",
                 getFreeTrial: "领取免费试用",
                 subscribeNow: "立即订阅",
-                gotIt: "知道了"
+                gotIt: "知道了",
+                freePlanTitle: "免费版",
+                freePlanSubtitle: "适合先体验看看",
+                freePlanPeriod: "永久",
+                freePlanAdsInfo: "Google AdSense + 每次广告会话 5 次请求",
+                freePlanFeatureSuggestions: "每次请求最多 15 条建议，其中包含 2 条“到此一游建议”",
+                freePlanFeatureARCamera: "AR 相机",
+                currentPlan: "当前套餐",
+                plusPlanTitle: "Plus 会员",
+                plusPlanPeriod: "每月",
+                plusPlanDescription: "月度自动续订订阅",
+                plusPlanFeatureUnlimitedInspires: "无限灵感",
+                plusPlanFeatureUnlimitedSuggestions: "每次 Inspire 获得无限建议，其中包含 5 条“到此一游建议”",
+                plusPlanFeatureAdvancedARCamera: "具备高级功能的 AR 相机",
+                plusPlanFeaturePremiumFilters: "高级实时图像滤镜",
+                plusPlanFeatureAdFree: "无广告体验",
+                plusPlanFeaturePrioritySupport: "优先支持",
+                startMonthlySubscription: "开通月度订阅",
+                mostPopular: "最受欢迎",
+                plusPlanDiscount: "立减 40%",
+                lifelongPlanTitle: "终身会员",
+                lifelongPlanPeriod: "一次性付款",
+                lifelongPlanDescription: "终身使用全部功能",
+                lifelongPlanFeatureEverything: "包含所有套餐权益",
+                lifelongPlanFeatureLifetimeAccess: "一次付费，永久解锁当前及未来功能",
+                lifelongPlanFeatureExclusiveModels: "未来专属 AI 模型与高级功能",
+                lifelongPlanFeatureVIPSupport: "VIP 支持与新功能抢先体验",
+                lifelongPlanFeatureNeverExpires: "永久有效，不会降级",
+                getLifetimeAccess: "获取终身权限",
+                coFounderPromotion: "联合创始人优惠",
+                lifelongPlanDiscount: "立减 60%",
+                productNotAvailable: "当前无法获取该订阅套餐。",
+                purchaseFailedFormat: "购买失败：%@",
+                purchaseCancelled: "购买已取消。",
+                unableToVerifyPurchase: "无法验证您的购买，请重试。",
+                invalidPurchaseReceipt: "购买凭证无效，请联系支持团队。",
+                restorePurchasesFailed: "恢复购买失败，请重试。",
+                purchasePendingApproval: "购买正在等待批准。",
+                unknownPurchaseResult: "未知的购买结果。"
             ),
             auth: LMAuthTextConfig(
                 signIn: "登录",

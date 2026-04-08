@@ -59,11 +59,11 @@ extension LMInspireMeButtonView {
 
         contentStackView.axis = .horizontal
         contentStackView.alignment = .center
-        contentStackView.spacing = 8
+        contentStackView.spacing = 6
         contentStackView.isUserInteractionEnabled = false
 
         titleLabel.text = LMText.camera.inspireMeButton
-        titleLabel.font = UIFont.systemFont(ofSize: 17, weight: .bold)
+        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
         titleLabel.textColor = .white
         titleLabel.textAlignment = .center
 
@@ -88,26 +88,26 @@ extension LMInspireMeButtonView {
 
         contentStackView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.leading.greaterThanOrEqualToSuperview().offset(16)
-            make.trailing.lessThanOrEqualToSuperview().offset(-16)
+            make.leading.greaterThanOrEqualToSuperview().offset(14)
+            make.trailing.lessThanOrEqualToSuperview().offset(-14)
         }
 
         questionButton.snp.makeConstraints { make in
-            make.width.height.equalTo(28)
+            make.width.height.equalTo(20)
         }
     }
 
     private func configureDefaultStyles() {
         backgroundColor = .clear
-        layer.cornerRadius = 18
+        layer.cornerRadius = 16
         layer.masksToBounds = true
 
         let gradientImage = UIImage.gradientImage(
-            size: CGSize(width: 220, height: 80),
+            size: CGSize(width: 180, height: 64),
             colors: [UIColor.hexColor("#6680E6").cgColor,
                     UIColor.hexColor("#9966E6").cgColor],
             direction: .horizontal,
-            cornerRadius: 18
+            cornerRadius: 16
         )
         inspireButton.setBackgroundImage(gradientImage, for: .normal)
         inspireButton.adjustsImageWhenHighlighted = false

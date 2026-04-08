@@ -38,20 +38,20 @@ struct LMUserProfileModel: Codable {
     
     // 便捷属性
     var displayName: String {
-        return nickname ?? username ?? "User"
+        return nickname ?? username ?? LMText.profile.defaultUserName
     }
     
     var subscriptionDisplayName: String {
-        guard let subscription = subscription else { return "Free Plan" }
+        guard let subscription = subscription else { return LMText.profile.freePlan }
         switch subscription.lowercased() {
         case "free":
-            return "Free Plan"
+            return LMText.profile.freePlan
         case "plus":
-            return "Plus Plan"
+            return LMText.profile.plusPlan
         case "lifelong":
-            return "Lifelong Plan"
+            return LMText.subscription.lifelongPlanTitle
         case "trial":
-            return "Trial"
+            return LMText.profile.trialPlan
         default:
             return subscription
         }
