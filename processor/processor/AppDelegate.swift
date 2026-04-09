@@ -7,7 +7,7 @@
 
 import UIKit
 import CoreData
-import ApiInspector
+//import ApiInspector
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,14 +16,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        let config = ApiInspectorConfig.config(
-            domains: [ApiInspectorDomain(name: "生产环境", url: AppConfigs.Host.release)],
-            enableDomainSwitch: false,
-            enableRequestLog: true,
-            enableWebDebug: false
-        )
-        ApiInspector.shared.delegate = self
-        ApiInspector.shared.start(with: config)
+//        let config = ApiInspectorConfig.config(
+//            domains: [ApiInspectorDomain(name: "生产环境", url: AppConfigs.Host.release)],
+//            enableDomainSwitch: false,
+//            enableRequestLog: true,
+//            enableWebDebug: false
+//        )
+//        ApiInspector.shared.delegate = self
+//        ApiInspector.shared.start(with: config)
         
         // Initialize StoreKit 2 manager
 //        Task {
@@ -48,9 +48,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 }
 
-extension AppDelegate: ApiInspectorDelegate {
-    
-    func apiInspector(_ inspector: ApiInspector, didSelectCustomMenuItemWithActionType actionType: String) {
-        
-    }
-}
+//extension AppDelegate: ApiInspectorDelegate {
+//    
+//    func apiInspector(_ inspector: ApiInspector, didSelectCustomMenuItemWithActionType actionType: String) {
+//        
+//    }
+//}

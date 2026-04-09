@@ -34,11 +34,7 @@ final class LMVersionUpdateDialog: UIView {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.image = UIImage(
-            systemName: "arrow.up.circle.fill",
-            withConfiguration: UIImage.SymbolConfiguration(pointSize: 72, weight: .semibold)
-        )
-        imageView.tintColor = UIColor.hexColor("#FF6B57")
+        imageView.image = UIImage(named: "rocket_update")
         return imageView
     }()
 
@@ -53,7 +49,7 @@ final class LMVersionUpdateDialog: UIView {
 
     private let introLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         label.textColor = UIColor.hexColor("#495163")
         label.textAlignment = .left
         label.numberOfLines = 0
@@ -62,7 +58,7 @@ final class LMVersionUpdateDialog: UIView {
 
     private let detailsLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 14, weight: .regular)
+        label.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         label.textColor = UIColor.hexColor("#758096")
         label.textAlignment = .left
         label.numberOfLines = 0
@@ -103,8 +99,7 @@ final class LMVersionUpdateDialog: UIView {
         addSubview(containerView)
         containerView.snp.makeConstraints { make in
             make.center.equalToSuperview()
-            make.leading.equalToSuperview().offset(42)
-            make.trailing.equalToSuperview().offset(-42)
+            make.width.equalTo(AppTheme.Screen.width * 0.7)
         }
 
         containerView.addSubview(iconImageView)
@@ -117,7 +112,7 @@ final class LMVersionUpdateDialog: UIView {
         iconImageView.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(12)
             make.centerX.equalToSuperview()
-            make.size.equalTo(80)
+            make.size.equalTo(60)
         }
 
         titleLabel.snp.makeConstraints { make in
@@ -158,21 +153,28 @@ final class LMVersionUpdateDialog: UIView {
 
     private func configureContent() {
         titleLabel.text = config.title
-        introLabel.text = config.intro
-        detailsLabel.attributedText = formattedDetailsText(config.details)
+        introLabel.attributedText = formattedContentText(
+            config.intro,
+            textColor: UIColor.hexColor("#495163")
+        )
+        detailsLabel.attributedText = formattedContentText(
+            config.details,
+            textColor: UIColor.hexColor("#758096")
+        )
         confirmButton.setTitle(config.confirmButtonText, for: .normal)
         cancelButton.setTitle(config.cancelButtonText, for: .normal)
     }
 
-    private func formattedDetailsText(_ text: String) -> NSAttributedString {
+    private func formattedContentText(_ text: String,
+                                      textColor: UIColor) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = 4
+        paragraphStyle.lineSpacing = 6
         paragraphStyle.alignment = .left
         return NSAttributedString(
             string: text,
             attributes: [
-                .font: UIFont.systemFont(ofSize: 14, weight: .regular),
-                .foregroundColor: UIColor.hexColor("#758096"),
+                .font: UIFont.systemFont(ofSize: 12, weight: .regular),
+                .foregroundColor: textColor,
                 .paragraphStyle: paragraphStyle
             ]
         )
