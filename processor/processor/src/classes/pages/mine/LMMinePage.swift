@@ -24,6 +24,7 @@ class LMMinePage: LMPageWrapper {
     private lazy var photoCollectionView = LMPhotoCollectionView()
     private var isMineVisible = false
     private var needsPhotoCollectionReload = true
+    private var hasAppliedInitialPhotoCollectionLayout = false
     
     // 悬浮菜单相关
     private var floatingMenuContainer: UIView = UIView()
@@ -473,7 +474,15 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func updatePhotoCollectionViewHeight(_ newHeight: CGFloat) {
-        // 当照片集合视图高度变化时，更新布局
+        _ = newHeight
+        if !hasAppliedInitialPhotoCollectionLayout {
+            hasAppliedInitialPhotoCollectionLayout = true
+            UIView.performWithoutAnimation {
+                self.view.layoutIfNeeded()
+            }
+            return
+        }
+
         UIView.animate(withDuration: 0.3) {
             self.view.layoutIfNeeded()
         }

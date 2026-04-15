@@ -231,6 +231,10 @@ extension LMGalleryPageView {
             make.leading.trailing.equalToSuperview().inset(40)
             make.centerX.equalToSuperview()
         }
+
+        UIView.performWithoutAnimation {
+            self.layoutIfNeeded()
+        }
         
         LMLogger.log("📭 Gallery empty state shown: \(message)")
     }

@@ -105,13 +105,15 @@ class LMCameraGuidanceOverlayView: UIView {
         
         // AI引导框约束
         aiGuidanceFrame.snp.makeConstraints { make in
-            make.center.equalToSuperview().offset(CGPoint(x: -50, y: -50) as! ConstraintOffsetTarget)
+            make.centerX.equalToSuperview().offset(-50)
+            make.centerY.equalToSuperview().offset(-50)
             make.size.equalTo(CGSize(width: 128, height: 160))
         }
         
         // 人物检测框约束
         personDetectionFrame.snp.makeConstraints { make in
-            make.center.equalToSuperview().offset(CGPoint(x: 50, y: 100) as! ConstraintOffsetTarget)
+            make.centerX.equalToSuperview().offset(50)
+            make.centerY.equalToSuperview().offset(100)
             make.size.equalTo(CGSize(width: 96, height: 128))
         }
         

@@ -18,21 +18,62 @@ class LMPhotoStorageManager {
         setupDocumentsDirectory()
     }
     
+    private(set) var persistentStoreLoadError: Error?
+    private(set) var isUsingInMemoryFallbackStore = false
+    
     // MARK: - Core Data Stack
     lazy var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "processor")
-        container.loadPersistentStores { description, error in
-            if let error = error {
-                LMLogger.log("❌ Core Data failed to load: \(error.localizedDescription)")
-                fatalError("Unresolved error \(error)")
-            }
-            LMLogger.log("✅ Core Data loaded successfully")
+        if let diskContainer = makePersistentContainer(storeDescription: nil, logSuccessMessage: "✅ Core Data loaded successfully") {
+            return diskContainer
         }
-        return container
+        
+        let fallbackDescription = NSPersistentStoreDescription()
+        fallbackDescription.type = NSInMemoryStoreType
+        
+        if let fallbackContainer = makePersistentContainer(
+            storeDescription: fallbackDescription,
+            logSuccessMessage: "⚠️ Core Data is using an in-memory fallback store"
+        ) {
+            isUsingInMemoryFallbackStore = true
+            return fallbackContainer
+        }
+        
+        LMLogger.log("❌ Core Data fallback store failed to load; continuing without a persistent store")
+        return NSPersistentContainer(name: "processor")
     }()
     
     var context: NSManagedObjectContext {
         return persistentContainer.viewContext
+    }
+    
+    private func makePersistentContainer(storeDescription: NSPersistentStoreDescription?,
+                                         logSuccessMessage: String) -> NSPersistentContainer? {
+        let container = NSPersistentContainer(name: "processor")
+        
+        if let storeDescription {
+            container.persistentStoreDescriptions = [storeDescription]
+        }
+        
+        container.persistentStoreDescriptions.forEach { description in
+            description.shouldAddStoreAsynchronously = false
+            description.shouldMigrateStoreAutomatically = true
+            description.shouldInferMappingModelAutomatically = true
+        }
+        
+        var loadError: Error?
+        container.loadPersistentStores { _, error in
+            loadError = error
+        }
+        
+        if let loadError {
+            persistentStoreLoadError = persistentStoreLoadError ?? loadError
+            LMLogger.log("❌ Core Data failed to load: \(loadError.localizedDescription)")
+            return nil
+        }
+        
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        LMLogger.log(logSuccessMessage)
+        return container
     }
     
     // MARK: - Documents Directory

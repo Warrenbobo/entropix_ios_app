@@ -35,7 +35,11 @@ class LMNavigationWrapper: UINavigationController {
         let buttonAppearance = createPlainBarButtonAppearance()
         appearance.buttonAppearance = buttonAppearance
         appearance.backButtonAppearance = buttonAppearance.copy()
-        appearance.prominentButtonAppearance = buttonAppearance.copy()
+        if #available(iOS 26.0, *) {
+            appearance.prominentButtonAppearance = buttonAppearance.copy()
+        } else {
+            appearance.doneButtonAppearance = buttonAppearance.copy()
+        }
 
         applyNavigationBarAppearance(appearance)
         navigationBar.prefersLargeTitles = false

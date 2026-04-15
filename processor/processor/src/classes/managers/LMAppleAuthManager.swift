@@ -7,6 +7,7 @@
 
 import Foundation
 import AuthenticationServices
+import UIKit
 
 class LMAppleAuthManager: NSObject {
     
@@ -16,12 +17,14 @@ class LMAppleAuthManager: NSObject {
     
     // MARK: - Properties
     private var completion: ((Result<LMUserModel, Error>) -> Void)?
+    private weak var presentationAnchorWindow: ASPresentationAnchor?
     
     // MARK: - Public Methods
     
     /// 发起Apple登录
     func signInWithApple(completion: @escaping (Result<LMUserModel, Error>) -> Void) {
         self.completion = completion
+        presentationAnchorWindow = resolvePresentationAnchorWindow()
         
         LMLogger.log("🍎 Starting Apple Sign In process...")
         
@@ -51,6 +54,40 @@ class LMAppleAuthManager: NSObject {
             }
         }
     }
+    
+    private func resolvePresentationAnchorWindow() -> ASPresentationAnchor? {
+        if let visibleWindow = AppTheme.Screen.visibleController()?.view.window {
+            return visibleWindow
+        }
+        
+        if let packageWindow = LMPackageManager.window {
+            return packageWindow
+        }
+        
+        let windowScenes = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .sorted { lhs, rhs in
+                lhs.activationState.sortPriority < rhs.activationState.sortPriority
+            }
+        
+        for scene in windowScenes {
+            if let keyWindow = scene.windows.first(where: \.isKeyWindow) {
+                return keyWindow
+            }
+            
+            if let visibleWindow = scene.windows.first(where: { !$0.isHidden && $0.alpha > 0 }) {
+                return visibleWindow
+            }
+        }
+        
+        return nil
+    }
+    
+    private func completeSignIn(with result: Result<LMUserModel, Error>) {
+        completion?(result)
+        completion = nil
+        presentationAnchorWindow = nil
+    }
 }
 
 // MARK: - ASAuthorizationControllerDelegate
@@ -66,7 +103,7 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Invalid Apple ID credential"]
             )
-            completion?(.failure(error))
+            completeSignIn(with: .failure(error))
             return
         }
         
@@ -82,7 +119,7 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Failed to get identity token"]
             )
-            completion?(.failure(error))
+            completeSignIn(with: .failure(error))
             return
         }
         
@@ -119,13 +156,17 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
                     DispatchQueue.main.async {
                         // 无论免费试用是否成功，都返回登录成功结果
                         let latestUser = LMUserManager.userModel ?? response
-                        self?.completion?(.success(latestUser))
-                        self?.completion = nil
+                        self?.completeSignIn(with: .success(latestUser))
                     }
                 }
             } else {
                 LMLogger.log("❌ Apple registration failed: \(registerResponse.message ?? "Unknown error")")
-                AppTheme.Toast.showText(registerResponse.message)
+                let registrationError = NSError(
+                    domain: "AppleAuthManager",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: registerResponse.message ?? "Unknown error"]
+                )
+                self?.completeSignIn(with: .failure(registrationError))
             }
         }
     }
@@ -168,12 +209,10 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "Apple Sign In canceled"]
             )
-            completion?(.failure(cancelError))
+            completeSignIn(with: .failure(cancelError))
         } else {
-            completion?(.failure(error))
+            completeSignIn(with: .failure(error))
         }
-        
-        completion = nil
     }
 }
 
@@ -181,6 +220,28 @@ extension LMAppleAuthManager: ASAuthorizationControllerDelegate {
 extension LMAppleAuthManager: ASAuthorizationControllerPresentationContextProviding {
     
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        return LMPackageManager.window!
+        if let anchor = presentationAnchorWindow ?? resolvePresentationAnchorWindow() {
+            return anchor
+        }
+        
+        LMLogger.log("⚠️ Apple Sign In presentation anchor missing, returning an empty fallback window")
+        return ASPresentationAnchor()
+    }
+}
+
+private extension UIScene.ActivationState {
+    var sortPriority: Int {
+        switch self {
+        case .foregroundActive:
+            return 0
+        case .foregroundInactive:
+            return 1
+        case .background:
+            return 2
+        case .unattached:
+            return 3
+        @unknown default:
+            return 4
+        }
     }
 }
