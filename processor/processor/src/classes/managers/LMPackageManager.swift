@@ -129,20 +129,31 @@ struct LMPackageManager {
 
     private static func queryDeviceUUID() {
         let cachedKey = "com.processor.keychain.uuid"
+        if let cachedUUID = UserDefaults.standard.string(forKey: cachedKey),
+           !cachedUUID.isEmpty {
+            package.uuid = cachedUUID
+            return
+        }
+
         do {
-            var uid = UserDefaults.standard.value(forKey: cachedKey) as? String
-            if uid == nil {
-                uid = try keychain.getString(cachedKey)
-            }
-            if let uid {
-                package.uuid = uid
-            } else if let uid = UIDevice.current.identifierForVendor?.uuidString {
-                try keychain.set(uid, key: cachedKey)
-                UserDefaults.standard.set(uid, forKey: cachedKey)
-                package.uuid = uid
+            if let keychainUUID = try keychain.getString(cachedKey),
+               !keychainUUID.isEmpty {
+                UserDefaults.standard.set(keychainUUID, forKey: cachedKey)
+                package.uuid = keychainUUID
+                return
             }
         } catch {
-            print("keychain uuid update is error: \(error.localizedDescription)")
+            LMLogger.log("⚠️ Keychain uuid read failed: \(error.localizedDescription)")
+        }
+
+        let fallbackUUID = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+        package.uuid = fallbackUUID
+        UserDefaults.standard.set(fallbackUUID, forKey: cachedKey)
+
+        do {
+            try keychain.set(fallbackUUID, key: cachedKey)
+        } catch {
+            LMLogger.log("⚠️ Keychain uuid save failed: \(error.localizedDescription)")
         }
     }
 

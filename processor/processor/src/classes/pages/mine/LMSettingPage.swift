@@ -363,9 +363,9 @@ extension LMSettingPage {
     }
     
     private func navigateToLoginPage() {
-        // 导航到登录页面
-        let installer = LMNewInstallerPage()
-        let navController = LMNavigationWrapper(rootViewController: installer)
+        // 当前版本已废弃旧登录引导页，登出后回到启动流程并重新建立 guest 会话
+        let launchSplash = LMLaunchSplashPage()
+        let navController = LMNavigationWrapper(rootViewController: launchSplash)
         if let window = AppTheme.Screen.window() {
             window.rootViewController = navController
         }

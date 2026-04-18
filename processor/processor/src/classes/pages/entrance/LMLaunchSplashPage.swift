@@ -296,12 +296,33 @@ class LMLaunchSplashPage: UIViewController {
 
                 } else {
                     LMLogger.log("❌ Guest login failed: \(response.message ?? "Unknown error")")
-                    // 登录失败，进入新用户引导页
-                    let rootController = LMNavigationWrapper(rootViewController: LMNewInstallerPage())
-                    LMPackageManager.switchWindowSceneContent(rootController)
+                    self?.showGuestLaunchRecoveryAlert(message: response.message)
                 }
             }
         }
+    }
+
+    private func showGuestLaunchRecoveryAlert(message: String?) {
+        let resolvedMessage: String
+        if let message = message?.trimmingCharacters(in: .whitespacesAndNewlines), !message.isEmpty {
+            resolvedMessage = message
+        } else {
+            resolvedMessage = LMText.common.networkError
+        }
+
+        LMAlertDialog.showAlert(
+            title: LMText.common.error,
+            message: resolvedMessage,
+            cancelText: LMText.common.exit,
+            confirmText: LMText.common.retry,
+            confirmStyle: .normal,
+            onConfirm: { [weak self] in
+                self?.registerAndLoginAsGuest()
+            },
+            onCancel: {
+                exit(0)
+            }
+        )
     }
 
     // MARK: - UI Setup
