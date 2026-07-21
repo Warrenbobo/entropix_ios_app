@@ -1,0 +1,4 @@
+{
+  "system_prompt_asset": "config/system_prompt_agentic_v3.txt",
+  "user_prompt": "【PreviewTask 调试专用静态 prompt】第一张图为参考图（风格目标），第二张图为当前相机实景（Current View）。Camera 页 Agent 模式使用代码动态生成的 user prompt，不读取本字段。"
+}

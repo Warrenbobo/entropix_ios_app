@@ -31,6 +31,36 @@ enum LMLanguageType: String, Codable {
             return "zh-TW"
         }
     }
+
+    /// Prompt lines instructing the agent LLM which language to use for reasoning and instructions.
+    var agentLLMOutputLanguageLines: [String] {
+        switch self {
+        case .english:
+            return [
+                "【Output language】",
+                "- The user's app UI is English.",
+                "- Write all {think} reasoning and every human-readable instruction string inside do(...)/finish(...) in English.",
+                "- Keep action names (e.g. Move_Camera, Zoom, finish) in the existing English identifiers; only localize explanatory instruction text.",
+                "- Brevity: {think} ≤ 120 characters, ≤ 3 short bullets; instruction ≤ 12 words; finish(message) ≤ 14 words.",
+            ]
+        case .simplifiedChinese:
+            return [
+                "【输出语言】",
+                "- 用户当前应用界面为简体中文。",
+                "- 请将 {think} 推理内容与 do(...)/finish(...) 中面向用户的 instruction 文案全部使用简体中文。",
+                "- 动作标识（如 Move_Camera、Zoom、finish）保持英文枚举名，仅本地化说明性 instruction 文本。",
+                "- 篇幅：{think} ≤ 120 字、≤ 3 条短 bullet；instruction ≤ 18 字；finish(message) ≤ 20 字。",
+            ]
+        case .traditionalChinese:
+            return [
+                "【輸出語言】",
+                "- 用戶當前應用程式介面為繁體中文。",
+                "- 請將 {think} 推理內容與 do(...)/finish(...) 中面向用戶的 instruction 文案全部使用繁體中文。",
+                "- 動作標識（如 Move_Camera、Zoom、finish）保持英文枚舉名，僅在地化說明性 instruction 文本。",
+                "- 篇幅：{think} ≤ 120 字、≤ 3 條短 bullet；instruction ≤ 18 字；finish(message) ≤ 20 字。",
+            ]
+        }
+    }
 }
 
 // MARK: - Language Manager
@@ -228,7 +258,7 @@ class LMLaunageManager {
                 timer: "定时器",
                 live: "实时",
                 grid: "网格",
-                flipCamera: "翻转相机",
+                flipCamera: "翻转",
                 arGuidance: "AR 引导",
                 inspireMeButton: "灵感启发",
                 inspirePointsFormat: "灵感点数 -%d",

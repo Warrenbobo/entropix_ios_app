@@ -14,7 +14,7 @@ class LMARGuidanceView: UIView {
     
     // MARK: - Properties
 
-    private var guidanceDisplayState: LMARGuidanceButtonState = .off
+    private var guidanceDisplayState: LMARGuidanceOverlayDisplay = .off
 
     private let lineArtImageView: UIImageView = {
         let imageView = UIImageView()
@@ -450,9 +450,14 @@ class LMARGuidanceView: UIView {
         print("[AR Guidance] 方向匹配 - \(matched)")
     }
 
-    func setGuidanceDisplayState(_ state: LMARGuidanceButtonState) {
-        guidanceDisplayState = state
+    func setOverlayDisplay(_ overlay: LMARGuidanceOverlayDisplay) {
+        guidanceDisplayState = overlay
         applyGuidanceVisibility()
+    }
+
+    /// Legacy name — maps overlay display for AR view.
+    func setGuidanceDisplayState(_ overlay: LMARGuidanceOverlayDisplay) {
+        setOverlayDisplay(overlay)
     }
     
     /// 隐藏所有引导元素（仅控制本视图内的元素，蓝色框和引导线由外部控制）
@@ -465,12 +470,12 @@ class LMARGuidanceView: UIView {
     private func applyGuidanceVisibility(hideAll: Bool = false) {
         let shouldHide = hideAll || !isOrientationMatched
         let shouldHideReferenceBox = LMARGuidancePolicy.shouldHideReferenceBox(
-            displayState: guidanceDisplayState,
+            overlay: guidanceDisplayState,
             orientationMatched: isOrientationMatched,
             hideAll: hideAll
         )
         let shouldHideLineArt = LMARGuidancePolicy.shouldHideLineArt(
-            displayState: guidanceDisplayState,
+            overlay: guidanceDisplayState,
             orientationMatched: isOrientationMatched,
             hideAll: hideAll,
             hasLineArtImage: lineArtImageView.image != nil,
@@ -478,7 +483,7 @@ class LMARGuidanceView: UIView {
         )
         
         switch guidanceDisplayState {
-        case .unavailable, .off:
+        case .off:
             lineArtImageView.isHidden = true
             referencePersonBox.isHidden = true
             successBox.isHidden = true

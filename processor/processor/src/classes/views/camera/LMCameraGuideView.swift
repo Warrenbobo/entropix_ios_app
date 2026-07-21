@@ -99,6 +99,30 @@ final class LMCameraGuideView: UIView {
         return button
     }()
 
+    private let footerCenterStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 12
+        stack.alignment = .center
+        stack.distribution = .fill
+        return stack
+    }()
+
+    /// Fixed-width slot so PREV/NEXT stay symmetric around the page indicator.
+    private let leadingNavSlot = UIView()
+
+    private let prevButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .bold)
+        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = UIColor.white.withAlphaComponent(0.14)
+        button.layer.cornerRadius = 18
+        button.layer.borderWidth = 1
+        button.layer.borderColor = UIColor.white.withAlphaComponent(0.24).cgColor
+        button.isHidden = true
+        return button
+    }()
+
     private let indicatorLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
@@ -117,6 +141,8 @@ final class LMCameraGuideView: UIView {
         button.layer.borderColor = UIColor.white.withAlphaComponent(0.24).cgColor
         return button
     }()
+
+    private static let navButtonWidth: CGFloat = 88
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -142,8 +168,12 @@ final class LMCameraGuideView: UIView {
         cardContainerView.addSubview(footerView)
 
         footerView.addSubview(secondaryButton)
-        footerView.addSubview(indicatorLabel)
-        footerView.addSubview(primaryButton)
+        footerView.addSubview(footerCenterStack)
+
+        leadingNavSlot.addSubview(prevButton)
+        footerCenterStack.addArrangedSubview(leadingNavSlot)
+        footerCenterStack.addArrangedSubview(indicatorLabel)
+        footerCenterStack.addArrangedSubview(primaryButton)
 
         dimmingView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -193,17 +223,30 @@ final class LMCameraGuideView: UIView {
             secondaryButtonWidthConstraint = make.width.equalTo(0).constraint
         }
 
-        primaryButton.snp.makeConstraints { make in
-            make.trailing.top.bottom.equalToSuperview()
-            make.width.equalTo(88)
-        }
-
-        indicatorLabel.snp.makeConstraints { make in
+        footerCenterStack.snp.makeConstraints { make in
             make.center.equalToSuperview()
         }
 
+        leadingNavSlot.snp.makeConstraints { make in
+            make.width.equalTo(Self.navButtonWidth)
+            make.height.equalToSuperview()
+        }
+
+        prevButton.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        primaryButton.snp.makeConstraints { make in
+            make.width.equalTo(Self.navButtonWidth)
+            make.height.equalToSuperview()
+        }
+
+        indicatorLabel.setContentHuggingPriority(.required, for: .horizontal)
+        indicatorLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
         skipButton.addTarget(self, action: #selector(handleSkipButtonTapped), for: .touchUpInside)
         secondaryButton.addTarget(self, action: #selector(handleSecondaryButtonTapped), for: .touchUpInside)
+        prevButton.addTarget(self, action: #selector(handlePrevButtonTapped), for: .touchUpInside)
         primaryButton.addTarget(self, action: #selector(handlePrimaryButtonTapped), for: .touchUpInside)
     }
 
@@ -264,6 +307,11 @@ final class LMCameraGuideView: UIView {
         secondaryButton.alpha = shouldShowReplay ? 1 : 0
         secondaryButton.isUserInteractionEnabled = shouldShowReplay
         secondaryButtonWidthConstraint?.update(offset: shouldShowReplay ? 82 : 0)
+
+        let shouldShowPrev = step.showsPreviousButton
+        prevButton.setTitle(LMText.camera.tutorialPrev.uppercased(), for: .normal)
+        prevButton.isHidden = !shouldShowPrev
+        leadingNavSlot.isHidden = step == .savePhoto
 
         skipButton.isHidden = shouldShowReplay
         skipButton.setTitle(LMText.camera.tutorialSkip.uppercased(), for: .normal)
@@ -554,6 +602,14 @@ final class LMCameraGuideView: UIView {
     @objc private func handleSecondaryButtonTapped() {
         guard currentTutorialStep == .savePhoto else { return }
         currentTutorialStep = .findScene
+        updateTutorialContent()
+    }
+
+    @objc private func handlePrevButtonTapped() {
+        guard let step = currentTutorialStep,
+              let previousStep = step.previousStep,
+              step.showsPreviousButton else { return }
+        currentTutorialStep = previousStep
         updateTutorialContent()
     }
 

@@ -111,6 +111,14 @@ class LMLaunchSplashPage: UIViewController {
     private func beginLaunchFlowIfNeeded() {
         guard !hasStartedLaunchFlow else { return }
         hasStartedLaunchFlow = true
+
+        if !LMFeatureFlagsManager.backendApiEnabled {
+            LMLogger.log("Offline demo mode — skipping network and guest login")
+            LMUserManager.setupOfflineDemoUser()
+            LMPackageManager.switchToHomeRootController()
+            return
+        }
+
         startNetworkMonitoringAndProceed()
     }
 

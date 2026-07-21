@@ -13,6 +13,7 @@ protocol LMCameraPreviewManagerDelegate: AnyObject {
     func cameraPreviewManager(_ manager: LMCameraPreviewManager, didToggleFavorite suggestion: LMCompositionSuggestion)
     func cameraPreviewManagerDidRequestBack(_ manager: LMCameraPreviewManager)
     func cameraPreviewManager(_ manager: LMCameraPreviewManager, didUpdateARGuidanceState isActive: Bool)
+    func cameraPreviewManagerDidTapPickFromAlbum(_ manager: LMCameraPreviewManager)
 }
 
 enum LMCameraPreviewState {
@@ -258,6 +259,10 @@ extension LMCameraPreviewManager: LMSuggestionsCarouselViewDelegate {
     
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpWithOffset offset: CGFloat) {
         // 滑动偏移量回调，由 LMCameraPage 处理引导消失逻辑
+    }
+
+    func suggestionsCarouselViewDidTapPickFromAlbum(_ view: LMSuggestionsCarouselView) {
+        delegate?.cameraPreviewManagerDidTapPickFromAlbum(self)
     }
 }
 

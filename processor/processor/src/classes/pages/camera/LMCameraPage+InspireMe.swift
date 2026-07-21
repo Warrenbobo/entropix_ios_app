@@ -18,8 +18,6 @@ private enum LMProcessingOverlayViewTag {
     static let label = 10_005
 }
 
-private let lmInspireMeFrameCIContext = CIContext(options: nil)
-
 private final class LMProcessingSpinnerView: UIView {
 
     private let trackLayer = CAShapeLayer()
@@ -154,7 +152,7 @@ extension LMCameraPage {
         isInspireMeCapture = true
         
         // 记录点击瞬间的设备方向（后续用于把帧旋转到竖屏“home键在下方”的预览样式）
-        inspireMeCaptureDeviceOrientation = LMOrientationMatcher.getCurrentDeviceOrientation()
+        inspireMeCaptureDeviceOrientation = LMOrientationMatcher.orientationForCapture()
 
         if captureCurrentPreviewFrameAndStartProcessing() {
             LMLogger.log("📸 Inspire Me froze the current preview frame immediately")
@@ -198,13 +196,11 @@ extension LMCameraPage {
         from pixelBuffer: CVPixelBuffer,
         deviceOrientation: UIDeviceOrientation
     ) -> UIImage? {
-        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
-        guard let cgImage = lmInspireMeFrameCIContext.createCGImage(ciImage, from: ciImage.extent) else {
-            return nil
-        }
-
-        let imageOrientation = getImageOrientation(for: deviceOrientation)
-        return UIImage(cgImage: cgImage, scale: 1.0, orientation: imageOrientation)
+        LMPreviewFramePipeline.makeUIImage(
+            from: pixelBuffer,
+            orientationPolicy: .locked(deviceOrientation),
+            isFrontCamera: isUsingFrontCamera
+        )
     }
 
     private func makeInspireMeImageFromLatestPreviewFrame() -> UIImage? {
@@ -213,14 +209,27 @@ extension LMCameraPage {
             return nil
         }
 
-        let deviceOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.getCurrentDeviceOrientation()
+        let deviceOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.orientationForCapture()
         return makeInspireMeImage(from: latestPixelBuffer, deviceOrientation: deviceOrientation)
     }
     
     func processInspireMeImage(_ image: UIImage) {
         LMLogger.log("📸 Processing Inspire Me image...")
+        let deviceOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.orientationForCapture()
+        LMAgentRequestLogRecorder.recordInspireMeFrame(
+            image,
+            orientationNote: "Inspire Me capture — deviceOrientation=\(deviceOrientation.rawValue), UIImage.orientation=\(image.imageOrientation.rawValue)"
+        )
         currentProcessingSceneryImage = image
         syncInspirePointsToBackend()
+
+        if !LMFeatureFlagsManager.backendApiEnabled {
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                _ = self?.analyzeSceneWithFastVLM(image)
+                self?.finishOfflineInspireMe()
+            }
+            return
+        }
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
@@ -230,6 +239,7 @@ extension LMCameraPage {
     }
     
     func syncInspirePointsToBackend() {
+        guard LMFeatureFlagsManager.backendApiEnabled else { return }
         let subscriptionStatus = LMStoreManager.shared.currentSubscriptionStatus
         
         if subscriptionStatus == .free {

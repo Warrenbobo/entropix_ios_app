@@ -42,14 +42,12 @@ class LMNavigationWrapper: UINavigationController {
         }
 
         applyNavigationBarAppearance(appearance)
-        navigationBar.prefersLargeTitles = false
         
+        navigationBar.prefersLargeTitles = false
         navigationBar.isTranslucent = false
         navigationBar.backgroundColor = AppTheme.ThemeColor.background
         navigationBar.tintColor = AppTheme.ThemeColor.buttonText
-        if #available(iOS 16.0, *) {
-            navigationBar.preferredBehavioralStyle = .pad
-        }
+        navigationBar.preferredBehavioralStyle = .pad
     }
     
     override func pushViewController(_ viewController: UIViewController, animated: Bool) {
@@ -79,9 +77,7 @@ extension LMNavigationWrapper {
         navigationBar.standardAppearance = appearance
         navigationBar.scrollEdgeAppearance = appearance
         navigationBar.compactAppearance = appearance
-        if #available(iOS 15.0, *) {
-            navigationBar.compactScrollEdgeAppearance = appearance
-        }
+        navigationBar.compactScrollEdgeAppearance = appearance
     }
     
     /// 设置导航栏标题对齐方式

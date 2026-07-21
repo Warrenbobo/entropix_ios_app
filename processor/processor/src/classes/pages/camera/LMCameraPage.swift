@@ -27,6 +27,16 @@ struct LMCameraConstants {
     static let bottomControlsHeight: CGFloat = 90
     
     static let topStatusBarHeight: CGFloat = 44
+    static let agentCoachingBubbleTopGap: CGFloat = 4
+    /// Collapsed instruction strip height used to place the donut at a fixed screen Y.
+    static let agentCoachingBubbleCollapsedHeight: CGFloat = 40
+    static let agentScoreDonutTopGap: CGFloat = 8
+    static let agentScoreDonutSize: CGFloat = 72
+    static let agentScoreDonutLeading: CGFloat = 12
+
+    /// Donut default Y from the safe-area top (status bar + bubble strip + gap).
+    static let agentScoreDonutAbsoluteTopOffset: CGFloat =
+        topStatusBarHeight + agentCoachingBubbleTopGap + agentCoachingBubbleCollapsedHeight + agentScoreDonutTopGap
     
     private init() {}
 }
@@ -93,8 +103,24 @@ class LMCameraPage: LMPageWrapper {
     var currentReferenceBbox: CGRect?
     var referenceImageInitialOrientation: UIDeviceOrientation? // 保存referenceImage的初始方向
     var arGuidanceLineArtRequestId: UInt64 = 0
-    var preferredARGuidanceButtonState: LMARGuidanceButtonState = .box
+    var preferredARGuidanceButtonState: LMARGuidanceButtonState = .agent
+    var agentGuidanceState: LMARGuidanceButtonState = .unavailable
+    var executionTool: LMExecutionTool = .none
+    var coachingActionText = ""
+    var coachingReasoningText = ""
+    var coachingReasoningExpanded = false
+    /// True after the user taps instruct shutter once; keeps the bubble visible for the rest of the session.
+    var hasUserTriggeredInstructInSession = false
+    var shutterRole: LMShutterRole = .captureDefault
+    var referenceWarmupComplete = false
+    lazy var agentCoachingController = LMAgentCoachingController(uiDelegate: nil)
+    var coachingBubbleView: LMCoachingBubbleView?
+    var scoreDonutOverlayView: LMScoreDonutOverlayView?
+    var scoreDonutTopConstraint: Constraint?
+    var agentLogButton: UIButton?
     var isCurrentlyAligned: Bool = false // 当前是否处于对齐状态
+    var boxAlignCompleteWorkItem: DispatchWorkItem?
+    var lineArtAutoDismissWorkItem: DispatchWorkItem?
     var lastLiveBoxBounds: CGRect? // 保存最后的蓝框位置，用于从对齐状态恢复
     var arGuidanceStartTime: Date? // AR引导开始时间，用于延迟显示蓝框
     var isARGuidanceFeedbackLoadingVisible = false
@@ -118,6 +144,7 @@ class LMCameraPage: LMPageWrapper {
         didSet {
             updateLeadingNavigationControl()
             updateInspireMeButtonState()
+            updateAgentLogButtonVisibility()
         }
     }
     
@@ -140,6 +167,13 @@ class LMCameraPage: LMPageWrapper {
         case savedIdea(GalleryItem) // 从已保存构图详情页的 Go Shot 进入
     }
     var navigationSource: NavigationSource = .normal
+
+    /// Tracks which camera state composition was entered from (for correct back navigation).
+    enum CompositionEntrySource {
+        case normal
+        case showingSuggestions
+    }
+    var compositionEntrySource: CompositionEntrySource = .normal
     
     // MARK: - View Tags
     enum ViewTag: Int {
@@ -170,6 +204,8 @@ class LMCameraPage: LMPageWrapper {
         
         // 初始化AR引导功能（必须在相机设置之前）
         setupARGuidance()
+        setupAgentLogButtonIfNeeded()
+        setupAgentCoachingHUDIfNeeded()
         
         // 初始化引导视图
         setupGuideView()
@@ -179,6 +215,9 @@ class LMCameraPage: LMPageWrapper {
         // 确保视图层级正确
         ensureCorrectViewHierarchy()
         
+        /// Stage A: begin Core ML preload before any composition-selected entry path.
+        LMCompositionModelPreloader.shared.startPreloadIfNeeded()
+
         // 如果是从已保存构图进入，自动进入 Composition Selected 状态
         handleNavigationSource()
         registerAppLifecycleObservers()
@@ -208,7 +247,6 @@ class LMCameraPage: LMPageWrapper {
             }
             LMLogger.log("📸 Returning to camera with reference image")
             LMLogger.log("📸 Current reference image exists: \(currentReferenceImage != nil)")
-            LMLogger.log("📸 AR button state: \(cameraBottomControlsView.isARGuidanceActive())")
             LMLogger.log("📸 isARGuidanceActive: \(isARGuidanceActive)")
             LMLogger.log("📸 arGuidanceState: \(arGuidanceState)")
         }
@@ -217,6 +255,8 @@ class LMCameraPage: LMPageWrapper {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         presentHomeCameraAppUpdateIfNeeded(forceRefresh: false)
+        /// Stage A: kick off Core ML preload while the user is still on the camera.
+        LMCompositionModelPreloader.shared.startPreloadIfNeeded()
     }
     
     private func registerAppLifecycleObservers() {
@@ -325,7 +365,13 @@ class LMCameraPage: LMPageWrapper {
         // Camera Controls View（右侧按钮，始终最顶层）
         view.bringSubviewToFront(cameraControlsView)
         
-        // 其他顶层UI元素
+        // Agent HUD: bubble under donut; status bar stays above both for Back/Log taps.
+        if let coachingBubbleView {
+            view.bringSubviewToFront(coachingBubbleView)
+        }
+        if let scoreDonutOverlayView {
+            view.bringSubviewToFront(scoreDonutOverlayView)
+        }
         view.bringSubviewToFront(topStatusBarView)
         view.bringSubviewToFront(cameraBottomControlsView)
         view.bringSubviewToFront(inspireMeButtonView)
@@ -397,7 +443,7 @@ class LMCameraPage: LMPageWrapper {
         }
         inspireMeButtonView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-10)
+            make.top.equalTo(topStatusBarView.snp.bottom).offset(4)
             make.width.equalTo(144)
             make.height.equalTo(48)
         }
@@ -493,13 +539,11 @@ class LMCameraPage: LMPageWrapper {
                     self.view.layoutIfNeeded()
                 },
                 completion: { [weak self] _ in
-                    // 动画完成后更新 AR Guidance 位置
                     self?.updateARGuidanceForAspectRatioChange()
                 }
             )
         } else {
             view.layoutIfNeeded()
-            // 立即更新 AR Guidance 位置
             updateARGuidanceForAspectRatioChange()
         }
         

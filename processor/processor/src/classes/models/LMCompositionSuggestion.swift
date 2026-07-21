@@ -41,10 +41,21 @@ struct LMCompositionSuggestion: Codable {
         return source == "retrieved"
     }
     
+    /// 是否为相册参考图
+    var isAlbum: Bool {
+        return source == "album"
+    }
+
+    /// 是否为离线演示图
+    var isDemo: Bool {
+        return source == "demo"
+    }
+
     /// 是否为生成结果
     var isGenerated: Bool {
         return source == "generated"
     }
+
     
     /// 是否为 AIGC 生成的图片（当 source = "generated" 时显示 AIGC 标签）
     var isAIGC: Bool {

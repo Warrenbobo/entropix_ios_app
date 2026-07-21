@@ -17,6 +17,10 @@ class LMAboutPage: LMPageWrapper {
 
     private let backgroundContainer = UIView()
 
+    private let backendApiTitleLabel = UILabel()
+    private let backendApiSwitch = UISwitch()
+    private let backendApiContainer = UIView()
+
     private let appDeveloperTitleLabel = UILabel()
     private let appDeveloperValueLabel = UILabel()
     private let appDeveloperContainer = UIView()
@@ -35,6 +39,7 @@ class LMAboutPage: LMPageWrapper {
     private let termsOfServiceButton = UIButton(type: .system)
     private let termsOfServiceContainer = UIView()
 
+    private let separatorLine0 = UIView()
     private let separatorLine1 = UIView()
     private let separatorLine2 = UIView()
     private let separatorLine3 = UIView()
@@ -63,14 +68,19 @@ extension LMAboutPage {
         scrollView.addSubview(contentView)
         contentView.addSubview(backgroundContainer)
 
+        backgroundContainer.addSubview(backendApiContainer)
         backgroundContainer.addSubview(appDeveloperContainer)
         backgroundContainer.addSubview(appVersionContainer)
         backgroundContainer.addSubview(privacyPolicyContainer)
         backgroundContainer.addSubview(termsOfServiceContainer)
 
+        backgroundContainer.addSubview(separatorLine0)
         backgroundContainer.addSubview(separatorLine1)
         backgroundContainer.addSubview(separatorLine2)
         backgroundContainer.addSubview(separatorLine3)
+
+        backendApiContainer.addSubview(backendApiTitleLabel)
+        backendApiContainer.addSubview(backendApiSwitch)
 
         appDeveloperContainer.addSubview(appDeveloperTitleLabel)
         appDeveloperContainer.addSubview(appDeveloperValueLabel)
@@ -88,6 +98,7 @@ extension LMAboutPage {
 
         setupBackgroundContainer()
         setupSeparatorLines()
+        setupBackendApiSection()
         setupAppDeveloperSection()
         setupAppVersionSection()
         setupPrivacyPolicySection()
@@ -101,9 +112,21 @@ extension LMAboutPage {
     }
 
     private func setupSeparatorLines() {
-        [separatorLine1, separatorLine2, separatorLine3].forEach { line in
+        [separatorLine0, separatorLine1, separatorLine2, separatorLine3].forEach { line in
             line.backgroundColor = UIColor.separator
         }
+    }
+
+    private func setupBackendApiSection() {
+        backendApiContainer.backgroundColor = UIColor.clear
+
+        backendApiTitleLabel.text = LMText.settings.backendApi
+        backendApiTitleLabel.font = UIFont.systemFont(ofSize: 17, weight: .medium)
+        backendApiTitleLabel.textColor = UIColor.systemGray
+        backendApiTitleLabel.textAlignment = .left
+
+        backendApiSwitch.isOn = LMFeatureFlagsManager.backendApiEnabled
+        backendApiSwitch.addTarget(self, action: #selector(handleBackendApiSwitchChanged), for: .valueChanged)
     }
 
     private func setupAppDeveloperSection() {
@@ -224,8 +247,31 @@ extension LMAboutPage {
             make.bottom.equalToSuperview().offset(-24)
         }
 
-        appDeveloperContainer.snp.makeConstraints { make in
+        backendApiContainer.snp.makeConstraints { make in
             make.top.equalToSuperview()
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(56)
+        }
+
+        backendApiTitleLabel.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.leading.equalToSuperview().offset(24)
+        }
+
+        backendApiSwitch.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.trailing.equalToSuperview().offset(-24)
+        }
+
+        separatorLine0.snp.makeConstraints { make in
+            make.top.equalTo(backendApiContainer.snp.bottom)
+            make.leading.equalToSuperview().offset(24)
+            make.trailing.equalToSuperview().offset(-24)
+            make.height.equalTo(0.5)
+        }
+
+        appDeveloperContainer.snp.makeConstraints { make in
+            make.top.equalTo(separatorLine0.snp.bottom)
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(56)
         }
@@ -347,6 +393,10 @@ extension LMAboutPage {
 
 // MARK: - Action Handlers
 extension LMAboutPage {
+
+    @objc private func handleBackendApiSwitchChanged() {
+        LMFeatureFlagsManager.setBackendApiEnabled(backendApiSwitch.isOn)
+    }
 
     @objc private func handleBackButtonTapped() {
         navigationController?.popViewController(animated: true)

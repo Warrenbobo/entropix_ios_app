@@ -2,68 +2,95 @@
 //  LMOrientationMatcher.swift
 //  processor
 //
-//  Created by Kiro on 2025-01-XX.
-//
 
 import UIKit
+import CoreVideo
 
-/// 图片方向类型
+/// Portrait vs landscape axis used to compare a reference image with device hold.
 enum LMImageOrientation {
-    case portrait  // 纵向（高 > 宽）
-    case landscape // 横向（宽 > 高）
+    case portrait
+    case landscape
 }
 
-/// 方向匹配工具类
-class LMOrientationMatcher {
-    
-    /// 判断图片方向（横向或纵向）
-    /// - Parameter imageSize: 图片尺寸
-    /// - Returns: 图片方向
-    static func getImageOrientation(imageSize: CGSize) -> LMImageOrientation {
-        if imageSize.width > imageSize.height {
-            return .landscape  // 横向图片（宽 > 高）
-        } else {
-            return .portrait   // 纵向图片（高 >= 宽，相等时默认为纵向）
-        }
+/// Shared orientation helpers for Inspire Me capture, agent preview frames, and AR Guidance.
+enum LMOrientationMatcher {
+
+    // MARK: - Reference vs device axis (AR Guidance)
+
+    /// Returns the aspect axis of an image from its pixel dimensions.
+    static func imageAxis(for size: CGSize) -> LMImageOrientation {
+        size.width > size.height ? .landscape : .portrait
     }
-    
-    /// 判断设备方向（横向或纵向）
-    /// - Parameter orientation: 设备方向
-    /// - Returns: 设备方向类型
-    static func getDeviceOrientation(_ orientation: UIDeviceOrientation) -> LMImageOrientation {
+
+    /// Returns the aspect axis of the current device hold.
+    static func deviceAxis(for orientation: UIDeviceOrientation) -> LMImageOrientation {
         switch orientation {
-        case .portrait, .portraitUpsideDown:
-            return .portrait   // 纵向设备
         case .landscapeLeft, .landscapeRight:
-            return .landscape  // 横向设备
+            return .landscape
         default:
-            return .portrait   // 默认纵向
+            return .portrait
         }
     }
-    
-    /// 检查方向是否匹配
-    /// - Parameters:
-    ///   - imageSize: 图片尺寸
-    ///   - deviceOrientation: 设备方向
-    /// - Returns: 是否匹配
+
+    /// `true` when reference aspect matches device hold (portrait↔portrait or landscape↔landscape).
     static func isOrientationMatched(imageSize: CGSize, deviceOrientation: UIDeviceOrientation) -> Bool {
-        let imageOrientation = getImageOrientation(imageSize: imageSize)
-        let deviceOrient = getDeviceOrientation(deviceOrientation)
-        return imageOrientation == deviceOrient
+        imageAxis(for: imageSize) == deviceAxis(for: orientationForCapture(deviceOrientation))
     }
-    
-    /// 获取当前设备方向（如果无效则返回默认值）
-    /// - Returns: 有效的设备方向
-    static func getCurrentDeviceOrientation() -> UIDeviceOrientation {
-        // 优先使用 LMDeviceOrientationManager 的方向值（更准确）
-        let orientation = LMDeviceOrientationManager.shared.currentOrientation
-        
-        // 如果是无效方向，返回默认的portrait
+
+    // MARK: - Capture lock
+
+    /// Physical hold at capture time; face-up/down uses the last definite orientation.
+    static func orientationForCapture() -> UIDeviceOrientation {
+        orientationForCapture(LMDeviceOrientationManager.shared.currentOrientation)
+    }
+
+    static func orientationForCapture(_ orientation: UIDeviceOrientation) -> UIDeviceOrientation {
         switch orientation {
         case .unknown, .faceUp, .faceDown:
-            return .portrait
+            return LMDeviceOrientationManager.shared.lastDefiniteOrientation
         default:
             return orientation
         }
+    }
+
+    // MARK: - Preview frame (shared via LMPreviewFramePipeline)
+
+    /// EXIF orientation for a raw sensor buffer displayed in the current device hold.
+    /// Prefer `LMPreviewFramePipeline.makeBitmap` / `makeUIImage` at call sites.
+    static func previewEXIF(
+        deviceOrientation: UIDeviceOrientation,
+        isFrontCamera: Bool
+    ) -> UIImage.Orientation {
+        if isFrontCamera {
+            switch deviceOrientation {
+            case .portrait: return .leftMirrored
+            case .landscapeLeft: return .downMirrored
+            case .landscapeRight: return .upMirrored
+            case .portraitUpsideDown: return .rightMirrored
+            default: return .leftMirrored
+            }
+        }
+
+        switch deviceOrientation {
+        case .portrait: return .right
+        case .landscapeLeft: return .up
+        case .landscapeRight: return .down
+        case .portraitUpsideDown: return .left
+        default: return .right
+        }
+    }
+
+    /// Converts a preview sensor buffer to a `UIImage` tagged for the current hold.
+    /// Prefer `LMPreviewFramePipeline` at new call sites; kept for legacy / test callers.
+    static func imageFromPreviewBuffer(
+        _ pixelBuffer: CVPixelBuffer,
+        deviceOrientation: UIDeviceOrientation,
+        isFrontCamera: Bool
+    ) -> UIImage? {
+        LMPreviewFramePipeline.makeUIImage(
+            from: pixelBuffer,
+            orientationPolicy: .locked(deviceOrientation),
+            isFrontCamera: isFrontCamera
+        )
     }
 }

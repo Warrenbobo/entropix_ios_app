@@ -28,6 +28,9 @@ class LMDeviceOrientationManager {
     /// 当前设备方向（只读，通过加速度计实时更新）
     private(set) var currentOrientation: UIDeviceOrientation = .portrait {
         didSet {
+            if isDefiniteOrientation(currentOrientation) {
+                lastDefiniteOrientation = currentOrientation
+            }
             if oldValue != currentOrientation {
                 // 发送方向变化通知
                 NotificationCenter.default.post(
@@ -39,6 +42,9 @@ class LMDeviceOrientationManager {
             }
         }
     }
+
+    /// Last portrait/landscape orientation before face-up/down (Android `lastDefiniteOrientation` parity).
+    private(set) var lastDefiniteOrientation: UIDeviceOrientation = .portrait
     
     // MARK: - Initialization
     private init() {
@@ -114,6 +120,15 @@ class LMDeviceOrientationManager {
 #endif
     
     // MARK: - Private Methods
+
+    private func isDefiniteOrientation(_ orientation: UIDeviceOrientation) -> Bool {
+        switch orientation {
+        case .portrait, .portraitUpsideDown, .landscapeLeft, .landscapeRight:
+            return true
+        default:
+            return false
+        }
+    }
     
     /// 根据加速度计数据计算设备方向
     /// - Parameter acceleration: 加速度数据

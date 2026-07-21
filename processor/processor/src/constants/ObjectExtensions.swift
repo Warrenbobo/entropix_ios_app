@@ -209,12 +209,23 @@ final class LMImageAssetProcessor {
 
     static func generateLineArt(from image: UIImage) -> UIImage? {
         let workingImage = image.lmScaledToFit(maxDimension: 1536)
-        guard let cgImage = workingImage.cgImage,
-              let personMask = generatePersonMask(for: cgImage) else {
-            return nil
+        guard let cgImage = workingImage.cgImage else { return nil }
+
+        if let snapshot = LMHumanUnderstandingService.shared.referenceSnapshot,
+           let lineArt = generateLineArt(from: workingImage, mask: snapshot.segmentationMask) {
+            return lineArt
         }
 
-        let rgba = generateLineart(image: cgImage, personMask: personMask)
+        guard let personMask = generatePersonMask(for: cgImage) else { return nil }
+        return generateLineArt(from: workingImage, mask: personMask)
+    }
+
+    /// Generates line art using a pre-computed segmentation mask (no second Vision call).
+    static func generateLineArt(from image: UIImage, mask: CVPixelBuffer) -> UIImage? {
+        let workingImage = image.lmScaledToFit(maxDimension: 1536)
+        guard let cgImage = workingImage.cgImage else { return nil }
+
+        let rgba = generateLineart(image: cgImage, personMask: mask)
         guard !rgba.isEmpty,
               let lineArtCGImage = makeCGImage(from: rgba, width: cgImage.width, height: cgImage.height) else {
             return nil

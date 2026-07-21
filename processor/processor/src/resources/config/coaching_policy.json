@@ -1,0 +1,70 @@
+{
+  "planning": {
+    "threshold_finish_overall": 0.85,
+    "finish_consecutive_rounds": 2
+  },
+  "priority": {
+    "global_extreme_low": 0.2,
+    "dim_low": 0.6,
+    "sub_dim_low": 0.5,
+    "suggest_finish_overall": 0.85,
+    "suggest_finish_core_dim": 0.75
+  },
+  "arbiter": {
+    "threshold_core_dim": 0.75,
+    "oscillation_window": 3,
+    "defer_exposure_below_overall": 0.7,
+    "force_finish_above_overall": 0.80
+  },
+  "session": {
+    "max_history_size": 5,
+    "history_prompt_rounds": 3,
+    "history_effective_up": 0.02,
+    "history_effective_down": -0.02,
+    "oscillation_stagnation_eps": 0.03
+  },
+  "exposure": {
+    "typical_step_ev": 0.167,
+    "agent_min_index": -6,
+    "agent_max_index": 6,
+    "max_steps_per_action": 3
+  },
+  "execution_tools": {
+    "box_align_hold_ms": 3000,
+    "line_art_auto_dismiss_ms": 60000,
+    "prefer_box_when_lines_below": 0.5,
+    "prefer_line_art_when_scale_below": 0.5
+  },
+  "skip": {
+    "enabled": true,
+    "arbiter_fallback": "finish",
+    "reevaluation_enabled": true,
+    "skip_finish_overall": 0.80,
+    "skip_finish_core_dim": 0.75,
+    "skip_finish_subject_center": 0.50
+  },
+  "instruct": {
+    "reuse_score_max_age_ms": 2000
+  },
+  "composition_strategy": {
+    "shot_extreme_close_up": 0.90,
+    "shot_close_up": 0.70,
+    "shot_medium_close": 0.50,
+    "shot_medium_shot": 0.20,
+    "shot_full_shot": 0.10,
+    "dominance_subject_area": 0.30,
+    "dominance_subject_negative": 0.30,
+    "dominance_environment_area": 0.10,
+    "dominance_environment_negative": 0.50,
+    "dominance_environment_area_alt": 0.20,
+    "thirds_x_tolerance": 0.12,
+    "center_tolerance": 0.13,
+    "rule_symmetrical": 0.75,
+    "rule_leading_lines": 0.60,
+    "rule_framed_depth": 0.70,
+    "negative_space_high": 0.60,
+    "negative_space_offset": 0.40,
+    "guidance_environment_area_max": 0.10,
+    "guidance_subject_area_min": 0.30
+  }
+}

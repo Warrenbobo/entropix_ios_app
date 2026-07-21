@@ -31,7 +31,7 @@ processor/
 - **UI框架**: UIKit
 - **布局**: SnapKit (自动布局)
 - **架构模式**: MVC + 组件化
-- **最低支持**: iOS 15.0+
+- **最低支持**: iOS 18.0+
 
 
 ## 🎨 设计原则
@@ -89,3 +89,39 @@ processor/
 - 按功能模块分组
 - 相关文件放在同一目录
 - 使用MARK注释分隔代码段
+
+## CocoaPods 环境
+
+项目依赖 CocoaPods。若终端提示 `pod: command not found`，任选其一：
+
+### 方式 A — 一键脚本（推荐）
+
+```bash
+cd entropix_ios_app/processor
+chmod +x setup_pods.sh
+./setup_pods.sh
+```
+
+### 方式 B — 手动 PATH
+
+CocoaPods 可能已安装在用户 gem 目录，只需加入 PATH：
+
+```bash
+export PATH="$HOME/.gem/ruby/2.6.0/bin:$PATH"
+cd entropix_ios_app/processor
+pod install
+```
+
+将上面 `export` 行加入 `~/.zshrc` 可永久生效。
+
+### 方式 C — 新版 Ruby + CocoaPods（与 Podfile.lock 1.16.x 一致）
+
+系统 Ruby 2.6 最高支持 CocoaPods 1.13。若需 1.16+，请先安装 [Homebrew](https://brew.sh)，再执行：
+
+```bash
+brew install ruby cocoapods
+cd entropix_ios_app/processor
+pod install
+```
+
+安装完成后请打开 **`processor.xcworkspace`**（不要直接打开 `.xcodeproj`）。

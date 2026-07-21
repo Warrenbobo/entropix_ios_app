@@ -7,6 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		70FFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 913B5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */; };
+		61D4ED49A14447F48857E061 /* PiDiNet.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 2FB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */; };
+		7DEF28E2208A447ABAC2BCD4 /* U2Netp.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 499883826CD2413585CB53C3 /* U2Netp.mlpackage */; };
+		0FD1331B43CA42C8BE257C4A /* LMPidinetModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */; };
+		B8289BCF3D8943549F800E51 /* LMU2NetpModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */; };
+		DA32B37E95AA4FE2940CECFC /* LMOpenCvLineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */; };
+		86A55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7572C9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */; };
+		6AA97AF698FF445291BDCCFD /* LMDepthLayeringScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45AA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */; };
+		BFCB45F239BF4CABBB190382 /* LMBitmapDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */; };
+		7C6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916CB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */; };
+		90799D327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204E896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */; };
+		3CD00C96D89B49C999885318 /* LMScoreTickContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */; };
+		EA5700692EC10005000AB522 /* LMAgentRequestLogModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */; };
+		EA57006B2EC10005000AB522 /* LMAgentRequestLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */; };
+		EA57006D2EC10005000AB522 /* LMAgentRequestLogRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */; };
+		EA57006F2EC10005000AB522 /* LMAgentRequestLogPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */; };
+		EA5700712EC10005000AB522 /* LMCameraPage+AgentLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */; };
 		EA0A473C2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A473B2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift */; };
 		EA0A473D2EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47352EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift */; };
 		EA0A473E2EBF8F19002CBB80 /* LMSubscriptionDialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47372EBF8F19002CBB80 /* LMSubscriptionDialogView.swift */; };
@@ -48,6 +65,45 @@
 		EA56DDDF2EC091B1000AB522 /* LMCompositionSuggestion.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC52EC091B1000AB522 /* LMCompositionSuggestion.swift */; };
 		EA56DDE02EC091B1000AB522 /* LMCompositionTaskResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDC72EC091B1000AB522 /* LMCompositionTaskResponse.swift */; };
 		EA56DDE72EC091BD000AB522 /* LMApiService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDE32EC091BD000AB522 /* LMApiService.swift */; };
+		EA5700012EC10001000AB522 /* LMHumanFrameSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700002EC10001000AB522 /* LMHumanFrameSnapshot.swift */; };
+		EA5700032EC10001000AB522 /* LMHumanMaskDerivation.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700022EC10001000AB522 /* LMHumanMaskDerivation.swift */; };
+		EA5700052EC10001000AB522 /* LMHumanUnderstandingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700042EC10001000AB522 /* LMHumanUnderstandingService.swift */; };
+		EA5700072EC10001000AB522 /* LMUploadReferenceCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700062EC10001000AB522 /* LMUploadReferenceCardView.swift */; };
+		EA5700092EC10001000AB522 /* LMAgentIconProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700082EC10001000AB522 /* LMAgentIconProvider.swift */; };
+		EA57000B2EC10001000AB522 /* LMLiquidGlassHUDTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57000A2EC10001000AB522 /* LMLiquidGlassHUDTokens.swift */; };
+		EA57000D2EC10001000AB522 /* LMCoachingEdgeLitBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57000C2EC10001000AB522 /* LMCoachingEdgeLitBar.swift */; };
+		EA57000F2EC10001000AB522 /* LMCoachingActionPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57000E2EC10001000AB522 /* LMCoachingActionPill.swift */; };
+		EA5700112EC10001000AB522 /* LMCoachingBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700102EC10001000AB522 /* LMCoachingBubbleView.swift */; };
+		EA5700132EC10001000AB522 /* LMConcentricScoreDonutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700122EC10001000AB522 /* LMConcentricScoreDonutView.swift */; };
+		EA5700152EC10001000AB522 /* LMScoreDonutOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700142EC10001000AB522 /* LMScoreDonutOverlayView.swift */; };
+		EA5700172EC10001000AB522 /* LMCameraPage+AgentCoaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700162EC10001000AB522 /* LMCameraPage+AgentCoaching.swift */; };
+		EA5700192EC10001000AB522 /* LMCompositionScore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700182EC10001000AB522 /* LMCompositionScore.swift */; };
+		EA57001B2EC10001000AB522 /* LMScoreFusionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57001A2EC10001000AB522 /* LMScoreFusionEngine.swift */; };
+		EA57001D2EC10001000AB522 /* LMCompositionMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57001C2EC10001000AB522 /* LMCompositionMath.swift */; };
+		EA57001F2EC10001000AB522 /* LMCompositionAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57001E2EC10001000AB522 /* LMCompositionAnalyzer.swift */; };
+		EA5700212EC10001000AB522 /* LMCompositionScoreLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700202EC10001000AB522 /* LMCompositionScoreLoop.swift */; };
+		EA5700232EC10001000AB522 /* LMGlobalStructureScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700222EC10001000AB522 /* LMGlobalStructureScorer.swift */; };
+		EA5700252EC10001000AB522 /* LMGeometricScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700242EC10001000AB522 /* LMGeometricScorer.swift */; };
+		EA5700272EC10001000AB522 /* LMHumanSceneScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700262EC10001000AB522 /* LMHumanSceneScorer.swift */; };
+		EA5700292EC10001000AB522 /* LMCoachingPolicyConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700282EC10001000AB522 /* LMCoachingPolicyConfig.swift */; };
+		EA57002B2EC10001000AB522 /* LMConfigRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57002A2EC10001000AB522 /* LMConfigRepository.swift */; };
+		EA57002D2EC10001000AB522 /* LMDashScopeChatClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57002C2EC10001000AB522 /* LMDashScopeChatClient.swift */; };
+		EA57002F2EC10001000AB522 /* LMCoachingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57002E2EC10001000AB522 /* LMCoachingSupport.swift */; };
+		EA5700312EC10001000AB522 /* LMPromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700302EC10001000AB522 /* LMPromptBuilder.swift */; };
+		EA5700332EC10001000AB522 /* LMArbiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700322EC10001000AB522 /* LMArbiter.swift */; };
+		EA5700352EC10001000AB522 /* LMActionExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700342EC10001000AB522 /* LMActionExecutor.swift */; };
+		EA5700372EC10001000AB522 /* LMExecutionToolRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700362EC10001000AB522 /* LMExecutionToolRouter.swift */; };
+		EA5700392EC10001000AB522 /* LMAgenticCoachingLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700382EC10001000AB522 /* LMAgenticCoachingLoop.swift */; };
+		EA57003B2EC10001000AB522 /* LMDepthEstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57003A2EC10001000AB522 /* LMDepthEstimationService.swift */; };
+		EA57003D2EC10001000AB522 /* LMAgentCoachingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57003C2EC10001000AB522 /* LMAgentCoachingController.swift */; };
+		EA57003F2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */; };
+		EA5700432EC10001000AB522 /* coaching_policy.json in Resources */ = {isa = PBXBuildFile; fileRef = EA5700412EC10001000AB522 /* coaching_policy.json */; };
+		EA5700A62EC10004000AB522 /* prompts.json in Resources */ = {isa = PBXBuildFile; fileRef = EA5700A52EC10004000AB522 /* prompts.json */; };
+		EA5700A82EC10004000AB522 /* system_prompt_agentic_v3.txt in Resources */ = {isa = PBXBuildFile; fileRef = EA5700A72EC10004000AB522 /* system_prompt_agentic_v3.txt */; };
+		EA5700592EC10001000AB522 /* LMSkipReevaluationEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700582EC10001000AB522 /* LMSkipReevaluationEvaluator.swift */; };
+		EA5700A02EC10003000AB522 /* LMFeatureFlagsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57009F2EC10003000AB522 /* LMFeatureFlagsManager.swift */; };
+		EA5700A22EC10003000AB522 /* LMDemoSuggestionsLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700A12EC10003000AB522 /* LMDemoSuggestionsLoader.swift */; };
+		EA5700A42EC10003000AB522 /* demo_suggestions in Resources */ = {isa = PBXBuildFile; fileRef = EA5700A32EC10003000AB522 /* demo_suggestions */; };
 		EA5835442EC976200013E531 /* LMCameraPage+ShowSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */; };
 		EA5835512EC99E1F0013E531 /* LMInspireMeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */; };
 		EA5835562EC9DBC70013E531 /* language_config.json in Resources */ = {isa = PBXBuildFile; fileRef = EA5835552EC9DBC70013E531 /* language_config.json */; };
@@ -147,6 +203,23 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		913B5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionModelPreloader.swift; sourceTree = "<group>"; };
+		2FB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = PiDiNet.mlpackage; sourceTree = "<group>"; };
+		499883826CD2413585CB53C3 /* U2Netp.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = U2Netp.mlpackage; sourceTree = "<group>"; };
+		2F6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPidinetModelProvider.swift; sourceTree = "<group>"; };
+		BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMU2NetpModelProvider.swift; sourceTree = "<group>"; };
+		B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMOpenCvLineDetector.swift; sourceTree = "<group>"; };
+		7572C9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubjectMaskAnalyzer.swift; sourceTree = "<group>"; };
+		45AA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDepthLayeringScorer.swift; sourceTree = "<group>"; };
+		F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMBitmapDescriptor.swift; sourceTree = "<group>"; };
+		916CB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreviewFramePipeline.swift; sourceTree = "<group>"; };
+		204E896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEVA02ModelProvider.swift; sourceTree = "<group>"; };
+		48EC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMScoreTickContext.swift; sourceTree = "<group>"; };
+		EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogModels.swift; sourceTree = "<group>"; };
+		EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogStore.swift; sourceTree = "<group>"; };
+		EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogRecorder.swift; sourceTree = "<group>"; };
+		EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogPage.swift; sourceTree = "<group>"; };
+		EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+AgentLog.swift"; sourceTree = "<group>"; };
 		4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_processor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8769BF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.debug.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.debug.xcconfig"; sourceTree = "<group>"; };
 		E918F2844F67229435DD4374 /* Pods-processor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.release.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.release.xcconfig"; sourceTree = "<group>"; };
@@ -192,6 +265,45 @@
 		EA56DDCC2EC091B1000AB522 /* LMRefreshTokenResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMRefreshTokenResponse.swift; sourceTree = "<group>"; };
 		EA56DDCF2EC091B1000AB522 /* LMUserRegisterResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUserRegisterResponse.swift; sourceTree = "<group>"; };
 		EA56DDE32EC091BD000AB522 /* LMApiService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMApiService.swift; sourceTree = "<group>"; };
+		EA5700002EC10001000AB522 /* LMHumanFrameSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMHumanFrameSnapshot.swift; sourceTree = "<group>"; };
+		EA5700022EC10001000AB522 /* LMHumanMaskDerivation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMHumanMaskDerivation.swift; sourceTree = "<group>"; };
+		EA5700042EC10001000AB522 /* LMHumanUnderstandingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMHumanUnderstandingService.swift; sourceTree = "<group>"; };
+		EA5700062EC10001000AB522 /* LMUploadReferenceCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMUploadReferenceCardView.swift; sourceTree = "<group>"; };
+		EA5700082EC10001000AB522 /* LMAgentIconProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentIconProvider.swift; sourceTree = "<group>"; };
+		EA57000A2EC10001000AB522 /* LMLiquidGlassHUDTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLiquidGlassHUDTokens.swift; sourceTree = "<group>"; };
+		EA57000C2EC10001000AB522 /* LMCoachingEdgeLitBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCoachingEdgeLitBar.swift; sourceTree = "<group>"; };
+		EA57000E2EC10001000AB522 /* LMCoachingActionPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCoachingActionPill.swift; sourceTree = "<group>"; };
+		EA5700102EC10001000AB522 /* LMCoachingBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCoachingBubbleView.swift; sourceTree = "<group>"; };
+		EA5700122EC10001000AB522 /* LMConcentricScoreDonutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMConcentricScoreDonutView.swift; sourceTree = "<group>"; };
+		EA5700142EC10001000AB522 /* LMScoreDonutOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMScoreDonutOverlayView.swift; sourceTree = "<group>"; };
+		EA5700162EC10001000AB522 /* LMCameraPage+AgentCoaching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+AgentCoaching.swift"; sourceTree = "<group>"; };
+		EA5700182EC10001000AB522 /* LMCompositionScore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionScore.swift; sourceTree = "<group>"; };
+		EA57001A2EC10001000AB522 /* LMScoreFusionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMScoreFusionEngine.swift; sourceTree = "<group>"; };
+		EA57001C2EC10001000AB522 /* LMCompositionMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionMath.swift; sourceTree = "<group>"; };
+		EA57001E2EC10001000AB522 /* LMCompositionAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionAnalyzer.swift; sourceTree = "<group>"; };
+		EA5700202EC10001000AB522 /* LMCompositionScoreLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionScoreLoop.swift; sourceTree = "<group>"; };
+		EA5700222EC10001000AB522 /* LMGlobalStructureScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGlobalStructureScorer.swift; sourceTree = "<group>"; };
+		EA5700242EC10001000AB522 /* LMGeometricScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGeometricScorer.swift; sourceTree = "<group>"; };
+		EA5700262EC10001000AB522 /* LMHumanSceneScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMHumanSceneScorer.swift; sourceTree = "<group>"; };
+		EA5700282EC10001000AB522 /* LMCoachingPolicyConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCoachingPolicyConfig.swift; sourceTree = "<group>"; };
+		EA57002A2EC10001000AB522 /* LMConfigRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMConfigRepository.swift; sourceTree = "<group>"; };
+		EA57002C2EC10001000AB522 /* LMDashScopeChatClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDashScopeChatClient.swift; sourceTree = "<group>"; };
+		EA57002E2EC10001000AB522 /* LMCoachingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCoachingSupport.swift; sourceTree = "<group>"; };
+		EA5700302EC10001000AB522 /* LMPromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPromptBuilder.swift; sourceTree = "<group>"; };
+		EA5700322EC10001000AB522 /* LMArbiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMArbiter.swift; sourceTree = "<group>"; };
+		EA5700342EC10001000AB522 /* LMActionExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMActionExecutor.swift; sourceTree = "<group>"; };
+		EA5700362EC10001000AB522 /* LMExecutionToolRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMExecutionToolRouter.swift; sourceTree = "<group>"; };
+		EA5700382EC10001000AB522 /* LMAgenticCoachingLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgenticCoachingLoop.swift; sourceTree = "<group>"; };
+		EA57003A2EC10001000AB522 /* LMDepthEstimationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDepthEstimationService.swift; sourceTree = "<group>"; };
+		EA57003C2EC10001000AB522 /* LMAgentCoachingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentCoachingController.swift; sourceTree = "<group>"; };
+		EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = DepthAnythingV2SmallF16P6.mlpackage; sourceTree = "<group>"; };
+		EA5700412EC10001000AB522 /* coaching_policy.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = coaching_policy.json; sourceTree = "<group>"; };
+		EA5700A52EC10004000AB522 /* prompts.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = prompts.json; sourceTree = "<group>"; };
+		EA5700A72EC10004000AB522 /* system_prompt_agentic_v3.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = system_prompt_agentic_v3.txt; sourceTree = "<group>"; };
+		EA5700582EC10001000AB522 /* LMSkipReevaluationEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSkipReevaluationEvaluator.swift; sourceTree = "<group>"; };
+		EA57009F2EC10003000AB522 /* LMFeatureFlagsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFeatureFlagsManager.swift; sourceTree = "<group>"; };
+		EA5700A12EC10003000AB522 /* LMDemoSuggestionsLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDemoSuggestionsLoader.swift; sourceTree = "<group>"; };
+		EA5700A32EC10003000AB522 /* demo_suggestions */ = {isa = PBXFileReference; lastKnownFileType = folder; path = demo_suggestions; sourceTree = "<group>"; };
 		EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+ShowSuggestions.swift"; sourceTree = "<group>"; };
 		EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeRecord.swift; sourceTree = "<group>"; };
 		EA5835552EC9DBC70013E531 /* language_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = language_config.json; sourceTree = "<group>"; };
@@ -345,6 +457,8 @@
 				EA8640642ED2D24800A0CD43 /* PhotoEntity+CoreDataClass.swift */,
 				EA8640652ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift */,
 				EA3F166E2EE3DFA800B24DA8 /* LMOrientationMatcher.swift */,
+				F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */,
+				916CB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */,
 			);
 			path = utils;
 			sourceTree = "<group>";
@@ -357,6 +471,100 @@
 				EA56DDE32EC091BD000AB522 /* LMApiService.swift */,
 			);
 			path = api;
+			sourceTree = "<group>";
+		};
+		EA5700502EC10002000AB522 /* coaching */ = {
+			isa = PBXGroup;
+			children = (
+				EA5700512EC10002000AB522 /* composition */,
+				EA5700532EC10002000AB522 /* config */,
+				EA5700542EC10002000AB522 /* llm */,
+				EA5700552EC10002000AB522 /* agent */,
+				EA5700562EC10002000AB522 /* managers */,
+				EA5700662EC10005000AB522 /* agentLog */,
+			);
+			path = coaching;
+			sourceTree = "<group>";
+		};
+		EA5700512EC10002000AB522 /* composition */ = {
+			isa = PBXGroup;
+			children = (
+				EA5700182EC10001000AB522 /* LMCompositionScore.swift */,
+				EA57001A2EC10001000AB522 /* LMScoreFusionEngine.swift */,
+				EA57001C2EC10001000AB522 /* LMCompositionMath.swift */,
+				EA57001E2EC10001000AB522 /* LMCompositionAnalyzer.swift */,
+				48EC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */,
+				EA5700202EC10001000AB522 /* LMCompositionScoreLoop.swift */,
+				EA5700702EC10006000AB522 /* opencv */,
+				EA5700522EC10002000AB522 /* scoring */,
+			);
+			path = composition;
+			sourceTree = "<group>";
+		};
+		EA5700522EC10002000AB522 /* scoring */ = {
+			isa = PBXGroup;
+			children = (
+				EA5700222EC10001000AB522 /* LMGlobalStructureScorer.swift */,
+				EA5700242EC10001000AB522 /* LMGeometricScorer.swift */,
+				7572C9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */,
+				45AA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */,
+				EA5700262EC10001000AB522 /* LMHumanSceneScorer.swift */,
+			);
+			path = scoring;
+			sourceTree = "<group>";
+		};
+		EA5700532EC10002000AB522 /* config */ = {
+			isa = PBXGroup;
+			children = (
+				EA5700282EC10001000AB522 /* LMCoachingPolicyConfig.swift */,
+				EA57002A2EC10001000AB522 /* LMConfigRepository.swift */,
+			);
+			path = config;
+			sourceTree = "<group>";
+		};
+		EA5700542EC10002000AB522 /* llm */ = {
+			isa = PBXGroup;
+			children = (
+				EA57002C2EC10001000AB522 /* LMDashScopeChatClient.swift */,
+			);
+			path = llm;
+			sourceTree = "<group>";
+		};
+		EA5700552EC10002000AB522 /* agent */ = {
+			isa = PBXGroup;
+			children = (
+				EA57002E2EC10001000AB522 /* LMCoachingSupport.swift */,
+				EA5700302EC10001000AB522 /* LMPromptBuilder.swift */,
+				EA5700322EC10001000AB522 /* LMArbiter.swift */,
+				EA5700342EC10001000AB522 /* LMActionExecutor.swift */,
+				EA5700362EC10001000AB522 /* LMExecutionToolRouter.swift */,
+				EA5700382EC10001000AB522 /* LMAgenticCoachingLoop.swift */,
+				EA5700582EC10001000AB522 /* LMSkipReevaluationEvaluator.swift */,
+			);
+			path = agent;
+			sourceTree = "<group>";
+		};
+		EA5700562EC10002000AB522 /* managers */ = {
+			isa = PBXGroup;
+			children = (
+				EA57003A2EC10001000AB522 /* LMDepthEstimationService.swift */,
+				204E896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */,
+				2F6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */,
+				BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */,
+				913B5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */,
+				EA57003C2EC10001000AB522 /* LMAgentCoachingController.swift */,
+			);
+			path = managers;
+			sourceTree = "<group>";
+		};
+		EA5700572EC10002000AB522 /* config */ = {
+			isa = PBXGroup;
+			children = (
+				EA5700412EC10001000AB522 /* coaching_policy.json */,
+				EA5700A52EC10004000AB522 /* prompts.json */,
+				EA5700A72EC10004000AB522 /* system_prompt_agentic_v3.txt */,
+			);
+			path = config;
 			sourceTree = "<group>";
 		};
 		EACA1BE82E7E408900C80883 = {
@@ -391,11 +599,16 @@
 				EA6019372EC877620067F2F7 /* LMSessionManager.swift */,
 				EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */,
 				EA56DDA02EC08078000AB522 /* LMPersonDetectionManager.swift */,
+				EA5700002EC10001000AB522 /* LMHumanFrameSnapshot.swift */,
+				EA5700022EC10001000AB522 /* LMHumanMaskDerivation.swift */,
+				EA5700042EC10001000AB522 /* LMHumanUnderstandingService.swift */,
 				EA4032A12EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift */,
 				EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */,
 				EACA1D052E7E4C7C00C80883 /* LMPackageManager.swift */,
 				EACA1D092E7E4EE900C80883 /* LMLogger.swift */,
 				EAFBAD892E9B8A4800586EC7 /* LMUserManager.swift */,
+				EA57009F2EC10003000AB522 /* LMFeatureFlagsManager.swift */,
+				EA5700A12EC10003000AB522 /* LMDemoSuggestionsLoader.swift */,
 				EA8629B82EB5F7C000F2B00E /* LMLaunageManager.swift */,
 				EA0A47452EBF995C002CBB80 /* LMStoreManager.swift */,
 			);
@@ -442,6 +655,7 @@
 				EACA1D0F2E7E517B00C80883 /* mine */,
 				EAFBAC932E7E546D00586EC7 /* login */,
 				EACA1D0B2E7E504F00C80883 /* LMWebViewPage.swift */,
+				EA5700672EC10005000AB522 /* agentLog */,
 			);
 			path = pages;
 			sourceTree = "<group>";
@@ -485,6 +699,7 @@
 				EACA1CD32E7E49B600C80883 /* pages */,
 				EACA1CD62E7E49B600C80883 /* views */,
 				EACA1CDA2E7E49B600C80883 /* wrappers */,
+				EA5700502EC10002000AB522 /* coaching */,
 			);
 			path = classes;
 			sourceTree = "<group>";
@@ -505,7 +720,12 @@
 				EA7F25AF2F066FCA0008E091 /* single_tap.json */,
 				EA7F25B02F066FCA0008E091 /* swipe_up_animation.json */,
 				EA5835552EC9DBC70013E531 /* language_config.json */,
+				EA5700A32EC10003000AB522 /* demo_suggestions */,
 				EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */,
+				EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */,
+				2FB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */,
+				499883826CD2413585CB53C3 /* U2Netp.mlpackage */,
+				EA5700572EC10002000AB522 /* config */,
 				EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */,
 				EACA1CE62E7E49B600C80883 /* Assets.xcassets */,
 				EACA1CEA2E7E49B600C80883 /* processor.xcdatamodeld */,
@@ -561,6 +781,8 @@
 				EA56DDAF2EC08E1D000AB522 /* LMCameraPage+ImageProcessing.swift */,
 				EA56DDB02EC08E1D000AB522 /* LMCameraPage+InspireMe.swift */,
 				EA56DDBE2EC08E81000AB522 /* LMCameraPage+Session.swift */,
+				EA5700162EC10001000AB522 /* LMCameraPage+AgentCoaching.swift */,
+				EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */,
 				EACB2E7B2EDC22B700983697 /* LMPhotoPreviewPage.swift */,
 			);
 			path = camera;
@@ -647,8 +869,47 @@
 				EAFBACB92E7E7E7500586EC7 /* LMCameraControlsView.swift */,
 				EAFBACBA2E7E7E7500586EC7 /* LMCameraPreviewView.swift */,
 				EAFBACBF2E87DE4E00586EC7 /* LMCameraGridOverlayView.swift */,
+				EA5700062EC10001000AB522 /* LMUploadReferenceCardView.swift */,
+				EA5700082EC10001000AB522 /* LMAgentIconProvider.swift */,
+				EA57000A2EC10001000AB522 /* LMLiquidGlassHUDTokens.swift */,
+				EA57000C2EC10001000AB522 /* LMCoachingEdgeLitBar.swift */,
+				EA57000E2EC10001000AB522 /* LMCoachingActionPill.swift */,
+				EA5700102EC10001000AB522 /* LMCoachingBubbleView.swift */,
+				EA5700122EC10001000AB522 /* LMConcentricScoreDonutView.swift */,
+				EA5700142EC10001000AB522 /* LMScoreDonutOverlayView.swift */,
 			);
 			path = camera;
+			sourceTree = "<group>";
+		};
+
+
+
+		EA5700662EC10005000AB522 /* agentLog */ = {
+			isa = PBXGroup;
+			children = (
+				EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */,
+				EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */,
+				EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */,
+			);
+			path = agentLog;
+			sourceTree = "<group>";
+		};
+
+		EA5700672EC10005000AB522 /* agentLog */ = {
+			isa = PBXGroup;
+			children = (
+				EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */,
+			);
+			path = agentLog;
+			sourceTree = "<group>";
+		};
+
+		EA5700702EC10006000AB522 /* opencv */ = {
+			isa = PBXGroup;
+			children = (
+				B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */,
+			);
+			path = opencv;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -682,7 +943,7 @@
 				BuildIndependentTargetsInParallel = 1;
 				CLASSPREFIX = LM;
 				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1620;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					EACA1BF02E7E408900C80883 = {
 						CreatedOnToolsVersion = 16.2;
@@ -713,11 +974,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EA5700A42EC10003000AB522 /* demo_suggestions in Resources */,
 				EA5835562EC9DBC70013E531 /* language_config.json in Resources */,
 				EACA1CEF2E7E49B600C80883 /* LaunchScreen.storyboard in Resources */,
 				EACA1CF02E7E49B600C80883 /* Assets.xcassets in Resources */,
 				EA7F25B12F066FCA0008E091 /* single_tap.json in Resources */,
 				EA7F25B22F066FCA0008E091 /* swipe_up_animation.json in Resources */,
+				EA5700432EC10001000AB522 /* coaching_policy.json in Resources */,
+				EA5700A62EC10004000AB522 /* prompts.json in Resources */,
+				EA5700A82EC10004000AB522 /* system_prompt_agentic_v3.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -774,6 +1039,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				61D4ED49A14447F48857E061 /* PiDiNet.mlpackage in Sources */,
+				7DEF28E2208A447ABAC2BCD4 /* U2Netp.mlpackage in Sources */,
+				0FD1331B43CA42C8BE257C4A /* LMPidinetModelProvider.swift in Sources */,
+				B8289BCF3D8943549F800E51 /* LMU2NetpModelProvider.swift in Sources */,
+				DA32B37E95AA4FE2940CECFC /* LMOpenCvLineDetector.swift in Sources */,
+				86A55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */,
+				6AA97AF698FF445291BDCCFD /* LMDepthLayeringScorer.swift in Sources */,
+				EA5700692EC10005000AB522 /* LMAgentRequestLogModels.swift in Sources */,
+				EA57006B2EC10005000AB522 /* LMAgentRequestLogStore.swift in Sources */,
+				EA57006D2EC10005000AB522 /* LMAgentRequestLogRecorder.swift in Sources */,
+				EA57006F2EC10005000AB522 /* LMAgentRequestLogPage.swift in Sources */,
+				EA5700712EC10005000AB522 /* LMCameraPage+AgentLog.swift in Sources */,
 				EA8640702ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift in Sources */,
 				EACB2E7C2EDC22B700983697 /* LMPhotoPreviewPage.swift in Sources */,
 				EA3F166C2EE3DDCC00B24DA8 /* LMARGuidanceView.swift in Sources */,
@@ -789,10 +1066,45 @@
 				EAFBAD7D2E93790E00586EC7 /* LMForgotPasswordPage.swift in Sources */,
 				EA7F25B42F06B8850008E091 /* LMPrivacyPermissionView.swift in Sources */,
 				EA56DDA12EC08078000AB522 /* LMPersonDetectionManager.swift in Sources */,
+				EA5700012EC10001000AB522 /* LMHumanFrameSnapshot.swift in Sources */,
+				EA5700032EC10001000AB522 /* LMHumanMaskDerivation.swift in Sources */,
+				EA5700052EC10001000AB522 /* LMHumanUnderstandingService.swift in Sources */,
+				EA5700072EC10001000AB522 /* LMUploadReferenceCardView.swift in Sources */,
+				EA5700092EC10001000AB522 /* LMAgentIconProvider.swift in Sources */,
+				EA57000B2EC10001000AB522 /* LMLiquidGlassHUDTokens.swift in Sources */,
+				EA57000D2EC10001000AB522 /* LMCoachingEdgeLitBar.swift in Sources */,
+				EA57000F2EC10001000AB522 /* LMCoachingActionPill.swift in Sources */,
+				EA5700112EC10001000AB522 /* LMCoachingBubbleView.swift in Sources */,
+				EA5700132EC10001000AB522 /* LMConcentricScoreDonutView.swift in Sources */,
+				EA5700152EC10001000AB522 /* LMScoreDonutOverlayView.swift in Sources */,
+				EA5700172EC10001000AB522 /* LMCameraPage+AgentCoaching.swift in Sources */,
+				EA5700192EC10001000AB522 /* LMCompositionScore.swift in Sources */,
+				EA57001B2EC10001000AB522 /* LMScoreFusionEngine.swift in Sources */,
+				EA57001D2EC10001000AB522 /* LMCompositionMath.swift in Sources */,
+				EA57001F2EC10001000AB522 /* LMCompositionAnalyzer.swift in Sources */,
+				EA5700212EC10001000AB522 /* LMCompositionScoreLoop.swift in Sources */,
+				EA5700232EC10001000AB522 /* LMGlobalStructureScorer.swift in Sources */,
+				EA5700252EC10001000AB522 /* LMGeometricScorer.swift in Sources */,
+				EA5700272EC10001000AB522 /* LMHumanSceneScorer.swift in Sources */,
+				EA5700292EC10001000AB522 /* LMCoachingPolicyConfig.swift in Sources */,
+				EA57002B2EC10001000AB522 /* LMConfigRepository.swift in Sources */,
+				EA57002D2EC10001000AB522 /* LMDashScopeChatClient.swift in Sources */,
+				EA57002F2EC10001000AB522 /* LMCoachingSupport.swift in Sources */,
+				EA5700312EC10001000AB522 /* LMPromptBuilder.swift in Sources */,
+				EA5700332EC10001000AB522 /* LMArbiter.swift in Sources */,
+				EA5700352EC10001000AB522 /* LMActionExecutor.swift in Sources */,
+				EA5700372EC10001000AB522 /* LMExecutionToolRouter.swift in Sources */,
+				EA5700392EC10001000AB522 /* LMAgenticCoachingLoop.swift in Sources */,
+				EA5700592EC10001000AB522 /* LMSkipReevaluationEvaluator.swift in Sources */,
+				EA57003B2EC10001000AB522 /* LMDepthEstimationService.swift in Sources */,
+				EA57003D2EC10001000AB522 /* LMAgentCoachingController.swift in Sources */,
 				EAFBACB02E7E79C100586EC7 /* LMFeaturePreviewView.swift in Sources */,
 				EA8629A32EB5A13F00F2B00E /* EVA02.mlpackage in Sources */,
+				EA57003F2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage in Sources */,
 				EAFBACBB2E7E7E7500586EC7 /* LMCameraControlsView.swift in Sources */,
 				EAFBAD8A2E9B8A4800586EC7 /* LMUserManager.swift in Sources */,
+				EA5700A02EC10003000AB522 /* LMFeatureFlagsManager.swift in Sources */,
+				EA5700A22EC10003000AB522 /* LMDemoSuggestionsLoader.swift in Sources */,
 				EAFBACBC2E7E7E7500586EC7 /* LMCameraPreviewView.swift in Sources */,
 				EA56DDBF2EC08E82000AB522 /* LMCameraPage+Session.swift in Sources */,
 				EAFBACBD2E7E7E7500586EC7 /* LMCameraBottomControlsView.swift in Sources */,
@@ -871,6 +1183,11 @@
 				EAFBAD7B2E936ABD00586EC7 /* LMNavigationTitleView.swift in Sources */,
 				EA5835442EC976200013E531 /* LMCameraPage+ShowSuggestions.swift in Sources */,
 				EA3F16702EE3DFA800B24DA8 /* LMOrientationMatcher.swift in Sources */,
+				BFCB45F239BF4CABBB190382 /* LMBitmapDescriptor.swift in Sources */,
+				7C6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */,
+				70FFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */,
+				90799D327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */,
+				3CD00C96D89B49C999885318 /* LMScoreTickContext.swift in Sources */,
 				EA3F16682EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift in Sources */,
 				EA3F16692EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift in Sources */,
 				EA3F166A2EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift in Sources */,
@@ -943,7 +1260,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -982,7 +1299,7 @@
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1035,6 +1352,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = WL97SW2V2L;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1052,12 +1370,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -1098,6 +1417,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = WL97SW2V2L;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -1109,11 +1429,12 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};

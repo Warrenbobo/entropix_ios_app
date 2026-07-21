@@ -92,6 +92,8 @@ protocol LMCameraControlsViewDelegate: AnyObject {
     func cameraControlsView(_ view: LMCameraControlsView, didChangeTimer duration: LMTimerDuration)
     func cameraControlsView(_ view: LMCameraControlsView, didToggleLivePhoto enabled: Bool)
     func cameraControlsView(_ view: LMCameraControlsView, didToggleGrid enabled: Bool)
+    func cameraControlsViewDidTapAgentToggle(_ view: LMCameraControlsView)
+    func cameraControlsViewDidTapFlipCamera(_ view: LMCameraControlsView)
 }
 
 class LMCameraControlsView: UIView {
@@ -100,32 +102,42 @@ class LMCameraControlsView: UIView {
     private let controlsStackView = UIStackView()
     
     // 控制项容器
+    private let agentContainer = UIView()
     private let flashContainer = UIView()
     private let ratioContainer = UIView()
     private let timerContainer = UIView()
     private let liveContainer = UIView()
     private let gridContainer = UIView()
+    private let flipCameraContainer = UIView()
     
     // 功能按钮
+    private let agentControlButton = UIButton()
     private let flashControlButton = UIButton()
     private let ratioControlButton = UIButton()
     private let timerControlButton = UIButton()
     private let liveControlButton = UIButton()
     private let gridControlButton = UIButton()
+    private let flipCameraControlButton = UIButton()
     
     // 图标视图
+    private let agentIconView = UIImageView()
     private let flashIconView = UIImageView()
     private let ratioIconView = UIImageView()
     private let timerIconView = UIImageView()
     private let liveIconView = UIImageView()
     private let gridIconView = UIImageView()
+    private let flipCameraIconView = UIImageView()
     
     // 功能标签
+    private let agentLabel = UILabel()
     private let flashLabel = UILabel()
     private let ratioLabel = UILabel()
     private let timerLabel = UILabel()
     private let liveLabel = UILabel()
     private let gridLabel = UILabel()
+    private let flipCameraLabel = UILabel()
+    
+    private let agentGlassPanel = UIVisualEffectView()
     
     // MARK: - Properties
     weak var delegate: LMCameraControlsViewDelegate?
@@ -159,13 +171,121 @@ extension LMCameraControlsView {
         controlsStackView.alignment = .center
         controlsStackView.distribution = .equalSpacing
         
+        setupAgentControlComponents()
         setupFlashControlComponents()
         setupRatioControlComponents()
         setupTimerControlComponents()
         setupLiveControlComponents()
         setupGridControlComponents()
+        setupFlipCameraControlComponents()
     }
     
+    private func setupAgentControlComponents() {
+        agentContainer.addSubview(agentGlassPanel)
+        agentContainer.addSubview(agentControlButton)
+        agentContainer.addSubview(agentIconView)
+        agentContainer.addSubview(agentLabel)
+        agentContainer.isHidden = true
+        agentGlassPanel.isHidden = true
+        agentGlassPanel.isUserInteractionEnabled = false
+        agentGlassPanel.layer.cornerRadius = 18
+        agentGlassPanel.clipsToBounds = true
+        if #available(iOS 26.0, *) {
+            agentGlassPanel.effect = UIGlassEffect(style: .regular)
+        } else {
+            agentGlassPanel.effect = UIBlurEffect(style: .systemThinMaterialDark)
+        }
+
+        agentControlButton.backgroundColor = .clear
+        agentControlButton.addTarget(self, action: #selector(handleAgentControlButtonTapped), for: .touchUpInside)
+
+        agentIconView.image = LMAgentIconProvider.agentToggleIcon
+        agentIconView.tintColor = .white
+        agentIconView.contentMode = .scaleAspectFit
+
+        agentLabel.text = LMLaunageManager.shared.camera.agentToggleLabel
+        agentLabel.font = .systemFont(ofSize: 9, weight: .medium)
+        agentLabel.textColor = .white
+        agentLabel.textAlignment = .center
+
+        controlsStackView.addArrangedSubview(agentContainer)
+        agentContainer.snp.makeConstraints { make in
+            make.width.equalTo(48)
+            make.height.equalTo(58)
+        }
+        agentGlassPanel.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        agentIconView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(6)
+            make.centerX.equalToSuperview()
+            make.width.height.equalTo(20)
+        }
+        agentControlButton.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+        agentLabel.snp.makeConstraints { make in
+            make.top.equalTo(agentIconView.snp.bottom).offset(4)
+            make.leading.trailing.equalToSuperview().inset(2)
+            make.bottom.equalToSuperview().offset(-4)
+        }
+    }
+
+    @objc private func handleAgentControlButtonTapped() {
+        delegate?.cameraControlsViewDidTapAgentToggle(self)
+    }
+
+    func setAgentToggleVisible(_ visible: Bool) {
+        agentContainer.isHidden = !visible
+    }
+
+    func setAgentToggleState(_ state: LMARGuidanceButtonState) {
+        switch state {
+        case .agent:
+            agentIconView.alpha = 1
+            agentLabel.alpha = 1
+            agentGlassPanel.isHidden = false
+            agentContainer.layer.borderWidth = 1
+            agentContainer.layer.borderColor = UIColor.white.withAlphaComponent(0.24).cgColor
+            agentContainer.layer.cornerRadius = 18
+        case .off:
+            agentIconView.alpha = 0.45
+            agentLabel.alpha = 0.45
+            agentGlassPanel.isHidden = true
+            agentContainer.layer.borderWidth = 0
+        case .unavailable:
+            agentContainer.isHidden = true
+        }
+    }
+
+    private func setupFlipCameraControlComponents() {
+        flipCameraContainer.addSubview(flipCameraControlButton)
+        flipCameraContainer.addSubview(flipCameraIconView)
+        flipCameraContainer.addSubview(flipCameraLabel)
+
+        flipCameraControlButton.backgroundColor = .clear
+        flipCameraControlButton.addTarget(self, action: #selector(handleFlipCameraControlButtonTapped), for: .touchUpInside)
+
+        flipCameraIconView.image = UIImage(named: "flip_camera")
+        flipCameraIconView.contentMode = .scaleAspectFit
+
+        flipCameraLabel.text = LMLaunageManager.shared.camera.flipCamera
+        configureControlLabel(flipCameraLabel)
+
+        configureControlItemLayout(
+            container: flipCameraContainer,
+            button: flipCameraControlButton,
+            iconView: flipCameraIconView,
+            label: flipCameraLabel
+        )
+        controlsStackView.addArrangedSubview(flipCameraContainer)
+    }
+
+    @objc private func handleFlipCameraControlButtonTapped() {
+        addTapAnimation(to: flipCameraContainer)
+        delegate?.cameraControlsViewDidTapFlipCamera(self)
+    }
+
     private func setupFlashControlComponents() {
         flashContainer.addSubview(flashControlButton)
         flashContainer.addSubview(flashIconView)

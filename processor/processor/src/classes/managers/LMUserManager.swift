@@ -214,6 +214,25 @@ class LMUserManager {
     static var isSignIn: Bool {
         return userModel != nil
     }
+
+    /// Initializes a mock user for offline demo mode.
+    static func setupOfflineDemoUser() {
+        let demoUser = LMUserModel(
+            userId: "demo_user",
+            username: "Demo User",
+            nickname: "Demo",
+            email: "demo@framaist.com",
+            avatar: nil,
+            subscription: SubscriptionType.plus.rawValue,
+            subscriptionEndDate: nil,
+            inspirePoints: 9999,
+            isGuest: false,
+            birthDate: nil,
+            language: nil
+        )
+        shared.updateUser(demoUser)
+        LMLogger.log("Offline demo user configured")
+    }
     
     
     /// 用户数据（仅内存缓存，不持久化）

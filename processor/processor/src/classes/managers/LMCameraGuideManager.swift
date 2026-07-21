@@ -116,6 +116,20 @@ enum LMCameraTutorialStep: Int, CaseIterable {
     var nextStep: LMCameraTutorialStep? {
         LMCameraTutorialStep(rawValue: rawValue + 1)
     }
+
+    var previousStep: LMCameraTutorialStep? {
+        LMCameraTutorialStep(rawValue: rawValue - 1)
+    }
+
+    /// Steps 2–4 show the PREV control beside the page indicator.
+    var showsPreviousButton: Bool {
+        switch self {
+        case .tapButton, .viewAndSelect, .alignGuidance:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 class LMCameraGuideManager {

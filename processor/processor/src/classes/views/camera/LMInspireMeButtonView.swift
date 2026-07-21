@@ -16,6 +16,9 @@ protocol LMInspireMeButtonViewDelegate: AnyObject {
 
 class LMInspireMeButtonView: UIView {
 
+    private let glassPanel = UIVisualEffectView()
+    private let depthShadowView = UIView()
+    private let borderView = UIView()
     private let inspireButton = UIButton()
     private let contentStackView = UIStackView()
     private let titleLabel = UILabel()
@@ -54,6 +57,9 @@ class LMInspireMeButtonView: UIView {
 extension LMInspireMeButtonView {
 
     private func setupComponents() {
+        addSubview(depthShadowView)
+        addSubview(glassPanel)
+        addSubview(borderView)
         addSubview(inspireButton)
         inspireButton.addSubview(contentStackView)
 
@@ -64,7 +70,7 @@ extension LMInspireMeButtonView {
 
         titleLabel.text = LMText.camera.inspireMeButton
         titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .bold)
-        titleLabel.textColor = .white
+        titleLabel.textColor = LMLiquidGlassHUDTokens.textPrimary
         titleLabel.textAlignment = .center
 
         let questionImage = UIImage(named: "question_circle")?.withRenderingMode(.alwaysOriginal)
@@ -82,6 +88,18 @@ extension LMInspireMeButtonView {
     }
 
     private func configureLayoutConstraints() {
+        depthShadowView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        glassPanel.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        borderView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
         inspireButton.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
@@ -99,23 +117,41 @@ extension LMInspireMeButtonView {
 
     private func configureDefaultStyles() {
         backgroundColor = .clear
-        layer.cornerRadius = 16
-        layer.masksToBounds = true
+        layer.cornerRadius = LMLiquidGlassHUDTokens.panelCornerRadius
+        layer.masksToBounds = false
 
-        let gradientImage = UIImage.gradientImage(
-            size: CGSize(width: 180, height: 64),
-            colors: [UIColor.hexColor("#6680E6").cgColor,
-                    UIColor.hexColor("#9966E6").cgColor],
-            direction: .horizontal,
-            cornerRadius: 16
-        )
-        inspireButton.setBackgroundImage(gradientImage, for: .normal)
+        depthShadowView.backgroundColor = UIColor.black.withAlphaComponent(0.28)
+        depthShadowView.layer.cornerRadius = LMLiquidGlassHUDTokens.panelCornerRadius
+        depthShadowView.layer.shadowColor = UIColor.black.cgColor
+        depthShadowView.layer.shadowOpacity = 0.45
+        depthShadowView.layer.shadowRadius = 10
+        depthShadowView.layer.shadowOffset = CGSize(width: 0, height: 6)
+        depthShadowView.isUserInteractionEnabled = false
+
+        if #available(iOS 26.0, *) {
+            let effect = UIGlassEffect(style: .regular)
+            effect.isInteractive = true
+            glassPanel.effect = effect
+        } else {
+            glassPanel.effect = UIBlurEffect(style: .systemThinMaterialDark)
+        }
+        glassPanel.layer.cornerRadius = LMLiquidGlassHUDTokens.panelCornerRadius
+        glassPanel.clipsToBounds = true
+
+        borderView.backgroundColor = .clear
+        borderView.layer.cornerRadius = LMLiquidGlassHUDTokens.panelCornerRadius
+        borderView.layer.borderWidth = 0.5
+        borderView.layer.borderColor = UIColor.white.withAlphaComponent(0.35).cgColor
+        borderView.isUserInteractionEnabled = false
+
+        inspireButton.backgroundColor = .clear
         inspireButton.adjustsImageWhenHighlighted = false
         updateInspireButtonAppearance()
     }
 
     private func updateInspireButtonAppearance() {
-        inspireButton.alpha = isEnabledForCamera ? 1.0 : 0.5
+        alpha = isEnabledForCamera ? 1.0 : 0.5
+        transform = isEnabledForCamera ? CGAffineTransform(translationX: 0, y: -1) : .identity
     }
 }
 

@@ -66,6 +66,7 @@ protocol LMSuggestionsCarouselViewDelegate: AnyObject {
     func suggestionsCarouselViewDidRequestMoreSuggestions(_ view: LMSuggestionsCarouselView)
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpSuggestion suggestion: LMCompositionSuggestion, at index: Int)
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpWithOffset offset: CGFloat)
+    func suggestionsCarouselViewDidTapPickFromAlbum(_ view: LMSuggestionsCarouselView)
 }
 
 class LMSuggestionsCarouselView: UIView {
@@ -74,6 +75,11 @@ class LMSuggestionsCarouselView: UIView {
     private var scrollView: UIScrollView!
     private var contentView: UIView!
     private var cardViews: [LMSuggestionCardView] = []
+    private var uploadCardView: LMUploadReferenceCardView?
+    private let swipeHintLabel = UILabel()
+    
+    /// Display index 0 = upload card; suggestion display index = data index + 1.
+    private let uploadSlotOffset = 1
     
     // MARK: - Properties
     weak var delegate: LMSuggestionsCarouselViewDelegate?
@@ -162,12 +168,43 @@ class LMSuggestionsCarouselView: UIView {
         
         scrollView.addSubview(contentView)
         addSubview(scrollView)
+
+        swipeHintLabel.text = LMLaunageManager.shared.camera.swipeUpToSelectHint
+        swipeHintLabel.font = .systemFont(ofSize: 11, weight: .regular)
+        swipeHintLabel.textColor = UIColor.white.withAlphaComponent(0.7)
+        swipeHintLabel.textAlignment = .center
+        addSubview(swipeHintLabel)
     }
     
     private func setupConstraints() {
-        scrollView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+        swipeHintLabel.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview().offset(-2)
         }
+
+        scrollView.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview()
+            make.bottom.equalTo(swipeHintLabel.snp.top).offset(-8)
+        }
+    }
+
+    /// Total carousel items including upload slot at index 0.
+    private var displayItemCount: Int {
+        uploadSlotOffset + cardViews.count
+    }
+
+    private func suggestionIndex(forDisplayIndex displayIndex: Int) -> Int? {
+        guard displayIndex >= uploadSlotOffset else { return nil }
+        let idx = displayIndex - uploadSlotOffset
+        return idx < suggestions.count ? idx : nil
+    }
+
+    private func displayIndex(forSuggestionIndex suggestionIndex: Int) -> Int {
+        suggestionIndex + uploadSlotOffset
+    }
+
+    private var swipeUpThreshold: CGFloat {
+        60.0 * screenScaleFactor
     }
     
     // MARK: - Public Methods
@@ -189,7 +226,7 @@ class LMSuggestionsCarouselView: UIView {
         }
         
         // ✅ CRITICAL: Check if this is initial load (first time creating cards)
-        let isInitialLoad = cardViews.isEmpty
+        let isInitialLoad = uploadCardView == nil && cardViews.isEmpty
         
         // ✅ Calculate data hash to detect actual changes
         let newDataHash = calculateDataHash(suggestions)
@@ -216,9 +253,8 @@ class LMSuggestionsCarouselView: UIView {
         // ✅ CRITICAL: Only use smartUpdateCardViews for non-initial updates
         // Initial load must create all cards from scratch
         if isInitialLoad {
-            // 首次加载：创建所有卡片
             createCardViews()
-            LMLogger.log("✅ Initial load: Created \(cardViews.count) card views")
+            LMLogger.log("✅ Initial load: Created upload + \(cardViews.count) suggestion cards")
         } else {
             // 后续更新：智能复用现有卡片
             smartUpdateCardViews()
@@ -231,24 +267,14 @@ class LMSuggestionsCarouselView: UIView {
         
         // ✅ Handle selection based on scenario
         if isInitialLoad {
-            // ✅ 首次加载：默认选中第一个卡片（需求要求）
-            if suggestions.count > 0 {
-                selectSuggestionSync(at: 0, animated: false)
-                
-                // 触发 delegate 回调
-                let firstSuggestion = suggestions[0]
-                delegate?.suggestionsCarouselView(
-                    self,
-                    didSelectSuggestion: firstSuggestion,
-                    at: 0
-                )
-                
-                LMLogger.log("✅ Initial load: Auto-selected first suggestion with enlarged style")
+            scrollToCard(at: 0, animated: false)
+            LMLogger.log("✅ Initial load: Carousel starts at upload card (index 0), no default selection")
+        } else if previousSelectedIndex >= uploadSlotOffset {
+            let suggestionIdx = previousSelectedIndex - uploadSlotOffset
+            if suggestionIdx < suggestions.count {
+                selectSuggestionSync(at: previousSelectedIndex, animated: false)
+                LMLogger.log("✅ Restored selection at display index: \(previousSelectedIndex)")
             }
-        } else if previousSelectedIndex >= 0 && previousSelectedIndex < suggestions.count {
-            // ✅ 恢复之前的选中状态（例如从 Reference Image 返回）
-            selectSuggestionSync(at: previousSelectedIndex, animated: false)
-            LMLogger.log("✅ Restored selection at index: \(previousSelectedIndex)")
         }
     }
     
@@ -377,78 +403,43 @@ class LMSuggestionsCarouselView: UIView {
         }
     }
     
-    func selectSuggestion(at index: Int, animated: Bool = true) {
-        guard index >= 0 && index < cardViews.count else { return }
-        
-        let previousIndex = selectedIndex
-        selectedIndex = index
-        
-        // 取消之前选中的 card
-        if previousIndex >= 0 && previousIndex < cardViews.count {
-            let previousCard = cardViews[previousIndex]
-            previousCard.isSelected = false
-        }
-        
-        // 选中新的 card
-        let currentCard = cardViews[index]
-        currentCard.isSelected = true
-        
-        // 重新布局所有 cards（带动画）
-        if animated {
-            UIView.animate(
-                withDuration: 0.3,
-                delay: 0,
-                usingSpringWithDamping: 0.8,
-                initialSpringVelocity: 0.5,
-                options: [.curveEaseInOut, .allowUserInteraction]
-            ) {
-                self.layoutCardViews()
-            }
-        } else {
-            layoutCardViews()
-        }
-        
-        // 滚动到中心位置
-        DispatchQueue.main.asyncAfter(deadline: .now() + (animated ? 0.1 : 0)) {
-            self.scrollToCard(at: index, animated: animated)
-        }
+    func selectSuggestion(at suggestionIndex: Int, animated: Bool = true) {
+        let displayIndex = displayIndex(forSuggestionIndex: suggestionIndex)
+        selectSuggestionSync(at: displayIndex, animated: animated)
     }
     
     /// 同步版本的选择方法，避免额外的异步调度
-    private func selectSuggestionSync(at index: Int, animated: Bool = true) {
-        guard index >= 0 && index < cardViews.count else { return }
-        
+    private func selectSuggestionSync(at displayIndex: Int, animated: Bool = true) {
+        guard displayIndex >= 0 && displayIndex < displayItemCount else { return }
+
         let previousIndex = selectedIndex
-        selectedIndex = index
-        
-        // 取消之前选中的 card
-        if previousIndex >= 0 && previousIndex < cardViews.count {
-            let previousCard = cardViews[previousIndex]
-            previousCard.isSelected = false
+        selectedIndex = displayIndex
+
+        if previousIndex > 0 {
+            let prevSuggestion = previousIndex - uploadSlotOffset
+            if prevSuggestion >= 0 && prevSuggestion < cardViews.count {
+                cardViews[prevSuggestion].isSelected = false
+            }
         }
-        
-        // 选中新的 card
-        let currentCard = cardViews[index]
-        currentCard.isSelected = true
-        
-        // 重新布局所有 cards（只在需要动画时才调用，避免重复布局）
+        uploadCardView?.applySelectionStyle(isSelected: false, borderWidth: selectedBorderWidth)
+
+        if displayIndex == 0 {
+            uploadCardView?.applySelectionStyle(isSelected: true, borderWidth: selectedBorderWidth)
+        } else {
+            let suggestionIndex = displayIndex - uploadSlotOffset
+            if suggestionIndex < cardViews.count {
+                cardViews[suggestionIndex].isSelected = true
+            }
+        }
+
         if animated {
-            UIView.animate(
-                withDuration: 0.3,
-                delay: 0,
-                usingSpringWithDamping: 0.8,
-                initialSpringVelocity: 0.5,
-                options: [.curveEaseInOut, .allowUserInteraction]
-            ) {
+            UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut, .allowUserInteraction]) {
                 self.layoutCardViews()
             } completion: { _ in
-                // 动画完成后滚动到中心位置
-                self.scrollToCard(at: index, animated: true)
+                self.scrollToCard(at: displayIndex, animated: true)
             }
         } else {
-            // 非动画模式：不重复调用 layoutCardViews（调用方已经调用过）
-            // 只滚动到中心位置
-            scrollToCard(at: index, animated: false)
+            scrollToCard(at: displayIndex, animated: false)
         }
     }
     
@@ -538,6 +529,14 @@ class LMSuggestionsCarouselView: UIView {
     // MARK: - Private Methods
     
     private func createCardViews() {
+        let upload = LMUploadReferenceCardView()
+        upload.onTap = { [weak self] in
+            guard let self else { return }
+            self.delegate?.suggestionsCarouselViewDidTapPickFromAlbum(self)
+        }
+        uploadCardView = upload
+        contentView.addSubview(upload)
+
         for (index, suggestion) in suggestions.enumerated() {
             let cardView = createCardView(for: suggestion, at: index)
             cardViews.append(cardView)
@@ -566,114 +565,114 @@ class LMSuggestionsCarouselView: UIView {
     }
     
     private func layoutCardViews() {
-        guard !cardViews.isEmpty else { return }
-        
-        // 计算总宽度（所有卡片使用统一间距10px，左右各30px边距）
-        // totalWidth = 左边距(30) + 所有卡片宽度 + 卡片间距 + 右边距(30)
-        let totalWidth = sideInset + CGFloat(cardViews.count) * normalCardSize.width + CGFloat(cardViews.count - 1) * cardSpacing + sideInset * 2
-        
-        // 设置 contentView 大小（高度要足够容纳放大的卡片）
-        let contentHeight = max(bounds.height, selectedCardSize.height)
-        
-        // ✅ FIX 10: Use tolerance-based comparison for CGSize to avoid floating-point precision issues
+        let itemCount = displayItemCount
+        guard itemCount > 0 else { return }
+
+        let totalWidth = sideInset
+            + CGFloat(itemCount) * normalCardSize.width
+            + CGFloat(max(0, itemCount - 1)) * cardSpacing
+            + sideInset
+
+        let contentHeight = max(scrollView.bounds.height, selectedCardSize.height)
         let newContentSize = CGSize(width: totalWidth, height: contentHeight)
-        let sizeDifference = abs(contentView.frame.width - newContentSize.width) + abs(contentView.frame.height - newContentSize.height)
-        
-        // Only update if difference is significant (> 0.5 points)
-        if sizeDifference > 0.5 {
-            contentView.frame = CGRect(x: 0, y: 0, width: totalWidth, height: contentHeight)
+
+        if abs(contentView.frame.width - newContentSize.width) > 0.5
+            || abs(contentView.frame.height - newContentSize.height) > 0.5 {
+            contentView.frame = CGRect(origin: .zero, size: newContentSize)
             scrollView.contentSize = newContentSize
-            LMLogger.log("📏 Updated contentSize to \(newContentSize)")
         }
-        
-        // 布局每个 card
+
         var currentX = sideInset
-        for (index, cardView) in cardViews.enumerated() {
-            let isSelected = (index == selectedIndex)
-            let cardSize = isSelected ? selectedCardSize : normalCardSize
-            
-            // 所有卡片的底部对齐到 contentView 的底部
-            // 选中的卡片向上偏移20px
-            let y = contentHeight - cardSize.height - (isSelected ? selectedYOffset : 0)
-            
-            // 如果当前卡片被选中，从左下角放大，不需要额外偏移
-            // 如果当前卡片在选中卡片右侧，需要向右移动以腾出放大空间
-            var xOffset: CGFloat = 0
-            if selectedIndex >= 0 && index > selectedIndex {
-                // 计算选中卡片放大后增加的宽度
-                let extraWidth = selectedCardSize.width - normalCardSize.width
-                xOffset = extraWidth
-            }
-            
-            let newFrame = CGRect(
-                x: currentX + xOffset,
-                y: y,
-                width: cardSize.width,
-                height: cardSize.height
+
+        if let upload = uploadCardView {
+            layoutItem(
+                upload,
+                displayIndex: 0,
+                currentX: &currentX,
+                contentHeight: contentHeight,
+                isUpload: true
             )
-            
-            // 只在 frame 真正改变时才更新，避免不必要的布局
-            if cardView.frame != newFrame {
-                cardView.frame = newFrame
-            }
-            
-            // 只在边框宽度需要改变时才更新
-            let newBorderWidth = isSelected ? selectedBorderWidth : 1
-            if cardView.layer.borderWidth != newBorderWidth {
-                cardView.layer.borderWidth = newBorderWidth
-            }
-            
-            // 更新下一个卡片的 x 位置
-            currentX += normalCardSize.width + cardSpacing
+        }
+
+        for (suggestionIndex, cardView) in cardViews.enumerated() {
+            layoutItem(
+                cardView,
+                displayIndex: suggestionIndex + uploadSlotOffset,
+                currentX: &currentX,
+                contentHeight: contentHeight,
+                isUpload: false
+            )
         }
     }
-    
-    private func scrollToCard(at index: Int, animated: Bool) {
-        guard index >= 0 && index < cardViews.count else { return }
-        
-        let cardView = cardViews[index]
-        
-        // 📊 详细日志：滚动操作
-        LMLogger.log("📍 [SCROLL] Scrolling to card at index: \(index)")
-        LMLogger.log("📍 [SCROLL] Card frame: \(cardView.frame)")
-        LMLogger.log("📍 [SCROLL] ScrollView bounds: \(scrollView.bounds)")
-        LMLogger.log("📍 [SCROLL] ScrollView contentSize: \(scrollView.contentSize)")
-        LMLogger.log("📍 [SCROLL] Current contentOffset: \(scrollView.contentOffset)")
-        
-        // ✅ CRITICAL FIX: For first card (index 0), align to left edge instead of center
-        // This prevents the card from scrolling off-screen to the left
-        if index == 0 {
-            // 第一个卡片：滚动到左边缘（考虑左侧边距）
-            scrollView.setContentOffset(CGPoint(x: 0, y: 0), animated: animated)
-            LMLogger.log("📍 [SCROLL] First card - scrolled to left edge (offset: 0)")
+
+    private func layoutItem(
+        _ view: UIView,
+        displayIndex: Int,
+        currentX: inout CGFloat,
+        contentHeight: CGFloat,
+        isUpload: Bool
+    ) {
+        let isSelected = displayIndex == selectedIndex
+        let cardSize = isSelected ? selectedCardSize : normalCardSize
+        let y = contentHeight - cardSize.height - (isSelected ? selectedYOffset : 0)
+
+        var xOffset: CGFloat = 0
+        if selectedIndex >= 0 && displayIndex > selectedIndex {
+            xOffset = selectedCardSize.width - normalCardSize.width
+        }
+
+        view.frame = CGRect(
+            x: currentX + xOffset,
+            y: y,
+            width: cardSize.width,
+            height: cardSize.height
+        )
+
+        if let upload = view as? LMUploadReferenceCardView {
+            upload.applySelectionStyle(isSelected: isSelected, borderWidth: selectedBorderWidth)
+            upload.transform = isSelected
+                ? CGAffineTransform(scaleX: selectedScale, y: selectedScale)
+                : .identity
+        } else if let card = view as? LMSuggestionCardView {
+            card.isSelected = isSelected
+            card.layer.borderWidth = isSelected ? selectedBorderWidth : 1
+        }
+
+        currentX += normalCardSize.width + cardSpacing
+    }
+
+    private func scrollToCard(at displayIndex: Int, animated: Bool) {
+        guard displayIndex >= 0 && displayIndex < displayItemCount else { return }
+
+        let targetView: UIView?
+        if displayIndex == 0 {
+            targetView = uploadCardView
+        } else {
+            let suggestionIndex = displayIndex - uploadSlotOffset
+            targetView = suggestionIndex < cardViews.count ? cardViews[suggestionIndex] : nil
+        }
+        guard let cardView = targetView else { return }
+
+        if displayIndex == 0 {
+            scrollView.setContentOffset(.zero, animated: animated)
             return
         }
-        
-        // 其他卡片：滚动到中心位置
+
         let cardCenterX = cardView.frame.midX
         let scrollViewCenterX = scrollView.bounds.width / 2
         let targetOffsetX = cardCenterX - scrollViewCenterX
-        
-        let maxOffsetX = scrollView.contentSize.width - scrollView.bounds.width
+        let maxOffsetX = max(0, scrollView.contentSize.width - scrollView.bounds.width)
         let clampedOffsetX = max(0, min(targetOffsetX, maxOffsetX))
-        
-        LMLogger.log("📍 [SCROLL] Card center X: \(cardCenterX)")
-        LMLogger.log("📍 [SCROLL] ScrollView center X: \(scrollViewCenterX)")
-        LMLogger.log("📍 [SCROLL] Target offset X: \(targetOffsetX)")
-        LMLogger.log("📍 [SCROLL] Max offset X: \(maxOffsetX)")
-        LMLogger.log("📍 [SCROLL] Clamped offset X: \(clampedOffsetX)")
-        
         scrollView.setContentOffset(CGPoint(x: clampedOffsetX, y: 0), animated: animated)
-        LMLogger.log("📍 [SCROLL] Scrolled to card at index \(index), offset: \(clampedOffsetX)")
     }
     
     @objc private func cardTapped(_ gesture: UITapGestureRecognizer) {
         guard let cardView = gesture.view as? LMSuggestionCardView else { return }
-        let index = cardView.tag
-        
-        // ✅ FIX: 添加索引有效性检查，避免异步更新导致的索引错误
-        guard index >= 0 && index < suggestions.count && index < cardViews.count else {
-            LMLogger.log("⚠️ Invalid tap index: \(index), suggestions count: \(suggestions.count)")
+        let suggestionIndex = cardView.tag
+        let displayIndex = displayIndex(forSuggestionIndex: suggestionIndex)
+
+        guard suggestionIndex >= 0 && suggestionIndex < suggestions.count && suggestionIndex < cardViews.count else {
+            LMLogger.log("⚠️ Invalid tap index: \(suggestionIndex), suggestions count: \(suggestions.count)")
             return
         }
         
@@ -686,62 +685,15 @@ class LMSuggestionsCarouselView: UIView {
             return
         }
         
-        // 📊 详细日志：点击事件
-        LMLogger.log("👆 [TAP] Card tapped at index: \(index)")
-        LMLogger.log("👆 [TAP] Gesture state: \(gesture.state.rawValue)")
-        LMLogger.log("👆 [TAP] Current selected index: \(selectedIndex)")
-        LMLogger.log("👆 [TAP] Card frame: \(cardView.frame)")
-        LMLogger.log("👆 [TAP] Tap location in view: \(gesture.location(in: self))")
-        
-        if index != selectedIndex {
-            // 转换到点击状态
-            guard transitionToState(.cardTapping(index: index)) else {
-                return
-            }
-            // 📊 详细日志：选中状态变更
-            LMLogger.log("👆 [TAP] Selection changing from \(selectedIndex) to \(index)")
-            
-            // ✅ 更新选中状态
-            let previousIndex = selectedIndex
-            selectedIndex = index
-            
-            // 取消之前选中的 card
-            if previousIndex >= 0 && previousIndex < cardViews.count {
-                let previousCard = cardViews[previousIndex]
-                previousCard.isSelected = false
-                LMLogger.log("👆 [TAP] Deselected card at index: \(previousIndex)")
-            }
-            
-            // 选中新的 card
-            let currentCard = cardViews[index]
-            currentCard.isSelected = true
-            LMLogger.log("👆 [TAP] Selected card at index: \(index)")
-            
-            // ✅ FIX: 使用更短的动画时间，提升响应速度
-            LMLogger.log("👆 [TAP] Starting layout animation...")
-            UIView.animate(
-                withDuration: 0.25,
-                delay: 0,
-                usingSpringWithDamping: 0.85,
-                initialSpringVelocity: 0.3,
-                options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]
-            ) {
-                self.layoutCardViews()
-            } completion: { finished in
-                LMLogger.log("👆 [TAP] Layout animation completed (finished: \(finished))")
-                // ✅ 动画完成后滚动到中心位置（带动画效果）
-                self.scrollToCard(at: index, animated: true)
-                
-                // 转换回空闲状态
-                self.transitionToState(.idle)
-            }
-            
-            // 触发 delegate 回调
-            let suggestion = suggestions[index]
-            LMLogger.log("👆 [TAP] Triggering delegate callback for suggestion: \(suggestion.id ?? "unknown")")
-            delegate?.suggestionsCarouselView(self, didSelectSuggestion: suggestion, at: index)
-        } else {
-            LMLogger.log("👆 [TAP] Card already selected, no action taken")
+        LMLogger.log("👆 [TAP] Card tapped at suggestion index: \(suggestionIndex), display: \(displayIndex)")
+
+        if displayIndex != selectedIndex {
+            guard transitionToState(.cardTapping(index: displayIndex)) else { return }
+            selectSuggestionSync(at: displayIndex, animated: true)
+            transitionToState(.idle)
+
+            let suggestion = suggestions[suggestionIndex]
+            delegate?.suggestionsCarouselView(self, didSelectSuggestion: suggestion, at: suggestionIndex)
         }
     }
     
@@ -820,16 +772,16 @@ class LMSuggestionsCarouselView: UIView {
     }
     
     // MARK: - Swipe Up Gesture Properties
-    private let swipeUpThreshold: CGFloat = 150.0 // 生效阈值
     private var draggedCardOriginalFrame: CGRect = .zero
     private var hasNotifiedSwipeUpOffset = false // 标记是否已通知过偏移量
     private weak var currentDraggedCardView: LMSuggestionCardView? // 当前正在拖动的卡片
     
     @objc private func cardPanned(_ gesture: UIPanGestureRecognizer) {
         guard let cardView = gesture.view as? LMSuggestionCardView else { return }
-        let index = cardView.tag
-        
-        guard index >= 0 && index < suggestions.count else { return }
+        let suggestionIndex = cardView.tag
+        let displayIndex = displayIndex(forSuggestionIndex: suggestionIndex)
+
+        guard suggestionIndex >= 0 && suggestionIndex < suggestions.count else { return }
         
         let translation = gesture.translation(in: self)
         let velocity = gesture.velocity(in: self)
@@ -837,7 +789,7 @@ class LMSuggestionsCarouselView: UIView {
         switch gesture.state {
         case .began:
             // 状态已在 gestureRecognizerShouldBegin 中转换
-            LMLogger.log("🎯 [PAN] Started dragging card at index: \(index)")
+            LMLogger.log("🎯 [PAN] Started dragging card at suggestion index: \(suggestionIndex), display: \(displayIndex)")
             LMLogger.log("🎯 [PAN] Initial translation: \(translation)")
             LMLogger.log("🎯 [PAN] Initial velocity: \(velocity)")
             LMLogger.log("🎯 [PAN] Card frame: \(cardView.frame)")
@@ -885,7 +837,7 @@ class LMSuggestionsCarouselView: UIView {
             
         case .ended, .cancelled:
             // 转换到拖拽结束状态
-            guard transitionToState(.cardDragEnding(index: index)) else {
+            guard transitionToState(.cardDragEnding(index: suggestionIndex)) else {
                 return
             }
             
@@ -904,21 +856,27 @@ class LMSuggestionsCarouselView: UIView {
                 // 达到阈值：执行上划动画并触发回调
                 LMLogger.log("⬆️ [PAN] Triggering swipe up animation")
                 
-                // ✅ FIX: 在触发上划动画前，先更新选中状态
+                // ✅ FIX: 在触发上划动画前，先更新选中状态（display index）
                 // 但不立即重新布局，避免与 transform 冲突
                 let previousIndex = selectedIndex
-                selectedIndex = index
-                
+                selectedIndex = displayIndex
+
                 // 取消之前选中的卡片
-                if previousIndex >= 0 && previousIndex < cardViews.count && previousIndex != index {
-                    let previousCard = cardViews[previousIndex]
-                    previousCard.isSelected = false
-                    LMLogger.log("⬆️ [PAN] Deselected previous card at index: \(previousIndex)")
+                if previousIndex >= 0 && previousIndex != displayIndex {
+                    if previousIndex == 0 {
+                        uploadCardView?.applySelectionStyle(isSelected: false, borderWidth: selectedBorderWidth)
+                    } else {
+                        let prevSuggestionIndex = previousIndex - uploadSlotOffset
+                        if prevSuggestionIndex >= 0 && prevSuggestionIndex < cardViews.count {
+                            cardViews[prevSuggestionIndex].isSelected = false
+                            LMLogger.log("⬆️ [PAN] Deselected previous card at display index: \(previousIndex)")
+                        }
+                    }
                 }
-                
+
                 // 选中当前卡片（在动画前设置，确保状态正确）
                 cardView.isSelected = true
-                LMLogger.log("⬆️ [PAN] Selected current card at index: \(index)")
+                LMLogger.log("⬆️ [PAN] Selected current card at suggestion index: \(suggestionIndex), display: \(displayIndex)")
                 
                 // ⚠️ 注意：不在这里调用 layoutCardViews()
                 // 因为卡片当前有 transform 变换，重新布局会导致位置错误
@@ -935,26 +893,26 @@ class LMSuggestionsCarouselView: UIView {
                     },
                     completion: { finished in
                         LMLogger.log("⬆️ [PAN] Swipe up animation completed (finished: \(finished))")
-                        LMLogger.log("⬆️ [PAN] Card swiped up at index: \(index)")
-                        
-                        // 触发上划回调
-                        let suggestion = self.suggestions[index]
+                        LMLogger.log("⬆️ [PAN] Card swiped up at suggestion index: \(suggestionIndex), display: \(displayIndex)")
+
+                        // 触发上划回调（delegate 使用 suggestion data index）
+                        let suggestion = self.suggestions[suggestionIndex]
                         self.delegate?.suggestionsCarouselView(
                             self,
                             didSwipeUpSuggestion: suggestion,
-                            at: index
+                            at: suggestionIndex
                         )
-                        
+
                         // ✅ FIX: 立即重置卡片状态并转换到空闲状态，避免阻塞后续点击
                         // 先重置 transform 和 alpha
                         cardView.transform = .identity
                         cardView.alpha = 1.0
-                        
+
                         // 重新布局，应用选中状态的视觉效果
                         self.layoutCardViews()
-                        
+
                         // 滚动到选中的卡片（居中显示）
-                        self.scrollToCard(at: index, animated: true)
+                        self.scrollToCard(at: displayIndex, animated: true)
                         
                         // ✅ CRITICAL: 立即转换回空闲状态，允许后续点击
                         self.transitionToState(.idle)
@@ -1051,27 +1009,27 @@ class LMSuggestionsCarouselView: UIView {
     /// 获取当前选中的构图方案
     /// - Returns: 当前选中的 LMCompositionSuggestion，如果没有选中则返回 nil
     func getSelectedSuggestion() -> LMCompositionSuggestion? {
-        guard selectedIndex >= 0 && selectedIndex < suggestions.count else {
-            return nil
-        }
-        
-        return suggestions[selectedIndex]
+        guard let idx = suggestionIndex(forDisplayIndex: selectedIndex) else { return nil }
+        return suggestions[idx]
     }
-    
-    /// 获取当前选中的卡片视图
-    /// - Returns: 当前选中的 LMSuggestionCardView，如果没有选中则返回 nil
+
     func getSelectedCardView() -> LMSuggestionCardView? {
-        guard selectedIndex >= 0 && selectedIndex < cardViews.count else {
-            return nil
-        }
-        
-        return cardViews[selectedIndex]
+        guard let idx = suggestionIndex(forDisplayIndex: selectedIndex),
+              idx < cardViews.count else { return nil }
+        return cardViews[idx]
     }
     
-    /// 获取当前选中的索引
-    /// - Returns: 当前选中的索引，如果没有选中则返回 -1
+    /// 获取当前选中的 carousel display index（0 = upload 位，1+ = suggestion）
+    /// - Returns: display index，未选中时返回 -1
     func getSelectedIndex() -> Int {
         return selectedIndex
+    }
+
+    /// 获取当前选中的 suggestion 数据索引（不含 upload 位）
+    /// - Returns: suggestion index，未选中 suggestion 时返回 -1
+    func getSelectedSuggestionIndex() -> Int {
+        guard let idx = suggestionIndex(forDisplayIndex: selectedIndex) else { return -1 }
+        return idx
     }
     
     // MARK: - Gesture Handling

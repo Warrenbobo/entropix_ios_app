@@ -114,7 +114,7 @@ extension LMCameraPage {
         
         currentCameraState = .showingSuggestions
         currentTaskId = taskId
-        preferredARGuidanceButtonState = .box
+        preferredARGuidanceButtonState = .off
         jobIdToPlaceholderRank.removeAll()
         if let suggestionsList = suggestions {
             currentSuggestions = suggestionsList
@@ -128,9 +128,7 @@ extension LMCameraPage {
         
         // 切换底部控制栏为紧凑模式
         cameraBottomControlsView.setLayoutMode(.compact, animated: true)
-        
-        // Show Suggestions 状态下，AR Guidance 保持不可用（灰色）
-        cameraBottomControlsView.resetARGuidance()
+        cameraBottomControlsView.setARGuidanceContainerHidden(true)
         
         // 显示构图轮播
         showSuggestionsCarousel()
@@ -142,8 +140,10 @@ extension LMCameraPage {
             LMLogger.log("✅ Initial suggestions loaded: \(currentSuggestions.count) items")
         }
         
-        // 开始轮询 AI 生成构图
-        startPollingAIGCSuggestions()
+        // 开始轮询 AI 生成构图（离线演示任务跳过）
+        if LMFeatureFlagsManager.backendApiEnabled && taskId != "demo_task" {
+            startPollingAIGCSuggestions()
+        }
         
         // 应用布局变化
         UIView.animate(
@@ -159,7 +159,7 @@ extension LMCameraPage {
             self?.showSwipeUpGuideIfNeeded()
         }
         
-        LMLogger.log("📐 Entered Show Suggestions state - Task ID: \(taskId), Suggestions: \(suggestions?.count ?? 0), AR Guidance unavailable")
+        LMLogger.log("📐 Entered Show Suggestions state - Task ID: \(taskId), Suggestions: \(suggestions?.count ?? 0)")
     }
     
     /// 退出 Show Suggestions 状态
@@ -180,15 +180,14 @@ extension LMCameraPage {
         // 恢复底部控制栏高度
         bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
         
-        // 切换底部控制栏为正常模式
+        // 恢复底部控制栏为正常模式
         cameraBottomControlsView.setLayoutMode(.normal, animated: true)
+        cameraBottomControlsView.setARGuidanceContainerHidden(false)
         
-        // 重置 AR Guidance 状态
-        cameraBottomControlsView.resetARGuidance()
         if isARGuidanceActive {
             stopARGuidanceSession()
         }
-        preferredARGuidanceButtonState = .box
+        preferredARGuidanceButtonState = .off
         
         // 清理数据
         currentTaskId = nil
@@ -206,11 +205,12 @@ extension LMCameraPage {
             self.view.layoutIfNeeded()
         }
         
-        LMLogger.log("📐 Exited Show Suggestions state, AR Guidance reset to unavailable")
+        LMLogger.log("📐 Exited Show Suggestions state")
     }
     
     func reportCurrentSuggestionShotIfNeeded() {
         guard currentCameraState == .compositionSelected else { return }
+        guard LMFeatureFlagsManager.backendApiEnabled, currentTaskId != "demo_task" else { return }
         guard case .normal = navigationSource else {
             LMLogger.log("⏭️ [Task Result] Skip Shot report - navigation source is not task-backed suggestion flow")
             return
@@ -233,6 +233,7 @@ extension LMCameraPage {
     }
 
     func reportSuggestionLikeIfNeeded(_ suggestion: LMCompositionSuggestion) {
+        guard LMFeatureFlagsManager.backendApiEnabled, currentTaskId != "demo_task" else { return }
         guard case .normal = navigationSource else {
             LMLogger.log("⏭️ [Task Result] Skip Like report - navigation source is not task-backed suggestion flow")
             return
@@ -282,6 +283,7 @@ extension LMCameraPage {
         suggestionId: String?,
         finalized: Bool
     ) {
+        guard LMFeatureFlagsManager.backendApiEnabled, taskId != "demo_task" else { return }
         var logComponents = ["task_id=\(taskId)", "finalized=\(finalized)"]
         if let eventType {
             logComponents.append("event_type=\(eventType.rawValue)")
@@ -341,7 +343,7 @@ extension LMCameraPage {
             let selectedYOffset: CGFloat = 20.0
             let buffer: CGFloat = 10.0
             
-            let carouselHeight = (baseNormalCardHeight * screenScaleFactor * selectedScale) + selectedYOffset + buffer
+            let carouselHeight = (baseNormalCardHeight * screenScaleFactor * selectedScale) + selectedYOffset + 8 + 14 + 2 + buffer
             
             carouselView.snp.makeConstraints { make in
                 make.bottom.equalTo(cameraBottomControlsView.snp.top).offset(-20)
@@ -725,6 +727,10 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
         enterCompositionSelectedState(with: suggestion, image: image)
     }
     
+    func suggestionsCarouselViewDidTapPickFromAlbum(_ view: LMSuggestionsCarouselView) {
+        presentAlbumPicker()
+    }
+
     func suggestionsCarouselView(_ view: LMSuggestionsCarouselView, didSwipeUpWithOffset offset: CGFloat) {
         // offset 已经是大于阈值的值，直接隐藏引导
         // hideSwipeUpGuide 内部有 guard 检查，确保只执行一次
@@ -744,75 +750,39 @@ extension LMCameraPage {
             LMLogger.log("⚠️ [Composition Selected] Cannot enter - current state is not showingSuggestions")
             return
         }
-        
-        LMLogger.log("🎯 [Composition Selected] Entering state with suggestion: \(suggestion.id)")
-        
-        currentCameraState = .compositionSelected
-        currentSuggestion = suggestion
-        clearLineArtOverlay()
-        currentReferenceImage = image
-        
-        // 确保 Inspire Me 按钮隐藏
-        inspireMeButtonView.isHidden = true
-        
-        // 隐藏构图轮播
-        hideSuggestionsCarousel()
-        
-        // 恢复底部控制栏高度
-        bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
-        
-        // 切换底部控制栏为正常模式
-        cameraBottomControlsView.setLayoutMode(.normal, animated: true)
-        
-        // 显示参考图在左下角
-        showReferenceImageInCorner(suggestion: suggestion)
-        
-        LMLogger.log("✅ [Composition Selected] Reference image loaded for AR Guidance")
-        
-        let initialARGuidanceState = LMARGuidancePolicy.stateForReferenceImageEntry(from: preferredARGuidanceButtonState)
-        preferredARGuidanceButtonState = initialARGuidanceState
-        cameraBottomControlsView.setARGuidanceState(initialARGuidanceState)
-        LMLogger.log("🎯 [Composition Selected] Applying AR Guidance state: \(initialARGuidanceState.logName)")
-        configureARGuidanceMode(initialARGuidanceState)
-        
-        // 应用布局变化
-        UIView.animate(
-            withDuration: 0.35,
-            delay: 0,
-            usingSpringWithDamping: 0.85,
-            initialSpringVelocity: 0.5,
-            options: [.curveEaseInOut, .allowUserInteraction]
-        ) {
-            self.view.layoutIfNeeded()
-        } completion: { [weak self] _ in
-            // 动画完成后显示 Step 3 引导（用户第一次进入 Camera w/ composition selected 状态）
-            self?.showARGuidanceGuideIfNeeded()
-            // 尝试显示 Step 4 引导（如果 Step 3 已显示过且 AR Guidance 已开启）
-            if initialARGuidanceState == .box {
-                self?.tryShowAlignBoxesGuideAfterDelay()
-            }
-        }
-        
-        LMLogger.log("📐 [Composition Selected] State entered - AR Guidance should be starting")
+        enterCompositionSelected(with: suggestion, image: image)
     }
     
     /// 进入 Camera with Composition Selected 状态（从已保存构图进入）
     func enterCompositionSelectedStateFromSavedIdea(item: GalleryItem) {
         currentCameraState = .compositionSelected
         inspireMeButtonView.isHidden = true
-        let initialARGuidanceState = LMARGuidancePolicy.stateForReferenceImageEntry(from: preferredARGuidanceButtonState)
-        preferredARGuidanceButtonState = initialARGuidanceState
+        agentGuidanceState = .agent
+        executionTool = .none
+        shutterRole = .instructReady
+        referenceWarmupComplete = false
         clearLineArtOverlay()
         showReferenceImageFromSavedIdea(item: item)
-        cameraBottomControlsView.setARGuidanceState(initialARGuidanceState)
-        configureARGuidanceMode(initialARGuidanceState)
-        // 尝试显示 Step 3 引导
-        showARGuidanceGuideIfNeeded()
-        // 尝试显示 Step 4 引导（如果 Step 3 已显示过且 AR Guidance 已开启）
-        if initialARGuidanceState == .box {
-            tryShowAlignBoxesGuideAfterDelay()
+        if let image = currentReferenceImage {
+            let suggestion = LMCompositionSuggestion(
+                id: item.id,
+                sceneType: nil,
+                source: "saved",
+                ready: true,
+                imageUrl: nil,
+                width: nil,
+                height: nil,
+                rank: nil,
+                score: nil
+            )
+            currentSuggestion = suggestion
+            Task { await warmupReferenceForAgent(image: image) }
+        } else {
+            configureARGuidanceForAgentEntry()
+            syncAgentCoachingForCurrentState()
         }
-        LMLogger.log("📐 Entered Composition Selected state from saved composition - ID: \(item.id), AR Guidance state: \(initialARGuidanceState.logName)")
+        showARGuidanceGuideIfNeeded()
+        LMLogger.log("📐 Entered Composition Selected state from saved composition - ID: \(item.id)")
     }
     
     /// 初始化参考图组件（在页面加载时调用一次，长期持有）
@@ -1056,131 +1026,128 @@ extension LMCameraPage {
     
     /// 关闭参考图
     @objc func closeReferenceImage() {
-        guard let containerView = referenceImageContainerView else {
+        guard referenceImageContainerView != nil else {
             return
         }
-        
-        // ✅ 停止监听设备方向变化（参考图关闭后不再需要）
-        stopObservingDeviceOrientation()
-        
-        // 隐藏 Step 3 和 Step 4 引导（用户点击关闭 Reference Image 按钮）
-        hideCompositionSelectedGuides()
-        
-        // 重置旋转变换
-        containerView.transform = .identity
-        
-        // 判断导航来源
+
         switch navigationSource {
         case .savedIdea:
-            // 从已保存构图进入，关闭参考图应该返回到已保存构图详情页
             LMLogger.log("🔙 Closing reference image from saved composition - navigating back")
-            
-            // 清理状态
-            containerView.isHidden = true
+            teardownCompositionSession()
             currentCameraState = .normal
-            currentSuggestion = nil
-            
-            // 重置 AR Guidance 为不可用状态
-            cameraBottomControlsView.resetARGuidance()
-            
-            // 先清理 LineArt 资源，再停止 AR Guidance，避免清理过程中把 Box 重新显示出来
-            clearLineArtOverlay()
-            
-            // 停止 AR Guidance 会话，确保残留引导元素被清理
-            stopARGuidanceSession()
-            
-            // 清除参考图相关数据
-            referenceImageInitialOrientation = nil
-            currentReferenceImage = nil
-            currentReferenceBbox = nil
-            
-            // 返回到已保存构图详情页
             navigationController?.popViewController(animated: true)
-            
+            syncAgentCoachingForCurrentState()
             LMLogger.log("✅ Navigated back to saved composition detail")
-            
+
         case .normal:
-            // ✅ 不停止 polling - polling 应该在后台持续运行直到所有任务完成
-            // 从 Show Suggestions 进入，返回 Show Suggestions 状态
-            containerView.isHidden = true
-            currentCameraState = .showingSuggestions
-            
-            // 保存当前选中的构图 ID（用于恢复选中状态）
-            let previouslySelectedId = currentSuggestion?.id
-            
-            currentSuggestion = nil
-            
-            // 重置 AR Guidance 为不可用状态（灰色）
-            cameraBottomControlsView.resetARGuidance()
-            
-            // 先清理 LineArt 资源，再停止 AR Guidance，避免清理过程中把 Box 重新显示出来
-            clearLineArtOverlay()
-            
-            // 停止 AR Guidance 会话，确保残留引导元素被清理
-            stopARGuidanceSession()
-            
-            // 清除参考图初始方向（防止旋转手机时误触发AR引导）
-            referenceImageInitialOrientation = nil
-            currentReferenceImage = nil
-            currentReferenceBbox = nil
-            
-            // 显示构图轮播（会自动重置手势状态）
-            showSuggestionsCarousel()
-            
-            // ✅ FIX 1: Ensure correct view hierarchy after showing carousel
-            ensureCorrectViewHierarchy()
-            LMLogger.log("✅ View hierarchy corrected after showing carousel")
-            
-            // ✅ FIX 2: Force layout update to ensure carousel is properly positioned
-            view.setNeedsLayout()
-            view.layoutIfNeeded()
-            
-            // ✅ FIX 6: Sequence animations properly to avoid conflicts
-            // Step 1: Update layout constraints first
-            bottomControlsHeightConstraint?.update(offset: 44)
-            
-            // Step 2: Animate layout changes
-            UIView.animate(
-                withDuration: 0.35,
-                delay: 0,
-                usingSpringWithDamping: 0.85,
-                initialSpringVelocity: 0.5,
-                options: [.curveEaseInOut]
-            ) {
-                self.view.layoutIfNeeded()
-            } completion: { [weak self] _ in
-                guard let self = self else { return }
-                
-                // Step 3: After layout animation completes, update bottom controls mode
-                self.cameraBottomControlsView.setLayoutMode(.compact, animated: true)
-                
-                // ✅ FIX 3: Reset gesture state again after animation completes
-                // This ensures any gesture state changes during animation are cleared
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    self.suggestionsCarouselView?.resetGestureState()
-                    LMLogger.log("✅ Gesture state reset after animation completion")
-                }
-                
-                // Step 4: 只恢复选中状态，不刷新整个列表（避免图片重新加载）
-                if let carouselView = self.suggestionsCarouselView {
-                    // 如果有之前选中的 ID，找到对应的索引并恢复选中状态
-                    if let selectedId = previouslySelectedId,
-                       let targetIndex = self.currentSuggestions.firstIndex(where: { $0.id == selectedId }) {
-                        // 只更新选中状态，不调用 updateSuggestions（避免图片重新加载）
-                        if targetIndex != carouselView.getSelectedIndex() {
-                            carouselView.selectSuggestion(at: targetIndex, animated: false)
-                            LMLogger.log("📐 Restored selection to index: \(targetIndex) (ID: \(selectedId)) without refreshing list")
-                        }
-                    }
-                }
-                
-                LMLogger.log("✅ Polling continues in background - Reference Image closed")
+            switch compositionEntrySource {
+            case .normal:
+                exitCompositionSelectedToNormal()
+            case .showingSuggestions:
+                exitCompositionSelectedToShowingSuggestions()
             }
-            
-            LMLogger.log("✅ Reference image hidden, returned to Show Suggestions state, AR Guidance reset to unavailable")
         }
     }
-    
+
+    /// Clears reference image, AR guidance, and agent HUD after leaving composition-selected.
+    func teardownCompositionSession() {
+        stopObservingDeviceOrientation()
+        hideCompositionSelectedGuides()
+
+        referenceImageContainerView?.transform = .identity
+        referenceImageContainerView?.isHidden = true
+
+        clearLineArtOverlay()
+        stopARGuidanceSession()
+
+        referenceImageInitialOrientation = nil
+        currentReferenceImage = nil
+        currentReferenceBbox = nil
+        currentReferenceLineArtImage = nil
+        currentSuggestion = nil
+
+        agentGuidanceState = .unavailable
+        executionTool = .none
+        shutterRole = .captureDefault
+        referenceWarmupComplete = false
+        hasUserTriggeredInstructInSession = false
+        agentCoachingController.releaseCompositionResources()
+        resetCoachingSessionUI()
+    }
+
+    /// Returns to normal camera after album reference from the bottom My Reference button.
+    func exitCompositionSelectedToNormal() {
+        teardownCompositionSession()
+        currentCameraState = .normal
+
+        bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
+        cameraBottomControlsView.setLayoutMode(.normal, animated: true)
+        syncAgentCoachingForCurrentState()
+
+        UIView.animate(
+            withDuration: 0.35,
+            delay: 0,
+            usingSpringWithDamping: 0.85,
+            initialSpringVelocity: 0.5,
+            options: [.curveEaseInOut, .allowUserInteraction]
+        ) {
+            self.view.layoutIfNeeded()
+        }
+
+        LMLogger.log("✅ Exited composition selected to normal camera")
+    }
+
+    /// Returns to Show Suggestions carousel after composition from Inspire Me flow.
+    func exitCompositionSelectedToShowingSuggestions() {
+        let previouslySelectedId = currentSuggestion?.id
+
+        teardownCompositionSession()
+        currentCameraState = .showingSuggestions
+
+        showSuggestionsCarousel()
+        ensureCorrectViewHierarchy()
+        LMLogger.log("✅ View hierarchy corrected after showing carousel")
+
+        view.setNeedsLayout()
+        view.layoutIfNeeded()
+        syncAgentCoachingForCurrentState()
+
+        bottomControlsHeightConstraint?.update(offset: 44)
+
+        UIView.animate(
+            withDuration: 0.35,
+            delay: 0,
+            usingSpringWithDamping: 0.85,
+            initialSpringVelocity: 0.5,
+            options: [.curveEaseInOut]
+        ) {
+            self.view.layoutIfNeeded()
+        } completion: { [weak self] _ in
+            guard let self = self else { return }
+
+            self.cameraBottomControlsView.setLayoutMode(.compact, animated: true)
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.suggestionsCarouselView?.resetGestureState()
+                LMLogger.log("✅ Gesture state reset after animation completion")
+            }
+
+            if let carouselView = self.suggestionsCarouselView {
+                if let selectedId = previouslySelectedId,
+                   let targetIndex = self.currentSuggestions.firstIndex(where: { $0.id == selectedId }) {
+                    if targetIndex != carouselView.getSelectedSuggestionIndex() {
+                        carouselView.selectSuggestion(at: targetIndex, animated: false)
+                        LMLogger.log("📐 Restored selection to index: \(targetIndex) (ID: \(selectedId)) without refreshing list")
+                    }
+                }
+            }
+
+            LMLogger.log("✅ Polling continues in background - Reference Image closed")
+        }
+
+        LMLogger.log("✅ Reference image hidden, returned to Show Suggestions state")
+    }
+
     /// 处理参考图拖动
     @objc func handleReferenceImagePan(_ gesture: UIPanGestureRecognizer) {
         guard let containerView = referenceImageContainerView else {
