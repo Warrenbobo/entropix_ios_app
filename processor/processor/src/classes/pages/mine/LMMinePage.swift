@@ -34,6 +34,12 @@ class LMMinePage: LMPageWrapper {
     // 悬浮菜单按钮引用（用于更新文本）
     private var floatingSavedIdeasButton: UIButton!
     private var floatingSceneHistoryButton: UIButton!
+
+    // MARK: - Banner (Mine only — AdMob study / demo units)
+    private let bannerContainer = UIView()
+    private let bannerHost: LMBannerAdHosting = LMBannerAdHost()
+    private var bannerHeightConstraint: Constraint?
+    private var currentBannerHeight: CGFloat = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,7 +48,10 @@ class LMMinePage: LMPageWrapper {
         setupStackView()
         setupCustomNavigationBar()
         setupFloatingMenu()
+        // Banner must be in the hierarchy before chrome constraints reference layout.
+        setupBannerAd()
         createTheFloatingCameraEntranceView()
+        updateMineOverlayZOrder()
         viewAdapter(scrollView)
         
         // 监听用户数据变化
@@ -65,8 +74,10 @@ class LMMinePage: LMPageWrapper {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         isMineVisible = true
+        bannerHost.installBanner(in: bannerContainer, rootViewController: self)
         DispatchQueue.main.async { [weak self] in
             self?.reloadPhotoCollectionIfNeeded()
+            self?.refreshBannerAdaptiveSizeIfNeeded()
         }
     }
     
@@ -75,8 +86,14 @@ class LMMinePage: LMPageWrapper {
         isMineVisible = false
         setMineChromeHidden(true)
     }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        refreshBannerAdaptiveSizeIfNeeded()
+    }
     
     deinit {
+        bannerHost.removeBanner()
         NotificationCenter.default.removeObserver(self)
     }
     
@@ -181,11 +198,74 @@ class LMMinePage: LMPageWrapper {
         }
         floatingCameraButton = floatingButton
         view.addSubview(floatingButton)
-        floatingButton.snp.makeConstraints { make in
-            make.bottom.equalTo(-(AppTheme.Screen.safeAreaBottom + 30))
+        updateFloatingCameraButtonConstraints()
+    }
+
+    /**
+     Pins an anchored adaptive banner to the bottom of Mine (above the home indicator).
+
+     Height starts at 0 and expands when a creative loads; collapses on failure.
+     */
+    private func setupBannerAd() {
+        bannerHost.delegate = self
+        bannerContainer.backgroundColor = .clear
+        bannerContainer.isHidden = true
+        bannerContainer.clipsToBounds = true
+
+        view.addSubview(bannerContainer)
+        bannerContainer.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom)
+            bannerHeightConstraint = make.height.equalTo(0).constraint
+        }
+        currentBannerHeight = 0
+    }
+
+    /**
+     Positions the floating camera using the safe-area bottom + banner height.
+
+     Do **not** constrain to `bannerContainer.top` — that can crash if either view is
+     temporarily outside a shared ancestor during setup / z-order changes.
+     */
+    private func updateFloatingCameraButtonConstraints() {
+        guard let floatingCameraButton, floatingCameraButton.superview === view else { return }
+        floatingCameraButton.snp.remakeConstraints { make in
+            make.bottom.equalTo(view.safeAreaLayoutGuide.snp.bottom).offset(-(currentBannerHeight + 16))
             make.trailing.equalTo(-20)
             make.size.equalTo(60)
         }
+    }
+
+    /// Keeps scroll < banner < camera button < top bar without breaking constraints.
+    private func updateMineOverlayZOrder() {
+        view.insertSubview(bannerContainer, aboveSubview: scrollView)
+        if let floatingCameraButton {
+            view.insertSubview(floatingCameraButton, aboveSubview: bannerContainer)
+        }
+        view.bringSubviewToFront(topBar)
+        if isFloatingMenuVisible {
+            view.bringSubviewToFront(floatingMenuContainer)
+        }
+    }
+
+    private func applyBannerLayoutInsets(bannerHeight: CGFloat) {
+        currentBannerHeight = max(0, bannerHeight)
+        bannerHeightConstraint?.update(offset: currentBannerHeight)
+        var inset = scrollView.contentInset
+        inset.bottom = currentBannerHeight + 100
+        scrollView.contentInset = inset
+        scrollView.verticalScrollIndicatorInsets.bottom = currentBannerHeight + 100
+        updateFloatingCameraButtonConstraints()
+        updateMineOverlayZOrder()
+        view.layoutIfNeeded()
+        LMLogger.log("Banner layout height=\(currentBannerHeight) hidden=\(bannerContainer.isHidden)")
+    }
+
+    private func refreshBannerAdaptiveSizeIfNeeded() {
+        guard isMineVisible else { return }
+        let width = bannerContainer.bounds.width
+        guard width > 0 else { return }
+        bannerHost.updateAdaptiveSizeIfNeeded(containerWidth: width)
     }
 
     private func updateNavigationPresentation() {
@@ -205,6 +285,12 @@ class LMMinePage: LMPageWrapper {
         topBar.isHidden = hidden
         floatingCameraButton?.isHidden = hidden
         floatingMenuContainer.isHidden = hidden || !isFloatingMenuVisible
+        if hidden {
+            bannerContainer.isHidden = true
+        } else if currentBannerHeight > 0 {
+            bannerContainer.isHidden = false
+            updateMineOverlayZOrder()
+        }
     }
     
     private func moreButtonTapped() {
@@ -485,6 +571,22 @@ class LMMinePage: LMPageWrapper {
     }
 }
 
+// MARK: - LMBannerAdHostDelegate
+
+extension LMMinePage: LMBannerAdHostDelegate {
+
+    func bannerAdHost(_ host: LMBannerAdHosting, didReceiveAdWithHeight adHeight: CGFloat) {
+        bannerContainer.isHidden = false
+        applyBannerLayoutInsets(bannerHeight: adHeight)
+    }
+
+    func bannerAdHost(_ host: LMBannerAdHosting, didFailWithError error: Error) {
+        applyBannerLayoutInsets(bannerHeight: 0)
+        bannerContainer.isHidden = true
+        LMLogger.log("Mine banner failed: \(error.localizedDescription)")
+    }
+}
+
 // MARK: - UIScrollViewDelegate
 extension LMMinePage: UIScrollViewDelegate {
     
@@ -516,6 +618,7 @@ extension LMMinePage: UIScrollViewDelegate {
         isFloatingMenuVisible = true
         floatingMenuContainer.isHidden = false
         floatingMenuContainer.alpha = 0
+        updateMineOverlayZOrder()
         
         // 同步当前tab状态
         let currentTab = photoCollectionView.getCurrentTab()

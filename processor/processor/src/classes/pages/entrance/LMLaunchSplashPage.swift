@@ -22,6 +22,8 @@ class LMLaunchSplashPage: UIViewController {
     private var hasStartedLaunchFlow = false
     private var hasContinuedToUserDataLoading = false
     private var isCheckingLaunchUpdate = false
+    /// Defers App Open → Camera until splash is on-screen (`viewDidAppear`).
+    private var isPendingHomeAfterAppOpen = false
 
     // MARK: - Privacy Permission Keys
     private static let privacyPermissionKey = "hasAgreedPrivacyPermission"
@@ -49,6 +51,14 @@ class LMLaunchSplashPage: UIViewController {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true,
                                                      animated: animated)
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if isPendingHomeAfterAppOpen {
+            isPendingHomeAfterAppOpen = false
+            performEnterHomeAfterAppOpenGate()
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -115,7 +125,9 @@ class LMLaunchSplashPage: UIViewController {
         // FRAMAIST_BACKEND_DISABLED — always local BYOK session; skip guest/network auth.
         LMLogger.log("FramAist backend disabled — local BYOK user, skip guest login")
         LMUserManager.setupLocalBYOKUser()
-        LMPackageManager.switchToHomeRootController()
+        // Preload App Open while splash remains visible (independent of FramAist backend).
+        LMAppOpenAdManager.shared.preloadIfNeeded()
+        enterHomeAfterAppOpenGate()
 
         /*
         // --- FRAMAIST_BACKEND_DISABLED (kept for reuse) ---
@@ -123,20 +135,43 @@ class LMLaunchSplashPage: UIViewController {
         if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
             LMLogger.log("Direct Gemini BYOK — skipping network and guest login")
             LMUserManager.setupLocalBYOKUser()
-            LMPackageManager.switchToHomeRootController()
+            LMAppOpenAdManager.shared.preloadIfNeeded()
+            enterHomeAfterAppOpenGate()
             return
         }
 
         if !LMFeatureFlagsManager.backendApiEnabled {
             LMLogger.log("Offline demo mode — skipping network and guest login")
             LMUserManager.setupOfflineDemoUser()
-            LMPackageManager.switchToHomeRootController()
+            LMAppOpenAdManager.shared.preloadIfNeeded()
+            enterHomeAfterAppOpenGate()
             return
         }
 
         startNetworkMonitoringAndProceed()
         // --- end FRAMAIST_BACKEND_DISABLED ---
         */
+    }
+
+    /**
+     Shows App Open (if allowed/ready) while splash is still visible, then enters Camera.
+
+     Does **not** re-enable FramAist guest/network auth — only gates home transition.
+     Defers until `viewDidAppear` so the splash is attached to the window before present.
+     */
+    private func enterHomeAfterAppOpenGate() {
+        if view.window != nil {
+            performEnterHomeAfterAppOpenGate()
+        } else {
+            LMLogger.log("App Open gate deferred until splash appears")
+            isPendingHomeAfterAppOpen = true
+        }
+    }
+
+    private func performEnterHomeAfterAppOpenGate() {
+        LMAppOpenAdManager.shared.showIfAvailable(from: self) {
+            LMPackageManager.switchToHomeRootController()
+        }
     }
 
     @objc private func handleApplicationDidBecomeActive() {

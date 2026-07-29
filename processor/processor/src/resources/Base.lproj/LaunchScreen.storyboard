@@ -16,7 +16,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Unleash Your Creativity in Photography" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontForContentSizeCategory="YES" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7Yc-cG-YFL">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Unleash Your Creativity in Photography" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7Yc-cG-YFL">
                                 <rect key="frame" x="30" y="758.66666666666663" width="333" height="19.333333333333371"/>
                                 <fontDescription key="fontDescription" type="system" weight="medium" pointSize="16"/>
                                 <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -40,7 +40,6 @@
                         <constraints>
                             <constraint firstItem="7Yc-cG-YFL" firstAttribute="top" secondItem="qHg-Le-rUC" secondAttribute="bottom" constant="16" id="1O7-DO-rLi"/>
                             <constraint firstItem="e4M-Bb-AXw" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="62" id="ARJ-cu-Saa"/>
-                            <constraint firstItem="7Yc-cG-YFL" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="IRY-bA-TsZ"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="7Yc-cG-YFL" secondAttribute="bottom" constant="40" id="Pcv-en-6hd"/>
                             <constraint firstItem="7Yc-cG-YFL" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="30" id="iGu-68-pZJ"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="e4M-Bb-AXw" secondAttribute="trailing" constant="62" id="otA-LQ-XQc"/>

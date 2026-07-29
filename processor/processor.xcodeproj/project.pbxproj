@@ -7,40 +7,34 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		EF2DA21A4EDD456EBE84930D /* LMLlmModuleSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9E1A6B3B9B456E845FD953 /* LMLlmModuleSettingsStore.swift */; };
-		AAE93FD764E14FDEBD0D4CB0 /* LMSceneExploreConfigRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF0BABB3D9643AA98133595 /* LMSceneExploreConfigRepository.swift */; };
-		D961550E8B1641DF851883ED /* LMGeminiInspireConfigRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F526A60DBC4F44EF8369D60A /* LMGeminiInspireConfigRepository.swift */; };
-		BCAABAD07D214569BCF383CF /* LMChatRequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE87998B7B540CD9540B481 /* LMChatRequestBuilder.swift */; };
-		BDAECB91CF114DBCB8493258 /* LMSceneExploreModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEEBEC26A6E7494F9FC70C13 /* LMSceneExploreModels.swift */; };
-		EABD4F43C8644B6FBFAFD275 /* LMSceneExploreClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC3045816BA4279918ECD1B /* LMSceneExploreClient.swift */; };
+		2AFD69D0DC144C62A1D0A87B /* LMInstructProgressCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F18178545F4835B6458E8A /* LMInstructProgressCoordinator.swift */; };
+		2E380A13831942AD85099921 /* LMLlmTaskRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2B0AC0FEE04E648AC59A87 /* LMLlmTaskRuntime.swift */; };
 		A11B22C33D4E4F1A9C0D8E77 /* LMGaussianHeatmapRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22C33D44E5F6A1B0C1D9E88 /* LMGaussianHeatmapRenderer.swift */; };
 		A3C1964416B24A9E89DFD62A /* LMSceneHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCBD67E2777E43439C753306 /* LMSceneHistoryStore.swift */; };
-		EACFF9547A674382826BB970 /* LMChatModuleSettingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3946E0448AA44BFBA9F06F8 /* LMChatModuleSettingPage.swift */; };
-		BBDBA7200C1742928CA7B316 /* LMIdeaInspirationSettingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6C85864047432B82C97AE6 /* LMIdeaInspirationSettingPage.swift */; };
-		DECDBDE218544A18B419BEA7 /* LMPreShootPlanButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FECD42B648DC41FABA90842F /* LMPreShootPlanButtonView.swift */; };
-		DEBAB7AFBF2C49C58AD166C8 /* LMPreShootPlanModeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0E6D9561E4455686479FA5 /* LMPreShootPlanModeSheet.swift */; };
 		A79DAE60BFB34BA9B583BCAB /* LMSceneExploreResultOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFDA8A54889E4EEC93DBAD18 /* LMSceneExploreResultOverlay.swift */; };
-		BC6A361E6C714D79A25FC9E8 /* LMCameraPage+SceneExplore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5E4A3D7D0C43C8ABE698F7 /* LMCameraPage+SceneExplore.swift */; };
-		FBE6E924E24F4F06A7B5DE42 /* LMSceneHistoryPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB45AE3D40844B079C209AE8 /* LMSceneHistoryPageView.swift */; };
-		EE0C689410B44904A41BA06B /* LMSceneHistoryBrowsePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBECEA885777492AB4A7148A /* LMSceneHistoryBrowsePage.swift */; };
-		C9842C37FC34409AA03AD8DC /* model_config.json in Resources */ = {isa = PBXBuildFile; fileRef = F1FD08E7D2DE44D99C49BBD0 /* model_config.json */; };
-		B5C1B85EC18F44009CECB530 /* scene_explore_config.json in Resources */ = {isa = PBXBuildFile; fileRef = C3C6CA5105504DD3A45B16A6 /* scene_explore_config.json */; };
-		F702946FB61D4DE3AE234FD9 /* gemini_inspire_config.json in Resources */ = {isa = PBXBuildFile; fileRef = CC92C09F58F54C74B863CD69 /* gemini_inspire_config.json */; };
-		ECAC4EBE74D74B9A8FA1C2D3 /* scene_explore_system_prompt.txt in Resources */ = {isa = PBXBuildFile; fileRef = ACBFE03711C3424EB3D1C945 /* scene_explore_system_prompt.txt */; };
-		DFDD14AFBA564985A349B684 /* scene_explore_user_prompt.txt in Resources */ = {isa = PBXBuildFile; fileRef = BADFBBBF0F1D45B8992529D7 /* scene_explore_user_prompt.txt */; };
-		EA5701C22EC20002000AB522 /* LMQwenModelSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5701C12EC20002000AB522 /* LMQwenModelSettingsStore.swift */; };
-		AFD1331B43CA42C8BE257C4A /* LMPidinetModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */; };
-		DCD00C96D89B49C999885318 /* LMScoreTickContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECEC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */; };
-		ABD4ED49A14447F48857E061 /* PiDiNet.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = CFB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */; };
 		AAA97AF698FF445291BDCCFD /* LMDepthLayeringScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFAA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */; };
-		BAFFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDB5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */; };
-		BC6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBACB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */; };
-		BDEF28E2208A447ABAC2BCD4 /* U2Netp.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EDDCCDCCACD2413585CB53C3 /* U2Netp.mlpackage */; };
-		CAA55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBCC9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */; };
-		DABDDD327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAEE896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */; };
+		AAE93FD764E14FDEBD0D4CB0 /* LMSceneExploreConfigRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF0BABB3D9643AA98133595 /* LMSceneExploreConfigRepository.swift */; };
+		ABD4ED49A14447F48857E061 /* PiDiNet.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = CFB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */; };
+		AFD1331B43CA42C8BE257C4A /* LMPidinetModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */; };
+		B5C1B85EC18F44009CECB530 /* scene_explore_config.json in Resources */ = {isa = PBXBuildFile; fileRef = C3C6CA5105504DD3A45B16A6 /* scene_explore_config.json */; };
 		B8289BCF3D8943549F800E51 /* LMU2NetpModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */; };
+		BAFFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDB5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */; };
+		BBDBA7200C1742928CA7B316 /* LMIdeaInspirationSettingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6C85864047432B82C97AE6 /* LMIdeaInspirationSettingPage.swift */; };
+		BC6A361E6C714D79A25FC9E8 /* LMCameraPage+SceneExplore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5E4A3D7D0C43C8ABE698F7 /* LMCameraPage+SceneExplore.swift */; };
+		BC6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBACB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */; };
+		BCAABAD07D214569BCF383CF /* LMChatRequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE87998B7B540CD9540B481 /* LMChatRequestBuilder.swift */; };
+		BDAECB91CF114DBCB8493258 /* LMSceneExploreModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEEBEC26A6E7494F9FC70C13 /* LMSceneExploreModels.swift */; };
+		BDEF28E2208A447ABAC2BCD4 /* U2Netp.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EDDCCDCCACD2413585CB53C3 /* U2Netp.mlpackage */; };
 		BFCB45F239BF4CABBB190382 /* LMBitmapDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */; };
+		C9842C37FC34409AA03AD8DC /* model_config.json in Resources */ = {isa = PBXBuildFile; fileRef = F1FD08E7D2DE44D99C49BBD0 /* model_config.json */; };
+		CAA55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBCC9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */; };
+		D961550E8B1641DF851883ED /* LMGeminiInspireConfigRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F526A60DBC4F44EF8369D60A /* LMGeminiInspireConfigRepository.swift */; };
 		DA32B37E95AA4FE2940CECFC /* LMOpenCvLineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */; };
+		DABDDD327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAEE896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */; };
+		DCD00C96D89B49C999885318 /* LMScoreTickContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECEC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */; };
+		DEBAB7AFBF2C49C58AD166C8 /* LMPreShootPlanModeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0E6D9561E4455686479FA5 /* LMPreShootPlanModeSheet.swift */; };
+		DECDBDE218544A18B419BEA7 /* LMPreShootPlanButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FECD42B648DC41FABA90842F /* LMPreShootPlanButtonView.swift */; };
+		DFDD14AFBA564985A349B684 /* scene_explore_user_prompt.txt in Resources */ = {isa = PBXBuildFile; fileRef = BADFBBBF0F1D45B8992529D7 /* scene_explore_user_prompt.txt */; };
 		EA0A473C2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A473B2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift */; };
 		EA0A473D2EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47352EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift */; };
 		EA0A473E2EBF8F19002CBB80 /* LMSubscriptionDialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47372EBF8F19002CBB80 /* LMSubscriptionDialogView.swift */; };
@@ -111,8 +105,6 @@
 		EA5700352EC10001000AB522 /* LMActionExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700342EC10001000AB522 /* LMActionExecutor.swift */; };
 		EA5700372EC10001000AB522 /* LMExecutionToolRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700362EC10001000AB522 /* LMExecutionToolRouter.swift */; };
 		EA5700392EC10001000AB522 /* LMAgenticCoachingLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700382EC10001000AB522 /* LMAgenticCoachingLoop.swift */; };
-		2AFD69D0DC144C62A1D0A87B /* LMInstructProgressCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F18178545F4835B6458E8A /* LMInstructProgressCoordinator.swift */; };
-		2E380A13831942AD85099921 /* LMLlmTaskRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2B0AC0FEE04E648AC59A87 /* LMLlmTaskRuntime.swift */; };
 		EA57003B2EC10001000AB522 /* LMDepthEstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57003A2EC10001000AB522 /* LMDepthEstimationService.swift */; };
 		EA57003D2EC10001000AB522 /* LMAgentCoachingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57003C2EC10001000AB522 /* LMAgentCoachingController.swift */; };
 		EA57003F2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */; };
@@ -133,6 +125,7 @@
 		EA5701B62EC20001000AB522 /* LMGeminiGridSplitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5701B52EC20001000AB522 /* LMGeminiGridSplitter.swift */; };
 		EA5701B82EC20001000AB522 /* LMModelsSettingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5701B72EC20001000AB522 /* LMModelsSettingPage.swift */; };
 		EA5701BA2EC20001000AB522 /* gemini_inspire_prompt.txt in Resources */ = {isa = PBXBuildFile; fileRef = EA5701B92EC20001000AB522 /* gemini_inspire_prompt.txt */; };
+		EA5701C22EC20002000AB522 /* LMQwenModelSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5701C12EC20002000AB522 /* LMQwenModelSettingsStore.swift */; };
 		EA5835442EC976200013E531 /* LMCameraPage+ShowSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */; };
 		EA5835512EC99E1F0013E531 /* LMInspireMeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */; };
 		EA5835562EC9DBC70013E531 /* language_config.json in Resources */ = {isa = PBXBuildFile; fileRef = EA5835552EC9DBC70013E531 /* language_config.json */; };
@@ -165,9 +158,16 @@
 		EA8640712ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86406D2ED2D8EB00A0CD43 /* LMPhotoStorageManager+SavedIdeas.swift */; };
 		EA8640722ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */; };
 		EAA37A7B2ED090230008081D /* LMAlertDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA37A7A2ED090230008081D /* LMAlertDialog.swift */; };
+		EAAD00012F6C00010001AD01 /* LMAppOpenAdContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00002F6C00010001AD00 /* LMAppOpenAdContracts.swift */; };
+		EAAD00032F6C00010001AD03 /* LMAppOpenAdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00022F6C00010001AD02 /* LMAppOpenAdManager.swift */; };
+		EAAD00052F6C00010001AD05 /* LMBannerAdContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00042F6C00010001AD04 /* LMBannerAdContracts.swift */; };
+		EAAD00072F6C00010001AD07 /* LMBannerAdHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00062F6C00010001AD06 /* LMBannerAdHost.swift */; };
+		EAAD00092F6C00010001AD09 /* LMGoogleAppOpenAdLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00082F6C00010001AD08 /* LMGoogleAppOpenAdLoader.swift */; };
+		EAAD000B2F6C00010001AD0B /* LMMobileAdsBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD000A2F6C00010001AD0A /* LMMobileAdsBootstrap.swift */; };
 		EAAF53ED2F15449500E961DC /* LMNotificationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53EC2F15449500E961DC /* LMNotificationModel.swift */; };
 		EAAF53EF2F1544AF00E961DC /* LMNotificationDetailPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53EE2F1544AF00E961DC /* LMNotificationDetailPage.swift */; };
 		EAAF53F12F1544DD00E961DC /* LMNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53F02F1544DD00E961DC /* LMNotificationManager.swift */; };
+		EABD4F43C8644B6FBFAFD275 /* LMSceneExploreClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC3045816BA4279918ECD1B /* LMSceneExploreClient.swift */; };
 		EACA1CEF2E7E49B600C80883 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */; };
 		EACA1CF02E7E49B600C80883 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EACA1CE62E7E49B600C80883 /* Assets.xcassets */; };
 		EACA1CF12E7E49B600C80883 /* ObjectExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACA1CDE2E7E49B600C80883 /* ObjectExtensions.swift */; };
@@ -197,6 +197,7 @@
 		EACB30EB2EF63E3500EC643C /* LMFreeTrialResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30E82EF63E3500EC643C /* LMFreeTrialResponse.swift */; };
 		EACB30EC2EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30E72EF63E3500EC643C /* LMCompositionTaskDetailResponse.swift */; };
 		EACB30F02EF6B53E00EC643C /* LMProfileItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EACB30EF2EF6B53E00EC643C /* LMProfileItemView.swift */; };
+		EACFF9547A674382826BB970 /* LMChatModuleSettingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3946E0448AA44BFBA9F06F8 /* LMChatModuleSettingPage.swift */; };
 		EAFBAC952E7E548A00586EC7 /* LMSignInPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC942E7E548A00586EC7 /* LMSignInPage.swift */; };
 		EAFBAC992E7E5A0800586EC7 /* LMMineUserInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC982E7E5A0800586EC7 /* LMMineUserInfoView.swift */; };
 		EAFBAC9F2E7E65B000586EC7 /* LMProcessorTopBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBAC9E2E7E65B000586EC7 /* LMProcessorTopBar.swift */; };
@@ -227,46 +228,44 @@
 		EAFBADC42EA36E5900586EC7 /* LMIdeasPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC32EA36E5900586EC7 /* LMIdeasPageView.swift */; };
 		EAFBADC62EA4C34300586EC7 /* LMFAQPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */; };
 		EAFBADC82EA4C90E00586EC7 /* LMNotificationsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */; };
+		ECAC4EBE74D74B9A8FA1C2D3 /* scene_explore_system_prompt.txt in Resources */ = {isa = PBXBuildFile; fileRef = ACBFE03711C3424EB3D1C945 /* scene_explore_system_prompt.txt */; };
 		ED1A82AB7EA3BF2D0B7016C1 /* Pods_processor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC28EB87E028DD5A58EC92E8 /* Pods_processor.framework */; };
+		EE0C689410B44904A41BA06B /* LMSceneHistoryBrowsePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBECEA885777492AB4A7148A /* LMSceneHistoryBrowsePage.swift */; };
+		EF2DA21A4EDD456EBE84930D /* LMLlmModuleSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9E1A6B3B9B456E845FD953 /* LMLlmModuleSettingsStore.swift */; };
 		F0A1B2C32F1A000100000001 /* LMARGuidanceMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */; };
+		F702946FB61D4DE3AE234FD9 /* gemini_inspire_config.json in Resources */ = {isa = PBXBuildFile; fileRef = CC92C09F58F54C74B863CD69 /* gemini_inspire_config.json */; };
+		FBE6E924E24F4F06A7B5DE42 /* LMSceneHistoryPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB45AE3D40844B079C209AE8 /* LMSceneHistoryPageView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		DA9E1A6B3B9B456E845FD953 /* LMLlmModuleSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLlmModuleSettingsStore.swift; sourceTree = "<group>"; };
-		FEF0BABB3D9643AA98133595 /* LMSceneExploreConfigRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreConfigRepository.swift; sourceTree = "<group>"; };
-		F526A60DBC4F44EF8369D60A /* LMGeminiInspireConfigRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGeminiInspireConfigRepository.swift; sourceTree = "<group>"; };
-		ABE87998B7B540CD9540B481 /* LMChatRequestBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMChatRequestBuilder.swift; sourceTree = "<group>"; };
-		CEEBEC26A6E7494F9FC70C13 /* LMSceneExploreModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreModels.swift; sourceTree = "<group>"; };
-		BBC3045816BA4279918ECD1B /* LMSceneExploreClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreClient.swift; sourceTree = "<group>"; };
-		B22C33D44E5F6A1B0C1D9E88 /* LMGaussianHeatmapRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGaussianHeatmapRenderer.swift; sourceTree = "<group>"; };
-		BCBD67E2777E43439C753306 /* LMSceneHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneHistoryStore.swift; sourceTree = "<group>"; };
 		A3946E0448AA44BFBA9F06F8 /* LMChatModuleSettingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMChatModuleSettingPage.swift; sourceTree = "<group>"; };
-		CF6C85864047432B82C97AE6 /* LMIdeaInspirationSettingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMIdeaInspirationSettingPage.swift; sourceTree = "<group>"; };
-		FECD42B648DC41FABA90842F /* LMPreShootPlanButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreShootPlanButtonView.swift; sourceTree = "<group>"; };
-		BB0E6D9561E4455686479FA5 /* LMPreShootPlanModeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreShootPlanModeSheet.swift; sourceTree = "<group>"; };
-		CFDA8A54889E4EEC93DBAD18 /* LMSceneExploreResultOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreResultOverlay.swift; sourceTree = "<group>"; };
-		BF5E4A3D7D0C43C8ABE698F7 /* LMCameraPage+SceneExplore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+SceneExplore.swift"; sourceTree = "<group>"; };
-		BB45AE3D40844B079C209AE8 /* LMSceneHistoryPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneHistoryPageView.swift; sourceTree = "<group>"; };
-		BBECEA885777492AB4A7148A /* LMSceneHistoryBrowsePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneHistoryBrowsePage.swift; sourceTree = "<group>"; };
-		F1FD08E7D2DE44D99C49BBD0 /* model_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = model_config.json; sourceTree = "<group>"; };
-		C3C6CA5105504DD3A45B16A6 /* scene_explore_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = scene_explore_config.json; sourceTree = "<group>"; };
-		CC92C09F58F54C74B863CD69 /* gemini_inspire_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = gemini_inspire_config.json; sourceTree = "<group>"; };
+		ABE87998B7B540CD9540B481 /* LMChatRequestBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMChatRequestBuilder.swift; sourceTree = "<group>"; };
 		ACBFE03711C3424EB3D1C945 /* scene_explore_system_prompt.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = scene_explore_system_prompt.txt; sourceTree = "<group>"; };
-		BADFBBBF0F1D45B8992529D7 /* scene_explore_user_prompt.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = scene_explore_user_prompt.txt; sourceTree = "<group>"; };
-		EA5701C12EC20002000AB522 /* LMQwenModelSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMQwenModelSettingsStore.swift; sourceTree = "<group>"; };
-		CAEE896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEVA02ModelProvider.swift; sourceTree = "<group>"; };
-		CF6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPidinetModelProvider.swift; sourceTree = "<group>"; };
-		CFB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = PiDiNet.mlpackage; sourceTree = "<group>"; };
-		EFAA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDepthLayeringScorer.swift; sourceTree = "<group>"; };
-		ECEC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMScoreTickContext.swift; sourceTree = "<group>"; };
-		EDDCCDCCACD2413585CB53C3 /* U2Netp.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = U2Netp.mlpackage; sourceTree = "<group>"; };
-		EC28EB87E028DD5A58EC92E8 /* Pods_processor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_processor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		BFBCC9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubjectMaskAnalyzer.swift; sourceTree = "<group>"; };
-		CBADBF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.debug.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.debug.xcconfig"; sourceTree = "<group>"; };
-		DBDB5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionModelPreloader.swift; sourceTree = "<group>"; };
-		DBACB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreviewFramePipeline.swift; sourceTree = "<group>"; };
+		B1F18178545F4835B6458E8A /* LMInstructProgressCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInstructProgressCoordinator.swift; sourceTree = "<group>"; };
+		B22C33D44E5F6A1B0C1D9E88 /* LMGaussianHeatmapRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGaussianHeatmapRenderer.swift; sourceTree = "<group>"; };
 		B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMOpenCvLineDetector.swift; sourceTree = "<group>"; };
+		BADFBBBF0F1D45B8992529D7 /* scene_explore_user_prompt.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = scene_explore_user_prompt.txt; sourceTree = "<group>"; };
+		BB0E6D9561E4455686479FA5 /* LMPreShootPlanModeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreShootPlanModeSheet.swift; sourceTree = "<group>"; };
+		BB45AE3D40844B079C209AE8 /* LMSceneHistoryPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneHistoryPageView.swift; sourceTree = "<group>"; };
 		BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMU2NetpModelProvider.swift; sourceTree = "<group>"; };
+		BBC3045816BA4279918ECD1B /* LMSceneExploreClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreClient.swift; sourceTree = "<group>"; };
+		BBECEA885777492AB4A7148A /* LMSceneHistoryBrowsePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneHistoryBrowsePage.swift; sourceTree = "<group>"; };
+		BCBD67E2777E43439C753306 /* LMSceneHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneHistoryStore.swift; sourceTree = "<group>"; };
+		BF5E4A3D7D0C43C8ABE698F7 /* LMCameraPage+SceneExplore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+SceneExplore.swift"; sourceTree = "<group>"; };
+		BFBCC9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubjectMaskAnalyzer.swift; sourceTree = "<group>"; };
+		C3C6CA5105504DD3A45B16A6 /* scene_explore_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = scene_explore_config.json; sourceTree = "<group>"; };
+		CAEE896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEVA02ModelProvider.swift; sourceTree = "<group>"; };
+		CBADBF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.debug.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.debug.xcconfig"; sourceTree = "<group>"; };
+		CC92C09F58F54C74B863CD69 /* gemini_inspire_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = gemini_inspire_config.json; sourceTree = "<group>"; };
+		CEEBEC26A6E7494F9FC70C13 /* LMSceneExploreModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreModels.swift; sourceTree = "<group>"; };
+		CF6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPidinetModelProvider.swift; sourceTree = "<group>"; };
+		CF6C85864047432B82C97AE6 /* LMIdeaInspirationSettingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMIdeaInspirationSettingPage.swift; sourceTree = "<group>"; };
+		CFB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = PiDiNet.mlpackage; sourceTree = "<group>"; };
+		CFDA8A54889E4EEC93DBAD18 /* LMSceneExploreResultOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreResultOverlay.swift; sourceTree = "<group>"; };
+		DA2B0AC0FEE04E648AC59A87 /* LMLlmTaskRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLlmTaskRuntime.swift; sourceTree = "<group>"; };
+		DA9E1A6B3B9B456E845FD953 /* LMLlmModuleSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLlmModuleSettingsStore.swift; sourceTree = "<group>"; };
+		DBACB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreviewFramePipeline.swift; sourceTree = "<group>"; };
+		DBDB5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionModelPreloader.swift; sourceTree = "<group>"; };
 		E918F2844F67229435DD4374 /* Pods-processor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.release.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.release.xcconfig"; sourceTree = "<group>"; };
 		EA0A47352EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionAdRewardsView.swift; sourceTree = "<group>"; };
 		EA0A47362EBF8F19002CBB80 /* LMSubscriptionCountdownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionCountdownView.swift; sourceTree = "<group>"; };
@@ -339,8 +338,6 @@
 		EA5700342EC10001000AB522 /* LMActionExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMActionExecutor.swift; sourceTree = "<group>"; };
 		EA5700362EC10001000AB522 /* LMExecutionToolRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMExecutionToolRouter.swift; sourceTree = "<group>"; };
 		EA5700382EC10001000AB522 /* LMAgenticCoachingLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgenticCoachingLoop.swift; sourceTree = "<group>"; };
-		B1F18178545F4835B6458E8A /* LMInstructProgressCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInstructProgressCoordinator.swift; sourceTree = "<group>"; };
-		DA2B0AC0FEE04E648AC59A87 /* LMLlmTaskRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLlmTaskRuntime.swift; sourceTree = "<group>"; };
 		EA57003A2EC10001000AB522 /* LMDepthEstimationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDepthEstimationService.swift; sourceTree = "<group>"; };
 		EA57003C2EC10001000AB522 /* LMAgentCoachingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentCoachingController.swift; sourceTree = "<group>"; };
 		EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = DepthAnythingV2SmallF16P6.mlpackage; sourceTree = "<group>"; };
@@ -361,6 +358,7 @@
 		EA5701B52EC20001000AB522 /* LMGeminiGridSplitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGeminiGridSplitter.swift; sourceTree = "<group>"; };
 		EA5701B72EC20001000AB522 /* LMModelsSettingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMModelsSettingPage.swift; sourceTree = "<group>"; };
 		EA5701B92EC20001000AB522 /* gemini_inspire_prompt.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = gemini_inspire_prompt.txt; sourceTree = "<group>"; };
+		EA5701C12EC20002000AB522 /* LMQwenModelSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMQwenModelSettingsStore.swift; sourceTree = "<group>"; };
 		EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+ShowSuggestions.swift"; sourceTree = "<group>"; };
 		EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeRecord.swift; sourceTree = "<group>"; };
 		EA5835552EC9DBC70013E531 /* language_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = language_config.json; sourceTree = "<group>"; };
@@ -393,6 +391,12 @@
 		EA86406E2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SavedIdeaEntity+CoreDataClass.swift"; sourceTree = "<group>"; };
 		EA86406F2ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataProperties.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SavedIdeaEntity+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		EAA37A7A2ED090230008081D /* LMAlertDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAlertDialog.swift; sourceTree = "<group>"; };
+		EAAD00002F6C00010001AD00 /* LMAppOpenAdContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppOpenAdContracts.swift; sourceTree = "<group>"; };
+		EAAD00022F6C00010001AD02 /* LMAppOpenAdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppOpenAdManager.swift; sourceTree = "<group>"; };
+		EAAD00042F6C00010001AD04 /* LMBannerAdContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMBannerAdContracts.swift; sourceTree = "<group>"; };
+		EAAD00062F6C00010001AD06 /* LMBannerAdHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMBannerAdHost.swift; sourceTree = "<group>"; };
+		EAAD00082F6C00010001AD08 /* LMGoogleAppOpenAdLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGoogleAppOpenAdLoader.swift; sourceTree = "<group>"; };
+		EAAD000A2F6C00010001AD0A /* LMMobileAdsBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMMobileAdsBootstrap.swift; sourceTree = "<group>"; };
 		EAAF53EC2F15449500E961DC /* LMNotificationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationModel.swift; sourceTree = "<group>"; };
 		EAAF53EE2F1544AF00E961DC /* LMNotificationDetailPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationDetailPage.swift; sourceTree = "<group>"; };
 		EAAF53F02F1544DD00E961DC /* LMNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationManager.swift; sourceTree = "<group>"; };
@@ -457,8 +461,16 @@
 		EAFBADC32EA36E5900586EC7 /* LMIdeasPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMIdeasPageView.swift; sourceTree = "<group>"; };
 		EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFAQPage.swift; sourceTree = "<group>"; };
 		EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationsPage.swift; sourceTree = "<group>"; };
+		EC28EB87E028DD5A58EC92E8 /* Pods_processor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_processor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		ECEC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMScoreTickContext.swift; sourceTree = "<group>"; };
+		EDDCCDCCACD2413585CB53C3 /* U2Netp.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = U2Netp.mlpackage; sourceTree = "<group>"; };
+		EFAA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDepthLayeringScorer.swift; sourceTree = "<group>"; };
 		F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceMode.swift; sourceTree = "<group>"; };
 		F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMBitmapDescriptor.swift; sourceTree = "<group>"; };
+		F1FD08E7D2DE44D99C49BBD0 /* model_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = model_config.json; sourceTree = "<group>"; };
+		F526A60DBC4F44EF8369D60A /* LMGeminiInspireConfigRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGeminiInspireConfigRepository.swift; sourceTree = "<group>"; };
+		FECD42B648DC41FABA90842F /* LMPreShootPlanButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreShootPlanButtonView.swift; sourceTree = "<group>"; };
+		FEF0BABB3D9643AA98133595 /* LMSceneExploreConfigRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreConfigRepository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -473,14 +485,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		EDB9550AE951C16458CB175B /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				EC28EB87E028DD5A58EC92E8 /* Pods_processor.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		B6D676A52273F4EC9040FD29 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -703,6 +707,12 @@
 				EACA1D092E7E4EE900C80883 /* LMLogger.swift */,
 				EAFBAD892E9B8A4800586EC7 /* LMUserManager.swift */,
 				EA57009F2EC10003000AB522 /* LMFeatureFlagsManager.swift */,
+				EAAD00002F6C00010001AD00 /* LMAppOpenAdContracts.swift */,
+				EAAD00022F6C00010001AD02 /* LMAppOpenAdManager.swift */,
+				EAAD00042F6C00010001AD04 /* LMBannerAdContracts.swift */,
+				EAAD00062F6C00010001AD06 /* LMBannerAdHost.swift */,
+				EAAD00082F6C00010001AD08 /* LMGoogleAppOpenAdLoader.swift */,
+				EAAD000A2F6C00010001AD0A /* LMMobileAdsBootstrap.swift */,
 				EA5701B12EC20001000AB522 /* LMGeminiModelSettingsStore.swift */,
 				EA5701C12EC20002000AB522 /* LMQwenModelSettingsStore.swift */,
 				DA9E1A6B3B9B456E845FD953 /* LMLlmModuleSettingsStore.swift */,
@@ -994,6 +1004,14 @@
 			path = camera;
 			sourceTree = "<group>";
 		};
+		EDB9550AE951C16458CB175B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				EC28EB87E028DD5A58EC92E8 /* Pods_processor.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -1006,6 +1024,7 @@
 				EACA1BEE2E7E408900C80883 /* Frameworks */,
 				EACA1BEF2E7E408900C80883 /* Resources */,
 				DEAAD246AF0D2D3D9FA8043E /* [CP] Embed Pods Frameworks */,
+				DB130864C74A692DF8EB05E9 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -1077,23 +1096,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		DEAAD246AF0D2D3D9FA8043E /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		CCF39359E38201EE3A7DD8B4 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1114,6 +1116,40 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		DB130864C74A692DF8EB05E9 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		DEAAD246AF0D2D3D9FA8043E /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -1211,6 +1247,12 @@
 				EAFBACBB2E7E7E7500586EC7 /* LMCameraControlsView.swift in Sources */,
 				EAFBAD8A2E9B8A4800586EC7 /* LMUserManager.swift in Sources */,
 				EA5700A02EC10003000AB522 /* LMFeatureFlagsManager.swift in Sources */,
+				EAAD00012F6C00010001AD01 /* LMAppOpenAdContracts.swift in Sources */,
+				EAAD00032F6C00010001AD03 /* LMAppOpenAdManager.swift in Sources */,
+				EAAD00052F6C00010001AD05 /* LMBannerAdContracts.swift in Sources */,
+				EAAD00072F6C00010001AD07 /* LMBannerAdHost.swift in Sources */,
+				EAAD00092F6C00010001AD09 /* LMGoogleAppOpenAdLoader.swift in Sources */,
+				EAAD000B2F6C00010001AD0B /* LMMobileAdsBootstrap.swift in Sources */,
 				EA5700A22EC10003000AB522 /* LMDemoSuggestionsLoader.swift in Sources */,
 				EAFBACBC2E7E7E7500586EC7 /* LMCameraPreviewView.swift in Sources */,
 				EA56DDBF2EC08E82000AB522 /* LMCameraPage+Session.swift in Sources */,
