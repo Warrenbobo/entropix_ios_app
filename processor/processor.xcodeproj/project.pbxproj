@@ -7,23 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		70FFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 913B5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */; };
-		61D4ED49A14447F48857E061 /* PiDiNet.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 2FB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */; };
-		7DEF28E2208A447ABAC2BCD4 /* U2Netp.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 499883826CD2413585CB53C3 /* U2Netp.mlpackage */; };
 		0FD1331B43CA42C8BE257C4A /* LMPidinetModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */; };
-		B8289BCF3D8943549F800E51 /* LMU2NetpModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */; };
-		DA32B37E95AA4FE2940CECFC /* LMOpenCvLineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */; };
-		86A55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7572C9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */; };
-		6AA97AF698FF445291BDCCFD /* LMDepthLayeringScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45AA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */; };
-		BFCB45F239BF4CABBB190382 /* LMBitmapDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */; };
-		7C6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916CB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */; };
-		90799D327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204E896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */; };
 		3CD00C96D89B49C999885318 /* LMScoreTickContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */; };
-		EA5700692EC10005000AB522 /* LMAgentRequestLogModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */; };
-		EA57006B2EC10005000AB522 /* LMAgentRequestLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */; };
-		EA57006D2EC10005000AB522 /* LMAgentRequestLogRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */; };
-		EA57006F2EC10005000AB522 /* LMAgentRequestLogPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */; };
-		EA5700712EC10005000AB522 /* LMCameraPage+AgentLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */; };
+		61D4ED49A14447F48857E061 /* PiDiNet.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 2FB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */; };
+		6AA97AF698FF445291BDCCFD /* LMDepthLayeringScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45AA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */; };
+		70FFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 913B5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */; };
+		BCD8460F55A346DF8FF5665C /* LMMobileAdsBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 695E17B064B644CA9A1F0BAF /* LMMobileAdsBootstrap.swift */; };
+		CDCC3D342DA646DAB190C54E /* LMAppOpenAdContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D00462653AD4DD4843934CD /* LMAppOpenAdContracts.swift */; };
+		0ECBF838D6A74F8C81F45DFF /* LMGoogleAppOpenAdLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98891994B1004B26B4A94FBE /* LMGoogleAppOpenAdLoader.swift */; };
+		4BCC2479F43242FA89E7C833 /* LMAppOpenAdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9054F116204C42989C28A0C2 /* LMAppOpenAdManager.swift */; };
+		581410ACBF0C474EB341129E /* LMBannerAdContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = B826A57BA1C84445BD39E697 /* LMBannerAdContracts.swift */; };
+		02B37A86DBE64A679162F267 /* LMBannerAdHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F00C341E03F476EADE144D5 /* LMBannerAdHost.swift */; };
+		7C6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916CB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */; };
+		7DEF28E2208A447ABAC2BCD4 /* U2Netp.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 499883826CD2413585CB53C3 /* U2Netp.mlpackage */; };
+		86A55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7572C9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */; };
+		90799D327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204E896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */; };
+		B8289BCF3D8943549F800E51 /* LMU2NetpModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */; };
+		BFCB45F239BF4CABBB190382 /* LMBitmapDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */; };
+		DA32B37E95AA4FE2940CECFC /* LMOpenCvLineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */; };
 		EA0A473C2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A473B2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift */; };
 		EA0A473D2EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47352EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift */; };
 		EA0A473E2EBF8F19002CBB80 /* LMSubscriptionDialogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47372EBF8F19002CBB80 /* LMSubscriptionDialogView.swift */; };
@@ -98,12 +99,17 @@
 		EA57003D2EC10001000AB522 /* LMAgentCoachingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57003C2EC10001000AB522 /* LMAgentCoachingController.swift */; };
 		EA57003F2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */; };
 		EA5700432EC10001000AB522 /* coaching_policy.json in Resources */ = {isa = PBXBuildFile; fileRef = EA5700412EC10001000AB522 /* coaching_policy.json */; };
-		EA5700A62EC10004000AB522 /* prompts.json in Resources */ = {isa = PBXBuildFile; fileRef = EA5700A52EC10004000AB522 /* prompts.json */; };
-		EA5700A82EC10004000AB522 /* system_prompt_agentic_v3.txt in Resources */ = {isa = PBXBuildFile; fileRef = EA5700A72EC10004000AB522 /* system_prompt_agentic_v3.txt */; };
 		EA5700592EC10001000AB522 /* LMSkipReevaluationEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700582EC10001000AB522 /* LMSkipReevaluationEvaluator.swift */; };
+		EA5700692EC10005000AB522 /* LMAgentRequestLogModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */; };
+		EA57006B2EC10005000AB522 /* LMAgentRequestLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */; };
+		EA57006D2EC10005000AB522 /* LMAgentRequestLogRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */; };
+		EA57006F2EC10005000AB522 /* LMAgentRequestLogPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */; };
+		EA5700712EC10005000AB522 /* LMCameraPage+AgentLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */; };
 		EA5700A02EC10003000AB522 /* LMFeatureFlagsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57009F2EC10003000AB522 /* LMFeatureFlagsManager.swift */; };
 		EA5700A22EC10003000AB522 /* LMDemoSuggestionsLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700A12EC10003000AB522 /* LMDemoSuggestionsLoader.swift */; };
 		EA5700A42EC10003000AB522 /* demo_suggestions in Resources */ = {isa = PBXBuildFile; fileRef = EA5700A32EC10003000AB522 /* demo_suggestions */; };
+		EA5700A62EC10004000AB522 /* prompts.json in Resources */ = {isa = PBXBuildFile; fileRef = EA5700A52EC10004000AB522 /* prompts.json */; };
+		EA5700A82EC10004000AB522 /* system_prompt_agentic_v3.txt in Resources */ = {isa = PBXBuildFile; fileRef = EA5700A72EC10004000AB522 /* system_prompt_agentic_v3.txt */; };
 		EA5835442EC976200013E531 /* LMCameraPage+ShowSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */; };
 		EA5835512EC99E1F0013E531 /* LMInspireMeRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */; };
 		EA5835562EC9DBC70013E531 /* language_config.json in Resources */ = {isa = PBXBuildFile; fileRef = EA5835552EC9DBC70013E531 /* language_config.json */; };
@@ -203,25 +209,25 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		913B5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionModelPreloader.swift; sourceTree = "<group>"; };
-		2FB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = PiDiNet.mlpackage; sourceTree = "<group>"; };
-		499883826CD2413585CB53C3 /* U2Netp.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = U2Netp.mlpackage; sourceTree = "<group>"; };
-		2F6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPidinetModelProvider.swift; sourceTree = "<group>"; };
-		BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMU2NetpModelProvider.swift; sourceTree = "<group>"; };
-		B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMOpenCvLineDetector.swift; sourceTree = "<group>"; };
-		7572C9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubjectMaskAnalyzer.swift; sourceTree = "<group>"; };
-		45AA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDepthLayeringScorer.swift; sourceTree = "<group>"; };
-		F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMBitmapDescriptor.swift; sourceTree = "<group>"; };
-		916CB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreviewFramePipeline.swift; sourceTree = "<group>"; };
 		204E896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEVA02ModelProvider.swift; sourceTree = "<group>"; };
+		2F6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPidinetModelProvider.swift; sourceTree = "<group>"; };
+		2FB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = PiDiNet.mlpackage; sourceTree = "<group>"; };
+		45AA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDepthLayeringScorer.swift; sourceTree = "<group>"; };
 		48EC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMScoreTickContext.swift; sourceTree = "<group>"; };
-		EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogModels.swift; sourceTree = "<group>"; };
-		EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogStore.swift; sourceTree = "<group>"; };
-		EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogRecorder.swift; sourceTree = "<group>"; };
-		EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogPage.swift; sourceTree = "<group>"; };
-		EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+AgentLog.swift"; sourceTree = "<group>"; };
+		499883826CD2413585CB53C3 /* U2Netp.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = U2Netp.mlpackage; sourceTree = "<group>"; };
 		4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_processor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		7572C9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubjectMaskAnalyzer.swift; sourceTree = "<group>"; };
 		8769BF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.debug.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.debug.xcconfig"; sourceTree = "<group>"; };
+		913B5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionModelPreloader.swift; sourceTree = "<group>"; };
+		695E17B064B644CA9A1F0BAF /* LMMobileAdsBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMMobileAdsBootstrap.swift; sourceTree = "<group>"; };
+		3D00462653AD4DD4843934CD /* LMAppOpenAdContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppOpenAdContracts.swift; sourceTree = "<group>"; };
+		98891994B1004B26B4A94FBE /* LMGoogleAppOpenAdLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGoogleAppOpenAdLoader.swift; sourceTree = "<group>"; };
+		9054F116204C42989C28A0C2 /* LMAppOpenAdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppOpenAdManager.swift; sourceTree = "<group>"; };
+		B826A57BA1C84445BD39E697 /* LMBannerAdContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMBannerAdContracts.swift; sourceTree = "<group>"; };
+		3F00C341E03F476EADE144D5 /* LMBannerAdHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMBannerAdHost.swift; sourceTree = "<group>"; };
+		916CB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreviewFramePipeline.swift; sourceTree = "<group>"; };
+		B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMOpenCvLineDetector.swift; sourceTree = "<group>"; };
+		BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMU2NetpModelProvider.swift; sourceTree = "<group>"; };
 		E918F2844F67229435DD4374 /* Pods-processor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.release.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.release.xcconfig"; sourceTree = "<group>"; };
 		EA0A47352EBF8F19002CBB80 /* LMSubscriptionAdRewardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionAdRewardsView.swift; sourceTree = "<group>"; };
 		EA0A47362EBF8F19002CBB80 /* LMSubscriptionCountdownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionCountdownView.swift; sourceTree = "<group>"; };
@@ -298,12 +304,17 @@
 		EA57003C2EC10001000AB522 /* LMAgentCoachingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentCoachingController.swift; sourceTree = "<group>"; };
 		EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = DepthAnythingV2SmallF16P6.mlpackage; sourceTree = "<group>"; };
 		EA5700412EC10001000AB522 /* coaching_policy.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = coaching_policy.json; sourceTree = "<group>"; };
-		EA5700A52EC10004000AB522 /* prompts.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = prompts.json; sourceTree = "<group>"; };
-		EA5700A72EC10004000AB522 /* system_prompt_agentic_v3.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = system_prompt_agentic_v3.txt; sourceTree = "<group>"; };
 		EA5700582EC10001000AB522 /* LMSkipReevaluationEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSkipReevaluationEvaluator.swift; sourceTree = "<group>"; };
+		EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogModels.swift; sourceTree = "<group>"; };
+		EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogStore.swift; sourceTree = "<group>"; };
+		EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogRecorder.swift; sourceTree = "<group>"; };
+		EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogPage.swift; sourceTree = "<group>"; };
+		EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+AgentLog.swift"; sourceTree = "<group>"; };
 		EA57009F2EC10003000AB522 /* LMFeatureFlagsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFeatureFlagsManager.swift; sourceTree = "<group>"; };
 		EA5700A12EC10003000AB522 /* LMDemoSuggestionsLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDemoSuggestionsLoader.swift; sourceTree = "<group>"; };
 		EA5700A32EC10003000AB522 /* demo_suggestions */ = {isa = PBXFileReference; lastKnownFileType = folder; path = demo_suggestions; sourceTree = "<group>"; };
+		EA5700A52EC10004000AB522 /* prompts.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = prompts.json; sourceTree = "<group>"; };
+		EA5700A72EC10004000AB522 /* system_prompt_agentic_v3.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = system_prompt_agentic_v3.txt; sourceTree = "<group>"; };
 		EA5835432EC976200013E531 /* LMCameraPage+ShowSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+ShowSuggestions.swift"; sourceTree = "<group>"; };
 		EA5835502EC99E1F0013E531 /* LMInspireMeRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspireMeRecord.swift; sourceTree = "<group>"; };
 		EA5835552EC9DBC70013E531 /* language_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = language_config.json; sourceTree = "<group>"; };
@@ -401,6 +412,7 @@
 		EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFAQPage.swift; sourceTree = "<group>"; };
 		EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationsPage.swift; sourceTree = "<group>"; };
 		F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMARGuidanceMode.swift; sourceTree = "<group>"; };
+		F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMBitmapDescriptor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -567,6 +579,32 @@
 			path = config;
 			sourceTree = "<group>";
 		};
+		EA5700662EC10005000AB522 /* agentLog */ = {
+			isa = PBXGroup;
+			children = (
+				EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */,
+				EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */,
+				EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */,
+			);
+			path = agentLog;
+			sourceTree = "<group>";
+		};
+		EA5700672EC10005000AB522 /* agentLog */ = {
+			isa = PBXGroup;
+			children = (
+				EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */,
+			);
+			path = agentLog;
+			sourceTree = "<group>";
+		};
+		EA5700702EC10006000AB522 /* opencv */ = {
+			isa = PBXGroup;
+			children = (
+				B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */,
+			);
+			path = opencv;
+			sourceTree = "<group>";
+		};
 		EACA1BE82E7E408900C80883 = {
 			isa = PBXGroup;
 			children = (
@@ -604,6 +642,12 @@
 				EA5700042EC10001000AB522 /* LMHumanUnderstandingService.swift */,
 				EA4032A12EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift */,
 				EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */,
+				695E17B064B644CA9A1F0BAF /* LMMobileAdsBootstrap.swift */,
+				3D00462653AD4DD4843934CD /* LMAppOpenAdContracts.swift */,
+				98891994B1004B26B4A94FBE /* LMGoogleAppOpenAdLoader.swift */,
+				9054F116204C42989C28A0C2 /* LMAppOpenAdManager.swift */,
+				B826A57BA1C84445BD39E697 /* LMBannerAdContracts.swift */,
+				3F00C341E03F476EADE144D5 /* LMBannerAdHost.swift */,
 				EACA1D052E7E4C7C00C80883 /* LMPackageManager.swift */,
 				EACA1D092E7E4EE900C80883 /* LMLogger.swift */,
 				EAFBAD892E9B8A4800586EC7 /* LMUserManager.swift */,
@@ -881,37 +925,6 @@
 			path = camera;
 			sourceTree = "<group>";
 		};
-
-
-
-		EA5700662EC10005000AB522 /* agentLog */ = {
-			isa = PBXGroup;
-			children = (
-				EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */,
-				EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */,
-				EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */,
-			);
-			path = agentLog;
-			sourceTree = "<group>";
-		};
-
-		EA5700672EC10005000AB522 /* agentLog */ = {
-			isa = PBXGroup;
-			children = (
-				EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */,
-			);
-			path = agentLog;
-			sourceTree = "<group>";
-		};
-
-		EA5700702EC10006000AB522 /* opencv */ = {
-			isa = PBXGroup;
-			children = (
-				B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */,
-			);
-			path = opencv;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -924,6 +937,7 @@
 				EACA1BEE2E7E408900C80883 /* Frameworks */,
 				EACA1BEF2E7E408900C80883 /* Resources */,
 				34AAD246AF0D2D3D9FA8043E /* [CP] Embed Pods Frameworks */,
+				098A1A0895F0A6B3745DAE8A /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -959,6 +973,9 @@
 			);
 			mainGroup = EACA1BE82E7E408900C80883;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A14794BC300F5A920076DAB2 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EACA1BF22E7E408900C80883 /* Products */;
 			projectDirPath = "";
@@ -989,6 +1006,23 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		098A1A0895F0A6B3745DAE8A /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		34AAD246AF0D2D3D9FA8043E /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -997,13 +1031,9 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
-			inputPaths = (
-			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1186,6 +1216,12 @@
 				BFCB45F239BF4CABBB190382 /* LMBitmapDescriptor.swift in Sources */,
 				7C6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */,
 				70FFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */,
+				BCD8460F55A346DF8FF5665C /* LMMobileAdsBootstrap.swift in Sources */,
+				CDCC3D342DA646DAB190C54E /* LMAppOpenAdContracts.swift in Sources */,
+				0ECBF838D6A74F8C81F45DFF /* LMGoogleAppOpenAdLoader.swift in Sources */,
+				4BCC2479F43242FA89E7C833 /* LMAppOpenAdManager.swift in Sources */,
+				581410ACBF0C474EB341129E /* LMBannerAdContracts.swift in Sources */,
+				02B37A86DBE64A679162F267 /* LMBannerAdHost.swift in Sources */,
 				90799D327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */,
 				3CD00C96D89B49C999885318 /* LMScoreTickContext.swift in Sources */,
 				EA3F16682EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift in Sources */,
@@ -1462,6 +1498,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A14794BC300F5A920076DAB2 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCVersionGroup section */
 		EACA1CEA2E7E49B600C80883 /* processor.xcdatamodeld */ = {

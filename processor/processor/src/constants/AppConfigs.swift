@@ -20,12 +20,16 @@ struct AppConfigs {
         static let release = "https://framaist.entropixai.com"
     }
     
-    /// 广告位配置
+    /// AdMob placement IDs. Study builds use Google demo units; replace before Release.
     struct GoogleAdConfigs {
-        // appid
-        static let appid = ""
-        // 激励视频广告
+        /// AdMob App ID (`GADApplicationIdentifier` in Info.plist).
+        static let appid = "ca-app-pub-3940256099942544~1458002511"
+        /// Rewarded video (deferred — unused in App Open / Banner study).
         static let rewardVideoAdId = ""
+        /// App Open: after splash/open page appears, before Camera (first page).
+        static let appOpenAdId = "ca-app-pub-3940256099942544/5575463023"
+        /// Banner: Mine page (`LMMinePage`) only.
+        static let bannerAdId = "ca-app-pub-3940256099942544/2435281174"
     }
     
     struct AppStore {

@@ -22,6 +22,8 @@ class LMLaunchSplashPage: UIViewController {
     private var hasStartedLaunchFlow = false
     private var hasContinuedToUserDataLoading = false
     private var isCheckingLaunchUpdate = false
+    /// Defers App Open → Camera until splash is on-screen (`viewDidAppear`).
+    private var isPendingHomeAfterAppOpen = false
 
     // MARK: - Privacy Permission Keys
     private static let privacyPermissionKey = "hasAgreedPrivacyPermission"
@@ -49,6 +51,14 @@ class LMLaunchSplashPage: UIViewController {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true,
                                                      animated: animated)
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if isPendingHomeAfterAppOpen {
+            isPendingHomeAfterAppOpen = false
+            performEnterHomeAfterAppOpenGate()
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -112,10 +122,13 @@ class LMLaunchSplashPage: UIViewController {
         guard !hasStartedLaunchFlow else { return }
         hasStartedLaunchFlow = true
 
+        // Preload App Open while splash remains visible (loads after AdMob SDK is ready).
+        LMAppOpenAdManager.shared.preloadIfNeeded()
+
         if !LMFeatureFlagsManager.backendApiEnabled {
             LMLogger.log("Offline demo mode — skipping network and guest login")
             LMUserManager.setupOfflineDemoUser()
-            LMPackageManager.switchToHomeRootController()
+            enterHomeAfterAppOpenGate()
             return
         }
 
@@ -249,7 +262,7 @@ class LMLaunchSplashPage: UIViewController {
                 if LMUserManager.isSignIn {
                     // 已登录，进入主页
                     LMLogger.log("✅ User already signed in, entering home page")
-                    LMPackageManager.switchToHomeRootController()
+                    self.enterHomeAfterAppOpenGate()
                 } else {
                     // 未登录，尝试 Guest 注册和登录
                     LMLogger.log("👤 No user signed in, attempting guest registration and login")
@@ -284,9 +297,9 @@ class LMLaunchSplashPage: UIViewController {
     /// 执行 Guest 登录
     private func performGuestLogin() {
         LMApiService.shared.loginGuest { [weak self] response in
-            guard self != nil else { return }
-
             DispatchQueue.main.async {
+                guard let self else { return }
+
                 if response.requestSuccess, let loginData = response.value {
                     LMLogger.log("✅ Guest user logged in successfully")
                     LMLogger.log("👤 Username: \(loginData.user?.username ?? "nil")")
@@ -299,12 +312,12 @@ class LMLaunchSplashPage: UIViewController {
                     // 保存用户信息
                     LMUserManager.shared.updateUser(loginData.user)
 
-                    // 进入主页
-                    LMPackageManager.switchToHomeRootController()
+                    // 进入主页（App Open gate: splash visible → ad → Camera）
+                    self.enterHomeAfterAppOpenGate()
 
                 } else {
                     LMLogger.log("❌ Guest login failed: \(response.message ?? "Unknown error")")
-                    self?.showGuestLaunchRecoveryAlert(message: response.message)
+                    self.showGuestLaunchRecoveryAlert(message: response.message)
                 }
             }
         }
@@ -331,6 +344,26 @@ class LMLaunchSplashPage: UIViewController {
                 exit(0)
             }
         )
+    }
+
+    /**
+     Shows App Open (if allowed/ready) while splash is still visible, then enters Camera.
+
+     Defers until `viewDidAppear` so the splash is attached to the window before present.
+     */
+    private func enterHomeAfterAppOpenGate() {
+        if view.window != nil {
+            performEnterHomeAfterAppOpenGate()
+        } else {
+            LMLogger.log("App Open gate deferred until splash appears")
+            isPendingHomeAfterAppOpen = true
+        }
+    }
+
+    private func performEnterHomeAfterAppOpenGate() {
+        LMAppOpenAdManager.shared.showIfAvailable(from: self) {
+            LMPackageManager.switchToHomeRootController()
+        }
     }
 
     // MARK: - UI Setup

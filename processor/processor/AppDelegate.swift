@@ -16,6 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         LMFeatureFlagsManager.setup()
+        LMMobileAdsBootstrap.shared.startIfNeeded()
         // Override point for customization after application launch.
 //        let config = ApiInspectorConfig.config(
 //            domains: [ApiInspectorDomain(name: "生产环境", url: AppConfigs.Host.release)],
