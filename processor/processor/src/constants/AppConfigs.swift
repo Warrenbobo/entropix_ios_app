@@ -57,7 +57,8 @@ struct AppConfigs {
         static let baseURL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
         static let apiKey = "sk-d50d7d95f0224783916ea419ab91971e"
         static let modelName = "qwen3.5-397b-a17b"
-        static let thinkingBudget = 64
+        /// Max thinking tokens (DashScope top-level `thinking_budget`; Android `app_config.json` = 512).
+        static let thinkingBudget = 512
         static let imageDataURLMime = "image/jpeg"
         static let imageDataURLQuality = 85
 

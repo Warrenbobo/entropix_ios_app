@@ -10,9 +10,10 @@ import Foundation
 /**
  Eagerly loads composition Core ML models once per resident session.
 
- Call `startPreloadIfNeeded()` when the camera page appears so Stage B reference
- warmup and the first score tick do not pay cold `MLModel` compile/load cost on
- the main thread.
+ Call `startPreloadIfNeeded()` on composition-intent entry (Show Suggestions,
+ album picker, saved-idea) — not bare camera appear — so Stage B reference
+ warmup and the first score tick do not pay cold `MLModel` compile/load cost
+ on the main thread, without taxing users who never open composition coaching.
  */
 final class LMCompositionModelPreloader: @unchecked Sendable {
     static let shared = LMCompositionModelPreloader()
@@ -25,15 +26,13 @@ final class LMCompositionModelPreloader: @unchecked Sendable {
 
     /// Whether the last preload attempt finished (models may still be partially missing).
     var isComplete: Bool {
-        lock.lock()
-        defer { lock.unlock() }
-        return didComplete
+        withLock { didComplete }
     }
 
     /**
      Starts a background preload if one is not already running or finished.
 
-     Safe to call repeatedly from `viewDidAppear`.
+     Safe to call repeatedly from composition-intent entry points.
      */
     func startPreloadIfNeeded() {
         lock.lock()
@@ -41,33 +40,34 @@ final class LMCompositionModelPreloader: @unchecked Sendable {
             lock.unlock()
             return
         }
-        let task = Task(priority: .utility) { [weak self] in
+        let task = Task<Void, Never>(priority: .utility) { [weak self] in
             await self?.preloadAll()
         }
         preloadTask = task
         lock.unlock()
     }
 
-    /**
-     Awaits an in-flight or freshly started preload (Stage B entry gate).
-
-     Failures for optional models are logged; required models retry on first predict.
-     */
+    /// Awaits an in-flight or freshly started preload (Stage B entry gate).
+    /// Failures for optional models are logged; required models retry on first predict.
     func preloadIfNeeded() async {
         startPreloadIfNeeded()
-        let task: Task<Void, Never>?
-        lock.lock()
-        task = preloadTask
-        lock.unlock()
+        let task = withLock { preloadTask }
         await task?.value
     }
 
     /// Clears completion state after `unload()` so the next camera session reloads.
     func markUnloaded() {
+        withLock {
+            didComplete = false
+            preloadTask = nil
+        }
+    }
+
+    /// Synchronous lock helper so `NSLock` is never called directly from an `async` function body.
+    private func withLock<T>(_ body: () -> T) -> T {
         lock.lock()
-        didComplete = false
-        preloadTask = nil
-        lock.unlock()
+        defer { lock.unlock() }
+        return body()
     }
 
     private func preloadAll() async {
@@ -105,9 +105,7 @@ final class LMCompositionModelPreloader: @unchecked Sendable {
             }
         }
 
-        lock.lock()
-        didComplete = true
-        lock.unlock()
+        withLock { didComplete = true }
         LMLogger.log(
             "✅ Composition model preload finished " +
             "(eva02=\(LMEVA02ModelProvider.isLoaded), " +

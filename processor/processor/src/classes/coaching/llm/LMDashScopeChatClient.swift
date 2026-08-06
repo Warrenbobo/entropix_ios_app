@@ -64,10 +64,11 @@ final class LMDashScopeChatClient: @unchecked Sendable {
     }
 
     /// Streams a chat completion; invokes `onDelta` for each parsed SSE delta.
+    /// - Parameter requestBody: Pre-encoded JSON from `LMChatRequestBuilder` (ordered keys).
     func streamChatCompletion(
         baseUrl: String,
         apiKey: String,
-        requestBody: [String: Any],
+        requestBody: Data,
         onDelta: @escaping @Sendable (LMStreamDelta) -> Void
     ) async -> LMStreamResult {
         let urlString = baseUrl.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/chat/completions"
@@ -80,7 +81,7 @@ final class LMDashScopeChatClient: @unchecked Sendable {
         request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: requestBody)
+        request.httpBody = requestBody
 
         let startNs = DispatchTime.now().uptimeNanoseconds
         var firstChunkNs: UInt64?

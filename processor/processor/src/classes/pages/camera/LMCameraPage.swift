@@ -214,9 +214,6 @@ class LMCameraPage: LMPageWrapper {
         
         // 确保视图层级正确
         ensureCorrectViewHierarchy()
-        
-        /// Stage A: begin Core ML preload before any composition-selected entry path.
-        LMCompositionModelPreloader.shared.startPreloadIfNeeded()
 
         // 如果是从已保存构图进入，自动进入 Composition Selected 状态
         handleNavigationSource()
@@ -255,8 +252,6 @@ class LMCameraPage: LMPageWrapper {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         presentHomeCameraAppUpdateIfNeeded(forceRefresh: false)
-        /// Stage A: kick off Core ML preload while the user is still on the camera.
-        LMCompositionModelPreloader.shared.startPreloadIfNeeded()
     }
     
     private func registerAppLifecycleObservers() {

@@ -224,6 +224,9 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
     }
 
     func presentAlbumPicker() {
+        /// Stage A: album path skips suggestions — overlap load with photo browsing.
+        LMCompositionModelPreloader.shared.startPreloadIfNeeded()
+
         var config = PHPickerConfiguration(photoLibrary: .shared())
         config.filter = .images
         config.selectionLimit = 1
@@ -240,7 +243,7 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
     func warmupReferenceForAgent(image: UIImage?) async {
         guard let image else { return }
 
-        // Stage A — no-op if camera `viewDidAppear` already finished preload.
+        // Stage A — no-op if suggestions / album / saved-idea already finished preload.
         await LMCompositionModelPreloader.shared.preloadIfNeeded()
 
         let isLandscape = image.size.width > image.size.height

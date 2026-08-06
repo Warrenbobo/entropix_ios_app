@@ -119,6 +119,9 @@ extension LMCameraPage {
         if let suggestionsList = suggestions {
             currentSuggestions = suggestionsList
         }
+
+        /// Stage A: preload while the user browses the carousel (before pick).
+        LMCompositionModelPreloader.shared.startPreloadIfNeeded()
         
         // 隐藏 Inspire Me 按钮
         inspireMeButtonView.isHidden = true
@@ -755,6 +758,9 @@ extension LMCameraPage {
     
     /// 进入 Camera with Composition Selected 状态（从已保存构图进入）
     func enterCompositionSelectedStateFromSavedIdea(item: GalleryItem) {
+        /// Stage A: saved-idea skips suggestions — start preload before Stage B await.
+        LMCompositionModelPreloader.shared.startPreloadIfNeeded()
+
         currentCameraState = .compositionSelected
         inspireMeButtonView.isHidden = true
         agentGuidanceState = .agent

@@ -286,12 +286,23 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
             )
         }
 
-        let requestBody = buildRequestJson(
-            config: config,
-            reference: reference,
-            cameraView: cameraView,
-            userPrompt: userPrompt
-        )
+        let refDataUrl = imageDataUrl(reference, config: config)
+        let camDataUrl = imageDataUrl(cameraView, config: config)
+        let requestBody: Data
+        do {
+            requestBody = try LMChatRequestBuilder.buildJSONData(
+                config: config,
+                referenceDataUrl: refDataUrl,
+                cameraViewDataUrl: camDataUrl,
+                userPrompt: userPrompt
+            )
+        } catch {
+            callbacks.onError?("Failed to encode LLM request: \(error.localizedDescription)")
+            return LMAgenticRunResult(
+                httpCode: 0, finalAction: "", rawOutput: "", reasoningFull: "", answerFull: "",
+                finishCause: nil, errorBody: "Request encode failed", ttfbMs: 0
+            )
+        }
 
         var reasoningAccumulator = ""
         var answerAccumulator = ""
@@ -358,32 +369,6 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
             errorBody: nil,
             ttfbMs: streamResult.ttfbMs ?? 0
         )
-    }
-
-    private func buildRequestJson(
-        config: LMAppConfig,
-        reference: UIImage,
-        cameraView: UIImage,
-        userPrompt: String
-    ) -> [String: Any] {
-        let refDataUrl = imageDataUrl(reference, config: config)
-        let camDataUrl = imageDataUrl(cameraView, config: config)
-        return [
-            "model": config.modelName,
-            "stream": true,
-            "extra_body": ["thinking_budget": config.thinkingBudget],
-            "messages": [
-                ["role": "system", "content": config.systemPrompt],
-                [
-                    "role": "user",
-                    "content": [
-                        ["type": "text", "text": userPrompt],
-                        ["type": "image_url", "image_url": ["url": refDataUrl]],
-                        ["type": "image_url", "image_url": ["url": camDataUrl]]
-                    ]
-                ]
-            ]
-        ]
     }
 
     private func imageDataUrl(_ image: UIImage, config: LMAppConfig) -> String {

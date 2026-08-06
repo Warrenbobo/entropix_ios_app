@@ -150,27 +150,12 @@ enum LMAgentRequestLogRecorder {
     ) -> String {
         let refDataUrl = sanitizeDataUrl(imageDataUrl(reference, config: config))
         let camDataUrl = sanitizeDataUrl(imageDataUrl(cameraView, config: config))
-        let payload: [String: Any] = [
-            "model": config.modelName,
-            "stream": true,
-            "extra_body": ["thinking_budget": config.thinkingBudget],
-            "messages": [
-                ["role": "system", "content": config.systemPrompt],
-                [
-                    "role": "user",
-                    "content": [
-                        ["type": "text", "text": userPrompt],
-                        ["type": "image_url", "image_url": ["url": refDataUrl]],
-                        ["type": "image_url", "image_url": ["url": camDataUrl]]
-                    ]
-                ]
-            ]
-        ]
-        guard let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys]),
-              let text = String(data: data, encoding: .utf8) else {
-            return "{}"
-        }
-        return text
+        return LMChatRequestBuilder.buildPrettyJSONString(
+            config: config,
+            referenceDataUrl: refDataUrl,
+            cameraViewDataUrl: camDataUrl,
+            userPrompt: userPrompt
+        )
     }
 
     private static func imageDataUrl(_ image: UIImage, config: LMAppConfig) -> String {

@@ -67,6 +67,7 @@ final class LMConfigRepository: @unchecked Sendable {
         ), !text.isEmpty {
             return text
         }
+        LMLogger.log("AGENT_SYSTEM_PROMPT_FALLBACK: bundled system_prompt_agentic_v3.txt not found")
         return fallbackSystemPrompt
     }
 
@@ -80,20 +81,28 @@ final class LMConfigRepository: @unchecked Sendable {
         return Data()
     }
 
+    /// Loads a bundled resource by logical path (e.g. `config/system_prompt_agentic_v3.txt`).
+    ///
+    /// Xcode Copy Bundle Resources often flattens `resources/config/` files to the app bundle root,
+    /// so this tries the subdirectory first, then the bundle root.
     private func readBundleResource(path: String) -> Data {
         let components = path.split(separator: "/")
         let name = String(components.last ?? Substring(path))
         let ext = (name as NSString).pathExtension
         let base = (name as NSString).deletingPathExtension
         let subdir = components.dropLast().joined(separator: "/")
-        guard let url = Bundle.main.url(
-            forResource: base,
-            withExtension: ext.isEmpty ? nil : ext,
-            subdirectory: subdir.isEmpty ? nil : subdir
-        ) else {
-            return Data()
+        let extensionOrNil: String? = ext.isEmpty ? nil : ext
+
+        if !subdir.isEmpty,
+           let url = Bundle.main.url(forResource: base, withExtension: extensionOrNil, subdirectory: subdir),
+           let data = try? Data(contentsOf: url), !data.isEmpty {
+            return data
         }
-        return (try? Data(contentsOf: url)) ?? Data()
+        if let url = Bundle.main.url(forResource: base, withExtension: extensionOrNil),
+           let data = try? Data(contentsOf: url), !data.isEmpty {
+            return data
+        }
+        return Data()
     }
 
     private var fallbackSystemPrompt: String {

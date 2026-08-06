@@ -89,6 +89,7 @@
 		EA5700292EC10001000AB522 /* LMCoachingPolicyConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700282EC10001000AB522 /* LMCoachingPolicyConfig.swift */; };
 		EA57002B2EC10001000AB522 /* LMConfigRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57002A2EC10001000AB522 /* LMConfigRepository.swift */; };
 		EA57002D2EC10001000AB522 /* LMDashScopeChatClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57002C2EC10001000AB522 /* LMDashScopeChatClient.swift */; };
+		EA5700B22EC10006000AB522 /* LMChatRequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700B12EC10006000AB522 /* LMChatRequestBuilder.swift */; };
 		EA57002F2EC10001000AB522 /* LMCoachingSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57002E2EC10001000AB522 /* LMCoachingSupport.swift */; };
 		EA5700312EC10001000AB522 /* LMPromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700302EC10001000AB522 /* LMPromptBuilder.swift */; };
 		EA5700332EC10001000AB522 /* LMArbiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700322EC10001000AB522 /* LMArbiter.swift */; };
@@ -294,6 +295,7 @@
 		EA5700282EC10001000AB522 /* LMCoachingPolicyConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCoachingPolicyConfig.swift; sourceTree = "<group>"; };
 		EA57002A2EC10001000AB522 /* LMConfigRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMConfigRepository.swift; sourceTree = "<group>"; };
 		EA57002C2EC10001000AB522 /* LMDashScopeChatClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDashScopeChatClient.swift; sourceTree = "<group>"; };
+		EA5700B12EC10006000AB522 /* LMChatRequestBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMChatRequestBuilder.swift; sourceTree = "<group>"; };
 		EA57002E2EC10001000AB522 /* LMCoachingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCoachingSupport.swift; sourceTree = "<group>"; };
 		EA5700302EC10001000AB522 /* LMPromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPromptBuilder.swift; sourceTree = "<group>"; };
 		EA5700322EC10001000AB522 /* LMArbiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMArbiter.swift; sourceTree = "<group>"; };
@@ -538,6 +540,7 @@
 			isa = PBXGroup;
 			children = (
 				EA57002C2EC10001000AB522 /* LMDashScopeChatClient.swift */,
+				EA5700B12EC10006000AB522 /* LMChatRequestBuilder.swift */,
 			);
 			path = llm;
 			sourceTree = "<group>";
@@ -1119,6 +1122,7 @@
 				EA5700292EC10001000AB522 /* LMCoachingPolicyConfig.swift in Sources */,
 				EA57002B2EC10001000AB522 /* LMConfigRepository.swift in Sources */,
 				EA57002D2EC10001000AB522 /* LMDashScopeChatClient.swift in Sources */,
+				EA5700B22EC10006000AB522 /* LMChatRequestBuilder.swift in Sources */,
 				EA57002F2EC10001000AB522 /* LMCoachingSupport.swift in Sources */,
 				EA5700312EC10001000AB522 /* LMPromptBuilder.swift in Sources */,
 				EA5700332EC10001000AB522 /* LMArbiter.swift in Sources */,
