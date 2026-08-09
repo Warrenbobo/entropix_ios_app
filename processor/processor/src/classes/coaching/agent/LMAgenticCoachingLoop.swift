@@ -279,7 +279,7 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
         callbacks: LMAgenticLoopCallbacks
     ) async throws -> LMAgenticRunResult {
         guard !config.apiKey.isEmpty else {
-            callbacks.onError?("Set AppConfigs.AgentLLM.apiKey")
+            callbacks.onError?(LMText.settings.qwenNotConfigured)
             return LMAgenticRunResult(
                 httpCode: 0, finalAction: "", rawOutput: "", reasoningFull: "", answerFull: "",
                 finishCause: nil, errorBody: "Missing api_key", ttfbMs: 0

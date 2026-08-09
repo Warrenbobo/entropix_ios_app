@@ -230,6 +230,16 @@ extension LMCameraPage: LMInspireMeButtonViewDelegate {
         guard ensureCameraPermissionForInteraction() else { return }
 #endif
         LMLogger.log("🎯 Inspire Me button tapped")
+
+        // BYOK Direct Gemini: no FramAist login / subscription gate.
+        if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
+            if !LMGeminiModelSettingsStore.isConfigured {
+                AppTheme.Toast.showText(LMText.camera.geminiModelsNotConfigured)
+                return
+            }
+            handleInspireMeFeature()
+            return
+        }
         
         if !LMFeatureFlagsManager.backendApiEnabled {
             handleInspireMeFeature()

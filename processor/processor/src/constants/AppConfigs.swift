@@ -48,10 +48,31 @@ struct AppConfigs {
         static let tutorialSave = "tutorial_save"
     }
 
-    /// Agent LLM + composition calibration defaults (aligned with Android `assets/config/app_config.json`).
+    /**
+     Compile-time Gemini defaults for Inspire Me direct path (SPEC §5 / §7).
+
+     User secrets live in `LMGeminiModelSettingsStore` (Keychain) — never here.
+     */
+    struct Gemini {
+        static let defaultBaseURL = "https://generativelanguage.googleapis.com"
+        /// Flip to `v1` in one place if QA requires it.
+        static let apiVersion = "v1beta"
+        static let defaultImageSize = "1K"
+        static let flashTimeout: TimeInterval = 120
+        static let proTimeout: TimeInterval = 180
+        static let inputMaxLongSide: CGFloat = 1024
+        static let inspirePromptAssetPath = "config/gemini_inspire_prompt.txt"
+        static let cacheDirectoryName = "inspire_gemini"
+        static let placeholderCount = 4
+    }
+
+    /**
+     Agent LLM compile-time defaults (aligned with Android `assets/config/app_config.json`).
+
+     User baseURL / apiKey live in `LMQwenModelSettingsStore` (Models → Qwen) — never hardcode secrets here.
+     */
     struct AgentLLM {
-        static let baseURL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-        static let apiKey = "sk-d50d7d95f0224783916ea419ab91971e"
+        static let defaultBaseURL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
         static let modelName = "qwen3.5-397b-a17b"
         static let thinkingBudget = 64
         static let imageDataURLMime = "image/jpeg"

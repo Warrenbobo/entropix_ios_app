@@ -18,4 +18,7 @@ echo "Using CocoaPods $(pod --version)"
 pod install
 
 echo ""
-echo "Done. Open processor.xcworkspace (not .xcodeproj) in Xcode."
+echo "Done."
+echo "IMPORTANT: Always open processor.xcworkspace in Xcode (never processor.xcodeproj)."
+echo "Building the .xcodeproj alone causes: Unable to find module dependency: Alamofire/SnapKit/..."
+echo "  open \"$(pwd)/processor.xcworkspace\""

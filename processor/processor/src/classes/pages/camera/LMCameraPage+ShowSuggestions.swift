@@ -140,8 +140,10 @@ extension LMCameraPage {
             LMLogger.log("✅ Initial suggestions loaded: \(currentSuggestions.count) items")
         }
         
-        // 开始轮询 AI 生成构图（离线演示任务跳过）
-        if LMFeatureFlagsManager.backendApiEnabled && taskId != "demo_task" {
+        // 开始轮询 AI 生成构图（离线演示 / 本地 Gemini 任务跳过）
+        if LMFeatureFlagsManager.backendApiEnabled
+            && taskId != "demo_task"
+            && !LMGeminiModelSettingsStore.isLocalGeminiTaskId(taskId) {
             startPollingAIGCSuggestions()
         }
         
@@ -210,7 +212,9 @@ extension LMCameraPage {
     
     func reportCurrentSuggestionShotIfNeeded() {
         guard currentCameraState == .compositionSelected else { return }
-        guard LMFeatureFlagsManager.backendApiEnabled, currentTaskId != "demo_task" else { return }
+        guard LMFeatureFlagsManager.backendApiEnabled,
+              currentTaskId != "demo_task",
+              !LMGeminiModelSettingsStore.isLocalGeminiTaskId(currentTaskId) else { return }
         guard case .normal = navigationSource else {
             LMLogger.log("⏭️ [Task Result] Skip Shot report - navigation source is not task-backed suggestion flow")
             return
@@ -233,7 +237,9 @@ extension LMCameraPage {
     }
 
     func reportSuggestionLikeIfNeeded(_ suggestion: LMCompositionSuggestion) {
-        guard LMFeatureFlagsManager.backendApiEnabled, currentTaskId != "demo_task" else { return }
+        guard LMFeatureFlagsManager.backendApiEnabled,
+              currentTaskId != "demo_task",
+              !LMGeminiModelSettingsStore.isLocalGeminiTaskId(currentTaskId) else { return }
         guard case .normal = navigationSource else {
             LMLogger.log("⏭️ [Task Result] Skip Like report - navigation source is not task-backed suggestion flow")
             return
@@ -283,7 +289,9 @@ extension LMCameraPage {
         suggestionId: String?,
         finalized: Bool
     ) {
-        guard LMFeatureFlagsManager.backendApiEnabled, taskId != "demo_task" else { return }
+        guard LMFeatureFlagsManager.backendApiEnabled,
+              taskId != "demo_task",
+              !LMGeminiModelSettingsStore.isLocalGeminiTaskId(taskId) else { return }
         var logComponents = ["task_id=\(taskId)", "finalized=\(finalized)"]
         if let eventType {
             logComponents.append("event_type=\(eventType.rawValue)")
@@ -573,7 +581,7 @@ extension LMCameraPage {
     
     /// 根据新数据立即更新建议图列表（轮询时使用单卡片更新）
     /// ⚠️ 此方法用于轮询期间的单卡片更新，不刷新整个列表
-    private func updateSuggestionsWithNewData(_ newSuggestions: [LMCompositionSuggestion]) {
+    func updateSuggestionsWithNewData(_ newSuggestions: [LMCompositionSuggestion]) {
         guard !newSuggestions.isEmpty else { return }
         
         // 用于批量更新的字典：key=索引，value=新数据
@@ -638,7 +646,7 @@ extension LMCameraPage {
     
     /// 清理无效的占位数据（ready 为 false 且 imageUrl 为 nil）
     /// ⚠️ 仅在轮询结束且最终数据总数与初始不一致时调用，执行完整列表刷新
-    private func cleanupInvalidSuggestions() {
+    func cleanupInvalidSuggestions() {
         let originalCount = currentSuggestions.count
         
         // 过滤掉 ready 为 false 且 imageUrl 为 nil 的数据

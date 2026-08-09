@@ -21,6 +21,10 @@ class LMAboutPage: LMPageWrapper {
     private let backendApiSwitch = UISwitch()
     private let backendApiContainer = UIView()
 
+    private let directGeminiTitleLabel = UILabel()
+    private let directGeminiSwitch = UISwitch()
+    private let directGeminiContainer = UIView()
+
     private let appDeveloperTitleLabel = UILabel()
     private let appDeveloperValueLabel = UILabel()
     private let appDeveloperContainer = UIView()
@@ -40,6 +44,7 @@ class LMAboutPage: LMPageWrapper {
     private let termsOfServiceContainer = UIView()
 
     private let separatorLine0 = UIView()
+    private let separatorLineDirectGemini = UIView()
     private let separatorLine1 = UIView()
     private let separatorLine2 = UIView()
     private let separatorLine3 = UIView()
@@ -69,18 +74,23 @@ extension LMAboutPage {
         contentView.addSubview(backgroundContainer)
 
         backgroundContainer.addSubview(backendApiContainer)
+        backgroundContainer.addSubview(directGeminiContainer)
         backgroundContainer.addSubview(appDeveloperContainer)
         backgroundContainer.addSubview(appVersionContainer)
         backgroundContainer.addSubview(privacyPolicyContainer)
         backgroundContainer.addSubview(termsOfServiceContainer)
 
         backgroundContainer.addSubview(separatorLine0)
+        backgroundContainer.addSubview(separatorLineDirectGemini)
         backgroundContainer.addSubview(separatorLine1)
         backgroundContainer.addSubview(separatorLine2)
         backgroundContainer.addSubview(separatorLine3)
 
         backendApiContainer.addSubview(backendApiTitleLabel)
         backendApiContainer.addSubview(backendApiSwitch)
+
+        directGeminiContainer.addSubview(directGeminiTitleLabel)
+        directGeminiContainer.addSubview(directGeminiSwitch)
 
         appDeveloperContainer.addSubview(appDeveloperTitleLabel)
         appDeveloperContainer.addSubview(appDeveloperValueLabel)
@@ -99,6 +109,7 @@ extension LMAboutPage {
         setupBackgroundContainer()
         setupSeparatorLines()
         setupBackendApiSection()
+        setupDirectGeminiSection()
         setupAppDeveloperSection()
         setupAppVersionSection()
         setupPrivacyPolicySection()
@@ -112,7 +123,7 @@ extension LMAboutPage {
     }
 
     private func setupSeparatorLines() {
-        [separatorLine0, separatorLine1, separatorLine2, separatorLine3].forEach { line in
+        [separatorLine0, separatorLineDirectGemini, separatorLine1, separatorLine2, separatorLine3].forEach { line in
             line.backgroundColor = UIColor.separator
         }
     }
@@ -127,6 +138,20 @@ extension LMAboutPage {
 
         backendApiSwitch.isOn = LMFeatureFlagsManager.backendApiEnabled
         backendApiSwitch.addTarget(self, action: #selector(handleBackendApiSwitchChanged), for: .valueChanged)
+    }
+
+    private func setupDirectGeminiSection() {
+        directGeminiContainer.backgroundColor = UIColor.clear
+
+        directGeminiTitleLabel.text = LMText.settings.inspireMeDirectGemini
+        directGeminiTitleLabel.font = UIFont.systemFont(ofSize: 17, weight: .medium)
+        directGeminiTitleLabel.textColor = UIColor.systemGray
+        directGeminiTitleLabel.textAlignment = .left
+        directGeminiTitleLabel.adjustsFontSizeToFitWidth = true
+        directGeminiTitleLabel.minimumScaleFactor = 0.75
+
+        directGeminiSwitch.isOn = LMFeatureFlagsManager.inspireMeDirectGeminiEnabled
+        directGeminiSwitch.addTarget(self, action: #selector(handleDirectGeminiSwitchChanged), for: .valueChanged)
     }
 
     private func setupAppDeveloperSection() {
@@ -270,8 +295,32 @@ extension LMAboutPage {
             make.height.equalTo(0.5)
         }
 
-        appDeveloperContainer.snp.makeConstraints { make in
+        directGeminiContainer.snp.makeConstraints { make in
             make.top.equalTo(separatorLine0.snp.bottom)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(56)
+        }
+
+        directGeminiTitleLabel.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.leading.equalToSuperview().offset(24)
+            make.trailing.lessThanOrEqualTo(directGeminiSwitch.snp.leading).offset(-12)
+        }
+
+        directGeminiSwitch.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.trailing.equalToSuperview().offset(-24)
+        }
+
+        separatorLineDirectGemini.snp.makeConstraints { make in
+            make.top.equalTo(directGeminiContainer.snp.bottom)
+            make.leading.equalToSuperview().offset(24)
+            make.trailing.equalToSuperview().offset(-24)
+            make.height.equalTo(0.5)
+        }
+
+        appDeveloperContainer.snp.makeConstraints { make in
+            make.top.equalTo(separatorLineDirectGemini.snp.bottom)
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(56)
         }
@@ -396,6 +445,10 @@ extension LMAboutPage {
 
     @objc private func handleBackendApiSwitchChanged() {
         LMFeatureFlagsManager.setBackendApiEnabled(backendApiSwitch.isOn)
+    }
+
+    @objc private func handleDirectGeminiSwitchChanged() {
+        LMFeatureFlagsManager.setInspireMeDirectGeminiEnabled(directGeminiSwitch.isOn)
     }
 
     @objc private func handleBackButtonTapped() {

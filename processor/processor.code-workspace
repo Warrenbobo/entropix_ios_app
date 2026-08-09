@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "processor",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "sweetpad.build.xcodeWorkspacePath": "${workspaceFolder}/processor.xcworkspace",
+    "sweetpad.build.scheme": "processor",
+    "sweetpad.build.configuration": "Debug"
+  }
+}

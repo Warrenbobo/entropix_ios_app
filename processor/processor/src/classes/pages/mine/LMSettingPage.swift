@@ -20,6 +20,7 @@ class LMSettingPage: LMPageWrapper {
     // Setting Items
     private let accountProfileItem = LMSettingItemView()
     private let languageItem = LMSettingItemView()
+    private let modelsItem = LMSettingItemView()
     private let contactUsItem = LMSettingItemView()
     private let frequentQuestionsItem = LMSettingItemView()
     private let aboutItem = LMSettingItemView()
@@ -68,6 +69,7 @@ extension LMSettingPage {
         itemsContainerView.addSubview(itemsStackView)
         itemsStackView.addArrangedSubview(accountProfileItem)
         itemsStackView.addArrangedSubview(languageItem)
+        itemsStackView.addArrangedSubview(modelsItem)
         itemsStackView.addArrangedSubview(contactUsItem)
         itemsStackView.addArrangedSubview(frequentQuestionsItem)
         itemsStackView.addArrangedSubview(aboutItem)
@@ -110,6 +112,19 @@ extension LMSettingPage {
         )
         languageItem.onTap = { [weak self] in
             self?.handleLanguageTapped()
+        }
+
+        // Models (Gemini BYOK) — SF Symbol with saturated tint on soft tinted chip (parity with asset rows).
+        modelsItem.configure(
+            icon: UIImage(systemName: "apple.intelligence"),
+            iconBackgroundColor: .hexColor("#EDE9FE"),
+            title: LMText.settings.models,
+            subtitle: LMText.settings.modelsSubtitle,
+            showArrow: true,
+            iconTintColor: .hexColor("#7C3AED")
+        )
+        modelsItem.onTap = { [weak self] in
+            self?.handleModelsTapped()
         }
         
         // Contact Us
@@ -248,6 +263,7 @@ extension LMSettingPage {
         [
             accountProfileItem,
             languageItem,
+            modelsItem,
             contactUsItem,
             frequentQuestionsItem,
             aboutItem,
@@ -302,6 +318,11 @@ extension LMSettingPage {
         let language = LMLanguagePage()
         navigationController?.pushViewController(language,
                                                  animated: true)
+    }
+
+    private func handleModelsTapped() {
+        let models = LMModelsSettingPage()
+        navigationController?.pushViewController(models, animated: true)
     }
     
     private func handleContactUsTapped() {
@@ -849,8 +870,27 @@ class LMSettingItemView: UIView {
         onTap?()
     }
     
-    func configure(icon: UIImage?, iconBackgroundColor: UIColor, title: String, subtitle: String, showArrow: Bool = true) {
-        iconImageView.image = icon
+    /**
+     Configures the settings row chrome.
+
+     - Parameter iconTintColor: When set, the icon is forced to template mode and tinted
+       (needed for SF Symbols so they match colored asset icons on tinted chips).
+     */
+    func configure(
+        icon: UIImage?,
+        iconBackgroundColor: UIColor,
+        title: String,
+        subtitle: String,
+        showArrow: Bool = true,
+        iconTintColor: UIColor? = nil
+    ) {
+        if let iconTintColor {
+            iconImageView.image = icon?.withRenderingMode(.alwaysTemplate)
+            iconImageView.tintColor = iconTintColor
+        } else {
+            iconImageView.image = icon
+            iconImageView.tintColor = .white
+        }
         iconContainerView.backgroundColor = iconBackgroundColor
         titleLabel.text = title
         subtitleLabel.text = subtitle

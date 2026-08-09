@@ -12,6 +12,7 @@ enum LMFeatureFlagsManager {
 
     private static let prefsKey = "backend_api_enabled"
     private static let neuralGeometricKey = "use_neural_geometric_scorers"
+    private static let directGeminiKey = "inspire_me_direct_gemini_enabled"
 
     /// Master switch: `false` = offline demo mode; backend API calls are skipped.
     static var backendApiEnabled: Bool {
@@ -27,6 +28,16 @@ enum LMFeatureFlagsManager {
         UserDefaults.standard.bool(forKey: neuralGeometricKey)
     }
 
+    /**
+     When `true` (and backend API enabled), Inspire Me uses device → Gemini directly
+     instead of Composition `/analyze` + job polling.
+
+     Default `true` for internal BYOK builds (SPEC §13).
+     */
+    static var inspireMeDirectGeminiEnabled: Bool {
+        UserDefaults.standard.bool(forKey: directGeminiKey)
+    }
+
     /// Loads persisted flags. Call once at app launch.
     static func setup() {
         if UserDefaults.standard.object(forKey: prefsKey) == nil {
@@ -35,9 +46,13 @@ enum LMFeatureFlagsManager {
         if UserDefaults.standard.object(forKey: neuralGeometricKey) == nil {
             UserDefaults.standard.set(true, forKey: neuralGeometricKey)
         }
+        if UserDefaults.standard.object(forKey: directGeminiKey) == nil {
+            UserDefaults.standard.set(true, forKey: directGeminiKey)
+        }
         LMLogger.log(
             "Feature flags: backendApiEnabled=\(backendApiEnabled) " +
-            "useNeuralGeometricScorers=\(useNeuralGeometricScorers)"
+            "useNeuralGeometricScorers=\(useNeuralGeometricScorers) " +
+            "inspireMeDirectGeminiEnabled=\(inspireMeDirectGeminiEnabled)"
         )
     }
 
@@ -53,5 +68,12 @@ enum LMFeatureFlagsManager {
         UserDefaults.standard.set(enabled, forKey: neuralGeometricKey)
         NotificationCenter.default.post(name: didChangeNotification, object: nil)
         LMLogger.log("Feature flags updated: useNeuralGeometricScorers=\(enabled)")
+    }
+
+    /// Persists and publishes the direct-Gemini Inspire Me switch.
+    static func setInspireMeDirectGeminiEnabled(_ enabled: Bool) {
+        UserDefaults.standard.set(enabled, forKey: directGeminiKey)
+        NotificationCenter.default.post(name: didChangeNotification, object: nil)
+        LMLogger.log("Feature flags updated: inspireMeDirectGeminiEnabled=\(enabled)")
     }
 }

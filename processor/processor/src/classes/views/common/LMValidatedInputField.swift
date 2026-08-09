@@ -23,6 +23,9 @@ class LMValidatedInputField: UIView {
     private let passwordVisibilityButton = UIButton(type: .custom)
     
     weak var delegate: LMValidatedInputFieldDelegate?
+
+    /// Maximum characters accepted in the text field (default 50; raise for API keys / URLs).
+    var maximumTextLength: Int = 50
     
     var text: String? {
         get { return textField.text }
@@ -291,11 +294,9 @@ extension LMValidatedInputField: UITextFieldDelegate {
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        // 限制输入长度
-        let maxLength = 50
         let currentText = textField.text ?? ""
         let newLength = currentText.count + string.count - range.length
-        return newLength <= maxLength
+        return newLength <= maximumTextLength
     }
 }
 

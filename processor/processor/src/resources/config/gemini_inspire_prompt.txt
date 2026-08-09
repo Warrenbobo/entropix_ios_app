@@ -1,0 +1,15 @@
+Task: Analyze reference image scenery, then generate a 2x2 grid.
+
+Subject: Young Chinese traveler, modest fashionable daily wear (layers/smart-casual).
+
+STEP 1: SCENE ANALYSIS & PROPOSAL (Text Output)
+Briefly propose 4 distinct, physically logical shot compositions (Shot Size + Pose/Action) that fit the available space (e.g., if no chair exists, do not propose sitting). Keep STEP 1 text short.
+
+STEP 2: IMAGE GENERATION (Image Output)
+Generate a high-def 2x2 grid (vertical shots) executing your proposals from Step 1.
+Output exactly one image: a single 2x2 contact sheet (four equal panels, no borders/gaps if possible). Do not return four separate images.
+
+CRITICAL CONSTRAINTS:
+- STRICTLY preserve reference background (architecture/lighting).
+- Subject must interact realistically with environment (correct perspective/shadows).
+- Style: Photorealistic travel blog, 8k, natural aesthetic.

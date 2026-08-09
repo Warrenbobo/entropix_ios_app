@@ -112,6 +112,14 @@ class LMLaunchSplashPage: UIViewController {
         guard !hasStartedLaunchFlow else { return }
         hasStartedLaunchFlow = true
 
+        // Direct Gemini BYOK: enter home with a local session — no FramAist guest auth.
+        if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
+            LMLogger.log("Direct Gemini BYOK — skipping network and guest login")
+            LMUserManager.setupLocalBYOKUser()
+            LMPackageManager.switchToHomeRootController()
+            return
+        }
+
         if !LMFeatureFlagsManager.backendApiEnabled {
             LMLogger.log("Offline demo mode — skipping network and guest login")
             LMUserManager.setupOfflineDemoUser()

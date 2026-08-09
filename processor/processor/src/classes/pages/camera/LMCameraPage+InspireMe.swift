@@ -140,9 +140,11 @@ extension LMCameraPage {
         // 隐藏 Step 1 引导（用户点击了 Inspire Me 按钮）
         hideInspireMeGuide()
         
-        // 检查登录状态
-        guard requireLogin(action: "use Inspire Me feature") else {
-            return
+        // BYOK Direct Gemini does not require FramAist login; other paths keep guest-friendly guard.
+        if !LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
+            guard requireLogin(action: "use Inspire Me feature") else {
+                return
+            }
         }
         
         guard validateCameraState() else {
@@ -223,6 +225,12 @@ extension LMCameraPage {
         currentProcessingSceneryImage = image
         syncInspirePointsToBackend()
 
+        // Prefer BYOK Gemini even when Backend API flag is off (no FramAist session).
+        if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
+            processDirectGeminiInspireMe(image)
+            return
+        }
+
         if !LMFeatureFlagsManager.backendApiEnabled {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 _ = self?.analyzeSceneWithFastVLM(image)
@@ -237,9 +245,26 @@ extension LMCameraPage {
             self.processAndUploadImage(image, sceneFeature: sceneFeature)
         }
     }
+
+    /// Gates + starts the device → Gemini Inspire Me path (no EVA02 /analyze).
+    private func processDirectGeminiInspireMe(_ image: UIImage) {
+        guard LMGeminiModelSettingsStore.isConfigured else {
+            DispatchQueue.main.async { [weak self] in
+                self?.hideProcessingOverlay()
+                self?.isInspireMeCapture = false
+                AppTheme.Toast.showText(LMText.camera.geminiModelsNotConfigured)
+            }
+            return
+        }
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            self?.processAndGenerateDirectGemini(image)
+        }
+    }
     
     func syncInspirePointsToBackend() {
-        guard LMFeatureFlagsManager.backendApiEnabled else { return }
+        // Direct Gemini BYOK: no server entitlement / point sync (SPEC Option A).
+        guard LMFeatureFlagsManager.backendApiEnabled,
+              !LMFeatureFlagsManager.inspireMeDirectGeminiEnabled else { return }
         let subscriptionStatus = LMStoreManager.shared.currentSubscriptionStatus
         
         if subscriptionStatus == .free {

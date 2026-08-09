@@ -255,6 +255,55 @@ extension LMCameraPage {
             handleResponse(response)
         }
     }
+
+    /**
+     Direct Gemini Inspire Me: show 4 placeholders immediately, then replace with local tiles.
+
+     Skips EVA02 upload and Composition `/analyze` / job polling.
+     */
+    func processAndGenerateDirectGemini(_ image: UIImage) {
+        LMLogger.log("📤 Processing Inspire Me via direct Gemini...")
+
+        guard let compressedImage = compressImage(image, maxLongSide: AppConfigs.Gemini.inputMaxLongSide) else {
+            DispatchQueue.main.async { [weak self] in
+                self?.hideProcessingOverlay()
+                self?.isInspireMeCapture = false
+                AppTheme.Toast.showText(LMText.camera.imageCompressionFailed)
+            }
+            return
+        }
+
+        let aspectRatio = LMCompositionService.snapAspectRatio(calculateAspectRatio(compressedImage))
+        let taskId = "local_gemini_\(UUID().uuidString)"
+        let placeholders = LMCompositionService.shared.makeDirectGeminiPlaceholders()
+
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.hideProcessingOverlay()
+            self.isInspireMeCapture = false
+            self.enterShowSuggestionsState(taskId: taskId, suggestions: placeholders)
+        }
+
+        LMCompositionService.shared.generateSuggestionsDirectly(
+            sceneImage: image,
+            aspectRatio: aspectRatio,
+            sessionId: taskId
+        ) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .success(let suggestions):
+                self.updateSuggestionsWithNewData(suggestions)
+                self.cleanupInvalidSuggestions()
+                LMLogger.log("✅ Direct Gemini suggestions ready: \(suggestions.count)")
+            case .failure(let error):
+                let message = (error as? LocalizedError)?.errorDescription
+                    ?? error.localizedDescription
+                LMLogger.log("❌ Direct Gemini failed: \(message)")
+                AppTheme.Toast.showText(message)
+                self.cleanupInvalidSuggestions()
+            }
+        }
+    }
     
     /// 检查是否为订阅失效错误
     private func isSubscriptionExpiredError(_ response: LMApiResponseModel<LMCompositionTaskResponse>) -> Bool {

@@ -13,6 +13,8 @@ final class LMConfigRepository: @unchecked Sendable {
 
     private let lock = NSLock()
     private var cached: LMAppConfig?
+    private var cachedGeminiInspirePrompt: String?
+    private var geminiPromptFallbackLogged = false
 
     private init() {}
 
@@ -30,7 +32,53 @@ final class LMConfigRepository: @unchecked Sendable {
     func invalidate() {
         lock.lock()
         cached = nil
+        cachedGeminiInspirePrompt = nil
+        geminiPromptFallbackLogged = false
         lock.unlock()
+    }
+
+    /**
+     Loads the Inspire Me FixedPrompt from `gemini_inspire_prompt.txt`.
+
+     Pipeline expects **one** final 2×2 contact sheet (see SPEC §6.3). Callers may append
+     `Expected panel aspect ratio: {ratio}.` after this string.
+     */
+    func geminiInspirePrompt() -> String {
+        lock.lock()
+        defer { lock.unlock() }
+        if let cachedGeminiInspirePrompt, !cachedGeminiInspirePrompt.isEmpty {
+            return cachedGeminiInspirePrompt
+        }
+        if let text = String(
+            data: readBundleResource(path: AppConfigs.Gemini.inspirePromptAssetPath),
+            encoding: .utf8
+        ), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            cachedGeminiInspirePrompt = text
+            return text
+        }
+        // Xcode may flatten `resources/config/*` to the bundle root.
+        if let url = Bundle.main.url(forResource: "gemini_inspire_prompt", withExtension: "txt"),
+           let text = try? String(contentsOf: url, encoding: .utf8),
+           !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            cachedGeminiInspirePrompt = text
+            return text
+        }
+        if !geminiPromptFallbackLogged {
+            geminiPromptFallbackLogged = true
+            LMLogger.log("⚠️ gemini_inspire_prompt.txt missing — using short fallback prompt")
+        }
+        let fallback = fallbackGeminiInspirePrompt
+        cachedGeminiInspirePrompt = fallback
+        return fallback
+    }
+
+    private var fallbackGeminiInspirePrompt: String {
+        """
+        Task: Analyze reference image scenery, then generate a 2x2 grid.
+        Output exactly one image: a single 2x2 contact sheet (four equal panels). Do not return four separate images.
+        Subject: Young Chinese traveler, modest fashionable daily wear.
+        Preserve reference background; photorealistic travel aesthetic.
+        """
     }
 
     private func load() -> LMAppConfig {
@@ -38,10 +86,11 @@ final class LMConfigRepository: @unchecked Sendable {
             with: readBundleJSON(named: AppConfigs.AgentLLM.promptsJSON, subdirectory: "config")
         ) as? [String: Any]) ?? [:]
 
+        let qwen = LMQwenModelSettingsStore.load()
         return LMAppConfig(
-            baseUrl: AppConfigs.AgentLLM.baseURL
+            baseUrl: qwen.baseURL
                 .trimmingCharacters(in: CharacterSet(charactersIn: "/")),
-            apiKey: AppConfigs.AgentLLM.apiKey,
+            apiKey: qwen.apiKey,
             modelName: AppConfigs.AgentLLM.modelName,
             thinkingBudget: AppConfigs.AgentLLM.thinkingBudget,
             imageDataUrlMime: AppConfigs.AgentLLM.imageDataURLMime,

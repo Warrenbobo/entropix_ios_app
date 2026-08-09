@@ -217,11 +217,25 @@ class LMUserManager {
 
     /// Initializes a mock user for offline demo mode.
     static func setupOfflineDemoUser() {
+        setupLocalSessionUser(userId: "demo_user", username: "Demo User", reason: "offline demo")
+    }
+
+    /**
+     Local session for BYOK Direct Gemini — no FramAist guest register/login.
+
+     Gives Plus + high inspire points so subscription UI does not block Inspire Me.
+     */
+    static func setupLocalBYOKUser() {
+        setupLocalSessionUser(userId: "byok_user", username: "BYOK User", reason: "direct Gemini BYOK")
+    }
+
+    /// Shared local (non-backend) user bootstrap for offline demo / BYOK.
+    private static func setupLocalSessionUser(userId: String, username: String, reason: String) {
         let demoUser = LMUserModel(
-            userId: "demo_user",
-            username: "Demo User",
-            nickname: "Demo",
-            email: "demo@framaist.com",
+            userId: userId,
+            username: username,
+            nickname: username,
+            email: nil,
             avatar: nil,
             subscription: SubscriptionType.plus.rawValue,
             subscriptionEndDate: nil,
@@ -231,7 +245,7 @@ class LMUserManager {
             language: nil
         )
         shared.updateUser(demoUser)
-        LMLogger.log("Offline demo user configured")
+        LMLogger.log("Local session user configured (\(reason))")
     }
     
     

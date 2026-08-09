@@ -42,7 +42,8 @@ final class LMCompositionModelPreloader: @unchecked Sendable {
             return
         }
         let task = Task(priority: .utility) { [weak self] in
-            await self?.preloadAll()
+            guard let self else { return }
+            await self.preloadAll()
         }
         preloadTask = task
         lock.unlock()
