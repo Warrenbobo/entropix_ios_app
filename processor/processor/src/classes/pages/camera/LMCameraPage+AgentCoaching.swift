@@ -5,6 +5,7 @@
 
 import UIKit
 import PhotosUI
+import UniformTypeIdentifiers
 
 extension LMCameraPage: LMAgentCoachingUIDelegate {
 
@@ -88,18 +89,31 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
 
     func syncAgentCoachingForCurrentState() {
         let isComposition = currentCameraState == .compositionSelected
+        // Agent is always on in composition-selected (§5); no sidebar toggle.
+        if isComposition {
+            agentGuidanceState = .agent
+        }
         let agentOn = agentGuidanceState == .agent && isComposition
 
-        cameraControlsView.setAgentToggleVisible(isComposition && currentReferenceImage != nil)
+        cameraControlsView.setAgentToggleVisible(false)
         cameraControlsView.setAgentToggleState(agentGuidanceState)
         cameraBottomControlsView.setARGuidanceContainerHidden(
             isComposition || currentCameraState == .showingSuggestions
         )
+        cameraBottomControlsView.setGetTipsVisible(agentOn && currentReferenceImage != nil)
+
         if agentOn {
             updateShutterRoleForAgentState(agentCoachingController.agentState)
         } else {
             shutterRole = .captureDefault
             cameraBottomControlsView.setShutterRole(.captureDefault)
+            cameraBottomControlsView.setGetTipsVisible(false)
+            if currentCameraState == .normal {
+                let mode = (exploreSession?.phase == .suspended)
+                    ? LMPreShootPlanMode.composition
+                    : preShootPlanMode
+                cameraBottomControlsView.applyPreShootShutterAppearance(mode)
+            }
         }
 
         setupAgentCoachingHUDIfNeeded()
@@ -110,6 +124,7 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         } else {
             hasUserTriggeredInstructInSession = false
             resetCoachingSessionUI()
+            instructProgressCoordinator.stop()
         }
 
         if agentOn && referenceWarmupComplete {
@@ -132,45 +147,62 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
     }
 
     func toggleAgentGuidance() {
+        // Agent toggle removed from composition-selected (§5); keep no-op for legacy side rail.
         guard currentCameraState == .compositionSelected else { return }
-        agentGuidanceState = agentGuidanceState.nextToggleState
-        if agentGuidanceState == .agent {
-            agentCoachingController.softResetAgentSession()
-            shutterRole = .instructReady
-            hasUserTriggeredInstructInSession = false
-        } else {
-            shutterRole = .captureDefault
-            executionTool = .none
-            hasUserTriggeredInstructInSession = false
-        }
+        agentGuidanceState = .agent
         syncAgentCoachingForCurrentState()
     }
 
     func beginInstructRound() {
-        guard agentGuidanceState == .agent, shutterRole == .instructReady else { return }
+        guard currentCameraState == .compositionSelected else { return }
+        agentGuidanceState = .agent
+
+        if !LMLlmModuleSettingsStore.isConfigured(.arGuidance) {
+            presentMissingModelConfig(for: .arGuidance)
+            return
+        }
+
+        guard shutterRole == .instructReady || shutterRole == .captureReady || shutterRole == .captureDefault else {
+            return
+        }
         hasUserTriggeredInstructInSession = true
         resetCoachingSessionUI()
         agentCoachingController.markCoachingFinal(false)
         updateShutterRoleForAgentState(.running)
+        cameraBottomControlsView.setGetTipsRunning(true)
+
+        instructProgressCoordinator.start { [weak self] phase in
+            guard let self else { return }
+            self.coachingBubbleView?.setVisible(true)
+            self.coachingActionText = phase.displayText
+            self.refreshCoachingBubble(agentState: .running, isFinal: false)
+        }
 
         agentCoachingController.runAgentRound { [weak self] in
             self?.capturePreviewFrameForScoring()
         }
     }
 
-    /// Derives shutter role from agent state (Android `CameraUiState.shutterRole` parity).
+    /// Derives shutter / Get Tips chrome from agent state — shutter stays photo-only.
     func updateShutterRoleForAgentState(_ state: LMAgentState) {
         guard agentGuidanceState == .agent, currentCameraState == .compositionSelected else { return }
 
         switch state {
         case .running:
             shutterRole = .instructRunning
+            cameraBottomControlsView.setGetTipsRunning(true)
         case .finished:
-            shutterRole = .captureReady
+            shutterRole = .instructReady
+            cameraBottomControlsView.setGetTipsRunning(false)
+            instructProgressCoordinator.stop()
         case .idle, .error:
             shutterRole = .instructReady
+            cameraBottomControlsView.setGetTipsRunning(false)
+            if state == .error {
+                instructProgressCoordinator.stop()
+            }
         }
-        cameraBottomControlsView.setShutterRole(shutterRole)
+        cameraBottomControlsView.setShutterRole(.captureDefault)
         updateCoachingBubbleVisibility()
         refreshCoachingBubble(agentState: state, isFinished: state == .finished)
     }
@@ -193,7 +225,7 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         referenceWarmupComplete = false
         resetCoachingSessionUI()
 
-        inspireMeButtonView.isHidden = true
+        preShootPlanButtonView.isHidden = true
         hideSuggestionsCarousel()
         bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
         cameraBottomControlsView.setLayoutMode(.normal, animated: true)
@@ -218,9 +250,27 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             rank: nil,
             score: nil
         )
-        let image = UIImage(contentsOfFile: imageURL.path)
-            ?? (try? Data(contentsOf: imageURL)).flatMap { UIImage(data: $0) }
+        let image = Self.loadAlbumReferenceImageIgnoringExif(at: imageURL)
         enterCompositionSelected(with: suggestion, image: image)
+    }
+
+    /**
+     Loads an album reference while **ignoring EXIF orientation** (§4).
+
+     Uses the file’s pixel buffer as-is with `.up`, so preview / bbox / score /
+     overlay share one geometry (do not bake EXIF into a rotated bitmap).
+     */
+    static func loadAlbumReferenceImageIgnoringExif(at url: URL) -> UIImage? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+            // Fallback: strip orientation metadata if UIImage applied EXIF.
+            guard let image = UIImage(data: data), let cg = image.cgImage else {
+                return UIImage(data: data)
+            }
+            return UIImage(cgImage: cg, scale: image.scale, orientation: .up)
+        }
+        return UIImage(cgImage: cgImage, scale: 1.0, orientation: .up)
     }
 
     func presentAlbumPicker() {
@@ -463,19 +513,62 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
     func agentCoaching(didApplyExposureAction semanticAction: String) {
         LMLogger.log("Exposure action: \(semanticAction)")
     }
+
+    func agentCoaching(didCompleteScoreModule phase: LMInstructProgressPhase) {
+        instructProgressCoordinator.markModuleDone(phase)
+    }
+
+    func agentCoachingDidEnterThinking() {
+        instructProgressCoordinator.enterThinking()
+    }
 }
 
 // MARK: - PHPickerViewControllerDelegate
 extension LMCameraPage: PHPickerViewControllerDelegate {
     func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
         picker.dismiss(animated: true)
-        guard let provider = results.first?.itemProvider, provider.canLoadObject(ofClass: UIImage.self) else { return }
+        guard let provider = results.first?.itemProvider else { return }
 
+        // Prefer file representation so we can ignore EXIF via CGImageSource.
+        if provider.hasItemConformingToTypeIdentifier(UTType.image.identifier) {
+            provider.loadFileRepresentation(forTypeIdentifier: UTType.image.identifier) { [weak self] url, _ in
+                guard let self, let url else {
+                    self?.loadAlbumImageViaUIImageObject(from: provider)
+                    return
+                }
+                let temp = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("album_ref_\(UUID().uuidString).jpg")
+                try? FileManager.default.removeItem(at: temp)
+                try? FileManager.default.copyItem(at: url, to: temp)
+                // Re-encode ignoring EXIF so downstream always sees .up pixels.
+                if let normalized = Self.loadAlbumReferenceImageIgnoringExif(at: temp),
+                   let data = normalized.jpegData(compressionQuality: 0.92) {
+                    try? data.write(to: temp)
+                }
+                DispatchQueue.main.async {
+                    self.enterCompositionSelectedFromAlbum(temp)
+                }
+            }
+            return
+        }
+
+        loadAlbumImageViaUIImageObject(from: provider)
+    }
+
+    /// Fallback when file representation is unavailable.
+    private func loadAlbumImageViaUIImageObject(from provider: NSItemProvider) {
+        guard provider.canLoadObject(ofClass: UIImage.self) else { return }
         provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
             guard let self, let image = object as? UIImage else { return }
+            let upright: UIImage
+            if let cg = image.cgImage {
+                upright = UIImage(cgImage: cg, scale: image.scale, orientation: .up)
+            } else {
+                upright = image
+            }
             let url = FileManager.default.temporaryDirectory
                 .appendingPathComponent("album_ref_\(UUID().uuidString).jpg")
-            if let data = image.jpegData(compressionQuality: 0.92) {
+            if let data = upright.jpegData(compressionQuality: 0.92) {
                 try? data.write(to: url)
             }
             DispatchQueue.main.async {

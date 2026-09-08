@@ -174,28 +174,24 @@ extension LMCameraPage {
     }
     
     func updateInspireMeButtonState() {
-        guard isViewLoaded, inspireMeButtonView != nil else { return }
+        guard isViewLoaded, preShootPlanButtonView != nil else { return }
 
-        // Inspire Me 按钮仅在 normal 状态下显示
-        // 在 showingSuggestions 和 compositionSelected 状态下，无论前后摄都不显示
         guard currentCameraState == .normal else {
-            inspireMeButtonView.isHidden = true
-            inspireMeButtonView.setInspireMeButtonEnabled(false)
-            LMLogger.log("📷 Camera state is \(currentCameraState): Inspire Me button hidden and disabled")
+            preShootPlanButtonView.isHidden = true
+            preShootPlanButtonView.setEnabledForCamera(false)
+            LMLogger.log("📷 Camera state is \(currentCameraState): PreShootPlan button hidden")
             return
         }
-        
-        // 在 normal 状态下，根据前后摄像头决定按钮状态
-        if isUsingFrontCamera {
-            // 前摄：显示按钮但禁用（灰色状态）
-            inspireMeButtonView.isHidden = false
-            inspireMeButtonView.setInspireMeButtonEnabled(false)
-            LMLogger.log("📷 Front camera in normal state: Inspire Me button visible but disabled")
-        } else {
-            // 后摄：显示并启用按钮
-            inspireMeButtonView.isHidden = false
-            inspireMeButtonView.setInspireMeButtonEnabled(true)
-            LMLogger.log("📷 Back camera in normal state: Inspire Me button visible and enabled")
-        }
+
+        // Path B suspended: still show chip locked to Get Template.
+        let suspended = exploreSession?.phase == .suspended
+        preShootPlanButtonView.isHidden = false
+        // Mode chip stays tappable for Camera mode even on front camera;
+        // AI shutter paths toast when executed.
+        preShootPlanButtonView.setEnabledForCamera(true)
+        let switchEnabled = preShootPlanModeSwitchEnabled && !suspended
+        let mode = suspended ? LMPreShootPlanMode.composition : preShootPlanMode
+        preShootPlanButtonView.setMode(mode, modeSwitchEnabled: switchEnabled)
+        cameraBottomControlsView.applyPreShootShutterAppearance(mode)
     }
 }

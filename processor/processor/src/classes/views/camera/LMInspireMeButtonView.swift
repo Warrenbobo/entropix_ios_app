@@ -9,9 +9,9 @@ import UIKit
 import SnapKit
 
 protocol LMInspireMeButtonViewDelegate: AnyObject {
-    func inspireMeButtonViewDidTapButton()
-    func inspireMeButtonViewDidTapQuestionButton()
-    func inspireMeButtonViewDidTapDisabledButton()
+    func preShootPlanButtonViewDidTapButton()
+    func preShootPlanButtonViewDidTapQuestionButton()
+    func preShootPlanButtonViewDidTapDisabledButton()
 }
 
 class LMInspireMeButtonView: UIView {
@@ -161,16 +161,16 @@ extension LMInspireMeButtonView {
         guard !isHidden else { return }
 
         if !isEnabledForCamera {
-            delegate?.inspireMeButtonViewDidTapDisabledButton()
+            delegate?.preShootPlanButtonViewDidTapDisabledButton()
             return
         }
 
-        delegate?.inspireMeButtonViewDidTapButton()
+        delegate?.preShootPlanButtonViewDidTapButton()
     }
 
     @objc private func handleQuestionButtonTapped() {
         guard !isHidden else { return }
-        delegate?.inspireMeButtonViewDidTapQuestionButton()
+        delegate?.preShootPlanButtonViewDidTapQuestionButton()
     }
 }
 

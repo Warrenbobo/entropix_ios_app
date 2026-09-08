@@ -9,7 +9,7 @@ import UIKit
 
 /// Records agent LLM request/response payloads for the in-app request log.
 enum LMAgentRequestLogRecorder {
-    private static let submitLongEdge: CGFloat = 512
+    private static let submitLongEdge: CGFloat = 1024
     private static let vectorPreviewCount = 8
 
     /// Records the payload about to be sent by an Instruct round.
@@ -150,23 +150,26 @@ enum LMAgentRequestLogRecorder {
     ) -> String {
         let refDataUrl = sanitizeDataUrl(imageDataUrl(reference, config: config))
         let camDataUrl = sanitizeDataUrl(imageDataUrl(cameraView, config: config))
-        let payload: [String: Any] = [
-            "model": config.modelName,
-            "stream": true,
-            "extra_body": ["thinking_budget": config.thinkingBudget],
-            "messages": [
-                ["role": "system", "content": config.systemPrompt],
-                [
-                    "role": "user",
-                    "content": [
-                        ["type": "text", "text": userPrompt],
-                        ["type": "image_url", "image_url": ["url": refDataUrl]],
-                        ["type": "image_url", "image_url": ["url": camDataUrl]]
-                    ]
+        let messages: [[String: Any]] = [
+            ["role": "system", "content": config.systemPrompt],
+            [
+                "role": "user",
+                "content": [
+                    ["type": "text", "text": userPrompt],
+                    ["type": "image_url", "image_url": ["url": refDataUrl]],
+                    ["type": "image_url", "image_url": ["url": camDataUrl]]
                 ]
             ]
         ]
-        guard let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted, .sortedKeys]),
+        let payload = LMChatRequestBuilder.buildStreamingRequest(
+            model: config.modelName,
+            enableThinking: config.enableThinking,
+            thinkingBudget: config.thinkingBudget,
+            temperature: config.temperature,
+            maxTokens: config.maxTokens,
+            messages: messages
+        )
+        guard let data = try? JSONSerialization.data(withJSONObject: payload, options: [.prettyPrinted]),
               let text = String(data: data, encoding: .utf8) else {
             return "{}"
         }

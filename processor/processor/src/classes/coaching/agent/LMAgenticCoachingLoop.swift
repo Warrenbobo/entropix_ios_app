@@ -17,6 +17,10 @@ struct LMAgenticLoopCallbacks {
     var onFinalAction: (@Sendable (String) -> Void)?
     var onError: (@Sendable (String) -> Void)?
     var onScore: (@Sendable (LMCompositionScore) -> Void)?
+    /// Instruct HUD module completion (Global / Geometric / Human / Fuse).
+    var onScoreModuleDone: (@Sendable (LMInstructProgressPhase) -> Void)?
+    /// Fired once scoring is done and LLM / prompt work begins.
+    var onEnterThinking: (@Sendable () -> Void)?
     var onExecuteAction: (
         @Sendable (String, LMCompositionScore, LMExecutionSystemState, LMFinishCause?) -> Void
     )?
@@ -190,14 +194,23 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
         let scores: LMCompositionScore
         if reuseScore, let cachedScore {
             LMLogger.log("AGENT_SCORE_REUSE ageMs=\(nowMs - cachedScore.analyzedAtMs)")
+            // Shorten scoring HUD but keep readable module steps.
+            callbacks.onScoreModuleDone?(.global)
+            callbacks.onScoreModuleDone?(.geometric)
+            callbacks.onScoreModuleDone?(.human)
+            callbacks.onScoreModuleDone?(.fuse)
             scores = cachedScore.score
         } else {
             let fresh = await Task.detached { [analyzer] in
-                analyzer.analyze(ref: reference, cam: camFrame)
+                analyzer.analyze(ref: reference, cam: camFrame) { phase in
+                    callbacks.onScoreModuleDone?(phase)
+                }
             }.value
             callbacks.onScore?(fresh)
             scores = fresh
         }
+
+        callbacks.onEnterThinking?()
 
         let systemState = LMExecutionSystemState(
             referenceBbox: referenceBboxProvider(),
@@ -297,7 +310,7 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
         var answerAccumulator = ""
         let uiThrottler = LMStreamingUiThrottler()
 
-        let streamResult = await chatClient.streamChatCompletion(
+        let streamResult = await LMLlmTaskRuntime.shared.runTipsChat(
             baseUrl: config.baseUrl,
             apiKey: config.apiKey,
             requestBody: requestBody
@@ -325,7 +338,10 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
         )
 
         guard (200...299).contains(streamResult.httpCode) else {
-            callbacks.onError?("HTTP \(streamResult.httpCode): \(streamResult.errorBody ?? "Request failed")")
+            let message = LMLlmTaskRuntime.isRetryableFailure(streamResult)
+                ? LMLlmTaskRuntime.retryableErrorMessage(for: streamResult)
+                : "HTTP \(streamResult.httpCode): \(streamResult.errorBody ?? "Request failed")"
+            callbacks.onError?(message)
             return LMAgenticRunResult(
                 httpCode: streamResult.httpCode,
                 finalAction: "",
@@ -341,6 +357,10 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
         let rawOutput = streamResult.fullText.isEmpty
             ? reasoningAccumulator + answerAccumulator
             : streamResult.fullText
+        // Prefer streamed answer when present; CompleteFetch fills fullText only.
+        if answerAccumulator.isEmpty, !streamResult.fullText.isEmpty {
+            answerAccumulator = streamResult.fullText
+        }
         let arbitrated = arbiter.arbitrate(
             llmOutput: rawOutput,
             currentScores: currentScores,
@@ -368,26 +388,29 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
     ) -> [String: Any] {
         let refDataUrl = imageDataUrl(reference, config: config)
         let camDataUrl = imageDataUrl(cameraView, config: config)
-        return [
-            "model": config.modelName,
-            "stream": true,
-            "extra_body": ["thinking_budget": config.thinkingBudget],
-            "messages": [
-                ["role": "system", "content": config.systemPrompt],
-                [
-                    "role": "user",
-                    "content": [
-                        ["type": "text", "text": userPrompt],
-                        ["type": "image_url", "image_url": ["url": refDataUrl]],
-                        ["type": "image_url", "image_url": ["url": camDataUrl]]
-                    ]
+        let messages: [[String: Any]] = [
+            ["role": "system", "content": config.systemPrompt],
+            [
+                "role": "user",
+                "content": [
+                    ["type": "text", "text": userPrompt],
+                    ["type": "image_url", "image_url": ["url": refDataUrl]],
+                    ["type": "image_url", "image_url": ["url": camDataUrl]]
                 ]
             ]
         ]
+        return LMChatRequestBuilder.buildStreamingRequest(
+            model: config.modelName,
+            enableThinking: config.enableThinking,
+            thinkingBudget: config.thinkingBudget,
+            temperature: config.temperature,
+            maxTokens: config.maxTokens,
+            messages: messages
+        )
     }
 
     private func imageDataUrl(_ image: UIImage, config: LMAppConfig) -> String {
-        let resized = resizeLongEdge(image, maxEdge: 512)
+        let resized = resizeLongEdge(image, maxEdge: 1024)
         let quality = CGFloat(config.imageDataUrlQuality) / 100.0
         let data = resized.jpegData(compressionQuality: quality) ?? Data()
         let base64 = data.base64EncodedString()

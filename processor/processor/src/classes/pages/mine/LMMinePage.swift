@@ -147,6 +147,10 @@ class LMMinePage: LMPageWrapper {
         photoCollectionView.onTabChanged = { [weak self] tab in
             self?.updateFloatingMenuState(tab)
         }
+        photoCollectionView.onSceneHistorySelected = { [weak self] record, cover in
+            let page = LMSceneHistoryBrowsePage(record: record, cover: cover)
+            self?.navigationController?.pushViewController(page, animated: true)
+        }
     }
     
     private func setupStackView() {
@@ -399,7 +403,7 @@ class LMMinePage: LMPageWrapper {
         floatingGalleryButton.isSelected = true
         floatingGalleryButton.addTarget(self, action: #selector(floatingGalleryTabTapped), for: .touchUpInside)
         
-        floatingSavedIdeasButton.setTitle(LMText.profile.savedIdeas, for: .normal)
+        floatingSavedIdeasButton.setTitle(LMText.profile.mineTabLikedSuggestion, for: .normal)
         floatingSavedIdeasButton.setTitleColor(UIColor.systemBlue, for: .selected)
         floatingSavedIdeasButton.setTitleColor(UIColor.systemGray, for: .normal)
         floatingSavedIdeasButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
@@ -450,24 +454,16 @@ class LMMinePage: LMPageWrapper {
         let indicator = floatingMenuContainer.subviews.first { !($0 is UIButton) }
         
         floatingGalleryButton?.isSelected = (tab == .gallery)
-        floatingSavedIdeasButton?.isSelected = (tab == .savedIdeas)
+        floatingSavedIdeasButton?.isSelected = (tab == .savedIdeas || tab == .sceneHistory)
         
         // 动画移动指示器
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseInOut) {
-            if tab == .gallery {
-                indicator?.snp.remakeConstraints { make in
-                    make.bottom.equalToSuperview().offset(-8)
-                    make.centerX.equalTo(self.floatingGalleryButton!)
-                    make.width.equalTo(50)
-                    make.height.equalTo(4)
-                }
-            } else {
-                indicator?.snp.remakeConstraints { make in
-                    make.bottom.equalToSuperview().offset(-8)
-                    make.centerX.equalTo(self.floatingSavedIdeasButton!)
-                    make.width.equalTo(50)
-                    make.height.equalTo(4)
-                }
+            let anchor = (tab == .gallery) ? self.floatingGalleryButton! : self.floatingSavedIdeasButton!
+            indicator?.snp.remakeConstraints { make in
+                make.bottom.equalToSuperview().offset(-8)
+                make.centerX.equalTo(anchor)
+                make.width.equalTo(50)
+                make.height.equalTo(4)
             }
             self.floatingMenuContainer.layoutIfNeeded()
         }

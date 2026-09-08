@@ -7,16 +7,37 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		EF2DA21A4EDD456EBE84930D /* LMLlmModuleSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9E1A6B3B9B456E845FD953 /* LMLlmModuleSettingsStore.swift */; };
+		AAE93FD764E14FDEBD0D4CB0 /* LMSceneExploreConfigRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEF0BABB3D9643AA98133595 /* LMSceneExploreConfigRepository.swift */; };
+		D961550E8B1641DF851883ED /* LMGeminiInspireConfigRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = F526A60DBC4F44EF8369D60A /* LMGeminiInspireConfigRepository.swift */; };
+		BCAABAD07D214569BCF383CF /* LMChatRequestBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABE87998B7B540CD9540B481 /* LMChatRequestBuilder.swift */; };
+		BDAECB91CF114DBCB8493258 /* LMSceneExploreModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEEBEC26A6E7494F9FC70C13 /* LMSceneExploreModels.swift */; };
+		EABD4F43C8644B6FBFAFD275 /* LMSceneExploreClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBC3045816BA4279918ECD1B /* LMSceneExploreClient.swift */; };
+		A11B22C33D4E4F1A9C0D8E77 /* LMGaussianHeatmapRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22C33D44E5F6A1B0C1D9E88 /* LMGaussianHeatmapRenderer.swift */; };
+		A3C1964416B24A9E89DFD62A /* LMSceneHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCBD67E2777E43439C753306 /* LMSceneHistoryStore.swift */; };
+		EACFF9547A674382826BB970 /* LMChatModuleSettingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3946E0448AA44BFBA9F06F8 /* LMChatModuleSettingPage.swift */; };
+		BBDBA7200C1742928CA7B316 /* LMIdeaInspirationSettingPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6C85864047432B82C97AE6 /* LMIdeaInspirationSettingPage.swift */; };
+		DECDBDE218544A18B419BEA7 /* LMPreShootPlanButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FECD42B648DC41FABA90842F /* LMPreShootPlanButtonView.swift */; };
+		DEBAB7AFBF2C49C58AD166C8 /* LMPreShootPlanModeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0E6D9561E4455686479FA5 /* LMPreShootPlanModeSheet.swift */; };
+		A79DAE60BFB34BA9B583BCAB /* LMSceneExploreResultOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFDA8A54889E4EEC93DBAD18 /* LMSceneExploreResultOverlay.swift */; };
+		BC6A361E6C714D79A25FC9E8 /* LMCameraPage+SceneExplore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5E4A3D7D0C43C8ABE698F7 /* LMCameraPage+SceneExplore.swift */; };
+		FBE6E924E24F4F06A7B5DE42 /* LMSceneHistoryPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB45AE3D40844B079C209AE8 /* LMSceneHistoryPageView.swift */; };
+		EE0C689410B44904A41BA06B /* LMSceneHistoryBrowsePage.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBECEA885777492AB4A7148A /* LMSceneHistoryBrowsePage.swift */; };
+		C9842C37FC34409AA03AD8DC /* model_config.json in Resources */ = {isa = PBXBuildFile; fileRef = F1FD08E7D2DE44D99C49BBD0 /* model_config.json */; };
+		B5C1B85EC18F44009CECB530 /* scene_explore_config.json in Resources */ = {isa = PBXBuildFile; fileRef = C3C6CA5105504DD3A45B16A6 /* scene_explore_config.json */; };
+		F702946FB61D4DE3AE234FD9 /* gemini_inspire_config.json in Resources */ = {isa = PBXBuildFile; fileRef = CC92C09F58F54C74B863CD69 /* gemini_inspire_config.json */; };
+		ECAC4EBE74D74B9A8FA1C2D3 /* scene_explore_system_prompt.txt in Resources */ = {isa = PBXBuildFile; fileRef = ACBFE03711C3424EB3D1C945 /* scene_explore_system_prompt.txt */; };
+		DFDD14AFBA564985A349B684 /* scene_explore_user_prompt.txt in Resources */ = {isa = PBXBuildFile; fileRef = BADFBBBF0F1D45B8992529D7 /* scene_explore_user_prompt.txt */; };
 		EA5701C22EC20002000AB522 /* LMQwenModelSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5701C12EC20002000AB522 /* LMQwenModelSettingsStore.swift */; };
-		0FD1331B43CA42C8BE257C4A /* LMPidinetModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */; };
-		3CD00C96D89B49C999885318 /* LMScoreTickContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */; };
-		61D4ED49A14447F48857E061 /* PiDiNet.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 2FB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */; };
-		6AA97AF698FF445291BDCCFD /* LMDepthLayeringScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45AA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */; };
-		70FFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 913B5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */; };
-		7C6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916CB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */; };
-		7DEF28E2208A447ABAC2BCD4 /* U2Netp.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 499883826CD2413585CB53C3 /* U2Netp.mlpackage */; };
-		86A55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7572C9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */; };
-		90799D327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 204E896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */; };
+		AFD1331B43CA42C8BE257C4A /* LMPidinetModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */; };
+		DCD00C96D89B49C999885318 /* LMScoreTickContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECEC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */; };
+		ABD4ED49A14447F48857E061 /* PiDiNet.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = CFB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */; };
+		AAA97AF698FF445291BDCCFD /* LMDepthLayeringScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFAA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */; };
+		BAFFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBDB5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */; };
+		BC6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBACB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */; };
+		BDEF28E2208A447ABAC2BCD4 /* U2Netp.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EDDCCDCCACD2413585CB53C3 /* U2Netp.mlpackage */; };
+		CAA55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFBCC9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */; };
+		DABDDD327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAEE896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */; };
 		B8289BCF3D8943549F800E51 /* LMU2NetpModelProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */; };
 		BFCB45F239BF4CABBB190382 /* LMBitmapDescriptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */; };
 		DA32B37E95AA4FE2940CECFC /* LMOpenCvLineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */; };
@@ -90,6 +111,8 @@
 		EA5700352EC10001000AB522 /* LMActionExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700342EC10001000AB522 /* LMActionExecutor.swift */; };
 		EA5700372EC10001000AB522 /* LMExecutionToolRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700362EC10001000AB522 /* LMExecutionToolRouter.swift */; };
 		EA5700392EC10001000AB522 /* LMAgenticCoachingLoop.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700382EC10001000AB522 /* LMAgenticCoachingLoop.swift */; };
+		2AFD69D0DC144C62A1D0A87B /* LMInstructProgressCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F18178545F4835B6458E8A /* LMInstructProgressCoordinator.swift */; };
+		2E380A13831942AD85099921 /* LMLlmTaskRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2B0AC0FEE04E648AC59A87 /* LMLlmTaskRuntime.swift */; };
 		EA57003B2EC10001000AB522 /* LMDepthEstimationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57003A2EC10001000AB522 /* LMDepthEstimationService.swift */; };
 		EA57003D2EC10001000AB522 /* LMAgentCoachingController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57003C2EC10001000AB522 /* LMAgentCoachingController.swift */; };
 		EA57003F2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */; };
@@ -204,23 +227,44 @@
 		EAFBADC42EA36E5900586EC7 /* LMIdeasPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC32EA36E5900586EC7 /* LMIdeasPageView.swift */; };
 		EAFBADC62EA4C34300586EC7 /* LMFAQPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */; };
 		EAFBADC82EA4C90E00586EC7 /* LMNotificationsPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */; };
-		ED1A82AB7EA3BF2D0B7016C1 /* Pods_processor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */; };
+		ED1A82AB7EA3BF2D0B7016C1 /* Pods_processor.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC28EB87E028DD5A58EC92E8 /* Pods_processor.framework */; };
 		F0A1B2C32F1A000100000001 /* LMARGuidanceMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C32F1A000100000002 /* LMARGuidanceMode.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		DA9E1A6B3B9B456E845FD953 /* LMLlmModuleSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLlmModuleSettingsStore.swift; sourceTree = "<group>"; };
+		FEF0BABB3D9643AA98133595 /* LMSceneExploreConfigRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreConfigRepository.swift; sourceTree = "<group>"; };
+		F526A60DBC4F44EF8369D60A /* LMGeminiInspireConfigRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGeminiInspireConfigRepository.swift; sourceTree = "<group>"; };
+		ABE87998B7B540CD9540B481 /* LMChatRequestBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMChatRequestBuilder.swift; sourceTree = "<group>"; };
+		CEEBEC26A6E7494F9FC70C13 /* LMSceneExploreModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreModels.swift; sourceTree = "<group>"; };
+		BBC3045816BA4279918ECD1B /* LMSceneExploreClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreClient.swift; sourceTree = "<group>"; };
+		B22C33D44E5F6A1B0C1D9E88 /* LMGaussianHeatmapRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGaussianHeatmapRenderer.swift; sourceTree = "<group>"; };
+		BCBD67E2777E43439C753306 /* LMSceneHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneHistoryStore.swift; sourceTree = "<group>"; };
+		A3946E0448AA44BFBA9F06F8 /* LMChatModuleSettingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMChatModuleSettingPage.swift; sourceTree = "<group>"; };
+		CF6C85864047432B82C97AE6 /* LMIdeaInspirationSettingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMIdeaInspirationSettingPage.swift; sourceTree = "<group>"; };
+		FECD42B648DC41FABA90842F /* LMPreShootPlanButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreShootPlanButtonView.swift; sourceTree = "<group>"; };
+		BB0E6D9561E4455686479FA5 /* LMPreShootPlanModeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreShootPlanModeSheet.swift; sourceTree = "<group>"; };
+		CFDA8A54889E4EEC93DBAD18 /* LMSceneExploreResultOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneExploreResultOverlay.swift; sourceTree = "<group>"; };
+		BF5E4A3D7D0C43C8ABE698F7 /* LMCameraPage+SceneExplore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+SceneExplore.swift"; sourceTree = "<group>"; };
+		BB45AE3D40844B079C209AE8 /* LMSceneHistoryPageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneHistoryPageView.swift; sourceTree = "<group>"; };
+		BBECEA885777492AB4A7148A /* LMSceneHistoryBrowsePage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSceneHistoryBrowsePage.swift; sourceTree = "<group>"; };
+		F1FD08E7D2DE44D99C49BBD0 /* model_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = model_config.json; sourceTree = "<group>"; };
+		C3C6CA5105504DD3A45B16A6 /* scene_explore_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = scene_explore_config.json; sourceTree = "<group>"; };
+		CC92C09F58F54C74B863CD69 /* gemini_inspire_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = gemini_inspire_config.json; sourceTree = "<group>"; };
+		ACBFE03711C3424EB3D1C945 /* scene_explore_system_prompt.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = scene_explore_system_prompt.txt; sourceTree = "<group>"; };
+		BADFBBBF0F1D45B8992529D7 /* scene_explore_user_prompt.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = scene_explore_user_prompt.txt; sourceTree = "<group>"; };
 		EA5701C12EC20002000AB522 /* LMQwenModelSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMQwenModelSettingsStore.swift; sourceTree = "<group>"; };
-		204E896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEVA02ModelProvider.swift; sourceTree = "<group>"; };
-		2F6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPidinetModelProvider.swift; sourceTree = "<group>"; };
-		2FB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = PiDiNet.mlpackage; sourceTree = "<group>"; };
-		45AA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDepthLayeringScorer.swift; sourceTree = "<group>"; };
-		48EC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMScoreTickContext.swift; sourceTree = "<group>"; };
-		499883826CD2413585CB53C3 /* U2Netp.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = U2Netp.mlpackage; sourceTree = "<group>"; };
-		4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_processor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		7572C9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubjectMaskAnalyzer.swift; sourceTree = "<group>"; };
-		8769BF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.debug.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.debug.xcconfig"; sourceTree = "<group>"; };
-		913B5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionModelPreloader.swift; sourceTree = "<group>"; };
-		916CB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreviewFramePipeline.swift; sourceTree = "<group>"; };
+		CAEE896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMEVA02ModelProvider.swift; sourceTree = "<group>"; };
+		CF6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPidinetModelProvider.swift; sourceTree = "<group>"; };
+		CFB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = PiDiNet.mlpackage; sourceTree = "<group>"; };
+		EFAA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDepthLayeringScorer.swift; sourceTree = "<group>"; };
+		ECEC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMScoreTickContext.swift; sourceTree = "<group>"; };
+		EDDCCDCCACD2413585CB53C3 /* U2Netp.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = U2Netp.mlpackage; sourceTree = "<group>"; };
+		EC28EB87E028DD5A58EC92E8 /* Pods_processor.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_processor.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		BFBCC9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubjectMaskAnalyzer.swift; sourceTree = "<group>"; };
+		CBADBF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.debug.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.debug.xcconfig"; sourceTree = "<group>"; };
+		DBDB5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionModelPreloader.swift; sourceTree = "<group>"; };
+		DBACB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreviewFramePipeline.swift; sourceTree = "<group>"; };
 		B59CB937C935424DA18D86D1 /* LMOpenCvLineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMOpenCvLineDetector.swift; sourceTree = "<group>"; };
 		BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMU2NetpModelProvider.swift; sourceTree = "<group>"; };
 		E918F2844F67229435DD4374 /* Pods-processor.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-processor.release.xcconfig"; path = "Target Support Files/Pods-processor/Pods-processor.release.xcconfig"; sourceTree = "<group>"; };
@@ -295,6 +339,8 @@
 		EA5700342EC10001000AB522 /* LMActionExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMActionExecutor.swift; sourceTree = "<group>"; };
 		EA5700362EC10001000AB522 /* LMExecutionToolRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMExecutionToolRouter.swift; sourceTree = "<group>"; };
 		EA5700382EC10001000AB522 /* LMAgenticCoachingLoop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgenticCoachingLoop.swift; sourceTree = "<group>"; };
+		B1F18178545F4835B6458E8A /* LMInstructProgressCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInstructProgressCoordinator.swift; sourceTree = "<group>"; };
+		DA2B0AC0FEE04E648AC59A87 /* LMLlmTaskRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLlmTaskRuntime.swift; sourceTree = "<group>"; };
 		EA57003A2EC10001000AB522 /* LMDepthEstimationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDepthEstimationService.swift; sourceTree = "<group>"; };
 		EA57003C2EC10001000AB522 /* LMAgentCoachingController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentCoachingController.swift; sourceTree = "<group>"; };
 		EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = DepthAnythingV2SmallF16P6.mlpackage; sourceTree = "<group>"; };
@@ -427,10 +473,10 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		4DB9550AE951C16458CB175B /* Frameworks */ = {
+		EDB9550AE951C16458CB175B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				4C28EB87E028DD5A58EC92E8 /* Pods_processor.framework */,
+				EC28EB87E028DD5A58EC92E8 /* Pods_processor.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -438,7 +484,7 @@
 		B6D676A52273F4EC9040FD29 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				8769BF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */,
+				CBADBF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */,
 				E918F2844F67229435DD4374 /* Pods-processor.release.xcconfig */,
 			);
 			path = Pods;
@@ -470,7 +516,7 @@
 				EA8640652ED2D24800A0CD43 /* PhotoEntity+CoreDataProperties.swift */,
 				EA3F166E2EE3DFA800B24DA8 /* LMOrientationMatcher.swift */,
 				F0A5544105024F0A8A0479F4 /* LMBitmapDescriptor.swift */,
-				916CB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */,
+				DBACB4C046404F7EAFECB97A /* LMPreviewFramePipeline.swift */,
 				EA5701B52EC20001000AB522 /* LMGeminiGridSplitter.swift */,
 			);
 			path = utils;
@@ -506,7 +552,7 @@
 				EA57001A2EC10001000AB522 /* LMScoreFusionEngine.swift */,
 				EA57001C2EC10001000AB522 /* LMCompositionMath.swift */,
 				EA57001E2EC10001000AB522 /* LMCompositionAnalyzer.swift */,
-				48EC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */,
+				ECEC0BF1534A4E1FAE1F5868 /* LMScoreTickContext.swift */,
 				EA5700202EC10001000AB522 /* LMCompositionScoreLoop.swift */,
 				EA5700702EC10006000AB522 /* opencv */,
 				EA5700522EC10002000AB522 /* scoring */,
@@ -519,8 +565,8 @@
 			children = (
 				EA5700222EC10001000AB522 /* LMGlobalStructureScorer.swift */,
 				EA5700242EC10001000AB522 /* LMGeometricScorer.swift */,
-				7572C9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */,
-				45AA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */,
+				BFBCC9778F5D41A09EB440EA /* LMSubjectMaskAnalyzer.swift */,
+				EFAA4C77FE3F4AF381D95592 /* LMDepthLayeringScorer.swift */,
 				EA5700262EC10001000AB522 /* LMHumanSceneScorer.swift */,
 			);
 			path = scoring;
@@ -539,6 +585,7 @@
 			isa = PBXGroup;
 			children = (
 				EA57002C2EC10001000AB522 /* LMDashScopeChatClient.swift */,
+				ABE87998B7B540CD9540B481 /* LMChatRequestBuilder.swift */,
 				EA5701B32EC20001000AB522 /* LMGeminiImageClient.swift */,
 			);
 			path = llm;
@@ -553,6 +600,7 @@
 				EA5700342EC10001000AB522 /* LMActionExecutor.swift */,
 				EA5700362EC10001000AB522 /* LMExecutionToolRouter.swift */,
 				EA5700382EC10001000AB522 /* LMAgenticCoachingLoop.swift */,
+				B1F18178545F4835B6458E8A /* LMInstructProgressCoordinator.swift */,
 				EA5700582EC10001000AB522 /* LMSkipReevaluationEvaluator.swift */,
 			);
 			path = agent;
@@ -562,11 +610,12 @@
 			isa = PBXGroup;
 			children = (
 				EA57003A2EC10001000AB522 /* LMDepthEstimationService.swift */,
-				204E896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */,
-				2F6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */,
+				CAEE896C532D4BD4BF996103 /* LMEVA02ModelProvider.swift */,
+				CF6A8E6D7C05422EBCD7D8DC /* LMPidinetModelProvider.swift */,
 				BB544AE10F274542B1B5F157 /* LMU2NetpModelProvider.swift */,
-				913B5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */,
+				DBDB5D4A3C7F4461806969B1 /* LMCompositionModelPreloader.swift */,
 				EA57003C2EC10001000AB522 /* LMAgentCoachingController.swift */,
+				DA2B0AC0FEE04E648AC59A87 /* LMLlmTaskRuntime.swift */,
 			);
 			path = managers;
 			sourceTree = "<group>";
@@ -578,6 +627,11 @@
 				EA5700A52EC10004000AB522 /* prompts.json */,
 				EA5700A72EC10004000AB522 /* system_prompt_agentic_v3.txt */,
 				EA5701B92EC20001000AB522 /* gemini_inspire_prompt.txt */,
+				F1FD08E7D2DE44D99C49BBD0 /* model_config.json */,
+				C3C6CA5105504DD3A45B16A6 /* scene_explore_config.json */,
+				CC92C09F58F54C74B863CD69 /* gemini_inspire_config.json */,
+				ACBFE03711C3424EB3D1C945 /* scene_explore_system_prompt.txt */,
+				BADFBBBF0F1D45B8992529D7 /* scene_explore_user_prompt.txt */,
 			);
 			path = config;
 			sourceTree = "<group>";
@@ -614,7 +668,7 @@
 				EACA1CEC2E7E49B600C80883 /* processor */,
 				EACA1BF22E7E408900C80883 /* Products */,
 				B6D676A52273F4EC9040FD29 /* Pods */,
-				4DB9550AE951C16458CB175B /* Frameworks */,
+				EDB9550AE951C16458CB175B /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -651,6 +705,13 @@
 				EA57009F2EC10003000AB522 /* LMFeatureFlagsManager.swift */,
 				EA5701B12EC20001000AB522 /* LMGeminiModelSettingsStore.swift */,
 				EA5701C12EC20002000AB522 /* LMQwenModelSettingsStore.swift */,
+				DA9E1A6B3B9B456E845FD953 /* LMLlmModuleSettingsStore.swift */,
+				FEF0BABB3D9643AA98133595 /* LMSceneExploreConfigRepository.swift */,
+				F526A60DBC4F44EF8369D60A /* LMGeminiInspireConfigRepository.swift */,
+				CEEBEC26A6E7494F9FC70C13 /* LMSceneExploreModels.swift */,
+				BBC3045816BA4279918ECD1B /* LMSceneExploreClient.swift */,
+				B22C33D44E5F6A1B0C1D9E88 /* LMGaussianHeatmapRenderer.swift */,
+				BCBD67E2777E43439C753306 /* LMSceneHistoryStore.swift */,
 				EA5700A12EC10003000AB522 /* LMDemoSuggestionsLoader.swift */,
 				EA8629B82EB5F7C000F2B00E /* LMLaunageManager.swift */,
 				EA0A47452EBF995C002CBB80 /* LMStoreManager.swift */,
@@ -766,8 +827,8 @@
 				EA5700A32EC10003000AB522 /* demo_suggestions */,
 				EA8629A22EB5A13F00F2B00E /* EVA02.mlpackage */,
 				EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */,
-				2FB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */,
-				499883826CD2413585CB53C3 /* U2Netp.mlpackage */,
+				CFB991F71B0B4B8780F18509 /* PiDiNet.mlpackage */,
+				EDDCCDCCACD2413585CB53C3 /* U2Netp.mlpackage */,
 				EA5700572EC10002000AB522 /* config */,
 				EACA1CE92E7E49B600C80883 /* LaunchScreen.storyboard */,
 				EACA1CE62E7E49B600C80883 /* Assets.xcassets */,
@@ -823,6 +884,7 @@
 				EA56DDAE2EC08E1D000AB522 /* LMCameraPage+Delegates.swift */,
 				EA56DDAF2EC08E1D000AB522 /* LMCameraPage+ImageProcessing.swift */,
 				EA56DDB02EC08E1D000AB522 /* LMCameraPage+InspireMe.swift */,
+				BF5E4A3D7D0C43C8ABE698F7 /* LMCameraPage+SceneExplore.swift */,
 				EA56DDBE2EC08E81000AB522 /* LMCameraPage+Session.swift */,
 				EA5700162EC10001000AB522 /* LMCameraPage+AgentCoaching.swift */,
 				EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */,
@@ -844,6 +906,9 @@
 				EAFBAD822E93905B00586EC7 /* LMContactUsPage.swift */,
 				EAFBAD842E9393E400586EC7 /* LMLanguagePage.swift */,
 				EA5701B72EC20001000AB522 /* LMModelsSettingPage.swift */,
+				A3946E0448AA44BFBA9F06F8 /* LMChatModuleSettingPage.swift */,
+				CF6C85864047432B82C97AE6 /* LMIdeaInspirationSettingPage.swift */,
+				BBECEA885777492AB4A7148A /* LMSceneHistoryBrowsePage.swift */,
 				EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */,
 				EA54E1DA2EBEED04000DB5EE /* LMSubscriptionPage.swift */,
 				EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */,
@@ -866,6 +931,7 @@
 			children = (
 				EACB30EF2EF6B53E00EC643C /* LMProfileItemView.swift */,
 				EAFBAD862E93B94B00586EC7 /* LMPhotoCollectionView.swift */,
+				BB45AE3D40844B079C209AE8 /* LMSceneHistoryPageView.swift */,
 				EAFBADC12EA36E4500586EC7 /* LMGalleryPageView.swift */,
 				EAFBADC32EA36E5900586EC7 /* LMIdeasPageView.swift */,
 				EAFBAC982E7E5A0800586EC7 /* LMMineUserInfoView.swift */,
@@ -905,6 +971,9 @@
 				EA7F25AD2F066EAD0008E091 /* LMCameraGuideView.swift */,
 				EA3F166B2EE3DDCC00B24DA8 /* LMARGuidanceView.swift */,
 				EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */,
+				FECD42B648DC41FABA90842F /* LMPreShootPlanButtonView.swift */,
+				BB0E6D9561E4455686479FA5 /* LMPreShootPlanModeSheet.swift */,
+				CFDA8A54889E4EEC93DBAD18 /* LMSceneExploreResultOverlay.swift */,
 				EA8629AC2EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift */,
 				EA8629AE2EB5EEF700F2B00E /* LMCameraPreviewManager.swift */,
 				EA8629AF2EB5EEF700F2B00E /* LMSuggestionCardView.swift */,
@@ -936,7 +1005,7 @@
 				EACA1BED2E7E408900C80883 /* Sources */,
 				EACA1BEE2E7E408900C80883 /* Frameworks */,
 				EACA1BEF2E7E408900C80883 /* Resources */,
-				34AAD246AF0D2D3D9FA8043E /* [CP] Embed Pods Frameworks */,
+				DEAAD246AF0D2D3D9FA8043E /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -987,6 +1056,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C9842C37FC34409AA03AD8DC /* model_config.json in Resources */,
+				B5C1B85EC18F44009CECB530 /* scene_explore_config.json in Resources */,
+				F702946FB61D4DE3AE234FD9 /* gemini_inspire_config.json in Resources */,
+				ECAC4EBE74D74B9A8FA1C2D3 /* scene_explore_system_prompt.txt in Resources */,
+				DFDD14AFBA564985A349B684 /* scene_explore_user_prompt.txt in Resources */,
 				EA5700A42EC10003000AB522 /* demo_suggestions in Resources */,
 				EA5835562EC9DBC70013E531 /* language_config.json in Resources */,
 				EACA1CEF2E7E49B600C80883 /* LaunchScreen.storyboard in Resources */,
@@ -1003,7 +1077,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		34AAD246AF0D2D3D9FA8043E /* [CP] Embed Pods Frameworks */ = {
+		DEAAD246AF0D2D3D9FA8043E /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1049,13 +1123,29 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				61D4ED49A14447F48857E061 /* PiDiNet.mlpackage in Sources */,
-				7DEF28E2208A447ABAC2BCD4 /* U2Netp.mlpackage in Sources */,
-				0FD1331B43CA42C8BE257C4A /* LMPidinetModelProvider.swift in Sources */,
+				EF2DA21A4EDD456EBE84930D /* LMLlmModuleSettingsStore.swift in Sources */,
+				AAE93FD764E14FDEBD0D4CB0 /* LMSceneExploreConfigRepository.swift in Sources */,
+				D961550E8B1641DF851883ED /* LMGeminiInspireConfigRepository.swift in Sources */,
+				BCAABAD07D214569BCF383CF /* LMChatRequestBuilder.swift in Sources */,
+				BDAECB91CF114DBCB8493258 /* LMSceneExploreModels.swift in Sources */,
+				EABD4F43C8644B6FBFAFD275 /* LMSceneExploreClient.swift in Sources */,
+				A11B22C33D4E4F1A9C0D8E77 /* LMGaussianHeatmapRenderer.swift in Sources */,
+				A3C1964416B24A9E89DFD62A /* LMSceneHistoryStore.swift in Sources */,
+				EACFF9547A674382826BB970 /* LMChatModuleSettingPage.swift in Sources */,
+				BBDBA7200C1742928CA7B316 /* LMIdeaInspirationSettingPage.swift in Sources */,
+				DECDBDE218544A18B419BEA7 /* LMPreShootPlanButtonView.swift in Sources */,
+				DEBAB7AFBF2C49C58AD166C8 /* LMPreShootPlanModeSheet.swift in Sources */,
+				A79DAE60BFB34BA9B583BCAB /* LMSceneExploreResultOverlay.swift in Sources */,
+				BC6A361E6C714D79A25FC9E8 /* LMCameraPage+SceneExplore.swift in Sources */,
+				FBE6E924E24F4F06A7B5DE42 /* LMSceneHistoryPageView.swift in Sources */,
+				EE0C689410B44904A41BA06B /* LMSceneHistoryBrowsePage.swift in Sources */,
+				ABD4ED49A14447F48857E061 /* PiDiNet.mlpackage in Sources */,
+				BDEF28E2208A447ABAC2BCD4 /* U2Netp.mlpackage in Sources */,
+				AFD1331B43CA42C8BE257C4A /* LMPidinetModelProvider.swift in Sources */,
 				B8289BCF3D8943549F800E51 /* LMU2NetpModelProvider.swift in Sources */,
 				DA32B37E95AA4FE2940CECFC /* LMOpenCvLineDetector.swift in Sources */,
-				86A55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */,
-				6AA97AF698FF445291BDCCFD /* LMDepthLayeringScorer.swift in Sources */,
+				CAA55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */,
+				AAA97AF698FF445291BDCCFD /* LMDepthLayeringScorer.swift in Sources */,
 				EA5700692EC10005000AB522 /* LMAgentRequestLogModels.swift in Sources */,
 				EA57006B2EC10005000AB522 /* LMAgentRequestLogStore.swift in Sources */,
 				EA57006D2EC10005000AB522 /* LMAgentRequestLogRecorder.swift in Sources */,
@@ -1110,6 +1200,8 @@
 				EA5700352EC10001000AB522 /* LMActionExecutor.swift in Sources */,
 				EA5700372EC10001000AB522 /* LMExecutionToolRouter.swift in Sources */,
 				EA5700392EC10001000AB522 /* LMAgenticCoachingLoop.swift in Sources */,
+				2AFD69D0DC144C62A1D0A87B /* LMInstructProgressCoordinator.swift in Sources */,
+				2E380A13831942AD85099921 /* LMLlmTaskRuntime.swift in Sources */,
 				EA5700592EC10001000AB522 /* LMSkipReevaluationEvaluator.swift in Sources */,
 				EA57003B2EC10001000AB522 /* LMDepthEstimationService.swift in Sources */,
 				EA57003D2EC10001000AB522 /* LMAgentCoachingController.swift in Sources */,
@@ -1199,10 +1291,10 @@
 				EA5835442EC976200013E531 /* LMCameraPage+ShowSuggestions.swift in Sources */,
 				EA3F16702EE3DFA800B24DA8 /* LMOrientationMatcher.swift in Sources */,
 				BFCB45F239BF4CABBB190382 /* LMBitmapDescriptor.swift in Sources */,
-				7C6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */,
-				70FFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */,
-				90799D327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */,
-				3CD00C96D89B49C999885318 /* LMScoreTickContext.swift in Sources */,
+				BC6DEE2511B943A788A4BFB0 /* LMPreviewFramePipeline.swift in Sources */,
+				BAFFDA702B3F4D30A8A0C3CE /* LMCompositionModelPreloader.swift in Sources */,
+				DABDDD327EB74883937AB758 /* LMEVA02ModelProvider.swift in Sources */,
+				DCD00C96D89B49C999885318 /* LMScoreTickContext.swift in Sources */,
 				EA3F16682EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift in Sources */,
 				EA3F16692EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift in Sources */,
 				EA3F166A2EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift in Sources */,
@@ -1256,7 +1348,7 @@
 /* Begin XCBuildConfiguration section */
 		EACA1C082E7E408A00C80883 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 8769BF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */;
+			baseConfigurationReference = CBADBF2F6929F4BC71A1AC30 /* Pods-processor.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

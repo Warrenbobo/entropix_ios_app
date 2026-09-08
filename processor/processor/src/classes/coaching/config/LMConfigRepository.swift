@@ -86,13 +86,16 @@ final class LMConfigRepository: @unchecked Sendable {
             with: readBundleJSON(named: AppConfigs.AgentLLM.promptsJSON, subdirectory: "config")
         ) as? [String: Any]) ?? [:]
 
-        let qwen = LMQwenModelSettingsStore.load()
+        let ar = LMLlmModuleSettingsStore.loadARGuidance()
         return LMAppConfig(
-            baseUrl: qwen.baseURL
+            baseUrl: ar.baseURL
                 .trimmingCharacters(in: CharacterSet(charactersIn: "/")),
-            apiKey: qwen.apiKey,
-            modelName: AppConfigs.AgentLLM.modelName,
-            thinkingBudget: AppConfigs.AgentLLM.thinkingBudget,
+            apiKey: ar.apiKey,
+            modelName: ar.modelName,
+            enableThinking: ar.enableThinking,
+            thinkingBudget: ar.thinkingBudget > 0 ? ar.thinkingBudget : AppConfigs.AgentLLM.thinkingBudget,
+            temperature: ar.temperature,
+            maxTokens: ar.maxTokens,
             imageDataUrlMime: AppConfigs.AgentLLM.imageDataURLMime,
             imageDataUrlQuality: AppConfigs.AgentLLM.imageDataURLQuality,
             systemPrompt: loadSystemPrompt(from: prompts),

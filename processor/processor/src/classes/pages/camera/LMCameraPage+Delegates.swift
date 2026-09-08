@@ -128,18 +128,50 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
         guard currentCameraState == .normal else { return }
         presentAlbumPicker()
     }
+
+    func cameraBottomControlsViewDidTapGetTips() {
+        guard ensureCameraPermissionForInteraction() else { return }
+        guard currentCameraState == .compositionSelected else { return }
+        beginInstructRound()
+    }
     
     func cameraBottomControlsViewDidTapCaptureButton() {
         guard ensureCameraPermissionForInteraction() else { return }
 
-        if agentGuidanceState == .agent && shutterRole == .instructReady {
-            beginInstructRound()
+        // Composition-selected: shutter is photo-only (Get Tips is separate).
+        if currentCameraState == .compositionSelected {
+            if shutterRole == .instructRunning { return }
+            capturePhotoWithOptionalTimer()
             return
         }
-        if shutterRole == .instructRunning { return }
 
+        guard currentCameraState == .normal else { return }
+
+        let mode = (exploreSession?.phase == .suspended)
+            ? LMPreShootPlanMode.composition
+            : preShootPlanMode
+
+        switch mode {
+        case .camera:
+            capturePhotoWithOptionalTimer()
+        case .findSpot:
+            if isUsingFrontCamera {
+                AppTheme.Toast.showText(LMText.camera.inspireMeFrontCameraHint)
+                return
+            }
+            handleFindSpotFeature()
+        case .composition:
+            if isUsingFrontCamera {
+                AppTheme.Toast.showText(LMText.camera.inspireMeFrontCameraHint)
+                return
+            }
+            beginCompositionInspireFromPreShootPlan()
+        }
+    }
+
+    /// Runs timer countdown when configured, otherwise captures immediately.
+    private func capturePhotoWithOptionalTimer() {
         let timerDuration = cameraControlsView.getCurrentTimerDuration().seconds
-        
         if timerDuration > 0 {
             LMLogger.log("⏱️ Starting \(timerDuration)s timer capture")
             showCountdownTimer(duration: timerDuration, completion: capturePhoto)
@@ -218,10 +250,11 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
     }
 }
 
-// MARK: - Inspire Me Button Delegate
-extension LMCameraPage: LMInspireMeButtonViewDelegate {
-    
-    func inspireMeButtonViewDidTapButton() {
+// MARK: - Pre-Shoot Plan Button Delegate
+extension LMCameraPage: LMPreShootPlanButtonViewDelegate {
+
+    /// Mode chip tap opens the 1×3 selector (shutter executes the mode).
+    func preShootPlanButtonDidTap() {
 #if DEBUG
         if !debugShouldBypassInspireMePermissionCheck {
             guard ensureCameraPermissionForInteraction() else { return }
@@ -229,25 +262,42 @@ extension LMCameraPage: LMInspireMeButtonViewDelegate {
 #else
         guard ensureCameraPermissionForInteraction() else { return }
 #endif
-        LMLogger.log("🎯 Inspire Me button tapped")
+        guard preShootPlanModeSwitchEnabled, exploreSession?.phase != .suspended else { return }
+        presentPreShootPlanModeSheet()
+    }
 
-        // BYOK Direct Gemini: no FramAist login / subscription gate.
+    func preShootPlanButtonDidTapDisabled() {
+        guard ensureCameraPermissionForInteraction() else { return }
+        AppTheme.Toast.showText(LMText.camera.inspireMeFrontCameraHint)
+    }
+
+    func preShootPlanButtonDidTapHint() {
+        guard ensureCameraPermissionForInteraction() else { return }
+        showTutorialFromStart()
+    }
+
+    /// Composition-mode gate then existing Inspire Me pipeline.
+    func beginCompositionInspireFromPreShootPlan() {
+        if exploreSession?.phase == .suspended {
+            // Path B: composing ends Explore session and writes history.
+            endExploreSessionWritingHistory()
+        }
+
         if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
-            if !LMGeminiModelSettingsStore.isConfigured {
-                AppTheme.Toast.showText(LMText.camera.geminiModelsNotConfigured)
+            if !LMLlmModuleSettingsStore.isConfigured(.ideaInspiration) {
+                presentMissingModelConfig(for: .ideaInspiration)
                 return
             }
             handleInspireMeFeature()
             return
         }
-        
+
         if !LMFeatureFlagsManager.backendApiEnabled {
             handleInspireMeFeature()
             return
         }
 
         let subscriptionStatus = LMStoreManager.shared.currentSubscriptionStatus
-        
         if subscriptionStatus == .free {
             let remainingPoints = getUserInspirePoints()
             if remainingPoints < 1 {
@@ -255,21 +305,6 @@ extension LMCameraPage: LMInspireMeButtonViewDelegate {
                 return
             }
         }
-        
         handleInspireMeFeature()
-    }
-    
-    func inspireMeButtonViewDidTapQuestionButton() {
-        guard ensureCameraPermissionForInteraction() else { return }
-        LMLogger.log("❓ Inspire Me question button tapped")
-        showTutorialFromStart()
-    }
-    
-    func inspireMeButtonViewDidTapDisabledButton() {
-        guard ensureCameraPermissionForInteraction() else { return }
-        LMLogger.log("⚠️ Inspire Me button tapped while using front camera")
-        
-        // 显示前摄不可用提示
-        AppTheme.Toast.showText(LMText.camera.inspireMeFrontCameraHint)
     }
 }

@@ -244,11 +244,11 @@ final class LMGeminiImageClient {
     ) -> [String: Any] {
         var generationConfig: [String: Any] = [
             "responseModalities": ["TEXT", "IMAGE"],
-            "responseFormat": [
-                "image": [
-                    "aspectRatio": aspectRatio,
-                    "imageSize": imageSize
-                ]
+            // Consumer generateContent accepts string ratios/sizes under imageConfig.
+            // responseFormat.image expects proto enums and rejects "3:4" / "1K".
+            "imageConfig": [
+                "aspectRatio": aspectRatio,
+                "imageSize": imageSize
             ]
         ]
         if model.supportsMinimalThinking {

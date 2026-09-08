@@ -33,6 +33,20 @@ final class LMCompositionAnalyzer: @unchecked Sendable {
 
     /// Analyzes ref/cam pair; `elapsedMs` covers the full scoring pipeline.
     func analyze(ref: UIImage, cam: UIImage) -> LMCompositionScore {
+        analyze(ref: ref, cam: cam, onModuleDone: nil)
+    }
+
+    /**
+     Analyzes with optional per-module completion callbacks for Instruct HUD (§5).
+
+     Modules still report done events so the HUD can advance with min dwell;
+     GLOBAL / GEOMETRIC / HUMAN callbacks fire as each finishes (then FUSE).
+     */
+    func analyze(
+        ref: UIImage,
+        cam: UIImage,
+        onModuleDone: ((LMInstructProgressPhase) -> Void)?
+    ) -> LMCompositionScore {
         analyzeLock.lock()
         defer { analyzeLock.unlock() }
 
@@ -48,6 +62,7 @@ final class LMCompositionAnalyzer: @unchecked Sendable {
             let globalStart = DispatchTime.now()
             let global = globalScorer.score(refEmbedding: refFeatures.globalEmbedding, cam: camFrame)
             let globalMs = milliseconds(since: globalStart)
+            onModuleDone?(.global)
 
             let geometricStart = DispatchTime.now()
             let geometric = geometricScorer.scoreBreakdown(
@@ -56,6 +71,7 @@ final class LMCompositionAnalyzer: @unchecked Sendable {
                 tickContext: tickContext
             )
             let geometricMs = milliseconds(since: geometricStart)
+            onModuleDone?(.geometric)
 
             let humanStart = DispatchTime.now()
             let human = humanScorer.scoreBreakdown(
@@ -65,6 +81,7 @@ final class LMCompositionAnalyzer: @unchecked Sendable {
                 tickContext: tickContext
             )
             let humanMs = milliseconds(since: humanStart)
+            onModuleDone?(.human)
 
             let geometricGated = geometricScorer.applyGlobalGate(breakdown: geometric, globalStructure: global)
             let overall = LMScoreFusionEngine.fuse(
@@ -72,6 +89,7 @@ final class LMCompositionAnalyzer: @unchecked Sendable {
                 geometric: geometricGated.combined,
                 humanScene: human?.combined
             )
+            onModuleDone?(.fuse)
             let totalMs = milliseconds(since: totalStart)
 
             LMLogger.log(

@@ -67,13 +67,16 @@ struct AppConfigs {
     }
 
     /**
-     Agent LLM compile-time defaults (aligned with Android `assets/config/app_config.json`).
+     Agent LLM compile-time helpers for AR Guidance.
 
-     User baseURL / apiKey live in `LMQwenModelSettingsStore` (Models → Qwen) — never hardcode secrets here.
+     Base URL and model name are user-configured (Models → AR Guidance / `model_config.json`);
+     do not ship DashScope or other provider defaults here.
      */
     struct AgentLLM {
-        static let defaultBaseURL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
-        static let modelName = "qwen3.5-397b-a17b"
+        /// Intentionally empty — configure via Models → AR Guidance.
+        static let defaultBaseURL = ""
+        /// Intentionally empty — configure via Models → AR Guidance.
+        static let modelName = ""
         static let thinkingBudget = 64
         static let imageDataURLMime = "image/jpeg"
         static let imageDataURLQuality = 85

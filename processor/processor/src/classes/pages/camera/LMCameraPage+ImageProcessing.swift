@@ -284,10 +284,17 @@ extension LMCameraPage {
             self.enterShowSuggestionsState(taskId: taskId, suggestions: placeholders)
         }
 
+        let appendix = pendingSpotPromptAppendix
+        pendingSpotPromptAppendix = nil
+        if let session = exploreSession {
+            session.inspireTaskId = taskId
+        }
+
         LMCompositionService.shared.generateSuggestionsDirectly(
             sceneImage: image,
             aspectRatio: aspectRatio,
-            sessionId: taskId
+            sessionId: taskId,
+            spotPromptAppendix: appendix
         ) { [weak self] result in
             guard let self else { return }
             switch result {

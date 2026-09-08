@@ -121,7 +121,7 @@ extension LMCameraPage {
         }
         
         // 隐藏 Inspire Me 按钮
-        inspireMeButtonView.isHidden = true
+        preShootPlanButtonView.isHidden = true
         
         // 调整底部控制栏高度
         bottomControlsHeightConstraint?.update(offset: 44)
@@ -177,7 +177,7 @@ extension LMCameraPage {
         hideSuggestionsCarousel()
         
         // 显示 Inspire Me 按钮
-        inspireMeButtonView.isHidden = false
+        preShootPlanButtonView.isHidden = false
         
         // 恢复底部控制栏高度
         bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
@@ -764,7 +764,7 @@ extension LMCameraPage {
     /// 进入 Camera with Composition Selected 状态（从已保存构图进入）
     func enterCompositionSelectedStateFromSavedIdea(item: GalleryItem) {
         currentCameraState = .compositionSelected
-        inspireMeButtonView.isHidden = true
+        preShootPlanButtonView.isHidden = true
         agentGuidanceState = .agent
         executionTool = .none
         shutterRole = .instructReady

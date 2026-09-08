@@ -161,6 +161,7 @@ class LMCompositionService {
         sceneImage: UIImage,
         aspectRatio: String,
         sessionId: String,
+        spotPromptAppendix: String? = nil,
         completion: @escaping (Result<[LMCompositionSuggestion], Error>) -> Void
     ) {
         let settings = LMGeminiModelSettingsStore.load()
@@ -169,8 +170,9 @@ class LMCompositionService {
             return
         }
 
-        guard let compressed = compressForGemini(sceneImage),
-              let jpeg = compressed.jpegData(compressionQuality: 0.9) else {
+        let feature = LMGeminiInspireConfigRepository.shared.get()
+        guard let compressed = compressForGemini(sceneImage, maxLong: feature.inputLongEdge),
+              let jpeg = compressed.jpegData(compressionQuality: feature.jpegQuality) else {
             completion(.failure(LMGeminiImageError.decodeFailed))
             return
         }
@@ -178,6 +180,9 @@ class LMCompositionService {
         let snapped = Self.snapAspectRatio(aspectRatio)
         var prompt = LMConfigRepository.shared.geminiInspirePrompt()
         prompt += "\nExpected panel aspect ratio: \(snapped)."
+        if let appendix = spotPromptAppendix, !appendix.isEmpty {
+            prompt += appendix
+        }
 
         LMLogger.log("🚀 Direct Gemini Inspire Me taskId=\(sessionId) model=\(settings.model.rawValue)")
 
@@ -213,9 +218,8 @@ class LMCompositionService {
         }
     }
 
-    /// Compresses scene for Gemini inline payload (long edge ≤1024).
-    private func compressForGemini(_ image: UIImage) -> UIImage? {
-        let maxLong = AppConfigs.Gemini.inputMaxLongSide
+    /// Compresses scene for Gemini inline payload (long edge configurable).
+    private func compressForGemini(_ image: UIImage, maxLong: CGFloat = AppConfigs.Gemini.inputMaxLongSide) -> UIImage? {
         let size = image.size
         let longSide = max(size.width, size.height)
         if longSide <= maxLong { return image }

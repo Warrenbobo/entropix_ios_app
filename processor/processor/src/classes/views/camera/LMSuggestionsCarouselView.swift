@@ -1191,6 +1191,12 @@ extension LMSuggestionsCarouselView: LMSuggestionCardViewDelegate {
         let index = cardView.tag
         guard index >= 0 && index < suggestions.count else { return }
         let suggestion = suggestions[index]
+
+        // Album temporary references must never enter Liked (§4 / §6).
+        guard !suggestion.isAlbum else {
+            LMLogger.log("⏭️ Skip favorite toggle — album reference is not likable")
+            return
+        }
         
         // 确保 suggestion 有有效的 id
         guard let suggestionId = suggestion.id else {

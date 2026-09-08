@@ -1,0 +1,8 @@
+{
+  "timeout_seconds": 180,
+  "heatmap_opacity": 0.85,
+  "image_long_edge": 1024,
+  "image_jpeg_quality": 85,
+  "system_prompt_asset": "config/scene_explore_system_prompt.txt",
+  "user_prompt_asset": "config/scene_explore_user_prompt.txt"
+}

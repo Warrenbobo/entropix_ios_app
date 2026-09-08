@@ -50,7 +50,7 @@ class LMCameraPage: LMPageWrapper {
     var cameraPreviewView: LMCameraPreviewView!
     var cameraControlsView: LMCameraControlsView!
     var cameraBottomControlsView: LMCameraBottomControlsView!
-    var inspireMeButtonView: LMInspireMeButtonView!
+    var preShootPlanButtonView: LMPreShootPlanButtonView!
     
     // MARK: - Camera Properties
     var captureSession: AVCaptureSession?
@@ -67,6 +67,20 @@ class LMCameraPage: LMPageWrapper {
     // MARK: - Bottom Controls Properties
     var bottomControlsHeightConstraint: Constraint? // 保存底部控制栏高度约束
     
+    // MARK: - Pre-Shoot Plan / Scene Explore
+    /// Session-only mode; cold start always resets to findSpot.
+    var preShootPlanMode: LMPreShootPlanMode = .findSpot
+    /// Path B locks mode switch until Explore session ends.
+    var preShootPlanModeSwitchEnabled: Bool = true
+    var exploreSession: LMExploreSession?
+    var sceneExploreResultOverlay: LMSceneExploreResultOverlay?
+    var preShootPlanModeSheet: LMPreShootPlanModeSheet?
+    var targetSpotChipView: UIView?
+    var returnToSpotMapButton: UIButton?
+    /// When Suggestions Back should return to Explore result instead of Basic Camera.
+    var suggestionsBoundToExploreSession = false
+    /// Optional Spot prompt appendix for Path A Inspire.
+    var pendingSpotPromptAppendix: String?
     // MARK: - Feature Flags
     var isInspireMeCapture = false
     var isARGuidanceActive = false
@@ -113,6 +127,8 @@ class LMCameraPage: LMPageWrapper {
     var hasUserTriggeredInstructInSession = false
     var shutterRole: LMShutterRole = .captureDefault
     var referenceWarmupComplete = false
+    /// Event-driven Get Tips HUD phase machine (§5).
+    let instructProgressCoordinator = LMInstructProgressCoordinator()
     lazy var agentCoachingController = LMAgentCoachingController(uiDelegate: nil)
     var coachingBubbleView: LMCoachingBubbleView?
     var scoreDonutOverlayView: LMScoreDonutOverlayView?
@@ -266,11 +282,31 @@ class LMCameraPage: LMPageWrapper {
             name: UIApplication.didBecomeActiveNotification,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleApplicationWillResignActive),
+            name: UIApplication.willResignActiveNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleApplicationWillResignActive() {
+        guard isViewLoaded, view.window != nil else { return }
+        // Pause scoring / detection; Tips switch to CompleteFetch (§8).
+        LMLlmTaskRuntime.shared.markTipsPreferCompleteFetch()
+        agentCoachingController.setPaused(true)
+        pauseARGuidance()
     }
 
     @objc private func handleApplicationDidBecomeActive() {
         guard isViewLoaded, view.window != nil else { return }
         presentHomeCameraAppUpdateIfNeeded(forceRefresh: false)
+        if currentCameraState == .compositionSelected {
+            agentCoachingController.setPaused(false)
+            if arGuidanceState == .paused {
+                arGuidanceState = .activeGuidance
+            }
+        }
     }
 
     private func presentHomeCameraAppUpdateIfNeeded(forceRefresh: Bool) {
@@ -304,6 +340,15 @@ class LMCameraPage: LMPageWrapper {
         
         // 只是临时暂停 AR 引导，不完全清理（用户可能从预览页返回）
         pauseARGuidance()
+
+        // Leave camera session (pop / dismiss): cancel LLM slots (§8).
+        // Do not cancel when presenting PHPicker / alerts on top of camera.
+        if isMovingFromParent || isBeingDismissed {
+            LMLlmTaskRuntime.shared.cancelAll()
+            agentCoachingController.setPaused(true)
+            agentCoachingController.stopAll()
+            instructProgressCoordinator.stop()
+        }
         
         // 停止设备方向检测
         LMDeviceOrientationManager.shared.stopMonitoring()
@@ -311,9 +356,11 @@ class LMCameraPage: LMPageWrapper {
     
     deinit {
         NotificationCenter.default.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIApplication.willResignActiveNotification, object: nil)
         stopObservingDeviceOrientation()
         // 页面真正销毁时，完全清理 AR 引导资源
         fullCleanupARGuidance()
+        LMLlmTaskRuntime.shared.cancelAll()
         LMLogger.log("🗑️ LMCameraPage deinit")
     }
     
@@ -374,7 +421,7 @@ class LMCameraPage: LMPageWrapper {
         }
         view.bringSubviewToFront(topStatusBarView)
         view.bringSubviewToFront(cameraBottomControlsView)
-        view.bringSubviewToFront(inspireMeButtonView)
+        view.bringSubviewToFront(preShootPlanButtonView)
         
         // 引导视图（最顶层）
         bringGuideViewToFront()
@@ -416,9 +463,10 @@ class LMCameraPage: LMPageWrapper {
     }
     
     private func setupInspireMeButtonComponent() {
-        inspireMeButtonView = LMInspireMeButtonView()
-        inspireMeButtonView.delegate = self
-        view.addSubview(inspireMeButtonView)
+        preShootPlanButtonView = LMPreShootPlanButtonView()
+        preShootPlanButtonView.delegate = self
+        view.addSubview(preShootPlanButtonView)
+        preShootPlanButtonView.setMode(.findSpot, modeSwitchEnabled: true)
     }
     
     // MARK: - Layout
@@ -441,11 +489,11 @@ class LMCameraPage: LMPageWrapper {
             // 保存高度约束的引用
             self.bottomControlsHeightConstraint = make.height.equalTo(LMCameraConstants.bottomControlsHeight).constraint
         }
-        inspireMeButtonView.snp.makeConstraints { make in
+        preShootPlanButtonView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalTo(topStatusBarView.snp.bottom).offset(4)
-            make.width.equalTo(144)
-            make.height.equalTo(48)
+            make.centerY.equalTo(topStatusBarView)
+            make.width.equalTo(168)
+            make.height.equalTo(36)
         }
         
         setupInitialPreviewCanvasLayout()
@@ -678,6 +726,9 @@ class LMCameraPage: LMPageWrapper {
     }
 
     private func shouldShowProfileEntryButton() -> Bool {
+        // Go to Spot: never show Mine — leading control resumes Explore (§3).
+        if exploreSession?.phase == .suspended { return false }
+
         let isNormalNavigationSource: Bool
         switch navigationSource {
         case .normal:
@@ -700,6 +751,15 @@ class LMCameraPage: LMPageWrapper {
 
     func updateLeadingNavigationControl() {
         guard isViewLoaded else { return }
+
+        if exploreSession?.phase == .suspended {
+            let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+            backButton.setImage(UIImage(systemName: "chevron.left", withConfiguration: config), for: .normal)
+            backButton.imageEdgeInsets = .zero
+            backButton.tintColor = .white
+            backButton.accessibilityLabel = LMText.common.back
+            return
+        }
 
         if shouldShowProfileEntryButton() {
             backButton.setImage(UIImage(named: "user_white_fill"), for: .normal)
@@ -743,6 +803,13 @@ class LMCameraPage: LMPageWrapper {
     @objc func handleGiveUpAndBackButtonTapped() {
         LMLogger.log("🔙 Back button tapped")
 
+        // Go to Spot → resume Explore result session (no Mine, no re-LLM).
+        if exploreSession?.phase == .suspended {
+            returnToSpotMapFromSuspended()
+            updateLeadingNavigationControl()
+            return
+        }
+
         if shouldShowProfileEntryButton() {
             let profilePage = LMMinePage()
             navigationController?.pushViewController(profilePage, animated: true)
@@ -752,7 +819,11 @@ class LMCameraPage: LMPageWrapper {
         // 根据当前状态决定返回行为
         switch currentCameraState {
         case .showingSuggestions:
-            // 在 Show Suggestions 状态，点击返回需要确认是否退出
+            // Path A: Suggestions bound to Explore → return to result without confirm.
+            if suggestionsBoundToExploreSession, let session = exploreSession, session.phase == .result || session.inspireTaskId != nil {
+                exitShowSuggestionsStateReturningToExplore()
+                return
+            }
             showLeaveConfirmation { [weak self] shouldLeave in
                 if shouldLeave {
                     self?.reportCurrentTaskFinalizedIfNeeded()

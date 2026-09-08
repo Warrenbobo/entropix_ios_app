@@ -15,6 +15,15 @@ protocol LMAgentCoachingUIDelegate: AnyObject {
     func agentCoaching(didSetExecutionTool tool: LMExecutionTool, instruction: String?)
     func agentCoaching(didFinishWithCause cause: LMFinishCause)
     func agentCoaching(didApplyExposureAction semanticAction: String)
+    /// Instruct HUD: a scoring module completed (Global / Geometric / Human / Fuse).
+    func agentCoaching(didCompleteScoreModule phase: LMInstructProgressPhase)
+    /// Instruct HUD: enter Thinking (prompt + LLM).
+    func agentCoachingDidEnterThinking()
+}
+
+extension LMAgentCoachingUIDelegate {
+    func agentCoaching(didCompleteScoreModule phase: LMInstructProgressPhase) {}
+    func agentCoachingDidEnterThinking() {}
 }
 
 /// Applies arbitrated semantic actions to the camera UI via delegate.

@@ -17,15 +17,32 @@ enum LMAgentIconProvider {
         UIImage(named: "ai_agent_stroke")?.withRenderingMode(.alwaysTemplate)
     }
 
-    /// Shutter instruct icon — SF Symbol with Agent accent gradient (Android `IntelligentGradientIcon`).
-    static func instructIcon(dimmed: Bool = false) -> UIImage? {
+    /**
+     Instruct / Get Tips icon.
+
+     - Parameters:
+       - dimmed: Lowers gradient alpha for running/disabled chrome.
+       - preferGradient: When false, returns a solid white SF Symbol (idle Get Tips).
+       - pointSize: Override default shutter-sized glyph when used as a sidebar control.
+     */
+    static func instructIcon(
+        dimmed: Bool = false,
+        preferGradient: Bool = true,
+        pointSize: CGFloat? = nil
+    ) -> UIImage? {
+        let size = pointSize ?? instructIconPointSize
+        if !preferGradient {
+            let configuration = UIImage.SymbolConfiguration(pointSize: size, weight: .medium)
+            return UIImage(systemName: "apple.intelligence", withConfiguration: configuration)?
+                .withRenderingMode(.alwaysTemplate)
+        }
         let scale = dimmed ? instructIconDimmedAlphaScale : 1
         let colors = LMLiquidGlassHUDTokens.agentAccentBorderColors.map {
             $0.withAlphaComponent($0.cgColor.alpha * scale)
         }
         return makeGradientSymbolImage(
             systemName: "apple.intelligence",
-            pointSize: instructIconPointSize,
+            pointSize: size,
             weight: .medium,
             colors: colors
         )

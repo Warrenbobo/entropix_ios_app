@@ -3,10 +3,10 @@
 //  processor
 //
 //  Persists Gemini BYOK settings for Inspire Me (baseURL / model / apiKey).
+//  Thin facade over LMLlmModuleSettingsStore.ideaInspiration for call-site compatibility.
 //
 
 import Foundation
-import KeychainAccess
 
 /**
  Locked Gemini image model ids for Inspire Me (SPEC §5.3).
@@ -29,9 +29,10 @@ enum LMGeminiImageModel: String, CaseIterable {
 
     /// Preferred URLSession timeout for this model (SPEC §7.6).
     var requestTimeout: TimeInterval {
+        let feature = LMGeminiInspireConfigRepository.shared.get()
         switch self {
-        case .flash31: return AppConfigs.Gemini.flashTimeout
-        case .pro3: return AppConfigs.Gemini.proTimeout
+        case .flash31: return feature.flashTimeoutSec
+        case .pro3: return feature.proTimeoutSec
         }
     }
 
@@ -58,57 +59,34 @@ struct LMGeminiModelSettings {
 }
 
 /**
- Loads and saves Gemini Models page settings.
-
- - baseURL / selected model → UserDefaults
- - apiKey → Keychain (`KeychainAccess`, same service as device UUID)
+ Loads and saves Gemini Models page settings via `LMLlmModuleSettingsStore`.
  */
 enum LMGeminiModelSettingsStore {
 
-    private static let baseURLKey = "gemini_inspire_base_url"
-    private static let modelKey = "gemini_inspire_model"
-    private static let apiKeyKeychainKey = "com.processor.keychain.gemini_api_key"
-
-    private static var keychain: Keychain {
-        Keychain(service: "com.processor.keychain")
-    }
-
     /// Current settings (defaults applied when unset).
     static func load() -> LMGeminiModelSettings {
-        let rawBase = UserDefaults.standard.string(forKey: baseURLKey)
-            ?? AppConfigs.Gemini.defaultBaseURL
-        let modelRaw = UserDefaults.standard.string(forKey: modelKey)
-            ?? LMGeminiImageModel.flash31.rawValue
-        let model = LMGeminiImageModel(rawValue: modelRaw) ?? .flash31
-        let apiKey = (try? keychain.getString(apiKeyKeychainKey)) ?? ""
+        let idea = LMLlmModuleSettingsStore.loadIdeaInspiration()
         return LMGeminiModelSettings(
-            baseURL: normalizeBaseURL(rawBase),
-            apiKey: apiKey,
-            model: model
+            baseURL: idea.baseURL,
+            apiKey: idea.apiKey,
+            model: idea.model
         )
     }
 
     /// Persists validated settings. Caller should validate first.
     static func save(_ settings: LMGeminiModelSettings) {
-        let base = normalizeBaseURL(settings.baseURL)
-        UserDefaults.standard.set(base, forKey: baseURLKey)
-        UserDefaults.standard.set(settings.model.rawValue, forKey: modelKey)
-        let key = settings.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        do {
-            if key.isEmpty {
-                try keychain.remove(apiKeyKeychainKey)
-            } else {
-                try keychain.set(key, key: apiKeyKeychainKey)
-            }
-        } catch {
-            LMLogger.log("⚠️ Gemini apiKey Keychain save failed: \(error.localizedDescription)")
-        }
-        LMLogger.log("💾 Gemini model settings saved: model=\(settings.model.rawValue) baseURL=\(base)")
+        LMLlmModuleSettingsStore.saveIdeaInspiration(
+            LMIdeaInspirationSettings(
+                baseURL: settings.baseURL,
+                apiKey: settings.apiKey,
+                model: settings.model
+            )
+        )
     }
 
     /// Whether Inspire Me direct path may start (baseURL + apiKey present).
     static var isConfigured: Bool {
-        load().isConfigured
+        LMLlmModuleSettingsStore.isConfigured(.ideaInspiration)
     }
 
     /**
@@ -141,11 +119,7 @@ enum LMGeminiModelSettingsStore {
 
     /// Trims whitespace and trailing `/` from a host base URL.
     static func normalizeBaseURL(_ raw: String) -> String {
-        var value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        while value.hasSuffix("/") {
-            value.removeLast()
-        }
-        return value
+        LMLlmModuleSettingsStore.normalizeBaseURL(raw)
     }
 
     /**

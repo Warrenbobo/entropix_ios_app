@@ -109,8 +109,91 @@ final class LMDashScopeChatClient: @unchecked Sendable {
 
             let ttfbMs = firstChunkNs.map { Int64(($0 - startNs) / 1_000_000) }
             return LMStreamResult(httpCode: httpCode, fullText: full, rawLines: rawLines, ttfbMs: ttfbMs, errorBody: nil)
+        } catch is CancellationError {
+            return LMStreamResult(
+                httpCode: 0,
+                fullText: "",
+                rawLines: [],
+                ttfbMs: nil,
+                errorBody: "cancelled"
+            )
         } catch {
             return LMStreamResult(httpCode: 0, fullText: "", rawLines: [], ttfbMs: nil, errorBody: error.localizedDescription)
         }
+    }
+
+    /**
+     Non-streaming CompleteFetch (`stream: false`) — returns the full assistant text once.
+
+     Parses OpenAI-compatible `choices[0].message.content` (+ optional reasoning).
+     */
+    func completeChatCompletion(
+        baseUrl: String,
+        apiKey: String,
+        requestBody: [String: Any]
+    ) async -> LMStreamResult {
+        let urlString = baseUrl.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/chat/completions"
+        guard let url = URL(string: urlString) else {
+            return LMStreamResult(httpCode: 0, fullText: "", rawLines: [], ttfbMs: nil, errorBody: "Invalid URL")
+        }
+
+        var body = requestBody
+        body["stream"] = false
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        request.timeoutInterval = 120
+
+        let startNs = DispatchTime.now().uptimeNanoseconds
+        do {
+            let (data, response) = try await session.data(for: request)
+            let httpCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let raw = String(data: data, encoding: .utf8) ?? ""
+            guard (200...299).contains(httpCode) else {
+                return LMStreamResult(httpCode: httpCode, fullText: "", rawLines: [raw], ttfbMs: nil, errorBody: raw)
+            }
+
+            let fullText = Self.parseCompleteMessageText(from: data)
+            let ttfbMs = Int64((DispatchTime.now().uptimeNanoseconds - startNs) / 1_000_000)
+            return LMStreamResult(
+                httpCode: httpCode,
+                fullText: fullText,
+                rawLines: [raw],
+                ttfbMs: ttfbMs,
+                errorBody: nil
+            )
+        } catch is CancellationError {
+            return LMStreamResult(httpCode: 0, fullText: "", rawLines: [], ttfbMs: nil, errorBody: "cancelled")
+        } catch {
+            return LMStreamResult(httpCode: 0, fullText: "", rawLines: [], ttfbMs: nil, errorBody: error.localizedDescription)
+        }
+    }
+
+    /// Extracts assistant content (+ reasoning when present) from a non-stream JSON body.
+    private static func parseCompleteMessageText(from data: Data) -> String {
+        guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = obj["choices"] as? [[String: Any]],
+              let first = choices.first,
+              let message = first["message"] as? [String: Any] else {
+            return String(data: data, encoding: .utf8) ?? ""
+        }
+        var full = ""
+        if let reasoning = message["reasoning_content"] as? String {
+            full += reasoning
+        }
+        if let content = message["content"] as? String {
+            full += content
+        } else if let contentParts = message["content"] as? [[String: Any]] {
+            for part in contentParts {
+                if let text = part["text"] as? String {
+                    full += text
+                }
+            }
+        }
+        return full
     }
 }

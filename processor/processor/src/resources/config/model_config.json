@@ -1,0 +1,25 @@
+{
+  "scene_explore": {
+    "base_url": "",
+    "api_key": "",
+    "model_name": "",
+    "enable_thinking": false,
+    "thinking_budget": 512,
+    "temperature": 0.7,
+    "max_tokens": 2048
+  },
+  "idea_inspiration": {
+    "base_url": "https://generativelanguage.googleapis.com",
+    "api_key": "",
+    "model_name": "gemini-3.1-flash-image"
+  },
+  "ar_guidance": {
+    "base_url": "",
+    "api_key": "",
+    "model_name": "",
+    "enable_thinking": false,
+    "thinking_budget": 512,
+    "temperature": 0.7,
+    "max_tokens": 2048
+  }
+}

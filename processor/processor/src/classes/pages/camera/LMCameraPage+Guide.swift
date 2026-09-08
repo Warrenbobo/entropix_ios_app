@@ -95,7 +95,7 @@ extension LMCameraPage {
         case .findScene:
             return previewCanvasView
         case .tapButton:
-            return inspireMeButtonView
+            return preShootPlanButtonView
         case .viewAndSelect:
             return previewCanvasView
         case .alignGuidance:

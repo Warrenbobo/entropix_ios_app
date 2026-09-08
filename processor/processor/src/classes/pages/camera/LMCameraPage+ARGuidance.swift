@@ -1367,7 +1367,7 @@ extension LMCameraPage {
         currentReferenceBbox = nil
         clearLineArtOverlay()
 
-        inspireMeButtonView.isHidden = true
+        preShootPlanButtonView.isHidden = true
         bottomControlsHeightConstraint?.update(offset: 44)
         cameraBottomControlsView.setLayoutMode(.compact, animated: false)
         showSuggestionsCarousel()

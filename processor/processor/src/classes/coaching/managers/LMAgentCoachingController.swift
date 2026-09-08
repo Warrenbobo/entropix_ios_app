@@ -265,6 +265,16 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
                     analyzedAtMs: Int64(Date().timeIntervalSince1970 * 1000)
                 )
             },
+            onScoreModuleDone: { [weak self] phase in
+                self?.dispatchUI {
+                    self?.uiDelegate?.agentCoaching(didCompleteScoreModule: phase)
+                }
+            },
+            onEnterThinking: { [weak self] in
+                self?.dispatchUI {
+                    self?.uiDelegate?.agentCoachingDidEnterThinking()
+                }
+            },
             onExecuteAction: { [weak self] semanticAction, scores, systemState, finishCause in
                 guard let self else { return }
                 self.setLlmStreaming(false)

@@ -112,7 +112,11 @@ struct LMAppConfig: Sendable {
     let baseUrl: String
     let apiKey: String
     let modelName: String
+    /// Whether to send top-level `enable_thinking` on chat completions.
+    let enableThinking: Bool
     let thinkingBudget: Int
+    let temperature: Double
+    let maxTokens: Int
     let imageDataUrlMime: String
     let imageDataUrlQuality: Int
     let systemPrompt: String
@@ -124,7 +128,10 @@ struct LMAppConfig: Sendable {
             baseUrl: baseUrl,
             apiKey: apiKey,
             modelName: modelName,
+            enableThinking: enableThinking,
             thinkingBudget: thinkingBudget,
+            temperature: temperature,
+            maxTokens: maxTokens,
             imageDataUrlMime: imageDataUrlMime,
             imageDataUrlQuality: imageDataUrlQuality,
             systemPrompt: prompt,
