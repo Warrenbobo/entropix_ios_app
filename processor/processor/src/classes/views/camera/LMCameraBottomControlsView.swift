@@ -191,7 +191,7 @@ extension LMCameraBottomControlsView {
 
         // Album: horizontal center of left half (leading edge → shutter).
         myReferenceContainer.snp.makeConstraints { make in
-            make.centerX.equalToSuperview().multipliedBy(0.5)
+            make.centerX.equalToSuperview().multipliedBy(0.4)
             make.centerY.equalTo(captureButton)
             make.width.equalTo(80)
             myReferenceContainerHeightConstraint = make.height.equalTo(50).constraint
@@ -209,7 +209,7 @@ extension LMCameraBottomControlsView {
 
         // Get Tips: horizontal center of right half (shutter → trailing).
         getTipsContainer.snp.makeConstraints { make in
-            make.centerX.equalToSuperview().multipliedBy(1.5)
+            make.centerX.equalToSuperview().multipliedBy(1.6)
             make.centerY.equalTo(captureButton)
             make.width.equalTo(80)
             getTipsContainerHeightConstraint = make.height.equalTo(50).constraint
@@ -316,6 +316,24 @@ extension LMCameraBottomControlsView {
             shutterIconView.isHidden = false
             modeHintLabel.text = LMText.camera.preShootPlanHintGetTemplate
         }
+        updateDashedRingPath()
+    }
+
+    /**
+     Show Suggestions chrome: photo shutter, no pre-shoot mode hint.
+
+     Clears “Tap shutter for templates / find spots” which belongs to Basic Camera only.
+     */
+    func applySuggestionsChrome() {
+        dashedGradientLayer.isHidden = true
+        captureButton.layer.borderColor = UIColor.white.cgColor
+        captureButton.layer.borderWidth = 4
+        captureButton.backgroundColor = .white
+        shutterIconView.image = nil
+        shutterIconView.isHidden = true
+        modeHintLabel.text = " "
+        setGetTipsVisible(false)
+        setARGuidanceContainerHidden(true)
         updateDashedRingPath()
     }
 

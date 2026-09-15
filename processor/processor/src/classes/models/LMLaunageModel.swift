@@ -100,8 +100,8 @@ struct LMCameraTextConfig: Codable {
     var ctaViewCompositions: String = "View compositions"
     var chipTargetSpot: String = "Target: %@"
     var actionReturnToSpotMap: String = "Back to spot map"
-    var exploreExitConfirmTitle: String = "End Scene Explore?"
-    var exploreExitConfirmSubtitle: String = "Scene Explore can be retrieved from Mine Page."
+    var exploreExitConfirmTitle: String = "Give Up Inspires?"
+    var exploreExitConfirmSubtitle: String = "You can find this Scene Explore again in Mine."
     var exploreProcessing: String = "Exploring spots…"
     var exploreFailed: String = "Scene Explore failed. Please try again."
     
@@ -595,7 +595,6 @@ struct LMSettingsTextConfig: Codable {
     var dataAndStorage: String = "Data & Storage"
     
     // About Section
-    var backendApi: String = "Backend API"
     var appVersion: String = "App Version"
     var termsOfService: String = "Terms of Service"
     var privacyPolicy: String = "Privacy Policy"

@@ -244,7 +244,12 @@ class LMUserManager {
             birthDate: nil,
             language: nil
         )
-        shared.updateUser(demoUser)
+        // Local token so `isLoggedIn` is true for Gallery / Liked without FramAist auth.
+        shared.saveLoginInfo(
+            accessToken: "local_\(userId)",
+            refreshToken: "local_refresh_\(userId)",
+            user: demoUser
+        )
         LMLogger.log("Local session user configured (\(reason))")
     }
     

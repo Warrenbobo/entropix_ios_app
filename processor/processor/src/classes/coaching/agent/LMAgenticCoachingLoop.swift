@@ -309,6 +309,7 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
         var reasoningAccumulator = ""
         var answerAccumulator = ""
         let uiThrottler = LMStreamingUiThrottler()
+        let enableThinking = config.enableThinking
 
         let streamResult = await LMLlmTaskRuntime.shared.runTipsChat(
             baseUrl: config.baseUrl,
@@ -321,20 +322,35 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
             if let content = delta.content {
                 answerAccumulator += content
             }
-            let actionPreview = LMActionExtractor.extractDisplayTextPartial(answerAccumulator)
+            let streams = LMInstructThinkTagParser.displayStreams(
+                enableThinking: enableThinking,
+                reasoningAccumulator: reasoningAccumulator,
+                answerAccumulator: answerAccumulator
+            )
             uiThrottler.onDelta(
-                reasoningText: reasoningAccumulator,
-                actionPreview: actionPreview,
+                reasoningText: streams.reasoningForUi,
+                actionPreview: streams.actionPreview,
                 onReasoning: { callbacks.onStreamingReasoning?($0) },
                 onAction: { callbacks.onStreamingAction?($0) }
             )
         }
 
+        let flushedStreams = LMInstructThinkTagParser.displayStreams(
+            enableThinking: enableThinking,
+            reasoningAccumulator: reasoningAccumulator,
+            answerAccumulator: answerAccumulator
+        )
         uiThrottler.flush(
-            reasoningText: reasoningAccumulator,
-            actionPreview: LMActionExtractor.extractDisplayTextPartial(answerAccumulator),
+            reasoningText: flushedStreams.reasoningForUi,
+            actionPreview: flushedStreams.actionPreview,
             onReasoning: { callbacks.onStreamingReasoning?($0) },
             onAction: { callbacks.onStreamingAction?($0) }
+        )
+
+        let reasoningFull = LMInstructThinkTagParser.reasoningFullForLog(
+            enableThinking: enableThinking,
+            reasoningAccumulator: reasoningAccumulator,
+            answerAccumulator: answerAccumulator
         )
 
         guard (200...299).contains(streamResult.httpCode) else {
@@ -346,7 +362,7 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
                 httpCode: streamResult.httpCode,
                 finalAction: "",
                 rawOutput: "",
-                reasoningFull: reasoningAccumulator,
+                reasoningFull: reasoningFull,
                 answerFull: answerAccumulator,
                 finishCause: nil,
                 errorBody: streamResult.errorBody,
@@ -372,7 +388,11 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
             httpCode: streamResult.httpCode,
             finalAction: arbitrated.action,
             rawOutput: rawOutput,
-            reasoningFull: reasoningAccumulator,
+            reasoningFull: LMInstructThinkTagParser.reasoningFullForLog(
+                enableThinking: enableThinking,
+                reasoningAccumulator: reasoningAccumulator,
+                answerAccumulator: answerAccumulator
+            ),
             answerFull: answerAccumulator,
             finishCause: arbitrated.finishCause,
             errorBody: nil,

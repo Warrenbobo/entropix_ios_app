@@ -176,21 +176,24 @@ extension LMCameraPage {
     func updateInspireMeButtonState() {
         guard isViewLoaded, preShootPlanButtonView != nil else { return }
 
-        guard currentCameraState == .normal else {
+        switch currentCameraState {
+        case .normal, .exploreGoToSpot:
+            break
+        default:
             preShootPlanButtonView.isHidden = true
             preShootPlanButtonView.setEnabledForCamera(false)
             LMLogger.log("📷 Camera state is \(currentCameraState): PreShootPlan button hidden")
             return
         }
 
-        // Path B suspended: still show chip locked to Get Template.
-        let suspended = exploreSession?.phase == .suspended
+        // Path B Go to Spot: show chip locked to Get Template.
+        let goToSpot = currentCameraState == .exploreGoToSpot
         preShootPlanButtonView.isHidden = false
         // Mode chip stays tappable for Camera mode even on front camera;
         // AI shutter paths toast when executed.
         preShootPlanButtonView.setEnabledForCamera(true)
-        let switchEnabled = preShootPlanModeSwitchEnabled && !suspended
-        let mode = suspended ? LMPreShootPlanMode.composition : preShootPlanMode
+        let switchEnabled = preShootPlanModeSwitchEnabled && !goToSpot
+        let mode = goToSpot ? LMPreShootPlanMode.composition : preShootPlanMode
         preShootPlanButtonView.setMode(mode, modeSwitchEnabled: switchEnabled)
         cameraBottomControlsView.applyPreShootShutterAppearance(mode)
     }

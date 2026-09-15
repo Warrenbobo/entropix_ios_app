@@ -24,7 +24,8 @@ typealias LMInspireMeDebugCompositionSubmitter = (
 
 struct LMCameraConstants {
     
-    static let bottomControlsHeight: CGFloat = 90
+    /// Bottom chrome reserve (hidden on Explore RESULT but still subtracted from preview slot).
+    static let bottomControlsHeight: CGFloat = 94
     
     static let topStatusBarHeight: CGFloat = 44
     static let agentCoachingBubbleTopGap: CGFloat = 4
@@ -149,11 +150,15 @@ class LMCameraPage: LMPageWrapper {
     var lastARGuidanceProcessTime: TimeInterval? // 上次处理AR引导帧的时间戳
     
     // MARK: - Camera State
+    /// Page states aligned with Android `CameraState` (docs/Android/camera-page-states.md).
     enum CameraState {
-        case normal              // 普通相机状态
-        case inspireMeProcessing // Inspire Me 处理中
-        case showingSuggestions  // 显示构图建议
-        case compositionSelected // 已选择构图（AR 引导）
+        case normal
+        case sceneExploreProcessing
+        case sceneExploreResult
+        case exploreGoToSpot
+        case inspireMeProcessing
+        case showingSuggestions
+        case compositionSelected
     }
     
     var currentCameraState: CameraState = .normal {
@@ -163,6 +168,9 @@ class LMCameraPage: LMPageWrapper {
             updateAgentLogButtonVisibility()
         }
     }
+
+    /// Cancels in-flight Scene Explore LLM when user confirms exit during processing.
+    var sceneExploreTask: Task<Void, Never>?
     
     // MARK: - Show Suggestions Properties
     var suggestionsCarouselView: LMSuggestionsCarouselView?
@@ -188,6 +196,7 @@ class LMCameraPage: LMPageWrapper {
     enum CompositionEntrySource {
         case normal
         case showingSuggestions
+        case exploreGoToSpot
     }
     var compositionEntrySource: CompositionEntrySource = .normal
     
@@ -273,6 +282,7 @@ class LMCameraPage: LMPageWrapper {
         presentHomeCameraAppUpdateIfNeeded(forceRefresh: false)
         /// Stage A: kick off Core ML preload while the user is still on the camera.
         LMCompositionModelPreloader.shared.startPreloadIfNeeded()
+        consumeSceneHistoryPendingActionIfNeeded()
     }
     
     private func registerAppLifecycleObservers() {
@@ -395,6 +405,9 @@ class LMCameraPage: LMPageWrapper {
         // 蓝色框在 arGuidanceView 之上（因为蓝色框不跟随旋转，需要独立显示）
         if let livePersonBox = livePersonBox {
             previewCanvasView.bringSubviewToFront(livePersonBox)
+        }
+        if let sceneExploreResultOverlay {
+            previewCanvasView.bringSubviewToFront(sceneExploreResultOverlay)
         }
         
         // 3. 主视图层级
@@ -726,8 +739,14 @@ class LMCameraPage: LMPageWrapper {
     }
 
     private func shouldShowProfileEntryButton() -> Bool {
-        // Go to Spot: never show Mine — leading control resumes Explore (§3).
-        if exploreSession?.phase == .suspended { return false }
+        // Explore triad / Inspire / Suggestions / Composition: leading is Back, not Mine.
+        switch currentCameraState {
+        case .normal:
+            break
+        case .sceneExploreProcessing, .sceneExploreResult, .exploreGoToSpot,
+             .inspireMeProcessing, .showingSuggestions, .compositionSelected:
+            return false
+        }
 
         let isNormalNavigationSource: Bool
         switch navigationSource {
@@ -744,21 +763,22 @@ class LMCameraPage: LMPageWrapper {
             isRootCameraPage = false
         }
 
-        return currentCameraState == .normal &&
-        isNormalNavigationSource &&
-        isRootCameraPage
+        return isNormalNavigationSource && isRootCameraPage
     }
 
     func updateLeadingNavigationControl() {
         guard isViewLoaded else { return }
 
-        if exploreSession?.phase == .suspended {
-            let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-            backButton.setImage(UIImage(systemName: "chevron.left", withConfiguration: config), for: .normal)
-            backButton.imageEdgeInsets = .zero
+        switch currentCameraState {
+        case .sceneExploreProcessing, .sceneExploreResult, .exploreGoToSpot,
+             .inspireMeProcessing, .showingSuggestions, .compositionSelected:
+            backButton.setImage(UIImage(named: "left_arrow_white"), for: .normal)
+            backButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
             backButton.tintColor = .white
             backButton.accessibilityLabel = LMText.common.back
             return
+        case .normal:
+            break
         }
 
         if shouldShowProfileEntryButton() {
@@ -801,26 +821,27 @@ class LMCameraPage: LMPageWrapper {
     
     // MARK: - Actions
     @objc func handleGiveUpAndBackButtonTapped() {
-        LMLogger.log("🔙 Back button tapped")
+        LMLogger.log("🔙 Back button tapped state=\(currentCameraState) explorePhase=\(String(describing: exploreSession?.phase)) bound=\(suggestionsBoundToExploreSession)")
 
-        // Go to Spot → resume Explore result session (no Mine, no re-LLM).
-        if exploreSession?.phase == .suspended {
-            returnToSpotMapFromSuspended()
-            updateLeadingNavigationControl()
-            return
-        }
-
-        if shouldShowProfileEntryButton() {
-            let profilePage = LMMinePage()
-            navigationController?.pushViewController(profilePage, animated: true)
-            return
-        }
-        
-        // 根据当前状态决定返回行为
         switch currentCameraState {
+        case .exploreGoToSpot:
+            // GS-01: resume Explore RESULT.
+            returnToSpotMapFromSuspended()
+            return
+
+        case .sceneExploreProcessing:
+            // SP-01/02: confirm exit explore while waiting.
+            confirmEndExploreSessionFromProcessing()
+            return
+
+        case .sceneExploreResult:
+            // SR-01/02: confirm exit explore from result.
+            confirmEndExploreSessionFromResult()
+            return
+
         case .showingSuggestions:
-            // Path A: Suggestions bound to Explore → return to result without confirm.
-            if suggestionsBoundToExploreSession, let session = exploreSession, session.phase == .result || session.inspireTaskId != nil {
+            // SS-01 bound → RESULT; SS-02 unbound → abandon confirm.
+            if suggestionsBoundToExploreSession, exploreSession != nil {
                 exitShowSuggestionsStateReturningToExplore()
                 return
             }
@@ -831,27 +852,69 @@ class LMCameraPage: LMPageWrapper {
                     self?.navigateBack()
                 }
             }
-            
+            return
+
         case .compositionSelected:
-            // 隐藏 Step 3 和 Step 4 引导（用户点击返回按钮）
             hideCompositionSelectedGuides()
-            
-            // 判断导航来源
             switch navigationSource {
             case .savedIdea:
-                // 从已保存构图进入，点击返回应该返回到已保存构图详情页
                 navigateBack()
                 LMLogger.log("🔙 Returned to saved composition detail from Composition Selected")
-                
             case .normal:
-                // 从 Show Suggestions 进入，点击返回应该返回到 Show Suggestions 列表
-                closeReferenceImage()
-                LMLogger.log("🔙 Returned to Show Suggestions from Composition Selected")
+                // CS-01: bound Explore → RESULT (skip close-ref middle).
+                if suggestionsBoundToExploreSession, exploreSession != nil {
+                    teardownCompositionSession()
+                    exitShowSuggestionsStateReturningToExplore()
+                    return
+                }
+                // CS-02: unbound → abandon confirm → NORMAL.
+                showLeaveConfirmation { [weak self] shouldLeave in
+                    guard let self, shouldLeave else { return }
+                    self.reportCurrentTaskFinalizedIfNeeded()
+                    self.teardownCompositionSession()
+                    self.stopPollingAIGCSuggestions()
+                    self.hideSuggestionsCarousel()
+                    self.currentTaskId = nil
+                    self.currentSuggestions.removeAll()
+                    self.jobIdToPlaceholderRank.removeAll()
+                    self.suggestionsBoundToExploreSession = false
+                    self.currentCameraState = .normal
+                    self.bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
+                    self.cameraBottomControlsView.setLayoutMode(.normal, animated: true)
+                    self.applyPageStateChrome()
+                    self.syncAgentCoachingForCurrentState()
+                }
             }
-            
-        default:
-            navigateBack()
+            return
+
+        case .inspireMeProcessing:
+            // IP-01: bound → RESULT; unbound → abandon confirm.
+            if suggestionsBoundToExploreSession, exploreSession != nil {
+                hideProcessingOverlay()
+                isInspireMeCapture = false
+                exitShowSuggestionsStateReturningToExplore()
+                return
+            }
+            showLeaveConfirmation { [weak self] shouldLeave in
+                guard let self, shouldLeave else { return }
+                self.hideProcessingOverlay()
+                self.isInspireMeCapture = false
+                self.currentCameraState = .normal
+                self.applyPageStateChrome()
+            }
+            return
+
+        case .normal:
+            break
         }
+
+        if shouldShowProfileEntryButton() {
+            let profilePage = LMMinePage()
+            navigationController?.pushViewController(profilePage, animated: true)
+            return
+        }
+
+        navigateBack()
     }
     
     // MARK: - Navigation Source Handling

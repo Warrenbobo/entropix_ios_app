@@ -32,8 +32,8 @@ class LMMinePage: LMPageWrapper {
     private var isFloatingMenuVisible = false
     
     // 悬浮菜单按钮引用（用于更新文本）
-    private var floatingGalleryButton: UIButton!
     private var floatingSavedIdeasButton: UIButton!
+    private var floatingSceneHistoryButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -213,13 +213,16 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func avatarTapped() {
-        // 检查登录状态
+        // FRAMAIST_BACKEND_DISABLED — account profile entry hidden.
+        LMLogger.log("Account profile entry disabled")
+        /*
         guard requireLogin(action: "view account profile") else {
             return
         }
         
         let profilePage = LMAccountProfilePage()
         navigationController?.pushViewController(profilePage, animated: true)
+        */
     }
     
     /// 点击观看广告按钮
@@ -248,7 +251,9 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func upgradeButtonTapped() {
-        // 检查登录状态
+        // FRAMAIST_BACKEND_DISABLED — subscription entry hidden.
+        LMLogger.log("Subscription upgrade entry disabled")
+        /*
         guard requireLogin(action: "upgrade subscription") else {
             return
         }
@@ -256,41 +261,38 @@ class LMMinePage: LMPageWrapper {
         let subscription = LMSubscriptionPage()
         navigationController?.pushViewController(subscription,
                                                  animated: true)
+        */
     }
     
     private func freeTrialButtonTapped() {
-        // 检查登录状态
+        // FRAMAIST_BACKEND_DISABLED — free trial entry hidden.
+        LMLogger.log("Free trial entry disabled")
+        /*
         guard requireLogin(action: "claim free trial") else {
             return
         }
         
-        // 设置按钮为加载状态
         membershipCardView.updateFreeTrialButtonState(hasFreeTrial: false, isLoading: true)
         
-        // 调用领取免费试用 API
         LMUserManager.shared.claimFreeTrial { [weak self] response in
             DispatchQueue.main.async {
                 if response.requestSuccess, let data = response.value {
                     if let granted = data.granted, granted {
-                        // 领取成功，更新按钮状态
                         self?.membershipCardView.updateFreeTrialButtonState(hasFreeTrial: true, isLoading: false)
-                        // 显示领取成功提示
                         AppTheme.Toast.showText(LMText.profile.freeTrialClaimed)
-                        // 刷新用户数据
                         self?.refreshUserData()
                         LMLogger.log("✅ Free trial claimed successfully")
                     } else {
-                        // 已经领取过或其他情况
                         self?.membershipCardView.updateFreeTrialButtonState(hasFreeTrial: true, isLoading: false)
                         LMLogger.log("⚠️ Free trial already claimed or not available")
                     }
                 } else {
-                    // 请求失败，恢复按钮状态（后端有容错，所以这里也设置为已领取状态）
                     self?.membershipCardView.updateFreeTrialButtonState(hasFreeTrial: true, isLoading: false)
                     LMLogger.log("❌ Failed to claim free trial: \(response.message ?? "Unknown error")")
                 }
             }
         }
+        */
     }
     
     private func cameraButtonTapped() {
@@ -390,75 +392,73 @@ class LMMinePage: LMPageWrapper {
     }
     
     private func setupFloatingMenuButtons() {
-        // 创建悬浮菜单按钮
-        floatingGalleryButton = UIButton()
         floatingSavedIdeasButton = UIButton()
+        floatingSceneHistoryButton = UIButton()
         let floatingTabIndicator = UIView()
-        
-        // 设置按钮样式
-        floatingGalleryButton.setTitle(LMText.profile.gallery, for: .normal)
-        floatingGalleryButton.setTitleColor(UIColor.systemBlue, for: .selected)
-        floatingGalleryButton.setTitleColor(UIColor.systemGray, for: .normal)
-        floatingGalleryButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-        floatingGalleryButton.isSelected = true
-        floatingGalleryButton.addTarget(self, action: #selector(floatingGalleryTabTapped), for: .touchUpInside)
         
         floatingSavedIdeasButton.setTitle(LMText.profile.mineTabLikedSuggestion, for: .normal)
         floatingSavedIdeasButton.setTitleColor(UIColor.systemBlue, for: .selected)
         floatingSavedIdeasButton.setTitleColor(UIColor.systemGray, for: .normal)
         floatingSavedIdeasButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        floatingSavedIdeasButton.isSelected = true
         floatingSavedIdeasButton.addTarget(self, action: #selector(floatingSavedIdeasTabTapped), for: .touchUpInside)
+
+        floatingSceneHistoryButton.setTitle(LMText.profile.mineTabSceneHistory, for: .normal)
+        floatingSceneHistoryButton.setTitleColor(UIColor.systemBlue, for: .selected)
+        floatingSceneHistoryButton.setTitleColor(UIColor.systemGray, for: .normal)
+        floatingSceneHistoryButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        floatingSceneHistoryButton.addTarget(self, action: #selector(floatingSceneHistoryTabTapped), for: .touchUpInside)
         
         floatingTabIndicator.backgroundColor = UIColor.systemBlue
         floatingTabIndicator.layer.cornerRadius = 2
         
-        floatingMenuContainer.addSubview(floatingGalleryButton)
         floatingMenuContainer.addSubview(floatingSavedIdeasButton)
+        floatingMenuContainer.addSubview(floatingSceneHistoryButton)
         floatingMenuContainer.addSubview(floatingTabIndicator)
         
-        // 设置约束
-        floatingGalleryButton.snp.makeConstraints { make in
+        floatingSavedIdeasButton.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(44)
             make.centerY.equalToSuperview()
-            make.width.equalTo(80)
+            make.width.greaterThanOrEqualTo(100)
         }
         
-        floatingSavedIdeasButton.snp.makeConstraints { make in
-            make.leading.equalTo(floatingGalleryButton.snp.trailing).offset(40)
+        floatingSceneHistoryButton.snp.makeConstraints { make in
+            make.leading.equalTo(floatingSavedIdeasButton.snp.trailing).offset(40)
             make.centerY.equalToSuperview()
-            make.width.equalTo(120)
+            make.width.greaterThanOrEqualTo(100)
         }
         
         floatingTabIndicator.snp.makeConstraints { make in
             make.bottom.equalToSuperview().offset(-8)
-            make.centerX.equalTo(floatingGalleryButton)
+            make.centerX.equalTo(floatingSavedIdeasButton)
             make.width.equalTo(50)
             make.height.equalTo(4)
         }
         
-        // 保存引用以便后续更新
-        floatingMenuContainer.tag = 999 // 用于标识
-    }
-    
-    @objc private func floatingGalleryTabTapped() {
-        photoCollectionView.switchToTab(.gallery)
-        updateFloatingMenuState(.gallery)
+        floatingMenuContainer.tag = 999
     }
     
     @objc private func floatingSavedIdeasTabTapped() {
         photoCollectionView.switchToTab(.savedIdeas)
         updateFloatingMenuState(.savedIdeas)
     }
+
+    @objc private func floatingSceneHistoryTabTapped() {
+        photoCollectionView.switchToTab(.sceneHistory)
+        updateFloatingMenuState(.sceneHistory)
+    }
     
     private func updateFloatingMenuState(_ tab: TabType) {
         let indicator = floatingMenuContainer.subviews.first { !($0 is UIButton) }
+        let resolved = (tab == .gallery) ? .savedIdeas : tab
         
-        floatingGalleryButton?.isSelected = (tab == .gallery)
-        floatingSavedIdeasButton?.isSelected = (tab == .savedIdeas || tab == .sceneHistory)
+        floatingSavedIdeasButton?.isSelected = (resolved == .savedIdeas)
+        floatingSceneHistoryButton?.isSelected = (resolved == .sceneHistory)
         
-        // 动画移动指示器
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseInOut) {
-            let anchor = (tab == .gallery) ? self.floatingGalleryButton! : self.floatingSavedIdeasButton!
+            let anchor = (resolved == .savedIdeas)
+                ? self.floatingSavedIdeasButton!
+                : self.floatingSceneHistoryButton!
             indicator?.snp.remakeConstraints { make in
                 make.bottom.equalToSuperview().offset(-8)
                 make.centerX.equalTo(anchor)

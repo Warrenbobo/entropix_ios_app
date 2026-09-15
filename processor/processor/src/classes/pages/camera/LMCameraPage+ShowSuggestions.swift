@@ -120,15 +120,19 @@ extension LMCameraPage {
             currentSuggestions = suggestionsList
         }
         
-        // 隐藏 Inspire Me 按钮
+        // 隐藏 Inspire Me / pre-shoot mode chip（Suggestions 不是 Basic Camera）
         preShootPlanButtonView.isHidden = true
+
+        // Path A may have left bottom chrome hidden after Explore overlay dismiss.
+        cameraBottomControlsView.isHidden = false
+        cameraControlsView.isHidden = false
         
         // 调整底部控制栏高度
         bottomControlsHeightConstraint?.update(offset: 44)
         
-        // 切换底部控制栏为紧凑模式
+        // Compact shutter + clear Basic Camera mode hint (“Tap shutter for templates”).
         cameraBottomControlsView.setLayoutMode(.compact, animated: true)
-        cameraBottomControlsView.setARGuidanceContainerHidden(true)
+        cameraBottomControlsView.applySuggestionsChrome()
         
         // 显示构图轮播
         showSuggestionsCarousel()
@@ -140,12 +144,14 @@ extension LMCameraPage {
             LMLogger.log("✅ Initial suggestions loaded: \(currentSuggestions.count) items")
         }
         
-        // 开始轮询 AI 生成构图（离线演示 / 本地 Gemini 任务跳过）
+        // FRAMAIST_BACKEND_DISABLED — FramAist job-list polling unreachable.
+        /*
         if LMFeatureFlagsManager.backendApiEnabled
             && taskId != "demo_task"
             && !LMGeminiModelSettingsStore.isLocalGeminiTaskId(taskId) {
             startPollingAIGCSuggestions()
         }
+        */
         
         // 应用布局变化
         UIView.animate(
@@ -178,13 +184,18 @@ extension LMCameraPage {
         
         // 显示 Inspire Me 按钮
         preShootPlanButtonView.isHidden = false
+        updateInspireMeButtonState()
         
         // 恢复底部控制栏高度
         bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
         
-        // 恢复底部控制栏为正常模式
+        // 恢复底部控制栏为正常模式 + Basic Camera shutter chrome
         cameraBottomControlsView.setLayoutMode(.normal, animated: true)
         cameraBottomControlsView.setARGuidanceContainerHidden(false)
+        let mode = (exploreSession?.phase == .suspended)
+            ? LMPreShootPlanMode.composition
+            : preShootPlanMode
+        cameraBottomControlsView.applyPreShootShutterAppearance(mode)
         
         if isARGuidanceActive {
             stopARGuidanceSession()
@@ -211,6 +222,8 @@ extension LMCameraPage {
     }
     
     func reportCurrentSuggestionShotIfNeeded() {
+        // FRAMAIST_BACKEND_DISABLED — FramAist task-result report unreachable.
+        /*
         guard currentCameraState == .compositionSelected else { return }
         guard LMFeatureFlagsManager.backendApiEnabled,
               currentTaskId != "demo_task",
@@ -234,9 +247,13 @@ extension LMCameraPage {
             suggestionId: suggestionId,
             finalized: false
         )
+        */
     }
 
     func reportSuggestionLikeIfNeeded(_ suggestion: LMCompositionSuggestion) {
+        // FRAMAIST_BACKEND_DISABLED — FramAist like-report unreachable.
+        _ = suggestion
+        /*
         guard LMFeatureFlagsManager.backendApiEnabled,
               currentTaskId != "demo_task",
               !LMGeminiModelSettingsStore.isLocalGeminiTaskId(currentTaskId) else { return }
@@ -263,9 +280,12 @@ extension LMCameraPage {
             suggestionId: suggestionId,
             finalized: false
         )
+        */
     }
     
     func reportCurrentTaskFinalizedIfNeeded() {
+        // FRAMAIST_BACKEND_DISABLED — FramAist finalized report unreachable.
+        /*
         guard case .normal = navigationSource else {
             LMLogger.log("⏭️ [Task Result] Skip finalized report - navigation source is not task-backed suggestion flow")
             return
@@ -281,6 +301,7 @@ extension LMCameraPage {
             suggestionId: nil,
             finalized: true
         )
+        */
     }
     
     private func reportSuggestionTaskResult(
@@ -289,6 +310,9 @@ extension LMCameraPage {
         suggestionId: String?,
         finalized: Bool
     ) {
+        // FRAMAIST_BACKEND_DISABLED — keep signature for recovery; no network.
+        _ = (taskId, eventType, suggestionId, finalized)
+        /*
         guard LMFeatureFlagsManager.backendApiEnabled,
               taskId != "demo_task",
               !LMGeminiModelSettingsStore.isLocalGeminiTaskId(taskId) else { return }
@@ -313,6 +337,7 @@ extension LMCameraPage {
                 LMLogger.log("❌ [Task Result] Upload failed: \(response.message ?? "Unknown error")")
             }
         }
+        */
     }
 }
 
@@ -429,11 +454,14 @@ extension LMCameraPage {
     
     /// 开始轮询 AI 生成构图（基于 Job 的新轮询逻辑）
     func startPollingAIGCSuggestions() {
+        // FRAMAIST_BACKEND_DISABLED — job-list polling unreachable.
+        /*
         guard let taskId = currentTaskId else { return }
         stopPollingAIGCSuggestions()
         LMLogger.log("🔄 Started job-based polling - Task ID: \(taskId)")
         // 2秒后开始第一次轮询
         scheduleNextPoll(taskId: taskId)
+        */
     }
     
     /// 停止轮询
@@ -765,10 +793,15 @@ extension LMCameraPage {
     func enterCompositionSelectedStateFromSavedIdea(item: GalleryItem) {
         currentCameraState = .compositionSelected
         preShootPlanButtonView.isHidden = true
+        // Restore chrome in case a prior Explore overlay left bottom controls hidden.
+        cameraBottomControlsView.isHidden = false
+        cameraControlsView.isHidden = false
         agentGuidanceState = .agent
         executionTool = .none
         shutterRole = .instructReady
         referenceWarmupComplete = false
+        agentCoachingController.stopAll()
+        agentCoachingController.resetAgentWindow()
         clearLineArtOverlay()
         showReferenceImageFromSavedIdea(item: item)
         if let image = currentReferenceImage {
@@ -784,6 +817,8 @@ extension LMCameraPage {
                 score: nil
             )
             currentSuggestion = suggestion
+            agentCoachingController.setReferenceImage(image, bbox: currentReferenceBbox)
+            syncAgentCoachingForCurrentState()
             Task { await warmupReferenceForAgent(image: image) }
         } else {
             configureARGuidanceForAgentEntry()
@@ -1053,12 +1088,18 @@ extension LMCameraPage {
                 exitCompositionSelectedToNormal()
             case .showingSuggestions:
                 exitCompositionSelectedToShowingSuggestions()
+            case .exploreGoToSpot:
+                exitCompositionSelectedToExploreGoToSpot()
             }
         }
     }
 
     /// Clears reference image, AR guidance, and agent HUD after leaving composition-selected.
+    /// On-device model unload is asynchronous so Give up / close-ref UI never waits on Core ML.
     func teardownCompositionSession() {
+        // 1) Stop coaching / score scheduling immediately (invalidates in-flight publish).
+        agentCoachingController.stopCoachingForLeave()
+
         stopObservingDeviceOrientation()
         hideCompositionSelectedGuides()
 
@@ -1079,8 +1120,10 @@ extension LMCameraPage {
         shutterRole = .captureDefault
         referenceWarmupComplete = false
         hasUserTriggeredInstructInSession = false
-        agentCoachingController.releaseCompositionResources()
         resetCoachingSessionUI()
+
+        // 2) Heavy unload off main — UI already left composition chrome.
+        agentCoachingController.unloadCompositionModelsAsync()
     }
 
     /// Returns to normal camera after album reference from the bottom My Reference button.
@@ -1090,6 +1133,7 @@ extension LMCameraPage {
 
         bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
         cameraBottomControlsView.setLayoutMode(.normal, animated: true)
+        applyPageStateChrome()
         syncAgentCoachingForCurrentState()
 
         UIView.animate(
@@ -1103,6 +1147,22 @@ extension LMCameraPage {
         }
 
         LMLogger.log("✅ Exited composition selected to normal camera")
+    }
+
+    /// E-GS-03: close album reference from Go to Spot → restore Go to Spot page.
+    func exitCompositionSelectedToExploreGoToSpot() {
+        teardownCompositionSession()
+        currentCameraState = .exploreGoToSpot
+        if let session = exploreSession, session.phase != .suspended {
+            session.phase = .suspended
+        }
+        applyPageStateChrome()
+        syncAgentCoachingForCurrentState()
+        if let name = exploreSession?.selectedSpot?.name {
+            showTargetSpotChip(name: name)
+        }
+        UIView.animate(withDuration: 0.35) { self.view.layoutIfNeeded() }
+        LMLogger.log("✅ Exited composition selected to Explore Go to Spot")
     }
 
     /// Returns to Show Suggestions carousel after composition from Inspire Me flow.

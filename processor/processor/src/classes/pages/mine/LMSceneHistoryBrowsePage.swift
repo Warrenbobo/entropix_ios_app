@@ -11,7 +11,8 @@ import SnapKit
 /// Read-only Explore browse from Mine Scene History. Back returns to Mine (not camera).
 final class LMSceneHistoryBrowsePage: LMPageWrapper {
 
-    override var usesMineNavigationBarStyle: Bool { true }
+    /// History uses overlay circular back; hide Mine nav chrome.
+    override var usesMineNavigationBarStyle: Bool { false }
 
     private let record: LMSceneHistoryRecord
     private let cover: UIImage?
@@ -30,7 +31,7 @@ final class LMSceneHistoryBrowsePage: LMPageWrapper {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        barTitle = LMText.profile.mineTabSceneHistory
+        navigationController?.setNavigationBarHidden(true, animated: false)
         view.backgroundColor = .black
         view.addSubview(overlay)
         overlay.snp.makeConstraints { $0.edges.equalToSuperview() }
@@ -60,8 +61,38 @@ final class LMSceneHistoryBrowsePage: LMPageWrapper {
             heatmap: heatmap,
             showHeatmap: showHeatmap,
             spots: record.spots,
-            selectedSpotId: record.selectedSpotId
+            selectedSpotId: record.selectedSpotId,
+            chrome: .historyBrowse
         )
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+
+    override func backButtonItemOnTap() {
+        navigationController?.popViewController(animated: true)
+    }
+
+    /**
+     Finds an existing camera page in the stack or pushes one, then applies pending Path A/B.
+     */
+    private func routePendingToCamera(_ pending: LMSceneExploreHistoryPending) {
+        LMSceneExploreHistoryPending.enqueue(pending)
+        if let camera = navigationController?.viewControllers.compactMap({ $0 as? LMCameraPage }).first {
+            navigationController?.popToViewController(camera, animated: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                camera.consumeSceneHistoryPendingActionIfNeeded()
+            }
+        } else {
+            let camera = LMCameraPage()
+            camera.navigationSource = .normal
+            navigationController?.pushViewController(camera, animated: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                camera.consumeSceneHistoryPendingActionIfNeeded()
+            }
+        }
     }
 }
 
@@ -69,44 +100,31 @@ extension LMSceneHistoryBrowsePage: LMSceneExploreResultOverlayDelegate {
     func sceneExploreResultOverlayDidSelectSpot(_ spot: LMSceneExploreSpot) {}
 
     func sceneExploreResultOverlayDidTapGoToSpot(_ spot: LMSceneExploreSpot) {
-        // Open camera in suspended-like Path B experience with this spot.
-        let camera = LMCameraPage()
-        camera.navigationSource = .normal
-        navigationController?.pushViewController(camera, animated: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            let session = LMExploreSession(
-                phase: .suspended,
-                freezeFrame: self.cover,
-                showHeatmap: self.record.showHeatmap,
-                spots: self.record.spots,
-                selectedSpotId: spot.id
+        guard let cover else { return }
+        routePendingToCamera(
+            .goToSpot(
+                cover: cover,
+                spots: record.spots,
+                spotId: spot.id,
+                showHeatmap: record.showHeatmap
             )
-            camera.exploreSession = session
-            camera.preShootPlanMode = .composition
-            camera.preShootPlanModeSwitchEnabled = false
-            camera.updateInspireMeButtonState()
-            camera.goToSpot(spot)
-        }
+        )
     }
 
     func sceneExploreResultOverlayDidTapGetTemplate(_ spot: LMSceneExploreSpot) {
         guard let cover else { return }
-        let camera = LMCameraPage()
-        navigationController?.pushViewController(camera, animated: true)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-            let session = LMExploreSession(
-                phase: .result,
-                freezeFrame: cover,
-                showHeatmap: self.record.showHeatmap,
-                spots: self.record.spots,
-                selectedSpotId: spot.id
+        routePendingToCamera(
+            .getTemplate(
+                cover: cover,
+                spots: record.spots,
+                spotId: spot.id,
+                showHeatmap: record.showHeatmap
             )
-            camera.exploreSession = session
-            camera.getTemplate(for: spot)
-        }
+        )
     }
 
     func sceneExploreResultOverlayDidTapBack() {
+        // History browse: no exit confirm — return to Mine Scene History.
         navigationController?.popViewController(animated: true)
     }
 

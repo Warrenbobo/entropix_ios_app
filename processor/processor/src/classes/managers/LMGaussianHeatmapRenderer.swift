@@ -2,16 +2,18 @@
 //  LMGaussianHeatmapRenderer.swift
 //  processor
 //
-//  Local Scene Explore heatmap: elliptical Gaussian per Spot bbox, max-blend, warm tint.
+//  Local Scene Explore heatmap: soft center glow per Spot (no hard bbox edges).
 //
 
 import UIKit
 
 /**
- Synthesizes a warm heatmap over a freeze frame from Spot bboxes.
+ Synthesizes a warm heatmap overlay from Spot bboxes.
 
- Each Spot bbox is an elliptical Gaussian kernel that peaks at the center and fades
- toward the bbox edge. Multiple Spots take the per-pixel maximum intensity.
+ Each Spot is a soft elliptical Gaussian that peaks at the bbox center and fades
+ to fully transparent well before a hard rectangular edge. Multiple Spots take
+ the per-pixel maximum intensity. The returned image is an **overlay only**
+ (transparent where intensity is zero) — callers draw it on top of the freeze frame.
  */
 enum LMGaussianHeatmapRenderer {
 
@@ -48,17 +50,20 @@ enum LMGaussianHeatmapRenderer {
     }
 
     /**
-     Composites a warm heatmap onto `base` using Spot bboxes.
+     Builds a transparent warm heatmap overlay sized to `base` pixels.
 
-     Large images (> ~2MP) are downsampled for the intensity field, then the tint
-     is applied and scaled back to the original size.
+     - Parameters:
+       - base: Freeze frame (orientation should already be `.up`).
+       - spots: VLM spots with normalized bboxes.
+       - opacity: Peak alpha multiplier for the glow.
      */
     static func render(
         base: UIImage,
         spots: [LMSceneExploreSpot],
         opacity: CGFloat
     ) -> UIImage? {
-        guard let cgBase = base.cgImage, !spots.isEmpty else { return nil }
+        let upright = base.lmNormalizedImage()
+        guard let cgBase = upright.cgImage, !spots.isEmpty else { return nil }
         let pixelW = cgBase.width
         let pixelH = cgBase.height
         guard pixelW > 0, pixelH > 0 else { return nil }
@@ -71,7 +76,7 @@ enum LMGaussianHeatmapRenderer {
 
         var field = [Float](repeating: 0, count: workW * workH)
         for spot in spots {
-            accumulateGaussian(into: &field, width: workW, height: workH, rect: spot.normalizedRect)
+            accumulateSoftGlow(into: &field, width: workW, height: workH, rect: spot.normalizedRect)
         }
 
         guard let heat = tintedOverlay(
@@ -83,20 +88,29 @@ enum LMGaussianHeatmapRenderer {
             return nil
         }
 
+        guard workW != pixelW || workH != pixelH else {
+            return heat
+        }
+
         let format = UIGraphicsImageRendererFormat.default()
         format.scale = 1
-        format.opaque = true
+        format.opaque = false
         let outSize = CGSize(width: pixelW, height: pixelH)
         let renderer = UIGraphicsImageRenderer(size: outSize, format: format)
         return renderer.image { _ in
-            base.draw(in: CGRect(origin: .zero, size: outSize))
-            heat.draw(in: CGRect(origin: .zero, size: outSize), blendMode: .normal, alpha: 1)
+            heat.draw(in: CGRect(origin: .zero, size: outSize))
         }
     }
 
     // MARK: - Private
 
-    private static func accumulateGaussian(
+    /**
+     Soft glow from bbox center; rasterized over ~3σ (not clipped to the bbox rect).
+
+     At the bbox edge intensity is already faint; outside it falls to ~0 so no
+     rectangular silhouette appears.
+     */
+    private static func accumulateSoftGlow(
         into field: inout [Float],
         width: Int,
         height: Int,
@@ -105,19 +119,21 @@ enum LMGaussianHeatmapRenderer {
         let clamped = rect.standardized.intersection(CGRect(x: 0, y: 0, width: 1, height: 1))
         guard !clamped.isNull, clamped.width > 0.002, clamped.height > 0.002 else { return }
 
-        let x0 = max(0, Int(floor(clamped.minX * CGFloat(width))))
-        let y0 = max(0, Int(floor(clamped.minY * CGFloat(height))))
-        let x1 = min(width, Int(ceil(clamped.maxX * CGFloat(width))))
-        let y1 = min(height, Int(ceil(clamped.maxY * CGFloat(height))))
-        guard x1 > x0, y1 > y0 else { return }
-
         let cx = clamped.midX * CGFloat(width)
         let cy = clamped.midY * CGFloat(height)
-        // ~2σ to the bbox edge → intensity ≈ near zero at the border.
-        let sigmaX = max(1, clamped.width * CGFloat(width) * 0.5 / 2.0)
-        let sigmaY = max(1, clamped.height * CGFloat(height) * 0.5 / 2.0)
+        // Half-extent ≈ 2.8σ → bbox edge ~e^(-4) ≈ 0.018 (near transparent).
+        let sigmaX = max(1.5, clamped.width * CGFloat(width) * 0.5 / 2.8)
+        let sigmaY = max(1.5, clamped.height * CGFloat(height) * 0.5 / 2.8)
         let invSX2 = 1 / (2 * sigmaX * sigmaX)
         let invSY2 = 1 / (2 * sigmaY * sigmaY)
+
+        let padX = Int(ceil(sigmaX * 3.2))
+        let padY = Int(ceil(sigmaY * 3.2))
+        let x0 = max(0, Int(floor(cx)) - padX)
+        let y0 = max(0, Int(floor(cy)) - padY)
+        let x1 = min(width, Int(ceil(cx)) + padX)
+        let y1 = min(height, Int(ceil(cy)) + padY)
+        guard x1 > x0, y1 > y0 else { return }
 
         for y in y0..<y1 {
             let dy = CGFloat(y) + 0.5 - cy
@@ -140,25 +156,28 @@ enum LMGaussianHeatmapRenderer {
         opacity: Float
     ) -> UIImage? {
         var rgba = [UInt8](repeating: 0, count: width * height * 4)
+        // Drop nearly-invisible fringe so no rectangular halo remains.
+        let minT: Float = 0.04
         for i in 0..<(width * height) {
             let t = max(0, min(1, field[i]))
-            guard t > 0.02 else { continue }
-            // Warm ramp: deep orange → amber → soft yellow-white.
+            guard t > minT else { continue }
+            // Remap so the visible range starts soft at minT.
+            let uVis = (t - minT) / (1 - minT)
             let r: Float
             let g: Float
             let b: Float
-            if t < 0.5 {
-                let u = t / 0.5
+            if uVis < 0.5 {
+                let u = uVis / 0.5
                 r = 0.95 * u + 0.55 * (1 - u)
                 g = 0.35 * u + 0.12 * (1 - u)
                 b = 0.05 * u
             } else {
-                let u = (t - 0.5) / 0.5
+                let u = (uVis - 0.5) / 0.5
                 r = 0.95 + 0.05 * u
                 g = 0.35 + 0.55 * u
                 b = 0.05 + 0.35 * u
             }
-            let a = t * opacity
+            let a = uVis * opacity * 0.85
             let o = i * 4
             rgba[o] = UInt8(min(255, Int(r * a * 255)))
             rgba[o + 1] = UInt8(min(255, Int(g * a * 255)))

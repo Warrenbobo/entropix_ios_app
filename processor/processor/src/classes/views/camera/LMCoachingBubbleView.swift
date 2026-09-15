@@ -9,6 +9,7 @@ import SnapKit
 /// Agent coaching instruction bubble with Liquid Glass material.
 final class LMCoachingBubbleView: UIView {
     private static let reasoningViewportHeight: CGFloat = 54
+    private static let actionPillHeight: CGFloat = 28
 
     var onSkipTapped: (() -> Void)?
     var onDismissToolTapped: (() -> Void)?
@@ -16,7 +17,10 @@ final class LMCoachingBubbleView: UIView {
 
     private let glassPanel = UIVisualEffectView()
     private let edgeBar = LMCoachingEdgeLitBar()
+    /// Vertical stack: instruction row → action pills → reasoning.
+    private let contentColumn = UIStackView()
     private let instructionRow = UIStackView()
+    private let actionsRow = UIStackView()
     private let instructionLabel = UILabel()
     private let expandButton = UIButton(type: .system)
     private let reasoningScrollView = UIScrollView()
@@ -26,6 +30,7 @@ final class LMCoachingBubbleView: UIView {
     private let finishBorderLayer = CAShapeLayer()
     private var skipHeightConstraint: Constraint?
     private var dismissHeightConstraint: Constraint?
+    private var actionsRowHeightConstraint: Constraint?
     private var reasoningHeightConstraint: Constraint?
     private var thinkingAnimator: UIViewPropertyAnimator?
 
@@ -64,8 +69,11 @@ final class LMCoachingBubbleView: UIView {
 
         instructionLabel.font = LMLiquidGlassHUDTokens.instructionFont
         instructionLabel.textColor = LMLiquidGlassHUDTokens.textPrimary
-        instructionLabel.numberOfLines = 1
-        instructionLabel.lineBreakMode = .byTruncatingTail
+        instructionLabel.numberOfLines = 0
+        instructionLabel.lineBreakMode = .byWordWrapping
+        instructionLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        instructionLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        instructionLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
         reasoningLabel.font = LMLiquidGlassHUDTokens.reasoningFont
         reasoningLabel.textColor = LMLiquidGlassHUDTokens.textSecondary
@@ -79,20 +87,40 @@ final class LMCoachingBubbleView: UIView {
         expandButton.setImage(UIImage(systemName: "chevron.down"), for: .normal)
         expandButton.addTarget(self, action: #selector(expandTapped), for: .touchUpInside)
         expandButton.isHidden = true
+        expandButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        expandButton.setContentHuggingPriority(.required, for: .horizontal)
 
         skipPill.isHidden = true
         skipPill.addTarget(self, action: #selector(skipTapped), for: .touchUpInside)
+        skipPill.setContentCompressionResistancePriority(.required, for: .horizontal)
+        skipPill.setContentHuggingPriority(.required, for: .horizontal)
 
         dismissPill.isHidden = true
         dismissPill.addTarget(self, action: #selector(dismissTapped), for: .touchUpInside)
+        dismissPill.setContentCompressionResistancePriority(.required, for: .horizontal)
+        dismissPill.setContentHuggingPriority(.required, for: .horizontal)
 
+        // Row 1: full-width instruction + expand chevron (never shares width with pills).
         instructionRow.axis = .horizontal
-        instructionRow.alignment = .center
+        instructionRow.alignment = .top
         instructionRow.spacing = 6
         instructionRow.addArrangedSubview(instructionLabel)
-        instructionRow.addArrangedSubview(skipPill)
-        instructionRow.addArrangedSubview(dismissPill)
         instructionRow.addArrangedSubview(expandButton)
+
+        // Row 2: Skip / Close frame guide keep intrinsic width.
+        actionsRow.axis = .horizontal
+        actionsRow.alignment = .center
+        actionsRow.spacing = 8
+        actionsRow.addArrangedSubview(skipPill)
+        actionsRow.addArrangedSubview(dismissPill)
+        actionsRow.addArrangedSubview(UIView()) // trailing spacer
+
+        contentColumn.axis = .vertical
+        contentColumn.alignment = .fill
+        contentColumn.spacing = 8
+        contentColumn.addArrangedSubview(instructionRow)
+        contentColumn.addArrangedSubview(actionsRow)
+        contentColumn.addArrangedSubview(reasoningScrollView)
 
         let instructionTap = UITapGestureRecognizer(target: self, action: #selector(expandTapped))
         instructionLabel.isUserInteractionEnabled = true
@@ -100,21 +128,25 @@ final class LMCoachingBubbleView: UIView {
 
         addSubview(glassPanel)
         glassPanel.contentView.addSubview(edgeBar)
-        glassPanel.contentView.addSubview(instructionRow)
-        glassPanel.contentView.addSubview(reasoningScrollView)
+        glassPanel.contentView.addSubview(contentColumn)
 
         glassPanel.snp.makeConstraints { $0.edges.equalToSuperview() }
         edgeBar.snp.makeConstraints { make in
             make.leading.top.bottom.equalToSuperview()
             make.width.equalTo(LMLiquidGlassHUDTokens.edgeBarWidth)
         }
-        instructionRow.snp.makeConstraints { make in
+        contentColumn.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(8)
             make.leading.equalTo(edgeBar.snp.trailing).offset(10)
             make.trailing.equalToSuperview().offset(-10)
+            make.bottom.equalToSuperview().offset(-8)
+        }
+        instructionRow.snp.makeConstraints { make in
             make.height.greaterThanOrEqualTo(22)
         }
-        instructionLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        actionsRow.snp.makeConstraints { make in
+            actionsRowHeightConstraint = make.height.equalTo(0).constraint
+        }
         skipPill.snp.makeConstraints { make in
             skipHeightConstraint = make.height.equalTo(0).constraint
         }
@@ -125,10 +157,7 @@ final class LMCoachingBubbleView: UIView {
             make.width.height.equalTo(18)
         }
         reasoningScrollView.snp.makeConstraints { make in
-            make.top.equalTo(instructionRow.snp.bottom).offset(4)
-            make.leading.trailing.equalTo(instructionRow)
             reasoningHeightConstraint = make.height.equalTo(0).constraint
-            make.bottom.equalToSuperview().offset(-8)
         }
         reasoningLabel.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -157,6 +186,13 @@ final class LMCoachingBubbleView: UIView {
             cornerRadius: LMLiquidGlassHUDTokens.panelCornerRadius
         ).cgPath
         finishBorderLayer.frame = bounds
+        // Prefer wrapping within the available instruction width.
+        let expandWidth: CGFloat = expandButton.isHidden ? 0 : 24
+        let available = max(0, instructionRow.bounds.width - expandWidth)
+        if available > 0, instructionLabel.preferredMaxLayoutWidth != available {
+            instructionLabel.preferredMaxLayoutWidth = available
+            invalidateIntrinsicContentSize()
+        }
     }
 
     /// Latest instruction text shown in the bubble (for Skip handling).
@@ -221,7 +257,7 @@ final class LMCoachingBubbleView: UIView {
 
         let showSkipButton = hasAction && !isThinking && showSkip && !isFinished
         skipPill.isHidden = !showSkipButton
-        skipHeightConstraint?.update(offset: showSkipButton ? 28 : 0)
+        skipHeightConstraint?.update(offset: showSkipButton ? Self.actionPillHeight : 0)
 
         let dismissLabel: String?
         switch executionTool {
@@ -232,7 +268,11 @@ final class LMCoachingBubbleView: UIView {
         let showDismissButton = hasAction && !isThinking && dismissLabel != nil
         dismissPill.isHidden = !showDismissButton
         dismissPill.setTitle(dismissLabel ?? "")
-        dismissHeightConstraint?.update(offset: showDismissButton ? 28 : 0)
+        dismissHeightConstraint?.update(offset: showDismissButton ? Self.actionPillHeight : 0)
+
+        let showActionsRow = showSkipButton || showDismissButton
+        actionsRow.isHidden = !showActionsRow
+        actionsRowHeightConstraint?.update(offset: showActionsRow ? Self.actionPillHeight : 0)
     }
 
     func setVisible(_ visible: Bool, animated: Bool = true) {

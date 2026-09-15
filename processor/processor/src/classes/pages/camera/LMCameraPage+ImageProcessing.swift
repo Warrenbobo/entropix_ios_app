@@ -185,6 +185,10 @@ extension LMCameraPage {
     
     /// 处理并上传图像到后端
     func processAndUploadImage(_ image: UIImage, sceneFeature: [Float]?) {
+        // FRAMAIST_BACKEND_DISABLED — FramAist upload unreachable; keep offline / Direct Gemini live.
+        finishOfflineInspireMe()
+        _ = sceneFeature
+        /*
         guard LMFeatureFlagsManager.backendApiEnabled else {
             finishOfflineInspireMe()
             return
@@ -254,6 +258,7 @@ extension LMCameraPage {
         ) { response in
             handleResponse(response)
         }
+        */
     }
 
     /**
@@ -266,8 +271,7 @@ extension LMCameraPage {
 
         guard let compressedImage = compressImage(image, maxLongSide: AppConfigs.Gemini.inputMaxLongSide) else {
             DispatchQueue.main.async { [weak self] in
-                self?.hideProcessingOverlay()
-                self?.isInspireMeCapture = false
+                self?.finishInspireProcessingFailed()
                 AppTheme.Toast.showText(LMText.camera.imageCompressionFailed)
             }
             return

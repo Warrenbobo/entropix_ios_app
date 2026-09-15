@@ -21,6 +21,8 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
     private var scheduledWork: DispatchWorkItem?
     private let scoringLock = NSLock()
     private var isScoring = false
+    /// Bumped on every `stop()` so in-flight `analyze` results are discarded.
+    private var generation: UInt64 = 0
 
     private var frameProvider: (() -> UIImage?)?
     private var referenceProvider: (() -> UIImage?)?
@@ -54,8 +56,17 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
         scheduleNextTick(after: 0)
     }
 
-    /// Stops the scoring loop and cancels any pending tick.
+    /**
+     Stops the scoring loop and cancels any pending tick.
+
+     In-flight `analyze` may still finish on the score queue, but its result is
+     discarded via `generation` so UI / donut are not updated after leave.
+     */
     func stop() {
+        scoringLock.lock()
+        generation &+= 1
+        scoringLock.unlock()
+
         scheduledWork?.cancel()
         scheduledWork = nil
         frameProvider = nil
@@ -83,32 +94,36 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
     private func tick() {
         guard let referenceProvider, let frameProvider else { return }
 
+        scoringLock.lock()
+        let tickGeneration = generation
+        scoringLock.unlock()
+
         guard let reference = referenceProvider() else {
-            publishScore(nil)
+            publishScore(nil, generation: tickGeneration)
             return
         }
         guard cameraReadyProvider?() ?? true else {
-            publishScore(nil)
+            publishScore(nil, generation: tickGeneration)
             return
         }
         if isPausedProvider?() ?? false {
-            scheduleNextTick(after: currentInterval())
+            scheduleNextTick(after: currentInterval(), generation: tickGeneration)
             return
         }
         if isScoring {
-            scheduleNextTick(after: 0.1)
+            scheduleNextTick(after: 0.1, generation: tickGeneration)
             return
         }
 
         guard let camFrame = frameProvider() else {
-            scheduleNextTick(after: currentInterval())
+            scheduleNextTick(after: currentInterval(), generation: tickGeneration)
             return
         }
 
         scoringLock.lock()
         guard !isScoring else {
             scoringLock.unlock()
-            scheduleNextTick(after: 0.1)
+            scheduleNextTick(after: 0.1, generation: tickGeneration)
             return
         }
         isScoring = true
@@ -134,18 +149,41 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
 
         scoringLock.lock()
         isScoring = false
+        let stillCurrent = (generation == tickGeneration)
         scoringLock.unlock()
 
-        publishScore(scored)
+        guard stillCurrent else {
+            LMLogger.log("ScoreLoop discarded stale analyze generation=\(tickGeneration)")
+            return
+        }
+
+        publishScore(scored, generation: tickGeneration)
     }
 
-    private func publishScore(_ score: LMCompositionScore?) {
+    private func publishScore(_ score: LMCompositionScore?, generation tickGeneration: UInt64) {
+        scoringLock.lock()
+        let stillCurrent = (generation == tickGeneration)
+        scoringLock.unlock()
+        guard stillCurrent else { return }
+
         latestScore = score
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
+            self.scoringLock.lock()
+            let current = self.generation == tickGeneration
+            self.scoringLock.unlock()
+            guard current else { return }
             self.delegate?.compositionScoreLoop(self, didUpdate: score)
         }
-        scheduleNextTick(after: currentInterval())
+        scheduleNextTick(after: currentInterval(), generation: tickGeneration)
+    }
+
+    private func scheduleNextTick(after delay: TimeInterval, generation tickGeneration: UInt64) {
+        scoringLock.lock()
+        let stillCurrent = (generation == tickGeneration)
+        scoringLock.unlock()
+        guard stillCurrent else { return }
+        scheduleNextTick(after: delay)
     }
 
     private func currentInterval() -> TimeInterval {

@@ -9,6 +9,7 @@ import UIKit
 import SnapKit
 
 enum TabType {
+    /// Kept for API compatibility; Gallery tab is hidden from Mine UI.
     case gallery
     case savedIdeas
     case sceneHistory
@@ -27,7 +28,6 @@ class LMPhotoCollectionView: UIView {
     
     // MARK: - UI Components
     private let menuTabsContainer = UIView()
-    private let galleryTabButton = UIButton()
     private let savedIdeasTabButton = UIButton()
     private let sceneHistoryTabButton = UIButton()
     private let tabIndicator = UIView()
@@ -37,15 +37,14 @@ class LMPhotoCollectionView: UIView {
     private let contentView = UIView()
     
     // 页面视图
-    private let galleryPageView = LMGalleryPageView()
     private let ideasPageView = LMIdeasPageView()
     private let sceneHistoryPageView = LMSceneHistoryPageView()
     
-    private var currentTab: TabType = .gallery
-    private var hasLoadedGalleryData = false
+    private var currentTab: TabType = .savedIdeas
     private var hasLoadedIdeasData = false
     private var hasLoadedSceneHistoryData = false
     private var heightConstraint: Constraint?
+    private var didApplyInitialTab = false
     
     // 回调，用于通知父视图高度变化
     var onHeightChanged: ((CGFloat) -> Void)?
@@ -74,8 +73,6 @@ extension LMPhotoCollectionView {
         addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        // 添加页面视图到内容视图
-        contentView.addSubview(galleryPageView)
         contentView.addSubview(ideasPageView)
         contentView.addSubview(sceneHistoryPageView)
         
@@ -87,21 +84,12 @@ extension LMPhotoCollectionView {
     private func setupMenuTabs() {
         menuTabsContainer.backgroundColor = UIColor.clear
         
-        // Gallery Tab Button
-        galleryTabButton.setTitle(LMText.profile.gallery, for: .normal)
-        galleryTabButton.setTitleColor(UIColor.systemBlue, for: .selected)
-        galleryTabButton.setTitleColor(UIColor.systemGray, for: .normal)
-        galleryTabButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        galleryTabButton.titleLabel?.adjustsFontSizeToFitWidth = true
-        galleryTabButton.isSelected = true
-        galleryTabButton.addTarget(self, action: #selector(galleryTabButtonTapped), for: .touchUpInside)
-        
-        // Liked Suggestion tab
         savedIdeasTabButton.setTitle(LMText.profile.mineTabLikedSuggestion, for: .normal)
         savedIdeasTabButton.setTitleColor(UIColor.systemBlue, for: .selected)
         savedIdeasTabButton.setTitleColor(UIColor.systemGray, for: .normal)
         savedIdeasTabButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         savedIdeasTabButton.titleLabel?.adjustsFontSizeToFitWidth = true
+        savedIdeasTabButton.isSelected = true
         savedIdeasTabButton.addTarget(self, action: #selector(savedIdeasTabButtonTapped), for: .touchUpInside)
 
         sceneHistoryTabButton.setTitle(LMText.profile.mineTabSceneHistory, for: .normal)
@@ -111,11 +99,9 @@ extension LMPhotoCollectionView {
         sceneHistoryTabButton.titleLabel?.adjustsFontSizeToFitWidth = true
         sceneHistoryTabButton.addTarget(self, action: #selector(sceneHistoryTabButtonTapped), for: .touchUpInside)
         
-        // Tab Indicator
         tabIndicator.backgroundColor = UIColor.systemBlue
         tabIndicator.layer.cornerRadius = 2
         
-        menuTabsContainer.addSubview(galleryTabButton)
         menuTabsContainer.addSubview(savedIdeasTabButton)
         menuTabsContainer.addSubview(sceneHistoryTabButton)
         menuTabsContainer.addSubview(tabIndicator)
@@ -131,7 +117,6 @@ extension LMPhotoCollectionView {
         
         contentView.backgroundColor = UIColor.clear
         
-        galleryPageView.disableVerticalScrolling()
         ideasPageView.disableVerticalScrolling()
         sceneHistoryPageView.disableVerticalScrolling()
     }
@@ -141,21 +126,14 @@ extension LMPhotoCollectionView {
 extension LMPhotoCollectionView {
     
     private func configureLayoutConstraints() {
-        // Menu Tabs Container
         menuTabsContainer.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(60)
         }
         
-        galleryTabButton.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
-            make.centerY.equalToSuperview()
-            make.width.greaterThanOrEqualTo(64)
-        }
-        
         savedIdeasTabButton.snp.makeConstraints { make in
-            make.leading.equalTo(galleryTabButton.snp.trailing).offset(16)
+            make.leading.equalToSuperview().offset(16)
             make.centerY.equalToSuperview()
             make.width.greaterThanOrEqualTo(90)
         }
@@ -169,41 +147,30 @@ extension LMPhotoCollectionView {
         
         tabIndicator.snp.makeConstraints { make in
             make.bottom.equalToSuperview().offset(-8)
-            make.centerX.equalTo(galleryTabButton)
+            make.centerX.equalTo(savedIdeasTabButton)
             make.width.equalTo(50)
             make.height.equalTo(4)
         }
         
-        // Scroll View
         scrollView.snp.makeConstraints { make in
             make.top.equalTo(menuTabsContainer.snp.bottom)
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
         }
         
-        // 设置整体高度约束
         self.snp.makeConstraints { make in
-            heightConstraint = make.height.equalTo(400).constraint // 初始高度
+            heightConstraint = make.height.equalTo(400).constraint
         }
         
-        // Content View
         contentView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
             make.height.equalTo(scrollView)
-            make.width.equalTo(scrollView).multipliedBy(3)
+            make.width.equalTo(scrollView).multipliedBy(2)
         }
         
-        // Gallery Page View
-        galleryPageView.snp.makeConstraints { make in
-            make.top.bottom.equalToSuperview()
-            make.leading.equalToSuperview()
-            make.width.equalTo(scrollView)
-        }
-        
-        // Ideas Page View
         ideasPageView.snp.makeConstraints { make in
             make.top.bottom.equalToSuperview()
-            make.leading.equalTo(galleryPageView.snp.trailing)
+            make.leading.equalToSuperview()
             make.width.equalTo(scrollView)
         }
 
@@ -219,12 +186,6 @@ extension LMPhotoCollectionView {
 // MARK: - Action Handlers
 extension LMPhotoCollectionView {
     
-
-    
-    @objc private func galleryTabButtonTapped() {
-        switchToTab(.gallery)
-    }
-    
     @objc private func savedIdeasTabButtonTapped() {
         switchToTab(.savedIdeas)
     }
@@ -233,23 +194,26 @@ extension LMPhotoCollectionView {
         switchToTab(.sceneHistory)
     }
     
+    /**
+     Switches the visible Mine content tab.
+
+     Gallery is no longer offered in the UI; `.gallery` maps to Liked.
+     */
     func switchToTab(_ tab: TabType) {
-        guard currentTab != tab else { return }
+        let resolved = (tab == .gallery) ? .savedIdeas : tab
+        guard currentTab != resolved || !didApplyInitialTab else { return }
         
-        currentTab = tab
-        loadData(for: tab)
+        currentTab = resolved
+        didApplyInitialTab = true
+        loadData(for: resolved)
         
-        galleryTabButton.isSelected = (tab == .gallery)
-        savedIdeasTabButton.isSelected = (tab == .savedIdeas)
-        sceneHistoryTabButton.isSelected = (tab == .sceneHistory)
+        savedIdeasTabButton.isSelected = (resolved == .savedIdeas)
+        sceneHistoryTabButton.isSelected = (resolved == .sceneHistory)
         
         UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseInOut) {
-            let anchor: UIView
-            switch tab {
-            case .gallery: anchor = self.galleryTabButton
-            case .savedIdeas: anchor = self.savedIdeasTabButton
-            case .sceneHistory: anchor = self.sceneHistoryTabButton
-            }
+            let anchor: UIView = (resolved == .savedIdeas)
+                ? self.savedIdeasTabButton
+                : self.sceneHistoryTabButton
             self.tabIndicator.snp.remakeConstraints { make in
                 make.bottom.equalToSuperview().offset(-8)
                 make.centerX.equalTo(anchor)
@@ -259,16 +223,11 @@ extension LMPhotoCollectionView {
             self.layoutIfNeeded()
         }
         
-        let pageIndex: CGFloat
-        switch tab {
-        case .gallery: pageIndex = 0
-        case .savedIdeas: pageIndex = 1
-        case .sceneHistory: pageIndex = 2
-        }
+        let pageIndex: CGFloat = (resolved == .savedIdeas) ? 0 : 1
         scrollView.setContentOffset(CGPoint(x: pageIndex * scrollView.frame.width, y: 0), animated: false)
         
         updateContentHeight()
-        onTabChanged?(tab)
+        onTabChanged?(resolved)
     }
     
     func getCurrentTab() -> TabType {
@@ -279,12 +238,10 @@ extension LMPhotoCollectionView {
     
     /// 重新加载数据
     func reloadData() {
-        hasLoadedGalleryData = false
         hasLoadedIdeasData = false
         hasLoadedSceneHistoryData = false
 
         guard LMUserManager.shared.isLoggedIn else {
-            galleryPageView.showSignInPrompt()
             ideasPageView.showSignInPrompt()
             sceneHistoryPageView.showSignInPrompt()
             updateContentHeight()
@@ -297,12 +254,7 @@ extension LMPhotoCollectionView {
 
     private func loadData(for tab: TabType, force: Bool = false) {
         switch tab {
-        case .gallery:
-            guard LMUserManager.shared.isLoggedIn else { return }
-            guard force || !hasLoadedGalleryData else { return }
-            galleryPageView.reloadData()
-            hasLoadedGalleryData = true
-        case .savedIdeas:
+        case .gallery, .savedIdeas:
             guard LMUserManager.shared.isLoggedIn else { return }
             guard force || !hasLoadedIdeasData else { return }
             ideasPageView.reloadData()
@@ -318,9 +270,7 @@ extension LMPhotoCollectionView {
         DispatchQueue.main.async {
             let contentHeight: CGFloat
             switch self.currentTab {
-            case .gallery:
-                contentHeight = self.galleryPageView.calculateContentHeight()
-            case .savedIdeas:
+            case .gallery, .savedIdeas:
                 contentHeight = self.ideasPageView.calculateContentHeight()
             case .sceneHistory:
                 contentHeight = self.sceneHistoryPageView.calculateContentHeight()
@@ -334,6 +284,11 @@ extension LMPhotoCollectionView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        if !didApplyInitialTab {
+            didApplyInitialTab = true
+            loadData(for: .savedIdeas)
+            onTabChanged?(.savedIdeas)
+        }
         updateContentHeight()
     }
 }
@@ -345,28 +300,19 @@ extension LMPhotoCollectionView: UIScrollViewDelegate {
         let pageWidth = max(scrollView.frame.width, 1)
         let currentPage = Int(scrollView.contentOffset.x / pageWidth)
         
-        let newTab: TabType
-        switch currentPage {
-        case 1: newTab = .savedIdeas
-        case 2: newTab = .sceneHistory
-        default: newTab = .gallery
-        }
+        let newTab: TabType = (currentPage >= 1) ? .sceneHistory : .savedIdeas
         
         if newTab != currentTab {
             currentTab = newTab
             loadData(for: newTab)
             
-            galleryTabButton.isSelected = (newTab == .gallery)
             savedIdeasTabButton.isSelected = (newTab == .savedIdeas)
             sceneHistoryTabButton.isSelected = (newTab == .sceneHistory)
             
             UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseInOut) {
-                let anchor: UIView
-                switch newTab {
-                case .gallery: anchor = self.galleryTabButton
-                case .savedIdeas: anchor = self.savedIdeasTabButton
-                case .sceneHistory: anchor = self.sceneHistoryTabButton
-                }
+                let anchor: UIView = (newTab == .savedIdeas)
+                    ? self.savedIdeasTabButton
+                    : self.sceneHistoryTabButton
                 self.tabIndicator.snp.remakeConstraints { make in
                     make.bottom.equalToSuperview().offset(-8)
                     make.centerX.equalTo(anchor)

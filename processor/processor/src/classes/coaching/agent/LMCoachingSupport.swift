@@ -223,13 +223,20 @@ enum LMActionExtractor {
     static func extractDisplayTextPartial(_ rawAnswer: String) -> String? {
         let trimmed = rawAnswer.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
-        if let formatted = formatDisplayText(trimmed) {
+        if let formatted = formatDisplayText(trimmed), !isMarkupOnlyToken(formatted) {
             return formatted
         }
-        return trimmed
+        let firstLine = trimmed
             .split(whereSeparator: \.isNewline)
             .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
             .first(where: { !$0.isEmpty })
+        guard let firstLine, !isMarkupOnlyToken(firstLine) else { return nil }
+        return firstLine
+    }
+
+    /// True for raw XML tag fragments that should not become bubble action text.
+    private static func isMarkupOnlyToken(_ text: String) -> Bool {
+        text.hasPrefix("<") && text.hasSuffix(">")
     }
 
     private static func formatDisplayText(_ rawAnswer: String) -> String? {
@@ -311,6 +318,93 @@ enum LMActionExtractor {
         }
         let value = String(params[range]).trimmingCharacters(in: .whitespacesAndNewlines)
         return value.isEmpty ? nil : value
+    }
+}
+
+/**
+ Splits Instruct stream text for coaching bubble UI by `enable_thinking`.
+
+ - When thinking is off, `<think>…</think>` inside answer becomes secondary copy.
+ - When thinking is on, only API `reasoning_content` is secondary; answer think tags are ignored.
+ - Action / main copy always comes from answer after think blocks are stripped.
+ */
+enum LMInstructThinkTagParser {
+    private static let thinkOpen = "<think>"
+    private static let thinkClose = "</think>"
+
+    /**
+     Streaming-safe extract of content between `<think>` and `</think>`.
+
+     If the open tag is present without a close yet, returns content through the end of `text`.
+     Returns `nil` when no open tag is found (or the captured body is empty).
+     */
+    static func extractThinkContentPartial(_ text: String) -> String? {
+        guard let start = text.range(of: thinkOpen) else { return nil }
+        let contentStart = start.upperBound
+        let inner: String
+        if let end = text.range(of: thinkClose, range: contentStart..<text.endIndex) {
+            inner = String(text[contentStart..<end.lowerBound])
+        } else {
+            inner = String(text[contentStart...])
+        }
+        let trimmed = inner.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    /**
+     Removes complete and trailing-unclosed `<think>` blocks so action parsing
+     never surfaces think text as the main instruction.
+     */
+    static func strippingThinkBlocks(_ text: String) -> String {
+        var result = text
+        while let start = result.range(of: thinkOpen) {
+            if let end = result.range(of: thinkClose, range: start.upperBound..<result.endIndex) {
+                result.removeSubrange(start.lowerBound..<end.upperBound)
+            } else {
+                result.removeSubrange(start.lowerBound..<result.endIndex)
+                break
+            }
+        }
+        return result
+    }
+
+    /**
+     Builds bubble secondary (reasoning) and main (action preview) streams.
+
+     - Parameter enableThinking: AR Guidance Models `enable_thinking`.
+     - Parameter reasoningAccumulator: Accumulated API `reasoning_content`.
+     - Parameter answerAccumulator: Accumulated `content` / answer text.
+     */
+    static func displayStreams(
+        enableThinking: Bool,
+        reasoningAccumulator: String,
+        answerAccumulator: String
+    ) -> (reasoningForUi: String, actionPreview: String?) {
+        let strippedAnswer = strippingThinkBlocks(answerAccumulator)
+        let actionPreview = LMActionExtractor.extractDisplayTextPartial(strippedAnswer)
+        let reasoningForUi: String
+        if enableThinking {
+            reasoningForUi = reasoningAccumulator
+        } else {
+            reasoningForUi = extractThinkContentPartial(answerAccumulator) ?? ""
+        }
+        return (reasoningForUi, actionPreview)
+    }
+
+    /**
+     Reasoning string for Agent Log / persistence after a round.
+
+     Uses API reasoning when thinking is on; otherwise the extracted `<think>` body.
+     */
+    static func reasoningFullForLog(
+        enableThinking: Bool,
+        reasoningAccumulator: String,
+        answerAccumulator: String
+    ) -> String {
+        if enableThinking {
+            return reasoningAccumulator
+        }
+        return extractThinkContentPartial(answerAccumulator) ?? ""
     }
 }
 

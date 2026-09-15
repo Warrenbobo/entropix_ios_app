@@ -7,7 +7,6 @@
 
 import Foundation
 import Alamofire
-import CocoaSecurity
 
 /// 请求的方式
 enum MethodType {

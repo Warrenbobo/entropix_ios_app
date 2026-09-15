@@ -14,9 +14,14 @@ enum LMFeatureFlagsManager {
     private static let neuralGeometricKey = "use_neural_geometric_scorers"
     private static let directGeminiKey = "inspire_me_direct_gemini_enabled"
 
-    /// Master switch: `false` = offline demo mode; backend API calls are skipped.
+    /**
+     FramAist backend master switch — **hard-disabled**.
+
+     Always `false` so login / composition upload / guest auth stay unreachable.
+     Implementation kept for future re-enable.
+     */
     static var backendApiEnabled: Bool {
-        UserDefaults.standard.bool(forKey: prefsKey)
+        false
     }
 
     /**
@@ -29,7 +34,7 @@ enum LMFeatureFlagsManager {
     }
 
     /**
-     When `true` (and backend API enabled), Inspire Me uses device → Gemini directly
+     When `true`, Inspire Me uses device → Gemini directly
      instead of Composition `/analyze` + job polling.
 
      Default `true` for internal BYOK builds (SPEC §13).
@@ -40,9 +45,8 @@ enum LMFeatureFlagsManager {
 
     /// Loads persisted flags. Call once at app launch.
     static func setup() {
-        if UserDefaults.standard.object(forKey: prefsKey) == nil {
-            UserDefaults.standard.set(false, forKey: prefsKey)
-        }
+        // FRAMAIST_BACKEND_DISABLED — always force off.
+        UserDefaults.standard.set(false, forKey: prefsKey)
         if UserDefaults.standard.object(forKey: neuralGeometricKey) == nil {
             UserDefaults.standard.set(true, forKey: neuralGeometricKey)
         }
@@ -56,11 +60,17 @@ enum LMFeatureFlagsManager {
         )
     }
 
-    /// Persists and publishes the backend API master switch.
+    /**
+     No-op while FramAist backend is disabled.
+
+     Keeps call sites compiling; always persists `false`.
+     */
     static func setBackendApiEnabled(_ enabled: Bool) {
-        UserDefaults.standard.set(enabled, forKey: prefsKey)
+        // FRAMAIST_BACKEND_DISABLED
+        _ = enabled
+        UserDefaults.standard.set(false, forKey: prefsKey)
         NotificationCenter.default.post(name: didChangeNotification, object: nil)
-        LMLogger.log("Feature flags updated: backendApiEnabled=\(enabled)")
+        LMLogger.log("Feature flags: setBackendApiEnabled ignored — backend hard-disabled")
     }
 
     /// Persists and publishes the neural geometric scorer switch.

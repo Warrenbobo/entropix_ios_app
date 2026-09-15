@@ -112,6 +112,13 @@ class LMLaunchSplashPage: UIViewController {
         guard !hasStartedLaunchFlow else { return }
         hasStartedLaunchFlow = true
 
+        // FRAMAIST_BACKEND_DISABLED — always local BYOK session; skip guest/network auth.
+        LMLogger.log("FramAist backend disabled — local BYOK user, skip guest login")
+        LMUserManager.setupLocalBYOKUser()
+        LMPackageManager.switchToHomeRootController()
+
+        /*
+        // --- FRAMAIST_BACKEND_DISABLED (kept for reuse) ---
         // Direct Gemini BYOK: enter home with a local session — no FramAist guest auth.
         if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
             LMLogger.log("Direct Gemini BYOK — skipping network and guest login")
@@ -128,6 +135,8 @@ class LMLaunchSplashPage: UIViewController {
         }
 
         startNetworkMonitoringAndProceed()
+        // --- end FRAMAIST_BACKEND_DISABLED ---
+        */
     }
 
     @objc private func handleApplicationDidBecomeActive() {
@@ -141,9 +150,13 @@ class LMLaunchSplashPage: UIViewController {
     }
 
     // MARK: - Network Monitoring
+    // FRAMAIST_BACKEND_DISABLED — guest/network auth helpers retained below for reuse.
 
     /// 开始网络监听并在有网络时继续执行
     private func startNetworkMonitoringAndProceed() {
+        // FRAMAIST_BACKEND_DISABLED — unreachable while launch always uses local BYOK.
+        LMLogger.log("FramAist backend disabled — startNetworkMonitoringAndProceed no-op")
+        /*
         networkReachabilityManager = NetworkReachabilityManager()
 
         // 检查当前网络状态
@@ -176,6 +189,7 @@ class LMLaunchSplashPage: UIViewController {
                 LMLogger.log("⚠️ Network status unknown")
             }
         }
+        */
     }
 
     /// 启动网络超时计时器
@@ -269,6 +283,9 @@ class LMLaunchSplashPage: UIViewController {
 
     /// Guest 用户注册和登录
     private func registerAndLoginAsGuest() {
+        // FRAMAIST_BACKEND_DISABLED — guest register/login retained for reuse.
+        LMLogger.log("FramAist backend disabled — registerAndLoginAsGuest no-op")
+        /*
         // 获取当前语言
         let language = LMLaunageManager.shared.currentLanguage.apiLanguageCode
         LMLogger.log("🌐 Language: \(language)")
@@ -287,10 +304,14 @@ class LMLaunchSplashPage: UIViewController {
                 self.performGuestLogin()
             }
         }
+        */
     }
 
     /// 执行 Guest 登录
     private func performGuestLogin() {
+        // FRAMAIST_BACKEND_DISABLED
+        LMLogger.log("FramAist backend disabled — performGuestLogin no-op")
+        /*
         LMApiService.shared.loginGuest { [weak self] response in
             guard self != nil else { return }
 
@@ -316,6 +337,7 @@ class LMLaunchSplashPage: UIViewController {
                 }
             }
         }
+        */
     }
 
     private func showGuestLaunchRecoveryAlert(message: String?) {

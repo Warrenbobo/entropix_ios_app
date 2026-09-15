@@ -94,9 +94,12 @@ extension LMCameraPage {
     
     /// 验证相机状态是否可以使用 Inspire Me 功能
     private func validateCameraState() -> Bool {
-        // 检查当前相机页面状态，只有在 normal 状态下才能使用 Inspire Me
-        guard currentCameraState == .normal else {
-            LMLogger.log("⚠️ Cannot use Inspire Me - current state is \(currentCameraState), not normal")
+        // NORMAL Get Template or Path B Go-to-Spot shutter.
+        switch currentCameraState {
+        case .normal, .exploreGoToSpot:
+            break
+        default:
+            LMLogger.log("⚠️ Cannot use Inspire Me - current state is \(currentCameraState)")
             return false
         }
         
@@ -140,12 +143,14 @@ extension LMCameraPage {
         // 隐藏 Step 1 引导（用户点击了 Inspire Me 按钮）
         hideInspireMeGuide()
         
-        // BYOK Direct Gemini does not require FramAist login; other paths keep guest-friendly guard.
+        // FRAMAIST_BACKEND_DISABLED — no FramAist login gate for Inspire Me.
+        /*
         if !LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
             guard requireLogin(action: "use Inspire Me feature") else {
                 return
             }
         }
+        */
         
         guard validateCameraState() else {
             return
@@ -231,6 +236,13 @@ extension LMCameraPage {
             return
         }
 
+        // Offline demo when Direct Gemini is off (FramAist upload path commented below).
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            _ = self?.analyzeSceneWithFastVLM(image)
+            self?.finishOfflineInspireMe()
+        }
+        // FRAMAIST_BACKEND_DISABLED — FramAist /analyze upload unreachable.
+        /*
         if !LMFeatureFlagsManager.backendApiEnabled {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 _ = self?.analyzeSceneWithFastVLM(image)
@@ -244,14 +256,14 @@ extension LMCameraPage {
             let sceneFeature = self.analyzeSceneWithFastVLM(image)
             self.processAndUploadImage(image, sceneFeature: sceneFeature)
         }
+        */
     }
 
     /// Gates + starts the device → Gemini Inspire Me path (no EVA02 /analyze).
     private func processDirectGeminiInspireMe(_ image: UIImage) {
         guard LMGeminiModelSettingsStore.isConfigured else {
             DispatchQueue.main.async { [weak self] in
-                self?.hideProcessingOverlay()
-                self?.isInspireMeCapture = false
+                self?.finishInspireProcessingFailed()
                 AppTheme.Toast.showText(LMText.camera.geminiModelsNotConfigured)
             }
             return
@@ -262,7 +274,8 @@ extension LMCameraPage {
     }
     
     func syncInspirePointsToBackend() {
-        // Direct Gemini BYOK: no server entitlement / point sync (SPEC Option A).
+        // FRAMAIST_BACKEND_DISABLED — no inspire-points sync / decrement.
+        /*
         guard LMFeatureFlagsManager.backendApiEnabled,
               !LMFeatureFlagsManager.inspireMeDirectGeminiEnabled else { return }
         let subscriptionStatus = LMStoreManager.shared.currentSubscriptionStatus
@@ -271,6 +284,7 @@ extension LMCameraPage {
             LMLogger.log("📉 Decrementing Inspire Points for Free Plan user")
             preShootPlanButtonView.decrementInspirePointsCount()
         }
+        */
     }
     
     func getUserInspirePoints() -> Int {
@@ -334,11 +348,18 @@ extension LMCameraPage {
         showProcessingOverlay(with: currentProcessingSceneryImage)
     }
 
-    func showProcessingOverlay(with image: UIImage?) {
-        hideProcessingOverlay()
+    /**
+     Shows the freeze / blur processing mask.
+     - Parameter setInspireProcessingState: When `true` (default), enters `.inspireMeProcessing`.
+       Scene Explore processing must pass `false` and set `.sceneExploreProcessing` itself.
+     */
+    func showProcessingOverlay(with image: UIImage?, setInspireProcessingState: Bool = true) {
+        hideProcessingOverlay(resetInspireState: false)
 
         currentProcessingSceneryImage = image
-        currentCameraState = .inspireMeProcessing
+        if setInspireProcessingState {
+            currentCameraState = .inspireMeProcessing
+        }
 
         let overlayView = UIView()
         overlayView.backgroundColor = .clear
@@ -450,17 +471,35 @@ extension LMCameraPage {
         blurImageView.image = makeProcessingBlurredImage(from: image)
     }
     
-    func hideProcessingOverlay() {
+    func hideProcessingOverlay(resetInspireState: Bool = true) {
         currentProcessingSceneryImage = nil
         if let overlayView = previewCanvasView.viewWithTag(ViewTag.processingOverlay.rawValue) {
             UIView.animate(withDuration: 0.2, animations: {
                 overlayView.alpha = 0
             }) { _ in
                 overlayView.removeFromSuperview()
-                if self.currentCameraState == .inspireMeProcessing {
+                // Only clear Inspire processing → NORMAL. Do not auto-restore Explore (IP-06
+                // is handled explicitly at failure call sites to avoid racing successful enter).
+                if resetInspireState, self.currentCameraState == .inspireMeProcessing {
                     self.currentCameraState = .normal
+                    self.applyPageStateChrome()
                 }
             }
+        } else if resetInspireState, currentCameraState == .inspireMeProcessing {
+            currentCameraState = .normal
+            applyPageStateChrome()
+        }
+    }
+
+    /// IP-05 / IP-06: leave Inspire processing after a hard failure.
+    func finishInspireProcessingFailed() {
+        hideProcessingOverlay(resetInspireState: false)
+        isInspireMeCapture = false
+        if suggestionsBoundToExploreSession, exploreSession != nil {
+            exitShowSuggestionsStateReturningToExplore()
+        } else {
+            currentCameraState = .normal
+            applyPageStateChrome()
         }
     }
 }

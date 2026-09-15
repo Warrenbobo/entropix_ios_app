@@ -92,20 +92,45 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
     }
 
     /// Releases analyzer, human-perception, and controller-held composition resources.
+    /// Heavy Core ML unload runs off the main thread so leave/back UI stays responsive.
     func releaseCompositionResources() {
+        stopCoachingForLeave()
+        unloadCompositionModelsAsync()
+    }
+
+    /**
+     Light leave path: stop loops / clear controller refs on the calling thread.
+
+     Does **not** clear analyzer cache or unload Core ML — those can block on an
+     in-flight `analyze` lock. Call `unloadCompositionModelsAsync()` after UI returns.
+     */
+    func stopCoachingForLeave() {
         setLlmStreaming(false)
-        stopScoreLoop()
+        stopAll()
         setReferenceImage(nil)
         referenceBbox = nil
         lineArtReady = false
-        LMHumanUnderstandingService.shared.invalidateReference()
-        LMHumanUnderstandingService.shared.invalidateLive()
-        LMEVA02ModelProvider.unload()
-        LMDepthEstimationService.shared.unload()
-        LMPidinetModelProvider.shared.unload()
-        LMU2NetpModelProvider.shared.unload()
-        LMCompositionAnalyzer.shared.clearReferenceCache()
-        LMCompositionModelPreloader.shared.markUnloaded()
+        latestCachedScore = nil
+    }
+
+    /**
+     Clears caches and unloads on-device composition models on a background queue.
+
+     `clearReferenceCache()` waits for any in-flight analyze off the main thread.
+     Provider `unload()` methods are lock-guarded.
+     */
+    func unloadCompositionModelsAsync() {
+        DispatchQueue.global(qos: .utility).async {
+            LMHumanUnderstandingService.shared.invalidateReference()
+            LMHumanUnderstandingService.shared.invalidateLive()
+            LMCompositionAnalyzer.shared.clearReferenceCache()
+            LMEVA02ModelProvider.unload()
+            LMDepthEstimationService.shared.unload()
+            LMPidinetModelProvider.shared.unload()
+            LMU2NetpModelProvider.shared.unload()
+            LMCompositionModelPreloader.shared.markUnloaded()
+            LMLogger.log("Composition models unloaded off main thread")
+        }
     }
 
     private var isLlmStreamingActive: Bool {

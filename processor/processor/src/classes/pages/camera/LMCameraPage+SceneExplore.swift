@@ -46,12 +46,16 @@ extension LMCameraPage {
             return
         }
 
-        let session = LMExploreSession(phase: .processing, freezeFrame: image)
+        let freeze = image.lmNormalizedImage()
+        let session = LMExploreSession(phase: .processing, freezeFrame: freeze)
         exploreSession = session
-        showProcessingOverlay(with: image)
+        currentCameraState = .sceneExploreProcessing
+        showProcessingOverlay(with: freeze, setInspireProcessingState: false)
+        applyPageStateChrome()
         updateProcessingOverlayLabel(LMText.camera.exploreProcessing)
 
-        Task { [weak self] in
+        sceneExploreTask?.cancel()
+        sceneExploreTask = Task { [weak self] in
             guard let self else { return }
             let client = LMSceneExploreClient()
             let result = await client.explore(image: image)
@@ -80,18 +84,31 @@ extension LMCameraPage {
             }
 
             await MainActor.run {
-                self.hideProcessingOverlay()
-                guard errorBody == nil, !spots.isEmpty else {
-                    AppTheme.Toast.showText(LMText.camera.exploreFailed)
-                    self.exploreSession = nil
+                guard !Task.isCancelled else { return }
+                // User may have confirmed exit while waiting.
+                guard self.exploreSession?.sessionId == session.sessionId,
+                      self.currentCameraState == .sceneExploreProcessing else {
                     return
                 }
+                self.hideProcessingOverlay()
                 session.phase = .result
                 session.spots = spots
                 session.wideScene = wideScene
-                session.selectedSpotId = spots.first?.id
-                session.showHeatmap = showHeatmap
                 session.heatmapImage = heatmap
+                session.showHeatmap = showHeatmap
+
+                let failed = errorBody != nil || spots.isEmpty
+                if failed {
+                    // Error lands on RESULT: clean freeze, no dots, short toast.
+                    session.spots = []
+                    session.showHeatmap = false
+                    session.heatmapImage = nil
+                    session.selectedSpotId = nil
+                    AppTheme.Toast.showText(LMText.camera.exploreFailed)
+                } else {
+                    // Card appears only after user taps a spot (no auto-open).
+                    session.selectedSpotId = nil
+                }
                 self.presentExploreResultOverlay(session: session)
             }
         }
@@ -164,14 +181,14 @@ extension LMCameraPage {
         view.bringSubviewToFront(sheet)
     }
 
+    /// Presents result overlay inside the camera preview aspect slot (Crop + spots/card).
     func presentExploreResultOverlay(session: LMExploreSession) {
         sceneExploreResultOverlay?.removeFromSuperview()
         let overlay = LMSceneExploreResultOverlay()
         overlay.delegate = self
-        view.addSubview(overlay)
+        previewCanvasView.addSubview(overlay)
         overlay.snp.makeConstraints { $0.edges.equalToSuperview() }
         if let image = session.freezeFrame {
-            // Restore heatmap if needed when returning from Path B / Suggestions.
             if session.showHeatmap, session.heatmapImage == nil {
                 applyHeatmapDecision(to: session, frame: image)
             }
@@ -181,23 +198,95 @@ extension LMCameraPage {
                 showHeatmap: session.showHeatmap,
                 spots: session.spots,
                 selectedSpotId: session.selectedSpotId,
-                generatedSpotIds: session.generatedSpotIds
+                generatedSpotIds: session.generatedSpotIds,
+                chrome: .cameraPreviewSlot
             )
         }
         sceneExploreResultOverlay = overlay
-        preShootPlanButtonView.isHidden = true
-        cameraBottomControlsView.isHidden = true
-        cameraControlsView.isHidden = true
+        previewCanvasView.bringSubviewToFront(overlay)
+        currentCameraState = .sceneExploreResult
+        session.phase = .result
+        applyPageStateChrome()
+        updateLeadingNavigationControl()
     }
 
     func hideExploreResultOverlay(showCameraChrome: Bool = true) {
         sceneExploreResultOverlay?.removeFromSuperview()
         sceneExploreResultOverlay = nil
         if showCameraChrome {
+            applyPageStateChrome()
+            updateInspireMeButtonState()
+            updateLeadingNavigationControl()
+        }
+    }
+
+    /**
+     Applies chrome for the current Page State (docs/Android/camera-page-states.md).
+     Mode chip / bottom / side rail / Album / Get Tips visibility.
+     */
+    func applyPageStateChrome() {
+        guard isViewLoaded else { return }
+
+        switch currentCameraState {
+        case .normal:
+            preShootPlanButtonView.isHidden = false
             cameraBottomControlsView.isHidden = false
             cameraControlsView.isHidden = false
-            updateInspireMeButtonState()
+            bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
+            cameraBottomControlsView.setLayoutMode(.normal, animated: false)
+            cameraBottomControlsView.applyPreShootShutterAppearance(preShootPlanMode)
+            cameraBottomControlsView.setGetTipsVisible(false)
+            preShootPlanModeSwitchEnabled = true
+
+        case .sceneExploreProcessing, .sceneExploreResult:
+            preShootPlanButtonView.isHidden = true
+            cameraBottomControlsView.isHidden = true
+            cameraControlsView.isHidden = true
+
+        case .exploreGoToSpot:
+            preShootPlanButtonView.isHidden = false
+            cameraBottomControlsView.isHidden = false
+            cameraControlsView.isHidden = false
+            bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
+            cameraBottomControlsView.setLayoutMode(.normal, animated: false)
+            cameraBottomControlsView.applyPreShootShutterAppearance(.composition)
+            cameraBottomControlsView.setGetTipsVisible(false)
+            preShootPlanMode = .composition
+            preShootPlanModeSwitchEnabled = false
+
+        case .inspireMeProcessing:
+            // Bottom remains visible but primary path is wait overlay (IP chrome).
+            preShootPlanButtonView.isHidden = true
+            cameraBottomControlsView.isHidden = false
+            cameraControlsView.isHidden = false
+
+        case .showingSuggestions:
+            preShootPlanButtonView.isHidden = true
+            cameraBottomControlsView.isHidden = false
+            cameraControlsView.isHidden = false
+            bottomControlsHeightConstraint?.update(offset: 44)
+            cameraBottomControlsView.setLayoutMode(.compact, animated: false)
+            cameraBottomControlsView.applySuggestionsChrome()
+            cameraBottomControlsView.setGetTipsVisible(false)
+
+        case .compositionSelected:
+            preShootPlanButtonView.isHidden = true
+            cameraBottomControlsView.isHidden = false
+            cameraControlsView.isHidden = false
+            bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
+            cameraBottomControlsView.setLayoutMode(.normal, animated: false)
         }
+
+        updateInspireMeButtonState()
+        updateLeadingNavigationControl()
+    }
+
+    /// RESULT chrome: hide shutter/side rail/mode; keep bottom height reserved via canvas layout.
+    func applyExploreResultCameraChrome(isShowing: Bool) {
+        if isShowing {
+            currentCameraState = .sceneExploreResult
+        }
+        applyPageStateChrome()
     }
 
     /// Path B: suspend explore, show live preview + chip; leading control resumes Explore.
@@ -205,38 +294,57 @@ extension LMCameraPage {
         guard let session = exploreSession else { return }
         session.phase = .suspended
         session.selectedSpotId = spot.id
-        hideExploreResultOverlay(showCameraChrome: true)
-        preShootPlanMode = .composition
-        preShootPlanModeSwitchEnabled = false
+        hideExploreResultOverlay(showCameraChrome: false)
+        currentCameraState = .exploreGoToSpot
+        applyPageStateChrome()
         updateInspireMeButtonState()
         showTargetSpotChip(name: spot.name)
         updateLeadingNavigationControl()
     }
 
     /// Path A: Get template using full freeze frame + spot appendix.
-    func getTemplate(for spot: LMSceneExploreSpot) {
-        guard let session = exploreSession, let image = session.freezeFrame else { return }
-        if session.generatedSpotIds.contains(spot.id), session.inspireTaskId != nil {
-            // Already generated — jump to suggestions.
-            suggestionsBoundToExploreSession = true
+    /// - Parameter bindReturnToExplore: Realtime Path A binds back to RESULT; history Path A usually does not.
+    func getTemplate(for spot: LMSceneExploreSpot, bindReturnToExplore: Bool = true) {
+        guard let session = exploreSession, let image = session.freezeFrame else {
+            LMLogger.log("❌ Path A Get Template aborted — missing session or freeze frame")
+            return
+        }
+
+        // Same Idea Inspiration / Gemini gate as Basic Camera Get Template shutter.
+        if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled,
+           !LMLlmModuleSettingsStore.isConfigured(.ideaInspiration) {
+            presentMissingModelConfig(for: .ideaInspiration)
+            return
+        }
+
+        suggestionsBoundToExploreSession = bindReturnToExplore
+        session.selectedSpotId = spot.id
+
+        // View compositions: reopen existing suggestions without regenerating.
+        if session.generatedSpotIds.contains(spot.id),
+           let taskId = session.inspireTaskId ?? currentTaskId,
+           !currentSuggestions.isEmpty {
             hideExploreResultOverlay(showCameraChrome: false)
-            // Existing suggestions UI should already be present if prior Path A ran.
-            if currentCameraState != .showingSuggestions {
-                // Fall through to regenerate only if carousel missing.
-            } else {
-                return
-            }
+            enterShowSuggestionsState(taskId: taskId, suggestions: currentSuggestions)
+            LMLogger.log("📐 Path A View compositions — reuse Suggestions for spot \(spot.id)")
+            return
         }
 
         pendingSpotPromptAppendix = Self.spotPromptAppendix(for: spot)
-        suggestionsBoundToExploreSession = true
-        session.selectedSpotId = spot.id
+        let appendixLen = pendingSpotPromptAppendix?.count ?? 0
         hideExploreResultOverlay(showCameraChrome: false)
+        currentCameraState = .inspireMeProcessing
+        applyPageStateChrome()
+
         showProcessingOverlay(with: image)
         isInspireMeCapture = true
+        // Same Direct Gemini pipeline as Basic Camera; freeze frame + optional spot appendix.
         processInspireMeImage(image)
         session.generatedSpotIds.insert(spot.id)
-        sceneExploreResultOverlay?.markGenerated(spotId: spot.id)
+        LMLogger.log(
+            "🚀 Path A Get Template started spot=\(spot.id) " +
+            "freeze=\(Int(image.size.width))x\(Int(image.size.height)) appendixChars=\(appendixLen)"
+        )
     }
 
     func returnToSpotMapFromSuspended() {
@@ -257,8 +365,31 @@ extension LMCameraPage {
         alert.addAction(UIAlertAction(title: LMText.common.cancel, style: .cancel))
         alert.addAction(UIAlertAction(title: LMText.common.confirm, style: .destructive) { [weak self] _ in
             self?.endExploreSessionWritingHistory()
-            self?.hideExploreResultOverlay(showCameraChrome: true)
+            self?.hideExploreResultOverlay(showCameraChrome: false)
+            self?.currentCameraState = .normal
             self?.resetPreShootPlanAfterExploreEnd()
+            self?.applyPageStateChrome()
+        })
+        present(alert, animated: true)
+    }
+
+    /// SP-01/02: exit confirm while Scene Explore is still processing.
+    func confirmEndExploreSessionFromProcessing() {
+        let alert = UIAlertController(
+            title: LMText.camera.exploreExitConfirmTitle,
+            message: LMText.camera.exploreExitConfirmSubtitle,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: LMText.common.cancel, style: .cancel))
+        alert.addAction(UIAlertAction(title: LMText.common.confirm, style: .destructive) { [weak self] _ in
+            guard let self else { return }
+            self.sceneExploreTask?.cancel()
+            self.sceneExploreTask = nil
+            self.hideProcessingOverlay(resetInspireState: false)
+            self.exploreSession = nil
+            self.currentCameraState = .normal
+            self.resetPreShootPlanAfterExploreEnd()
+            self.applyPageStateChrome()
         })
         present(alert, animated: true)
     }
@@ -266,7 +397,9 @@ extension LMCameraPage {
     func endExploreSessionWritingHistory() {
         guard let session = exploreSession else { return }
         session.phase = .ended
-        _ = LMSceneHistoryStore.save(session: session)
+        if !session.spots.isEmpty {
+            _ = LMSceneHistoryStore.save(session: session)
+        }
         exploreSession = nil
         suggestionsBoundToExploreSession = false
         hideTargetSpotChip()
@@ -275,7 +408,6 @@ extension LMCameraPage {
 
     func resetPreShootPlanAfterExploreEnd() {
         preShootPlanModeSwitchEnabled = true
-        // Keep current mode unless cold start; Path B had forced composition.
         updateInspireMeButtonState()
     }
 
@@ -286,7 +418,7 @@ extension LMCameraPage {
         return makeInspireMeImage(from: latestPixelBuffer, deviceOrientation: deviceOrientation)
     }
 
-    private func showTargetSpotChip(name: String) {
+    func showTargetSpotChip(name: String) {
         hideTargetSpotChip()
         let chip = UILabel()
         chip.text = String(format: LMText.camera.chipTargetSpot, name)
@@ -339,7 +471,6 @@ extension LMCameraPage {
     private func hideReturnToSpotMapButton() { hideGoToSpotBackButton() }
 
     @objc private func handleDismissTargetChip() {
-        // Closing chip does not end session (SPEC §5.5).
         hideTargetSpotChip()
     }
 
@@ -348,26 +479,68 @@ extension LMCameraPage {
     }
 
     /// Exits Suggestions and restores Explore result when Path A is bound.
+    /// Keeps `currentSuggestions` / `currentTaskId` so View compositions can reopen without regenerating.
     func exitShowSuggestionsStateReturningToExplore() {
-        guard currentCameraState == .showingSuggestions else { return }
         stopPollingAIGCSuggestions()
         hideSuggestionsCarousel()
+        hideProcessingOverlay(resetInspireState: false)
+        isInspireMeCapture = false
         bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
         cameraBottomControlsView.setLayoutMode(.normal, animated: true)
         cameraBottomControlsView.setARGuidanceContainerHidden(false)
-        currentCameraState = .normal
-        currentTaskId = nil
+        // Do NOT clear currentSuggestions / currentTaskId / inspireTaskId (SR-08 View).
         if let session = exploreSession {
             session.phase = .result
+            if currentTaskId != nil {
+                session.inspireTaskId = currentTaskId
+            }
             presentExploreResultOverlay(session: session)
+        } else {
+            currentCameraState = .normal
+            applyPageStateChrome()
+            updateLeadingNavigationControl()
         }
+        syncAgentCoachingForCurrentState()
+        updateLeadingNavigationControl()
         UIView.animate(withDuration: 0.35) { self.view.layoutIfNeeded() }
+        LMLogger.log("🔙 Show Suggestions → Explore result (Path A, suggestions cached)")
     }
 
     private func updateProcessingOverlayLabel(_ text: String) {
-        // Best-effort: reuse processing overlay label if present.
         if let label = view.viewWithTag(10_005) as? UILabel {
             label.text = text
+        }
+    }
+
+    /// Applies a History-browse pending Path A/B action after camera is on screen.
+    func consumeSceneHistoryPendingActionIfNeeded() {
+        guard let pending = LMSceneExploreHistoryPending.consume() else { return }
+        switch pending {
+        case let .goToSpot(cover, spots, spotId, showHeatmap):
+            let session = LMExploreSession(
+                phase: .suspended,
+                freezeFrame: cover,
+                showHeatmap: showHeatmap,
+                spots: spots,
+                selectedSpotId: spotId
+            )
+            exploreSession = session
+            if let spot = spots.first(where: { $0.id == spotId }) {
+                goToSpot(spot)
+            }
+        case let .getTemplate(cover, spots, spotId, showHeatmap):
+            let session = LMExploreSession(
+                phase: .result,
+                freezeFrame: cover,
+                showHeatmap: showHeatmap,
+                spots: spots,
+                selectedSpotId: spotId
+            )
+            exploreSession = session
+            if let spot = spots.first(where: { $0.id == spotId }) {
+                // History Path A: abandon suggestions returns to NORMAL, not RESULT.
+                getTemplate(for: spot, bindReturnToExplore: false)
+            }
         }
     }
 }
@@ -402,5 +575,23 @@ extension LMCameraPage: LMSceneExploreResultOverlayDelegate {
 
     func sceneExploreResultOverlayDidDismissCard() {
         exploreSession?.selectedSpotId = nil
+    }
+}
+
+/// Pending Path A/B action queued from Mine Scene History browse (pop → camera).
+enum LMSceneExploreHistoryPending {
+    case goToSpot(cover: UIImage, spots: [LMSceneExploreSpot], spotId: String, showHeatmap: Bool)
+    case getTemplate(cover: UIImage, spots: [LMSceneExploreSpot], spotId: String, showHeatmap: Bool)
+
+    private static var storage: LMSceneExploreHistoryPending?
+
+    static func enqueue(_ action: LMSceneExploreHistoryPending) {
+        storage = action
+    }
+
+    static func consume() -> LMSceneExploreHistoryPending? {
+        let value = storage
+        storage = nil
+        return value
     }
 }

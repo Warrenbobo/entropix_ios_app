@@ -231,28 +231,22 @@ extension LMSettingPage {
     }
     
     private func updateUIForLoginState() {
-        logoutButton.isHidden = !isUserLoggedIn
+        // FRAMAIST_BACKEND_DISABLED — account / logout entry points hidden.
+        accountProfileItem.isHidden = true
+        logoutButton.isHidden = true
         
-        // 如果未登录，需要更新布局约束
-        if !isUserLoggedIn {
-            logoutButton.snp.remakeConstraints { make in
-                make.top.equalTo(itemsStackView.snp.bottom)
-                make.leading.trailing.equalToSuperview().inset(16)
-                make.height.equalTo(0)
-                make.bottom.equalToSuperview().offset(-40)
-            }
-        } else {
-            logoutButton.snp.remakeConstraints { make in
-                make.top.equalTo(itemsStackView.snp.bottom).offset(40)
-                make.leading.trailing.equalToSuperview().inset(16)
-                make.height.equalTo(50)
-                make.bottom.equalToSuperview().offset(-40)
-            }
+        logoutButton.snp.remakeConstraints { make in
+            make.top.equalTo(itemsStackView.snp.bottom)
+            make.leading.trailing.equalToSuperview().inset(16)
+            make.height.equalTo(0)
+            make.bottom.equalToSuperview().offset(-40)
         }
+        updateItemSeparators()
     }
     
     private func updateUIForReviewState() {
-        deleteAccountItem.isHidden = !isInReviewMode
+        // FRAMAIST_BACKEND_DISABLED — delete account always hidden.
+        deleteAccountItem.isHidden = true
         updateItemSeparators()
     }
 }

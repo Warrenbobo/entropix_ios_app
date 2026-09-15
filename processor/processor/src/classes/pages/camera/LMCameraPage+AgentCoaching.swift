@@ -100,7 +100,11 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         cameraBottomControlsView.setARGuidanceContainerHidden(
             isComposition || currentCameraState == .showingSuggestions
         )
-        cameraBottomControlsView.setGetTipsVisible(agentOn && currentReferenceImage != nil)
+        // Wait for Stage A/B warmup so Get Tips cannot fire with a nil controller reference
+        // (common after Album picker dismiss / accidental tap while models still load).
+        cameraBottomControlsView.setGetTipsVisible(
+            agentOn && currentReferenceImage != nil && referenceWarmupComplete
+        )
 
         if agentOn {
             updateShutterRoleForAgentState(agentCoachingController.agentState)
@@ -108,8 +112,8 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             shutterRole = .captureDefault
             cameraBottomControlsView.setShutterRole(.captureDefault)
             cameraBottomControlsView.setGetTipsVisible(false)
-            if currentCameraState == .normal {
-                let mode = (exploreSession?.phase == .suspended)
+            if currentCameraState == .normal || currentCameraState == .exploreGoToSpot {
+                let mode = (currentCameraState == .exploreGoToSpot)
                     ? LMPreShootPlanMode.composition
                     : preShootPlanMode
                 cameraBottomControlsView.applyPreShootShutterAppearance(mode)
@@ -162,9 +166,23 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             return
         }
 
+        guard let reference = currentReferenceImage else {
+            AppTheme.Toast.showText(LMText.camera.cameraNotReady)
+            return
+        }
+
+        // Album / saved-idea entry can expose UI before Stage B finishes; block until ready.
+        guard referenceWarmupComplete else {
+            AppTheme.Toast.showText(LMText.camera.cameraNotReady)
+            return
+        }
+
         guard shutterRole == .instructReady || shutterRole == .captureReady || shutterRole == .captureDefault else {
             return
         }
+
+        agentCoachingController.setReferenceImage(reference, bbox: currentReferenceBbox)
+
         hasUserTriggeredInstructInSession = true
         resetCoachingSessionUI()
         agentCoachingController.markCoachingFinal(false)
@@ -211,11 +229,15 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         with suggestion: LMCompositionSuggestion,
         image: UIImage?
     ) {
-        compositionEntrySource = currentCameraState == .showingSuggestions ? .showingSuggestions : .normal
-
-        if let image {
-            currentReferenceImage = image
+        switch currentCameraState {
+        case .showingSuggestions:
+            compositionEntrySource = .showingSuggestions
+        case .exploreGoToSpot:
+            compositionEntrySource = .exploreGoToSpot
+        default:
+            compositionEntrySource = .normal
         }
+
         currentSuggestion = suggestion
         currentCameraState = .compositionSelected
         agentGuidanceState = .agent
@@ -223,16 +245,25 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         shutterRole = .instructReady
         hasUserTriggeredInstructInSession = false
         referenceWarmupComplete = false
+        agentCoachingController.stopAll()
+        agentCoachingController.resetAgentWindow()
         resetCoachingSessionUI()
+
+        if let image {
+            currentReferenceImage = image
+            // Seed controller immediately so a late Get Tips tap never sees nil reference
+            // while warmup still runs (warmup refreshes bbox / line-art eligibility).
+            agentCoachingController.setReferenceImage(image, bbox: currentReferenceBbox)
+            showReferenceImageInCorner(suggestion: suggestion)
+        }
 
         preShootPlanButtonView.isHidden = true
         hideSuggestionsCarousel()
+        // Explore Path A may leave chrome hidden; restore for composition-selected shutter / Get Tips.
+        cameraBottomControlsView.isHidden = false
+        cameraControlsView.isHidden = false
         bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
         cameraBottomControlsView.setLayoutMode(.normal, animated: true)
-
-        if let image {
-            showReferenceImageInCorner(suggestion: suggestion)
-        }
 
         Task { await warmupReferenceForAgent(image: image ?? currentReferenceImage) }
         syncAgentCoachingForCurrentState()
@@ -384,6 +415,36 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         )
         arGuidanceView.setOverlayDisplay(overlay)
         isARGuidanceActive = agentGuidanceState == .agent && executionTool != .none
+        syncExecutionToolRealtimeDetection()
+    }
+
+    /**
+     Arms / disarms the blue live-person bbox when the agent Box tool is active.
+
+     Composition entry starts AR session with `executionTool == .none`, which stops
+     realtime detection. When the tool later becomes `.box`, white reference overlay
+     alone is not enough — we must re-enable stream detection.
+     */
+    func syncExecutionToolRealtimeDetection() {
+        guard currentCameraState == .compositionSelected,
+              agentGuidanceState == .agent else {
+            stopRealtimePersonDetection()
+            hideLiveBox()
+            return
+        }
+
+        switch executionTool {
+        case .box:
+            // If session is still warming, `.activeGuidance` will call
+            // `startRealtimePersonDetection()` when it arrives with tool already `.box`.
+            guard arGuidanceState == .activeGuidance else { return }
+            // Reset delay window so the blue box can appear promptly after tool callout.
+            arGuidanceStartTime = Date()
+            startRealtimePersonDetection()
+        case .lineArt, .none:
+            stopRealtimePersonDetection()
+            hideLiveBox()
+        }
     }
 
     // MARK: - LMAgentCoachingUIDelegate

@@ -125,8 +125,12 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
     
     func cameraBottomControlsViewDidTapMyReference() {
         guard ensureCameraPermissionForInteraction() else { return }
-        guard currentCameraState == .normal else { return }
-        presentAlbumPicker()
+        switch currentCameraState {
+        case .normal, .exploreGoToSpot:
+            presentAlbumPicker()
+        default:
+            break
+        }
     }
 
     func cameraBottomControlsViewDidTapGetTips() {
@@ -145,9 +149,20 @@ extension LMCameraPage: LMCameraBottomControlsViewDelegate {
             return
         }
 
-        guard currentCameraState == .normal else { return }
+        // SS-09: compact shutter still shoots while browsing suggestions.
+        if currentCameraState == .showingSuggestions {
+            capturePhotoWithOptionalTimer()
+            return
+        }
 
-        let mode = (exploreSession?.phase == .suspended)
+        switch currentCameraState {
+        case .normal, .exploreGoToSpot:
+            break
+        default:
+            return
+        }
+
+        let mode = (currentCameraState == .exploreGoToSpot)
             ? LMPreShootPlanMode.composition
             : preShootPlanMode
 
@@ -211,7 +226,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
             DispatchQueue.main.async { [weak self] in
                 self?.isInspireMeCapture = false
                 self?.inspireMeCaptureDeviceOrientation = nil
-                self?.hideProcessingOverlay()
+                self?.finishInspireProcessingFailed()
                 AppTheme.Toast.showText(LMText.camera.failedToCaptureFrame)
             }
             return
@@ -228,7 +243,7 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
             DispatchQueue.main.async { [weak self] in
                 self?.isInspireMeCapture = false
                 self?.inspireMeCaptureDeviceOrientation = nil
-                self?.hideProcessingOverlay()
+                self?.finishInspireProcessingFailed()
                 AppTheme.Toast.showText(LMText.camera.failedToProcessFrame)
             }
             return
@@ -262,7 +277,7 @@ extension LMCameraPage: LMPreShootPlanButtonViewDelegate {
 #else
         guard ensureCameraPermissionForInteraction() else { return }
 #endif
-        guard preShootPlanModeSwitchEnabled, exploreSession?.phase != .suspended else { return }
+        guard preShootPlanModeSwitchEnabled, currentCameraState != .exploreGoToSpot else { return }
         presentPreShootPlanModeSheet()
     }
 
@@ -278,9 +293,10 @@ extension LMCameraPage: LMPreShootPlanButtonViewDelegate {
 
     /// Composition-mode gate then existing Inspire Me pipeline.
     func beginCompositionInspireFromPreShootPlan() {
-        if exploreSession?.phase == .suspended {
+        if currentCameraState == .exploreGoToSpot {
             // Path B: composing ends Explore session and writes history.
             endExploreSessionWritingHistory()
+            currentCameraState = .normal
         }
 
         if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
@@ -292,6 +308,9 @@ extension LMCameraPage: LMPreShootPlanButtonViewDelegate {
             return
         }
 
+        // FRAMAIST_BACKEND_DISABLED — skip FramAist subscription / inspire-points gates.
+        handleInspireMeFeature()
+        /*
         if !LMFeatureFlagsManager.backendApiEnabled {
             handleInspireMeFeature()
             return
@@ -306,5 +325,6 @@ extension LMCameraPage: LMPreShootPlanButtonViewDelegate {
             }
         }
         handleInspireMeFeature()
+        */
     }
 }
