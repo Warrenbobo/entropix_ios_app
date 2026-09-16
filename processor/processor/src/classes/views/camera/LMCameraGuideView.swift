@@ -571,7 +571,8 @@ final class LMCameraGuideView: UIView {
         container.layer.borderWidth = 1
         container.layer.borderColor = UIColor.white.withAlphaComponent(0.24).cgColor
 
-        let iconView = UIImageView(image: UIImage(named: "download_white"))
+        let iconView = UIImageView(image: UIImage.lmSymbol("square.and.arrow.down", pointSize: 18))
+        iconView.tintColor = .white
         iconView.contentMode = .scaleAspectFit
         container.addSubview(iconView)
 

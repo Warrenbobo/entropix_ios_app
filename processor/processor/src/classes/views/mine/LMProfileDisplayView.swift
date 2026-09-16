@@ -93,7 +93,8 @@ class LMProfileDisplayView: UIView {
         emailLabel.textColor = UIColor.systemGray
         
         // Edit button
-        editButton.setImage(UIImage(named: "edit_blue"), for: .normal)
+        editButton.setImage(UIImage.lmSymbol("pencil", pointSize: 17), for: .normal)
+        editButton.tintColor = .systemBlue
         editButton.imageEdgeInsets = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         editButton.addTarget(self, action: #selector(startEditProfileDataButtonTapped), for: .touchUpInside)
     }

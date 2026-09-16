@@ -65,7 +65,7 @@ class LMProcessorTopBar: UIView {
         titleLabel.textAlignment = .left
 
         contentView.addSubview(backButton)
-        backButton.setImage(UIImage(named: "left_arrow_dark"), for: .normal)
+        backButton.setImage(UIImage.lmSymbol("chevron.left", pointSize: 17), for: .normal)
         backButton.tintColor = LMProfileNavigationMetrics.titleColor
         backButton.backgroundColor = .clear
         backButton.adjustsImageWhenHighlighted = false
@@ -77,7 +77,8 @@ class LMProcessorTopBar: UIView {
         backButton.addTarget(self, action: #selector(backButtonTapped), for: .touchUpInside)
 
         contentView.addSubview(moreButton)
-        moreButton.setImage(UIImage(named: "more_option"), for: .normal)
+        moreButton.setImage(UIImage.lmSymbol("ellipsis", pointSize: 17), for: .normal)
+        moreButton.tintColor = LMProfileNavigationMetrics.titleColor
         moreButton.backgroundColor = .clear
         moreButton.adjustsImageWhenHighlighted = false
         moreButton.contentHorizontalAlignment = .trailing

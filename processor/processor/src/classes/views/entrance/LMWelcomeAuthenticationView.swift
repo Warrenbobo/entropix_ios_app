@@ -121,7 +121,7 @@ extension LMWelcomeAuthenticationView {
         signInWithEmailButton.setTitleColor(UIColor.white, for: .normal)
         signInWithEmailButton.backgroundColor = UIColor.systemBlue
         signInWithEmailButton.layer.cornerRadius = 8
-        signInWithEmailButton.adjust(image: UIImage(named: "email_item"),
+        signInWithEmailButton.adjust(image: UIImage.lmSymbol("envelope", pointSize: 18),
                                      title: LMLaunageManager.shared.settings.signInWithEmail,
                                      titlePosition: .right,
                                      additionalSpacing: 5,
@@ -355,7 +355,7 @@ extension LMWelcomeAuthenticationView {
     /// 更新所有文本以反映语言变化
     func refreshLanguageContent() {
         // 更新邮箱登录按钮
-        signInWithEmailButton.adjust(image: UIImage(named: "email_item"),
+        signInWithEmailButton.adjust(image: UIImage.lmSymbol("envelope", pointSize: 18),
                                      title: LMLaunageManager.shared.settings.signInWithEmail,
                                      titlePosition: .right,
                                      additionalSpacing: 5,

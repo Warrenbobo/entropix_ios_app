@@ -198,7 +198,8 @@ extension LMGalleryPageView {
         
         // 创建占位图片
         let placeholderImageView = UIImageView()
-        placeholderImageView.image = UIImage(named: "multi_image_gray")
+        placeholderImageView.image = UIImage.lmSymbol("photo.on.rectangle.angled", pointSize: 44)
+        placeholderImageView.tintColor = .systemGray3
         placeholderImageView.contentMode = .scaleAspectFit
         placeholderImageView.tintColor = UIColor.systemGray3
         

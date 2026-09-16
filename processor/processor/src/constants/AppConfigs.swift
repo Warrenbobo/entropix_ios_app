@@ -37,8 +37,6 @@ struct AppConfigs {
 
     struct Assets {
         static let watermarkBrand = "watermark_brand"
-        static let arGuidanceBox = "box_focus_icon"
-        static let arGuidanceLineArt = "pose_icon"
         static let tutorialScene = "tutorial_scene"
         static let tutorialTapLeft = "tutorial_tap_left"
         static let tutorialTapRight = "tutorial_tap_right"

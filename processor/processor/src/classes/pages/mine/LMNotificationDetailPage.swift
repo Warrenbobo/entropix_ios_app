@@ -83,12 +83,12 @@ extension LMNotificationDetailPage {
         iconContainerView.layer.cornerRadius = 12
         iconContainerView.backgroundColor = notification.notificationType.backgroundColor
         
-        // Icon image
-        if let customIcon = UIImage(named: notification.notificationType.iconName) {
-            iconImageView.image = customIcon
-        } else {
-            iconImageView.image = UIImage(systemName: notification.notificationType.iconName)
+        // Icon image — prefer SF Symbol
+        if let symbol = UIImage(systemName: notification.notificationType.iconName) {
+            iconImageView.image = symbol.withRenderingMode(.alwaysTemplate)
             iconImageView.tintColor = notification.notificationType.iconColor
+        } else if let customIcon = UIImage(named: notification.notificationType.iconName) {
+            iconImageView.image = customIcon
         }
         iconImageView.contentMode = .center
         

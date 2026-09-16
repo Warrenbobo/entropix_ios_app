@@ -100,8 +100,11 @@ class LMPageWrapper: UIViewController {
         barButton.frame = CGRect(origin: .zero,
                                  size: CGSize(width: 44,
                                               height: 44))
-        barButton.setImage(UIImage(named: "left_arrow_dark")?.withRenderingMode(.alwaysOriginal),
+        barButton.setImage(UIImage.lmSymbol("chevron.left", pointSize: 17),
                            for: .normal)
+        barButton.tintColor = usesMineNavigationBarStyle
+            ? LMProfileNavigationMetrics.titleColor
+            : .label
         barButton.backgroundColor = .clear
         barButton.contentHorizontalAlignment = .leading
         barButton.contentVerticalAlignment = .center

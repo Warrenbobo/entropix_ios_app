@@ -226,7 +226,8 @@ class LMSubscriptionPlanCardView: UIView {
         for feature in plan.features {
             let featureRow = UIView()
             let checkIcon = UIImageView()
-            checkIcon.image = UIImage(named: plan.textColor == .white ? "check_line_white" : "check_line_green")
+            checkIcon.image = UIImage.lmSymbol("checkmark", pointSize: 14)
+            checkIcon.tintColor = plan.textColor
             checkIcon.contentMode = .scaleAspectFit
             
             let featureLabel = UILabel()

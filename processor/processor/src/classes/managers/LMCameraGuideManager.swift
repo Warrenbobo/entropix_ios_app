@@ -95,11 +95,11 @@ enum LMCameraTutorialStep: Int, CaseIterable {
     var accentAssetName: String? {
         switch self {
         case .tapButton:
-            return "star_fill"
+            return "star.fill"
         case .alignGuidance:
             return "users_viewfinder_white"
         case .savePhoto:
-            return "download_white"
+            return "square.and.arrow.down"
         default:
             return nil
         }

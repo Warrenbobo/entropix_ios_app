@@ -43,7 +43,7 @@ class LMFloatingCameraButton: UIView {
         addSubview(cameraButton)
         
         // 设置相机图标
-        cameraButton.setImage(UIImage(named: "camera_solid_white"), for: .normal)
+        cameraButton.setImage(UIImage.lmSymbol("camera.fill", pointSize: 22), for: .normal)
         cameraButton.tintColor = UIColor.white
         cameraButton.addTarget(self, action: #selector(cameraButtonTapped), for: .touchUpInside)
         cameraButton.imageEdgeInsets = UIEdgeInsets(top: 13, left: 13, bottom: 13, right: 13)

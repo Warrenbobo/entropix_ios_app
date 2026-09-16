@@ -235,7 +235,8 @@ extension LMFAQPage {
         contactSupportView.layer.cornerRadius = 12
         
         let iconImageView = UIImageView()
-        iconImageView.image = UIImage(named: "question_circle_gray")
+        iconImageView.image = UIImage.lmSymbol("questionmark.circle", pointSize: 20)
+        iconImageView.tintColor = .systemGray
         
         let titleLabel = UILabel()
         titleLabel.text = LMText.settings.stillHaveQuestions

@@ -92,11 +92,12 @@ extension LMSettingPage {
     private func setupSettingItems() {
         // Account Profile
         accountProfileItem.configure(
-            icon: UIImage(named: "user_solid_blue"),
+            icon: UIImage.lmSymbol("person.fill", pointSize: 20),
             iconBackgroundColor: .hexColor("#DBEAFE"),
             title: LMText.settings.accountProfile,
             subtitle: LMText.settings.accountProfileSubtitle,
-            showArrow: true
+            showArrow: true,
+            iconTintColor: .hexColor("#2563EB")
         )
         accountProfileItem.onTap = { [weak self] in
             self?.handleAccountProfileTapped()
@@ -104,11 +105,12 @@ extension LMSettingPage {
         
         // Language
         languageItem.configure(
-            icon: UIImage(named: "globe_purple"),
+            icon: UIImage.lmSymbol("globe", pointSize: 20),
             iconBackgroundColor: .hexColor("F3E8FF"),
             title: LMText.settings.language,
             subtitle: LMText.settings.languageSubtitle,
-            showArrow: true
+            showArrow: true,
+            iconTintColor: .hexColor("#9333EA")
         )
         languageItem.onTap = { [weak self] in
             self?.handleLanguageTapped()
@@ -116,7 +118,7 @@ extension LMSettingPage {
 
         // Models (Gemini BYOK) — SF Symbol with saturated tint on soft tinted chip (parity with asset rows).
         modelsItem.configure(
-            icon: UIImage(systemName: "apple.intelligence"),
+            icon: UIImage.lmSymbol("apple.intelligence", pointSize: 20),
             iconBackgroundColor: .hexColor("#EDE9FE"),
             title: LMText.settings.models,
             subtitle: LMText.settings.modelsSubtitle,
@@ -129,11 +131,12 @@ extension LMSettingPage {
         
         // Contact Us
         contactUsItem.configure(
-            icon: UIImage(named: "envelope_orange"),
+            icon: UIImage.lmSymbol("envelope.fill", pointSize: 20),
             iconBackgroundColor: .hexColor("#FFECD5"),
             title: LMText.settings.contactUs,
             subtitle: LMText.settings.contactUsSubtitle,
-            showArrow: true
+            showArrow: true,
+            iconTintColor: .hexColor("#EA580C")
         )
         contactUsItem.onTap = { [weak self] in
             self?.handleContactUsTapped()
@@ -141,11 +144,12 @@ extension LMSettingPage {
         
         // Frequent Questions
         frequentQuestionsItem.configure(
-            icon: UIImage(named: "question_circle_indigo"),
+            icon: UIImage.lmSymbol("questionmark.circle", pointSize: 20),
             iconBackgroundColor: .hexColor("#E0E7FF"),
             title: LMText.settings.frequentQuestions,
             subtitle: LMText.settings.frequentQuestionsSubtitle,
-            showArrow: true
+            showArrow: true,
+            iconTintColor: .hexColor("#4F46E5")
         )
         frequentQuestionsItem.onTap = { [weak self] in
             self?.handleFrequentQuestionsTapped()
@@ -153,11 +157,12 @@ extension LMSettingPage {
         
         // About
         aboutItem.configure(
-            icon: UIImage(named: "info_circle_green"),
+            icon: UIImage.lmSymbol("info.circle", pointSize: 20),
             iconBackgroundColor: .hexColor("#DCFCE8"),
             title: LMText.settings.about,
             subtitle: LMText.settings.aboutSubtitle,
-            showArrow: true
+            showArrow: true,
+            iconTintColor: .hexColor("#16A34A")
         )
         aboutItem.onTap = { [weak self] in
             self?.handleAboutTapped()
@@ -165,11 +170,12 @@ extension LMSettingPage {
         
         // Delete Account
         deleteAccountItem.configure(
-            icon: UIImage(named: "trash_white"),
+            icon: UIImage.lmSymbol("trash", pointSize: 20),
             iconBackgroundColor: UIColor.systemRed,
             title: LMText.settings.deleteAccount,
             subtitle: LMText.settings.deleteAccountSubtitle,
-            showArrow: true
+            showArrow: true,
+            iconTintColor: .white
         )
         deleteAccountItem.onTap = { [weak self] in
             self?.handleDeleteAccountTapped()
@@ -184,7 +190,7 @@ extension LMSettingPage {
         logoutButton.backgroundColor = UIColor.systemRed
         logoutButton.layer.cornerRadius = 12
         logoutButton.addTarget(self, action: #selector(handleLogoutButtonTapped), for: .touchUpInside)
-        logoutButton.adjust(image: UIImage(named: "sign_out_white"),
+        logoutButton.adjust(image: UIImage.lmSymbol("rectangle.portrait.and.arrow.right", pointSize: 18),
                             title: LMText.auth.logOut,
                             titlePosition: .right,
                             additionalSpacing: 5,

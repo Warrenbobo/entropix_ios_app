@@ -48,7 +48,8 @@ class LMSubscriptionAdRewardsView: UIView {
         addSubview(adRewardsDescLabel)
         addSubview(watchAdButton)
         
-        adRewardsIcon.image = UIImage(named: "gift_solid_white")
+        adRewardsIcon.image = UIImage.lmSymbol("gift.fill", pointSize: 22)
+        adRewardsIcon.tintColor = .white
         adRewardsIcon.contentMode = .scaleAspectFit
         
         adRewardsTitleLabel.text = LMText.settings.earnFreeUses
@@ -61,7 +62,8 @@ class LMSubscriptionAdRewardsView: UIView {
         adRewardsDescLabel.numberOfLines = 0
         
         watchAdButton.setTitle(LMText.subscription.watchAd, for: .normal)
-        watchAdButton.setImage(UIImage(named: "play_solid_green"), for: .normal)
+        watchAdButton.setImage(UIImage.lmSymbol("play.fill", pointSize: 16), for: .normal)
+        watchAdButton.tintColor = UIColor.hexColor("#10b981")
         watchAdButton.imageView?.contentMode = .scaleAspectFit
         watchAdButton.titleLabel?.adjustsFontSizeToFitWidth = true
         watchAdButton.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)

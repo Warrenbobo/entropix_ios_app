@@ -374,7 +374,8 @@ class LMMembershipCardView: UIView {
         gradientLayer.endPoint = CGPoint(x: 1, y: 1)
         
         // Icon styling
-        iconImageView.image = UIImage(named: "crown_solid_white")
+        iconImageView.image = UIImage.lmSymbol("crown.fill", pointSize: 22)
+        iconImageView.tintColor = .white
         iconImageView.backgroundColor = UIColor.white.withAlphaComponent(0.2)
         iconImageView.layer.cornerRadius = 12
         iconImageView.layer.masksToBounds = true
@@ -405,7 +406,8 @@ class LMMembershipCardView: UIView {
         gradientLayer.endPoint = CGPoint(x: 1, y: 1)
         
         // Icon styling for free plan
-        iconImageView.image = UIImage(named: "crown_solid_gray")
+        iconImageView.image = UIImage.lmSymbol("crown.fill", pointSize: 22)
+        iconImageView.tintColor = UIColor(red: 0.42, green: 0.45, blue: 0.5, alpha: 1.0)
         iconImageView.backgroundColor = UIColor(red: 0.42, green: 0.45, blue: 0.5, alpha: 0.2)
         iconImageView.layer.cornerRadius = 12
         iconImageView.layer.masksToBounds = true

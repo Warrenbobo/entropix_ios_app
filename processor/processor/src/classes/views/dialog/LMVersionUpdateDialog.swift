@@ -34,7 +34,8 @@ final class LMVersionUpdateDialog: UIView {
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.image = UIImage(named: "rocket_update")
+        imageView.image = UIImage.lmSymbol("rocket.fill", pointSize: 36)
+        imageView.tintColor = .systemOrange
         return imageView
     }()
 

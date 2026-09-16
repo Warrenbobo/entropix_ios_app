@@ -75,7 +75,7 @@ class LMGalleryDetailPage: UIViewController {
         view.addSubview(backButtonContainer)
         
         // 配置左箭头图标
-        let backImage = UIImage(named: "left_arrow_white")
+        let backImage = UIImage.lmSymbol("chevron.left", pointSize: 18)
         backIconImageView.image = backImage
         backIconImageView.tintColor = .white
         backIconImageView.contentMode = .scaleAspectFit

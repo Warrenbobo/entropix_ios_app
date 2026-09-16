@@ -39,7 +39,8 @@ class LMSubscriptionHeroView: UIView {
         addSubview(heroTitleLabel)
         addSubview(heroDescLabel)
         
-        heroIcon.image = UIImage(named: "crown_solid_white")
+        heroIcon.image = UIImage.lmSymbol("crown.fill", pointSize: 28)
+        heroIcon.tintColor = .white
         heroIcon.contentMode = .scaleAspectFill
         
         heroTitleLabel.text = LMText.settings.unlockCreativePotential

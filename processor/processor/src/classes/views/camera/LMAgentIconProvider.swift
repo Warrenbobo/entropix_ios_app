@@ -14,7 +14,7 @@ enum LMAgentIconProvider {
     private static let instructIconDimmedAlphaScale: CGFloat = 0.58
 
     static var agentToggleIcon: UIImage? {
-        UIImage(named: "ai_agent_stroke")?.withRenderingMode(.alwaysTemplate)
+        UIImage.lmSymbol("apple.intelligence", pointSize: 18, weight: .medium)
     }
 
     /**

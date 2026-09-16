@@ -53,7 +53,8 @@ class LMNotificationTableViewCell: UITableViewCell {
         iconContainerView.layer.cornerRadius = 8
         iconContainerView.backgroundColor = .hexColor("#FEF9C2")
         
-        iconImageView.image = UIImage(named: "bullhorn_yellow")
+        iconImageView.image = UIImage.lmSymbol("megaphone.fill", pointSize: 18)
+        iconImageView.tintColor = .systemOrange
         iconImageView.contentMode = .center
         
         unreadIndicator.backgroundColor = UIColor.systemRed
@@ -134,12 +135,12 @@ class LMNotificationTableViewCell: UITableViewCell {
         let notificationType = notification.notificationType
         iconContainerView.backgroundColor = notificationType.backgroundColor
         
-        // 使用系统图标或自定义图标
-        if let customIcon = UIImage(named: notificationType.iconName) {
-            iconImageView.image = customIcon
-        } else {
-            iconImageView.image = UIImage(systemName: notificationType.iconName)
+        // Prefer SF Symbol; fall back to raster only if a named asset still exists.
+        if let symbol = UIImage(systemName: notificationType.iconName) {
+            iconImageView.image = symbol.withRenderingMode(.alwaysTemplate)
             iconImageView.tintColor = notificationType.iconColor
+        } else if let customIcon = UIImage(named: notificationType.iconName) {
+            iconImageView.image = customIcon
         }
         
         // 未读状态

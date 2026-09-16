@@ -446,7 +446,8 @@ class LMCameraPage: LMPageWrapper {
         view.addSubview(topStatusBarView)
         topStatusBarView.addSubview(backButton)
         
-        backButton.setImage(UIImage(named: "left_arrow_white"), for: .normal)
+        backButton.setImage(UIImage.lmSymbol("chevron.left", pointSize: 18), for: .normal)
+        backButton.tintColor = .white
         backButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
         backButton.imageView?.contentMode = .scaleAspectFit
         backButton.addTarget(self, action: #selector(handleGiveUpAndBackButtonTapped), for: .touchUpInside)
@@ -772,7 +773,7 @@ class LMCameraPage: LMPageWrapper {
         switch currentCameraState {
         case .sceneExploreProcessing, .sceneExploreResult, .exploreGoToSpot,
              .inspireMeProcessing, .showingSuggestions, .compositionSelected:
-            backButton.setImage(UIImage(named: "left_arrow_white"), for: .normal)
+            backButton.setImage(UIImage.lmSymbol("chevron.left", pointSize: 18), for: .normal)
             backButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
             backButton.tintColor = .white
             backButton.accessibilityLabel = LMText.common.back
@@ -782,12 +783,12 @@ class LMCameraPage: LMPageWrapper {
         }
 
         if shouldShowProfileEntryButton() {
-            backButton.setImage(UIImage(named: "user_white_fill"), for: .normal)
+            backButton.setImage(UIImage.lmSymbol("person.fill", pointSize: 18), for: .normal)
             backButton.imageEdgeInsets = .zero
             backButton.tintColor = .white
             backButton.accessibilityLabel = LMText.profile.profile
         } else {
-            backButton.setImage(UIImage(named: "left_arrow_white"), for: .normal)
+            backButton.setImage(UIImage.lmSymbol("chevron.left", pointSize: 18), for: .normal)
             backButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 10)
             backButton.tintColor = .white
             backButton.accessibilityLabel = LMText.common.back
@@ -947,7 +948,7 @@ extension LMCameraPage {
     /// 显示离开 Show Suggestions 确认对话框
     func showLeaveConfirmation(completion: @escaping (Bool) -> Void) {
         let config = LMAlertDialogConfig(
-            image: UIImage(named: "exclamation_triangle_orange"),
+            image: UIImage.lmSymbol("exclamationmark.triangle.fill", pointSize: 18),
             title: LMText.camera.giveUpInspires,
             message: LMText.camera.giveUpInspiresMessage,
             cancelButtonText: LMText.common.cancel,

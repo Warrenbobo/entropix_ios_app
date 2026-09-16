@@ -116,6 +116,25 @@ extension UIView {
 }
 
 extension UIImage {
+    /**
+     Loads an SF Symbol as a template image for tinting (ios-sf-symbol-migration-spec).
+
+     - Parameters:
+       - name: SF Symbol name (e.g. `chevron.left`).
+       - pointSize: Point size for `UIImage.SymbolConfiguration`.
+       - weight: Symbol weight.
+     - Returns: Template `UIImage`, or `nil` if the symbol is unavailable.
+     */
+    static func lmSymbol(
+        _ name: String,
+        pointSize: CGFloat = 17,
+        weight: UIImage.SymbolWeight = .regular
+    ) -> UIImage? {
+        let config = UIImage.SymbolConfiguration(pointSize: pointSize, weight: weight)
+        return UIImage(systemName: name, withConfiguration: config)?
+            .withRenderingMode(.alwaysTemplate)
+    }
+
     /// 生成渐变色图片
     /// - Parameters:
     ///   - size: 图片尺寸（默认屏幕尺寸）

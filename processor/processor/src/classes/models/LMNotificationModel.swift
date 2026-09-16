@@ -153,7 +153,7 @@ enum NotificationType: String, Codable {
     var iconName: String {
         switch self {
         case .system:
-            return "bullhorn_yellow"
+            return "megaphone.fill"
         case .update:
             return "arrow.down.circle.fill"
         case .warning:

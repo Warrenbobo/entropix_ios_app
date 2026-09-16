@@ -12,12 +12,13 @@ enum LMFlashMode {
     case auto
     case on
     case off
-    
-    var iconName: String {
+
+    /// SF Symbol name for the camera sidebar flash control.
+    var symbolName: String {
         switch self {
-        case .auto: return "flash_auto_mode"
-        case .on: return "flash_on_mode"
-        case .off: return "flash_off"
+        case .auto: return "bolt.badge.automatic.fill"
+        case .on: return "bolt.fill"
+        case .off: return "bolt.slash.fill"
         }
     }
     
@@ -57,13 +58,14 @@ enum LMTimerDuration {
     case three
     case five
     case ten
-    
-    var iconName: String {
+
+    /// Overlay digit for `timer` + label stack; `nil` when off.
+    var badgeText: String? {
         switch self {
-        case .off: return "camera_timer_off_state"
-        case .three: return "backward_3_seconds"
-        case .five: return "backward_5_seconds"
-        case .ten: return "backward_10_seconds"
+        case .off: return nil
+        case .three: return "3"
+        case .five: return "5"
+        case .ten: return "10"
         }
     }
     
@@ -124,6 +126,8 @@ class LMCameraControlsView: UIView {
     private let flashIconView = UIImageView()
     private let ratioIconView = UIImageView()
     private let timerIconView = UIImageView()
+    /// Small digit overlaid on the timer SF Symbol (3 / 5 / 10).
+    private let timerBadgeLabel = UILabel()
     private let liveIconView = UIImageView()
     private let gridIconView = UIImageView()
     private let flipCameraIconView = UIImageView()
@@ -266,7 +270,8 @@ extension LMCameraControlsView {
         flipCameraControlButton.backgroundColor = .clear
         flipCameraControlButton.addTarget(self, action: #selector(handleFlipCameraControlButtonTapped), for: .touchUpInside)
 
-        flipCameraIconView.image = UIImage(named: "flip_camera")
+        flipCameraIconView.image = UIImage.lmSymbol("arrow.triangle.2.circlepath.camera", pointSize: 18)
+        flipCameraIconView.tintColor = .white
         flipCameraIconView.contentMode = .scaleAspectFit
 
         flipCameraLabel.text = LMLaunageManager.shared.camera.flipCamera
@@ -331,6 +336,7 @@ extension LMCameraControlsView {
     private func setupTimerControlComponents() {
         timerContainer.addSubview(timerControlButton)
         timerContainer.addSubview(timerIconView)
+        timerContainer.addSubview(timerBadgeLabel)
         timerContainer.addSubview(timerLabel)
         
         // 配置按钮
@@ -339,6 +345,15 @@ extension LMCameraControlsView {
         
         // 配置图标
         timerIconView.contentMode = .scaleAspectFit
+
+        timerBadgeLabel.font = UIFont.systemFont(ofSize: 8, weight: .bold)
+        timerBadgeLabel.textColor = .white
+        timerBadgeLabel.textAlignment = .center
+        timerBadgeLabel.isHidden = true
+        timerBadgeLabel.layer.shadowColor = UIColor.black.cgColor
+        timerBadgeLabel.layer.shadowOffset = CGSize(width: 0, height: 1)
+        timerBadgeLabel.layer.shadowRadius = 1
+        timerBadgeLabel.layer.shadowOpacity = 0.8
         
         // 配置标签
         timerLabel.text = LMText.camera.timer
@@ -346,6 +361,10 @@ extension LMCameraControlsView {
         
         configureControlItemLayout(container: timerContainer, button: timerControlButton, 
                                  iconView: timerIconView, label: timerLabel)
+        timerBadgeLabel.snp.makeConstraints { make in
+            make.centerX.equalTo(timerIconView)
+            make.bottom.equalTo(timerIconView).offset(1)
+        }
         controlsStackView.addArrangedSubview(timerContainer)
     }
     
@@ -475,10 +494,7 @@ extension LMCameraControlsView {
     }
     
     private func updateFlashAppearance() {
-        let iconName = currentFlashMode.iconName
-        flashIconView.image = UIImage(named: iconName)
-        
-        // 根据HTML设计，图标默认为白色，添加阴影
+        flashIconView.image = UIImage.lmSymbol(currentFlashMode.symbolName, pointSize: 18)
         flashIconView.tintColor = UIColor.white
         addIconShadow(to: flashIconView)
     }
@@ -491,22 +507,29 @@ extension LMCameraControlsView {
     }
     
     private func updateTimerAppearance() {
-        let iconName = currentTimerDuration.iconName
-        timerIconView.image = UIImage(named: iconName)
+        timerIconView.image = UIImage.lmSymbol("timer", pointSize: 18)
         timerIconView.tintColor = UIColor.white
+        timerIconView.alpha = currentTimerDuration == .off ? 0.55 : 1.0
+        if let badge = currentTimerDuration.badgeText {
+            timerBadgeLabel.text = badge
+            timerBadgeLabel.isHidden = false
+        } else {
+            timerBadgeLabel.text = nil
+            timerBadgeLabel.isHidden = true
+        }
         addIconShadow(to: timerIconView)
     }
     
     private func updateLivePhotoAppearance() {
-        let iconName = isLivePhotoEnabled ? "live_photo_on" : "live_photo_off"
-        liveIconView.image = UIImage(named: iconName)
+        let symbol = isLivePhotoEnabled ? "livephoto" : "livephoto.slash"
+        liveIconView.image = UIImage.lmSymbol(symbol, pointSize: 18)
         liveIconView.tintColor = UIColor.white
         addIconShadow(to: liveIconView)
     }
     
     private func updateGridAppearance() {
-        let iconName = isGridEnabled ? "grid_on" : "grid_off"
-        gridIconView.image = UIImage(named: iconName)
+        gridIconView.image = UIImage.lmSymbol("grid", pointSize: 18)
+        gridIconView.tintColor = UIColor.white
         
         // 根据HTML设计，激活状态有特殊颜色
         if isGridEnabled {
