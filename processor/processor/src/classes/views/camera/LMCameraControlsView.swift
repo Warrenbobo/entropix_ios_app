@@ -94,6 +94,8 @@ protocol LMCameraControlsViewDelegate: AnyObject {
     func cameraControlsView(_ view: LMCameraControlsView, didChangeTimer duration: LMTimerDuration)
     func cameraControlsView(_ view: LMCameraControlsView, didToggleLivePhoto enabled: Bool)
     func cameraControlsView(_ view: LMCameraControlsView, didToggleGrid enabled: Bool)
+    func cameraControlsView(_ view: LMCameraControlsView, didToggleBoxGuidance enabled: Bool)
+    func cameraControlsView(_ view: LMCameraControlsView, didToggleLineArtGuidance enabled: Bool)
     func cameraControlsViewDidTapAgentToggle(_ view: LMCameraControlsView)
     func cameraControlsViewDidTapFlipCamera(_ view: LMCameraControlsView)
 }
@@ -105,6 +107,8 @@ class LMCameraControlsView: UIView {
     
     // 控制项容器
     private let agentContainer = UIView()
+    private let framingContainer = UIView()
+    private let poseContainer = UIView()
     private let flashContainer = UIView()
     private let ratioContainer = UIView()
     private let timerContainer = UIView()
@@ -114,6 +118,8 @@ class LMCameraControlsView: UIView {
     
     // 功能按钮
     private let agentControlButton = UIButton()
+    private let framingControlButton = UIButton()
+    private let poseControlButton = UIButton()
     private let flashControlButton = UIButton()
     private let ratioControlButton = UIButton()
     private let timerControlButton = UIButton()
@@ -123,6 +129,8 @@ class LMCameraControlsView: UIView {
     
     // 图标视图
     private let agentIconView = UIImageView()
+    private let framingIconView = UIImageView()
+    private let poseIconView = UIImageView()
     private let flashIconView = UIImageView()
     private let ratioIconView = UIImageView()
     private let timerIconView = UIImageView()
@@ -134,6 +142,8 @@ class LMCameraControlsView: UIView {
     
     // 功能标签
     private let agentLabel = UILabel()
+    private let framingLabel = UILabel()
+    private let poseLabel = UILabel()
     private let flashLabel = UILabel()
     private let ratioLabel = UILabel()
     private let timerLabel = UILabel()
@@ -151,6 +161,8 @@ class LMCameraControlsView: UIView {
     private var currentTimerDuration: LMTimerDuration = .off
     private var isLivePhotoEnabled = false
     private var isGridEnabled = true
+    private var isBoxGuidanceEnabled = false
+    private var isLineArtGuidanceEnabled = false
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -176,6 +188,8 @@ extension LMCameraControlsView {
         controlsStackView.distribution = .equalSpacing
         
         setupAgentControlComponents()
+        setupFramingControlComponents()
+        setupPoseControlComponents()
         setupFlashControlComponents()
         setupRatioControlComponents()
         setupTimerControlComponents()
@@ -235,8 +249,98 @@ extension LMCameraControlsView {
         }
     }
 
+    private func setupFramingControlComponents() {
+        framingContainer.layer.cornerRadius = 6
+        framingContainer.addSubview(framingControlButton)
+        framingContainer.addSubview(framingIconView)
+        framingContainer.addSubview(framingLabel)
+        framingContainer.isHidden = true
+
+        framingControlButton.backgroundColor = .clear
+        framingControlButton.addTarget(
+            self,
+            action: #selector(handleFramingControlButtonTapped),
+            for: .touchUpInside
+        )
+
+        framingIconView.contentMode = .scaleAspectFit
+        framingLabel.text = LMText.camera.framingGuidance
+        configureControlLabel(framingLabel)
+        framingLabel.numberOfLines = 2
+        framingLabel.adjustsFontSizeToFitWidth = true
+        framingLabel.minimumScaleFactor = 0.7
+
+        configureControlItemLayout(
+            container: framingContainer,
+            button: framingControlButton,
+            iconView: framingIconView,
+            label: framingLabel
+        )
+        controlsStackView.addArrangedSubview(framingContainer)
+    }
+
+    private func setupPoseControlComponents() {
+        poseContainer.layer.cornerRadius = 6
+        poseContainer.addSubview(poseControlButton)
+        poseContainer.addSubview(poseIconView)
+        poseContainer.addSubview(poseLabel)
+        poseContainer.isHidden = true
+
+        poseControlButton.backgroundColor = .clear
+        poseControlButton.addTarget(
+            self,
+            action: #selector(handlePoseControlButtonTapped),
+            for: .touchUpInside
+        )
+
+        poseIconView.contentMode = .scaleAspectFit
+        poseLabel.text = LMText.camera.poseGuidance
+        configureControlLabel(poseLabel)
+        poseLabel.numberOfLines = 2
+        poseLabel.adjustsFontSizeToFitWidth = true
+        poseLabel.minimumScaleFactor = 0.7
+
+        configureControlItemLayout(
+            container: poseContainer,
+            button: poseControlButton,
+            iconView: poseIconView,
+            label: poseLabel
+        )
+        controlsStackView.addArrangedSubview(poseContainer)
+    }
+
     @objc private func handleAgentControlButtonTapped() {
         delegate?.cameraControlsViewDidTapAgentToggle(self)
+    }
+
+    /**
+     Shows or hides Framing / Pose toggles (Composition Selected only).
+
+     - Parameter visible: When `false`, both containers are hidden.
+     */
+    func setGuidanceToolTogglesVisible(_ visible: Bool) {
+        framingContainer.isHidden = !visible
+        poseContainer.isHidden = !visible
+    }
+
+    /**
+     Updates Framing toggle highlight without firing the delegate.
+
+     - Parameter enabled: Whether Framing is on.
+     */
+    func setBoxGuidanceEnabled(_ enabled: Bool) {
+        isBoxGuidanceEnabled = enabled
+        updateFramingAppearance()
+    }
+
+    /**
+     Updates Pose toggle highlight without firing the delegate.
+
+     - Parameter enabled: Whether Pose / line-art is on.
+     */
+    func setLineArtGuidanceEnabled(_ enabled: Bool) {
+        isLineArtGuidanceEnabled = enabled
+        updatePoseAppearance()
     }
 
     func setAgentToggleVisible(_ visible: Bool) {
@@ -491,6 +595,8 @@ extension LMCameraControlsView {
         updateTimerAppearance()
         updateLivePhotoAppearance()
         updateGridAppearance()
+        updateFramingAppearance()
+        updatePoseAppearance()
     }
     
     private func updateFlashAppearance() {
@@ -539,6 +645,27 @@ extension LMCameraControlsView {
         }
         
         addIconShadow(to: gridIconView)
+    }
+
+    private func updateFramingAppearance() {
+        framingIconView.image = UIImage.lmSymbol("plus.viewfinder", pointSize: 18)
+        framingIconView.tintColor = .white
+        framingLabel.text = LMText.camera.framingGuidance
+        framingContainer.backgroundColor = isBoxGuidanceEnabled
+            ? .hexColor("667EEA", alpha: 0.3)
+            : .clear
+        addIconShadow(to: framingIconView)
+    }
+
+    private func updatePoseAppearance() {
+        poseIconView.image = UIImage.lmSymbol("person.line.dotted", pointSize: 18)
+            ?? UIImage.lmSymbol("square.dashed", pointSize: 18)
+        poseIconView.tintColor = .white
+        poseLabel.text = LMText.camera.poseGuidance
+        poseContainer.backgroundColor = isLineArtGuidanceEnabled
+            ? .hexColor("667EEA", alpha: 0.3)
+            : .clear
+        addIconShadow(to: poseIconView)
     }
     
     private func addIconShadow(to imageView: UIImageView) {
@@ -615,6 +742,20 @@ extension LMCameraControlsView {
         addTapAnimation(to: gridContainer)
         updateGridAppearance()
         delegate?.cameraControlsView(self, didToggleGrid: isGridEnabled)
+    }
+
+    @objc private func handleFramingControlButtonTapped() {
+        isBoxGuidanceEnabled.toggle()
+        addTapAnimation(to: framingContainer)
+        updateFramingAppearance()
+        delegate?.cameraControlsView(self, didToggleBoxGuidance: isBoxGuidanceEnabled)
+    }
+
+    @objc private func handlePoseControlButtonTapped() {
+        isLineArtGuidanceEnabled.toggle()
+        addTapAnimation(to: poseContainer)
+        updatePoseAppearance()
+        delegate?.cameraControlsView(self, didToggleLineArtGuidance: isLineArtGuidanceEnabled)
     }
     
     private func addTapAnimation(to view: UIView) {

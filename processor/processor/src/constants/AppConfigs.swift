@@ -30,6 +30,10 @@ struct AppConfigs {
         static let appOpenAdId = "ca-app-pub-3940256099942544/5575463023"
         /// Banner: Mine page (`LMMinePage`) only.
         static let bannerAdId = "ca-app-pub-3940256099942544/2435281174"
+        /// Interstitial during Find Spot freeze (`.sceneExploreProcessing`). Demo unit.
+        static let findSpotInterstitialAdId = "ca-app-pub-3940256099942544/4411468910"
+        /// Interstitial while Show Suggestions cards are still loading. Demo unit.
+        static let suggestionLoadingInterstitialAdId = "ca-app-pub-3940256099942544/4411468910"
     }
     
     struct AppStore {

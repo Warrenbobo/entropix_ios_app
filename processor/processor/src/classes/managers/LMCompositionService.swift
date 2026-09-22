@@ -155,13 +155,17 @@ class LMCompositionService {
 
      Does **not** call Composition `/analyze` or job APIs.
 
-     - Parameter sessionId: Existing `local_gemini_*` id (matches carousel placeholders).
+     - Parameters:
+       - sessionId: Existing `local_gemini_*` id (matches carousel placeholders).
+       - mode: FREE_COMPOSITION (Normal / Path B) or FIXED_CAMERA (Path A).
+       - spot: Required for FIXED_CAMERA; ignored for free mode.
      */
     func generateSuggestionsDirectly(
         sceneImage: UIImage,
         aspectRatio: String,
         sessionId: String,
-        spotPromptAppendix: String? = nil,
+        mode: LMInspireGenerationMode = .freeComposition,
+        spot: LMSceneExploreSpot? = nil,
         completion: @escaping (Result<[LMCompositionSuggestion], Error>) -> Void
     ) {
         let settings = LMGeminiModelSettingsStore.load()
@@ -170,21 +174,28 @@ class LMCompositionService {
             return
         }
 
+        let requestStart = Date()
+        let hasCameraInstruction = !(spot?.cameraInstruction?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        LMLogger.log(
+            "inspire.request_start mode=\(mode.rawValue) taskId=\(sessionId) " +
+            "spotId=\(spot?.id ?? "nil") cameraInstruction=\(hasCameraInstruction) " +
+            "model=\(settings.model.rawValue)"
+        )
+
         let feature = LMGeminiInspireConfigRepository.shared.get()
         guard let compressed = compressForGemini(sceneImage, maxLong: feature.inputLongEdge),
               let jpeg = compressed.jpegData(compressionQuality: feature.jpegQuality) else {
+            LMLogger.log("inspire.fail mode=\(mode.rawValue) taskId=\(sessionId) reason=compress")
             completion(.failure(LMGeminiImageError.decodeFailed))
             return
         }
 
         let snapped = Self.snapAspectRatio(aspectRatio)
-        var prompt = LMConfigRepository.shared.geminiInspirePrompt()
-        prompt += "\nExpected panel aspect ratio: \(snapped)."
-        if let appendix = spotPromptAppendix, !appendix.isEmpty {
-            prompt += appendix
-        }
-
-        LMLogger.log("🚀 Direct Gemini Inspire Me taskId=\(sessionId) model=\(settings.model.rawValue)")
+        let prompt = LMInspirePromptBuilder.build(
+            mode: mode,
+            aspectRatio: snapped,
+            spot: mode == .fixedCamera ? spot : nil
+        )
 
         LMGeminiImageClient.shared.generate(
             sceneJPEG: jpeg,
@@ -194,10 +205,19 @@ class LMCompositionService {
             settings: settings
         ) { [weak self] result in
             DispatchQueue.global(qos: .userInitiated).async {
+                let elapsedMs = Int(Date().timeIntervalSince(requestStart) * 1000)
                 switch result {
                 case .failure(let error):
+                    LMLogger.log(
+                        "inspire.fail mode=\(mode.rawValue) taskId=\(sessionId) " +
+                        "elapsedMs=\(elapsedMs) error=\(error.localizedDescription)"
+                    )
                     DispatchQueue.main.async { completion(.failure(error)) }
                 case .success(let images):
+                    LMLogger.log(
+                        "inspire.first_image mode=\(mode.rawValue) taskId=\(sessionId) " +
+                        "elapsedMs=\(elapsedMs) imageCount=\(images.count)"
+                    )
                     guard let self else {
                         DispatchQueue.main.async { completion(.failure(LMGeminiImageError.cancelled)) }
                         return
@@ -209,8 +229,17 @@ class LMCompositionService {
                             sessionId: sessionId,
                             aspectRatio: snapped
                         )
+                        let totalMs = Int(Date().timeIntervalSince(requestStart) * 1000)
+                        LMLogger.log(
+                            "inspire.success mode=\(mode.rawValue) taskId=\(sessionId) " +
+                            "elapsedMs=\(totalMs) tiles=\(suggestions.count) rawImages=\(images.count)"
+                        )
                         DispatchQueue.main.async { completion(.success(suggestions)) }
                     } catch {
+                        LMLogger.log(
+                            "inspire.fail mode=\(mode.rawValue) taskId=\(sessionId) " +
+                            "elapsedMs=\(elapsedMs) error=\(error.localizedDescription)"
+                        )
                         DispatchQueue.main.async { completion(.failure(error)) }
                     }
                 }

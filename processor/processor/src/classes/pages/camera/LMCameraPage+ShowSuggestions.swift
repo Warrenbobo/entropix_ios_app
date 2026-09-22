@@ -168,12 +168,59 @@ extension LMCameraPage {
         }
         
         LMLogger.log("📐 Entered Show Suggestions state - Task ID: \(taskId), Suggestions: \(suggestions?.count ?? 0)")
+        presentSuggestionLoadingInterstitialIfNeeded()
+    }
+
+    /**
+     Presents a suggestion-loading interstitial only while any card is still `ready != true`.
+
+     Demo suggestions (`ready: true`) skip this. Close timing stays with the SDK.
+     */
+    func presentSuggestionLoadingInterstitialIfNeeded() {
+        let needsAd = currentSuggestions.contains { $0.ready != true }
+        guard needsAd else { return }
+        let token = UUID()
+        suggestionAdToken = token
+        holdsSuggestionCardUpdatesForAd = true
+        LMInterstitialAdManager.shared.showIfAvailable(.suggestionLoading, from: self) { [weak self] in
+            guard let self, self.suggestionAdToken == token else { return }
+            self.suggestionAdToken = nil
+            self.holdsSuggestionCardUpdatesForAd = false
+            guard self.currentCameraState == .showingSuggestions
+                    || self.currentCameraState == .compositionSelected else {
+                return
+            }
+            self.suggestionsCarouselView?.updateSuggestions(self.currentSuggestions)
+        }
+    }
+
+    /**
+     Cancels a suggestion interstitial that has not been presented yet.
+
+     Clears the hold token first so a synchronous finish cannot refresh a torn-down carousel.
+     */
+    func cancelSuggestionLoadingInterstitial() {
+        suggestionAdToken = nil
+        holdsSuggestionCardUpdatesForAd = false
+        LMInterstitialAdManager.shared.cancelIfNotShowing(.suggestionLoading)
+    }
+
+    /**
+     - Returns: `false` while the suggestion interstitial is covering the carousel.
+     */
+    func shouldApplySuggestionCarouselUpdates() -> Bool {
+        if holdsSuggestionCardUpdatesForAd {
+            LMLogger.log("Suggestion interstitial holding card UI")
+            return false
+        }
+        return true
     }
     
     /// 退出 Show Suggestions 状态
     func exitShowSuggestionsState() {
         guard currentCameraState == .showingSuggestions else { return }
         
+        cancelSuggestionLoadingInterstitial()
         currentCameraState = .normal
         
         // 停止轮询
@@ -444,7 +491,9 @@ extension LMCameraPage {
         }
         
         guard currentSuggestions.count != originalCount else { return }
-        suggestionsCarouselView?.updateSuggestions(currentSuggestions)
+        if shouldApplySuggestionCarouselUpdates() {
+            suggestionsCarouselView?.updateSuggestions(currentSuggestions)
+        }
         LMLogger.log("🧹 Removed failed placeholder cards for ranks: \(failedRanks.sorted())")
     }
 }
@@ -640,9 +689,10 @@ extension LMCameraPage {
         // Polling should update UI even when carousel is hidden (e.g., in Reference Image state)
         if let carouselView = suggestionsCarouselView {
             if !updates.isEmpty {
-                // 批量更新单个卡片（不刷新整个列表）
-                carouselView.updateSuggestions(updates)
-                LMLogger.log("✅ Updated \(updates.count) cards individually (no list refresh), carousel visible: \(!carouselView.isHidden), total: \(currentSuggestions.count)")
+                if shouldApplySuggestionCarouselUpdates() {
+                    carouselView.updateSuggestions(updates)
+                    LMLogger.log("✅ Updated \(updates.count) cards individually (no list refresh), carousel visible: \(!carouselView.isHidden), total: \(currentSuggestions.count)")
+                }
             } else {
                 LMLogger.log("⏭️ No existing cards to update, data added to list only")
             }
@@ -693,7 +743,7 @@ extension LMCameraPage {
             // ✅ CRITICAL FIX: Only refresh full list if final count ≠ initial count
             // This is the ONLY scenario where full list refresh is allowed during polling
             cleanupPlaceholderJobMapping()
-            if let carouselView = suggestionsCarouselView {
+            if let carouselView = suggestionsCarouselView, shouldApplySuggestionCarouselUpdates() {
                 carouselView.updateSuggestions(currentSuggestions)
                 LMLogger.log("✅ Full list refreshed after cleanup (count changed: \(originalCount) → \(currentSuggestions.count)), carousel visible: \(!carouselView.isHidden)")
             } else {
@@ -798,6 +848,8 @@ extension LMCameraPage {
         cameraControlsView.isHidden = false
         agentGuidanceState = .agent
         executionTool = .none
+        isBoxGuidanceEnabled = false
+        isLineArtGuidanceEnabled = false
         shutterRole = .instructReady
         referenceWarmupComplete = false
         agentCoachingController.stopAll()
@@ -1117,10 +1169,15 @@ extension LMCameraPage {
 
         agentGuidanceState = .unavailable
         executionTool = .none
+        isBoxGuidanceEnabled = false
+        isLineArtGuidanceEnabled = false
         shutterRole = .captureDefault
         referenceWarmupComplete = false
         hasUserTriggeredInstructInSession = false
         resetCoachingSessionUI()
+        cameraControlsView.setGuidanceToolTogglesVisible(false)
+        cameraControlsView.setBoxGuidanceEnabled(false)
+        cameraControlsView.setLineArtGuidanceEnabled(false)
 
         // 2) Heavy unload off main — UI already left composition chrome.
         agentCoachingController.unloadCompositionModelsAsync()

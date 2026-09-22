@@ -74,14 +74,24 @@ class LMCameraPage: LMPageWrapper {
     /// Path B locks mode switch until Explore session ends.
     var preShootPlanModeSwitchEnabled: Bool = true
     var exploreSession: LMExploreSession?
+    /// `exploreSession.sessionId` while a Find Spot interstitial attempt is in flight.
+    var findSpotAdSessionId: String?
+    /// Explore result UI held until the Find Spot interstitial is dismissed or skipped.
+    var pendingFindSpotResult: (() -> Void)?
+    /// When true, suggestion data may update but the carousel stays on the loading cards.
+    var holdsSuggestionCardUpdatesForAd = false
+    /// Invalidates a suggestion-ad callback after the user leaves Show Suggestions.
+    var suggestionAdToken: UUID?
     var sceneExploreResultOverlay: LMSceneExploreResultOverlay?
     var preShootPlanModeSheet: LMPreShootPlanModeSheet?
     var targetSpotChipView: UIView?
     var returnToSpotMapButton: UIButton?
     /// When Suggestions Back should return to Explore result instead of Basic Camera.
     var suggestionsBoundToExploreSession = false
-    /// Optional Spot prompt appendix for Path A Inspire.
-    var pendingSpotPromptAppendix: String?
+    /// Path A spot context for FIXED_CAMERA Inspire (cleared when generation starts).
+    var pendingInspireSpot: LMSceneExploreSpot?
+    /// Wall-clock when the user triggered the current Direct Gemini Inspire tap.
+    var inspireTapDate: Date?
     // MARK: - Feature Flags
     var isInspireMeCapture = false
     var isARGuidanceActive = false
@@ -121,6 +131,10 @@ class LMCameraPage: LMPageWrapper {
     var preferredARGuidanceButtonState: LMARGuidanceButtonState = .agent
     var agentGuidanceState: LMARGuidanceButtonState = .unavailable
     var executionTool: LMExecutionTool = .none
+    /// Framing overlay (white reference box + live blue box) — independent of Pose.
+    var isBoxGuidanceEnabled = false
+    /// Pose / line-art overlay — independent of Framing.
+    var isLineArtGuidanceEnabled = false
     var coachingActionText = ""
     var coachingReasoningText = ""
     var coachingReasoningExpanded = false

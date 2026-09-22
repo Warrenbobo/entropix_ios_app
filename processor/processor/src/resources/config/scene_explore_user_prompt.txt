@@ -1,1 +1,1 @@
-请分析这个场景，推荐适合拍摄人像的机位。
+Analyze this scene and recommend camera positions suitable for portrait photography.

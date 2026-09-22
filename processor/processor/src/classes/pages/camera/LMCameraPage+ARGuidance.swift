@@ -283,11 +283,38 @@ extension LMCameraPage {
             height: constrainedHeight
         )
         
+        let previousSize = livePersonBox.bounds.size
         // 直接设置 frame（蓝色框不旋转，所以不需要处理 transform）
         livePersonBox.frame = constrainedFrame
+        let sizeChanged = abs(previousSize.width - constrainedWidth) > 0.5
+            || abs(previousSize.height - constrainedHeight) > 0.5
+        if sizeChanged {
+            refreshLiveBoxPaths()
+        }
         
         // 更新引导线
         updateGuidanceLineForLiveBox()
+    }
+
+    /**
+     Redraws corner brackets and the center crosshair for the current bounds.
+
+     Called when a later detection changes box size so the visible frame matches
+     the rectangle used for alignment.
+     */
+    private func refreshLiveBoxPaths() {
+        guard let livePersonBox = livePersonBox else { return }
+        let bounds = livePersonBox.bounds
+        guard bounds.width > 0, bounds.height > 0 else { return }
+
+        let corner = livePersonBox.layer.sublayers?.first { $0.name == "cornerLayer" } as? CAShapeLayer
+        let crosshair = livePersonBox.layer.sublayers?.first { $0.name == "crosshairLayer" } as? CAShapeLayer
+        guard let corner, let crosshair else {
+            createLiveBoxFrameLayers()
+            return
+        }
+        corner.path = createCornerPath(in: bounds).cgPath
+        crosshair.path = createCrosshairPath(in: bounds, length: 6, width: 2).cgPath
     }
     
     /// 显示蓝色框
@@ -308,7 +335,7 @@ extension LMCameraPage {
               let arGuidanceView = arGuidanceView,
               let guidanceLine = guidanceLine else { return }
         
-        guard executionTool == .box else {
+        guard isBoxGuidanceEnabled else {
             guidanceLine.isHidden = true
             return
         }
@@ -340,8 +367,11 @@ extension LMCameraPage {
     // MARK: - Configuration
     
     func configureARGuidanceFeatures(_ enabled: Bool) {
-        executionTool = enabled ? .box : .none
-        applyExecutionToolToOverlay()
+        isBoxGuidanceEnabled = enabled
+        if !enabled {
+            isLineArtGuidanceEnabled = false
+        }
+        applyGuidanceOverlays()
         if enabled { startARGuidanceSession() } else { stopARGuidanceSession() }
     }
 
@@ -418,7 +448,7 @@ extension LMCameraPage {
         // 1. 更新 ARGuidanceView 的尺寸
         updateARGuidanceViewSize()
 
-        guard executionTool == .box || executionTool == .lineArt else {
+        guard isBoxGuidanceEnabled || isLineArtGuidanceEnabled else {
             LMLogger.log("📐 [AR Guidance] Updated line art canvas for new aspect ratio")
             return
         }
@@ -508,7 +538,7 @@ extension LMCameraPage {
         LMLogger.log("📐 [AR Guidance] Initial transform set for orientation: \(currentOrientation.rawValue), transform: \(arGuidanceView.transform)")
 
         // Box guidance uses VNDetectHumanRectangles — always run reference detection.
-        if executionTool == .box {
+        if isBoxGuidanceEnabled {
             LMLogger.log("✅ [AR Guidance] Box mode — running human-rectangle reference detection...")
             arGuidanceView.setReferenceGuideReady(false)
             detectPersonAndShowGuidance(in: referenceImage)
@@ -639,11 +669,9 @@ extension LMCameraPage {
                 return
             }
             isARGuidanceActive = agentGuidanceState == .agent
-            arGuidanceView.setOverlayDisplay(
-                LMARGuidanceOverlayDisplay(executionTool: executionTool, agentEnabled: agentGuidanceState == .agent)
-            )
+            applyGuidanceOverlays()
             arGuidanceView.setReferenceGuideReady(currentReferenceBbox != nil)
-            if executionTool == .box {
+            if isBoxGuidanceEnabled {
                 startRealtimePersonDetection()
             } else {
                 stopRealtimePersonDetection()
@@ -811,7 +839,7 @@ extension LMCameraPage {
     ///   - bbox: 检测到的bbox（归一化坐标，Vision 坐标系统）
     ///   - confidence: 置信度
     private func handleRealtimeDetectionResult(bbox: CGRect?, confidence: Float) {
-        guard executionTool == .box else {
+        guard isBoxGuidanceEnabled else {
             hideLiveBox()
             return
         }
@@ -948,7 +976,7 @@ extension LMCameraPage {
     
     /// 从对齐状态恢复到非对齐状态（显示蓝白框+引导线）
     private func restoreToNonAlignedState() {
-        guard executionTool == .box else {
+        guard isBoxGuidanceEnabled else {
             arGuidanceView.hideSuccessBox()
             hideLiveBox()
             return
@@ -1156,7 +1184,7 @@ extension LMCameraPage {
     /// 将bbox坐标转换到画布坐标
     /// 注意：横向图片已在识别前旋转到竖屏方向，因此bbox坐标无需旋转，直接转换即可
     /// 输入的 bbox 使用 Vision 坐标系统（原点在左下角，Y轴向上）
-    private func convertBboxToCanvas(bbox: CGRect, imageSize: CGSize) -> CGRect {
+    func convertBboxToCanvas(bbox: CGRect, imageSize: CGSize) -> CGRect {
         // 使用实际画布尺寸（已根据图片宽高比计算）
         let canvasSize = getMaxCanvasSize()
         
@@ -1187,7 +1215,7 @@ extension LMCameraPage {
     // MARK: - Helper Methods
     
     /// 检查当前设备方向是否与参考图方向类型匹配（竖屏 vs 横屏）。
-    private func isCurrentOrientationMatched() -> Bool {
+    func isCurrentOrientationMatched() -> Bool {
         guard let referenceImage = currentReferenceImage else {
             LMLogger.log("⚠️ [Orientation Check] No reference image")
             return false
@@ -1222,7 +1250,7 @@ extension LMCameraPage {
     /// 显示对齐成功指示器（使用绿色校准框）
     /// 注意：不再停止AR引导，而是保持检测以便在超出阈值时恢复
     func showAlignmentSuccessWithGreenFrame() {
-        guard executionTool == .box else { return }
+        guard isBoxGuidanceEnabled else { return }
         
         // 检查是否已经显示绿色框
         guard arGuidanceView.successBox.isHidden else {
@@ -1287,7 +1315,9 @@ extension LMCameraPage {
         arGuidanceState = .disabled
         stopRealtimePersonDetection()
         cameraStreamDetectionManager?.reset()
-        executionTool = .box
+        executionTool = .none
+        isBoxGuidanceEnabled = false
+        isLineArtGuidanceEnabled = false
         referenceImageInitialOrientation = nil
         currentReferenceImage = nil
         clearLineArtOverlay()
@@ -1315,7 +1345,7 @@ extension LMCameraPage {
     /// 处理AR引导的视频帧
     func processARGuidanceFrame(_ sampleBuffer: CMSampleBuffer) {
         guard isARGuidanceActive else { return }
-        guard executionTool == .box else { return }
+        guard isBoxGuidanceEnabled else { return }
         guard currentCameraState == .compositionSelected else { return }
         guard currentReferenceImage != nil else { return }
         guard arGuidanceState == .activeGuidance else { return }
@@ -1385,7 +1415,11 @@ extension LMCameraPage {
         arGuidanceView.setLineArtImage(image)
         arGuidanceView.setReferenceGuideReady(false)
         arGuidanceView.setOverlayDisplay(
-            LMARGuidanceOverlayDisplay(executionTool: executionTool, agentEnabled: agentGuidanceState == .agent)
+            LMARGuidanceOverlayDisplay(
+                showBox: isBoxGuidanceEnabled,
+                showLineArt: isLineArtGuidanceEnabled,
+                inCompositionSelected: currentCameraState == .compositionSelected
+            )
         )
         view.layoutIfNeeded()
     }
@@ -1408,7 +1442,11 @@ extension LMCameraPage {
         arGuidanceView.setReferenceBoxBounds(bbox: canvasBbox)
         arGuidanceView.setReferenceGuideReady(true)
         arGuidanceView.setOverlayDisplay(
-            LMARGuidanceOverlayDisplay(executionTool: executionTool, agentEnabled: agentGuidanceState == .agent)
+            LMARGuidanceOverlayDisplay(
+                showBox: isBoxGuidanceEnabled,
+                showLineArt: isLineArtGuidanceEnabled,
+                inCompositionSelected: currentCameraState == .compositionSelected
+            )
         )
 
         let currentOrientation = LMOrientationMatcher.orientationForCapture()
@@ -1416,7 +1454,7 @@ extension LMCameraPage {
         arGuidanceView.setOrientationMatched(isMatched)
         if isMatched {
             updateARGuidanceViewRotation(for: currentOrientation, isMatched: true)
-            if executionTool == .box {
+            if isBoxGuidanceEnabled {
                 arGuidanceView.showReferenceBox()
             }
         }

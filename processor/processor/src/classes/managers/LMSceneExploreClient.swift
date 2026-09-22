@@ -72,6 +72,8 @@ enum LMSceneExploreSpotParser {
             let reason = (item["reason"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             let warning = (item["safety_warning"] as? String)?
                 .trimmingCharacters(in: .whitespacesAndNewlines)
+            let cameraInstruction = (item["camera_instruction"] as? String)?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
             let bboxRaw = item["bbox"] as? [Any] ?? []
             let bboxNums = bboxRaw.compactMap { value -> CGFloat? in
                 if let n = value as? NSNumber { return CGFloat(truncating: n) }
@@ -84,7 +86,8 @@ enum LMSceneExploreSpotParser {
                     name: name,
                     reason: reason,
                     bbox: xywh,
-                    safetyWarning: (warning?.isEmpty == false) ? warning : nil
+                    safetyWarning: (warning?.isEmpty == false) ? warning : nil,
+                    cameraInstruction: (cameraInstruction?.isEmpty == false) ? cameraInstruction : nil
                 )
             )
         }
@@ -159,8 +162,9 @@ final class LMSceneExploreClient {
         let prepared = prepareJPEG(image, longEdge: longEdge, quality: feature.imageJPEGQuality)
         let dataUrl = "data:image/jpeg;base64,\(prepared.base64EncodedString())"
 
+        let systemContent = Self.systemPromptWithOutputLanguage(feature.systemPrompt)
         let messages: [[String: Any]] = [
-            ["role": "system", "content": feature.systemPrompt],
+            ["role": "system", "content": systemContent],
             [
                 "role": "user",
                 "content": [
@@ -215,6 +219,20 @@ final class LMSceneExploreClient {
             rawText: stream.fullText,
             errorBody: parsed.spots.isEmpty ? "Failed to parse spots JSON" : nil
         )
+    }
+
+    /**
+     Appends app-locale output-language constraints (Agent-parity) to the bundled system prompt.
+
+     - Parameter base: Text from `scene_explore_system_prompt.txt`.
+     - Returns: System content for this request.
+     */
+    private static func systemPromptWithOutputLanguage(_ base: String) -> String {
+        let languageLines = LMLaunageManager.shared.currentLanguage.sceneExploreLLMOutputLanguageLines
+        guard !languageLines.isEmpty else { return base }
+        return base
+            + "\n\n"
+            + languageLines.joined(separator: "\n")
     }
 
     private func prepareJPEG(_ image: UIImage, longEdge: CGFloat, quality: CGFloat) -> Data {

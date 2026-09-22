@@ -36,6 +36,11 @@ class LMPersonDetectionManager {
     private let detectionQueue = DispatchQueue(label: "com.framaist.persondetection", qos: .userInitiated)
     private var lastDetectionTime: Date?
     private let detectionInterval: TimeInterval = 0.1
+    /// Minimum IoU with the previous live box to keep the same person.
+    private let liveContinuityIoU: CGFloat = 0.3
+    private let liveBoxLock = NSLock()
+    /// Last selected live-stream box in Vision normalized coordinates. Cleared on stop.
+    private var lastLiveBBox: CGRect?
 
     var currentCameraPosition: AVCaptureDevice.Position = .back
 
@@ -48,6 +53,9 @@ class LMPersonDetectionManager {
     func stopDetection() {
         isDetecting = false
         lastDetectionTime = nil
+        liveBoxLock.lock()
+        lastLiveBBox = nil
+        liveBoxLock.unlock()
         LMLogger.log("👤 Person detection stopped")
     }
 
@@ -129,40 +137,90 @@ class LMPersonDetectionManager {
             orientation: orientation,
             options: [:]
         )
-        return try performHumanRectangleDetection(with: handler)
+        return try performHumanRectangleDetection(with: handler, trackLiveIdentity: true)
     }
 
     private func detectHumanRectangle(in ciImage: CIImage) throws -> HumanRectangleDetection? {
         let handler = VNImageRequestHandler(ciImage: ciImage, options: [:])
-        return try performHumanRectangleDetection(with: handler)
+        // Reference stills keep the original first-result pick and do not update live identity.
+        return try performHumanRectangleDetection(with: handler, trackLiveIdentity: false)
     }
 
-    /// Tries full-body detection first, then upper-body fallback.
+    /**
+     Tries full-body detection first, then upper-body fallback.
+
+     - Parameter trackLiveIdentity: When true (camera stream), prefer the box that continues
+       the previous person; otherwise pick the largest box. Reference stills pass false.
+     */
     private func performHumanRectangleDetection(
-        with handler: VNImageRequestHandler
+        with handler: VNImageRequestHandler,
+        trackLiveIdentity: Bool
     ) throws -> HumanRectangleDetection? {
-        if let fullBody = try runHumanRectangleRequest(handler: handler, upperBodyOnly: false) {
-            return fullBody
+        let fullBody = try runHumanRectangleRequest(handler: handler, upperBodyOnly: false)
+        let pool = fullBody.isEmpty
+            ? try runHumanRectangleRequest(handler: handler, upperBodyOnly: true)
+            : fullBody
+        guard !pool.isEmpty else { return nil }
+        if trackLiveIdentity {
+            return selectLiveBox(from: pool)
         }
-        return try runHumanRectangleRequest(handler: handler, upperBodyOnly: true)
+        return pool.first
     }
 
     private func runHumanRectangleRequest(
         handler: VNImageRequestHandler,
         upperBodyOnly: Bool
-    ) throws -> HumanRectangleDetection? {
+    ) throws -> [HumanRectangleDetection] {
         let request = VNDetectHumanRectanglesRequest()
         request.upperBodyOnly = upperBodyOnly
         try handler.perform([request])
 
-        guard let observation = request.results?.first else {
-            return nil
+        return (request.results ?? []).map { observation in
+            HumanRectangleDetection(
+                bbox: observation.boundingBox,
+                confidence: observation.confidence
+            )
+        }
+    }
+
+    /**
+     Picks one live box: continue the previous person when IoU exceeds `liveContinuityIoU`,
+     otherwise the largest box. Stores the choice for the next frame.
+     */
+    private func selectLiveBox(from observations: [HumanRectangleDetection]) -> HumanRectangleDetection? {
+        guard !observations.isEmpty else { return nil }
+
+        liveBoxLock.lock()
+        let previous = lastLiveBBox
+        liveBoxLock.unlock()
+
+        let chosen: HumanRectangleDetection
+        if let previous,
+           let continued = observations.max(by: { lhs, rhs in
+               intersectionOverUnion(lhs.bbox, previous) < intersectionOverUnion(rhs.bbox, previous)
+           }),
+           intersectionOverUnion(continued.bbox, previous) > liveContinuityIoU {
+            chosen = continued
+        } else {
+            chosen = observations.max(by: { lhs, rhs in
+                lhs.bbox.width * lhs.bbox.height < rhs.bbox.width * rhs.bbox.height
+            }) ?? observations[0]
         }
 
-        return HumanRectangleDetection(
-            bbox: observation.boundingBox,
-            confidence: observation.confidence
-        )
+        liveBoxLock.lock()
+        lastLiveBBox = chosen.bbox
+        liveBoxLock.unlock()
+        return chosen
+    }
+
+    /// Intersection over union in the same coordinate space (Vision normalized rects).
+    private func intersectionOverUnion(_ a: CGRect, _ b: CGRect) -> CGFloat {
+        let intersection = a.intersection(b)
+        guard !intersection.isNull, intersection.width > 0, intersection.height > 0 else { return 0 }
+        let interArea = intersection.width * intersection.height
+        let unionArea = a.width * a.height + b.width * b.height - interArea
+        guard unionArea > 0 else { return 0 }
+        return interArea / unionArea
     }
 
     // MARK: - Dispatch

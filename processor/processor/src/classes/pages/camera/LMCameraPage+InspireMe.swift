@@ -157,7 +157,10 @@ extension LMCameraPage {
         }
 
         isInspireMeCapture = true
-        
+        pendingInspireSpot = nil
+        inspireTapDate = Date()
+        LMLogger.log("inspire.tap mode=FREE_COMPOSITION")
+
         // 记录点击瞬间的设备方向（后续用于把帧旋转到竖屏“home键在下方”的预览样式）
         inspireMeCaptureDeviceOrientation = LMOrientationMatcher.orientationForCapture()
 
@@ -181,7 +184,10 @@ extension LMCameraPage {
             return false
         }
 
-        showProcessingOverlay(with: image)
+        // Direct Gemini: skip long Inspiring freeze — placeholders appear ASAP in processAndGenerateDirectGemini.
+        if !LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
+            showProcessingOverlay(with: image)
+        }
         processInspireMeImage(image)
         inspireMeCaptureDeviceOrientation = nil
         return true

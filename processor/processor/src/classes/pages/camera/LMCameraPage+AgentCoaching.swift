@@ -50,18 +50,19 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             bubble.onToggleReasoning = { [weak self] in
                 self?.toggleCoachingReasoningExpanded()
             }
-            bubble.onDismissToolTapped = { [weak self] in
-                self?.dismissActiveExecutionTool()
-            }
         }
     }
 
-    /// Clears the active box/line-art execution overlay (Android dismiss pill parity).
-    func dismissActiveExecutionTool() {
+    /// Turns Framing and Pose overlays off (sidebar sync). Prefer per-tool toggles for user actions.
+    func clearGuidanceOverlays() {
         boxAlignCompleteWorkItem?.cancel()
         boxAlignCompleteWorkItem = nil
+        lineArtAutoDismissWorkItem?.cancel()
+        lineArtAutoDismissWorkItem = nil
+        isBoxGuidanceEnabled = false
+        isLineArtGuidanceEnabled = false
         executionTool = .none
-        applyExecutionToolToOverlay()
+        applyGuidanceOverlays()
         refreshCoachingBubble()
     }
 
@@ -97,6 +98,9 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
 
         cameraControlsView.setAgentToggleVisible(false)
         cameraControlsView.setAgentToggleState(agentGuidanceState)
+        cameraControlsView.setGuidanceToolTogglesVisible(isComposition)
+        cameraControlsView.setBoxGuidanceEnabled(isBoxGuidanceEnabled)
+        cameraControlsView.setLineArtGuidanceEnabled(isLineArtGuidanceEnabled)
         cameraBottomControlsView.setARGuidanceContainerHidden(
             isComposition || currentCameraState == .showingSuggestions
         )
@@ -242,6 +246,8 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         currentCameraState = .compositionSelected
         agentGuidanceState = .agent
         executionTool = .none
+        isBoxGuidanceEnabled = false
+        isLineArtGuidanceEnabled = false
         shutterRole = .instructReady
         hasUserTriggeredInstructInSession = false
         referenceWarmupComplete = false
@@ -369,14 +375,20 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
     /**
      Generates Asset LineArt once for the current reference (plan §4.5).
      Cache hits return immediately; clears with `clearLineArtOverlay` / reference change.
+
+     - Parameter completion: Invoked on the main queue with whether a line-art image is available.
      */
-    func ensureLineArtReadyForCallout() {
+    func ensureLineArtReadyForCallout(completion: ((Bool) -> Void)? = nil) {
         if currentReferenceLineArtImage != nil {
             arGuidanceView.setLineArtImage(currentReferenceLineArtImage)
             agentCoachingController.setLineArtReady(true)
+            completion?(true)
             return
         }
-        guard let image = currentReferenceImage else { return }
+        guard let image = currentReferenceImage else {
+            completion?(false)
+            return
+        }
 
         arGuidanceLineArtRequestId &+= 1
         let requestId = arGuidanceLineArtRequestId
@@ -404,46 +416,168 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
                 } else {
                     LMLogger.log("⚠️ LineArt first callout generation failed")
                 }
+                completion?(lineArtImage != nil)
             }
         }
     }
 
-    func applyExecutionToolToOverlay() {
+    /// Applies Framing / Pose overlay flags and syncs sidebar highlight + live detection.
+    func applyGuidanceOverlays() {
+        let inComposition = currentCameraState == .compositionSelected
         let overlay = LMARGuidanceOverlayDisplay(
-            executionTool: executionTool,
-            agentEnabled: agentGuidanceState == .agent
+            showBox: isBoxGuidanceEnabled,
+            showLineArt: isLineArtGuidanceEnabled,
+            inCompositionSelected: inComposition
         )
         arGuidanceView.setOverlayDisplay(overlay)
-        isARGuidanceActive = agentGuidanceState == .agent && executionTool != .none
+        if isBoxGuidanceEnabled, let bbox = currentReferenceBbox, let image = currentReferenceImage {
+            let canvasBbox = convertBboxToCanvas(bbox: bbox, imageSize: image.size)
+            arGuidanceView.setReferenceBoxBounds(bbox: canvasBbox)
+            arGuidanceView.setReferenceGuideReady(true)
+            if isCurrentOrientationMatched() {
+                arGuidanceView.showReferenceBox()
+            }
+        }
+        if isLineArtGuidanceEnabled {
+            arGuidanceView.setLineArtImage(currentReferenceLineArtImage)
+        }
+        isARGuidanceActive = inComposition && agentGuidanceState == .agent
+            && (isBoxGuidanceEnabled || isLineArtGuidanceEnabled)
+        cameraControlsView.setBoxGuidanceEnabled(isBoxGuidanceEnabled)
+        cameraControlsView.setLineArtGuidanceEnabled(isLineArtGuidanceEnabled)
         syncExecutionToolRealtimeDetection()
+        // Keep legacy single-tool field in sync for any remaining call sites / logs.
+        if isBoxGuidanceEnabled && isLineArtGuidanceEnabled {
+            executionTool = .box
+        } else if isBoxGuidanceEnabled {
+            executionTool = .box
+        } else if isLineArtGuidanceEnabled {
+            executionTool = .lineArt
+        } else {
+            executionTool = .none
+        }
+    }
+
+    /// Legacy name — forwards to `applyGuidanceOverlays`.
+    func applyExecutionToolToOverlay() {
+        applyGuidanceOverlays()
     }
 
     /**
-     Arms / disarms the blue live-person bbox when the agent Box tool is active.
+     Arms / disarms the blue live-person bbox when Framing is on.
 
-     Composition entry starts AR session with `executionTool == .none`, which stops
-     realtime detection. When the tool later becomes `.box`, white reference overlay
-     alone is not enough — we must re-enable stream detection.
+     Composition entry may start with Framing off; enabling Framing must re-arm stream detection.
      */
     func syncExecutionToolRealtimeDetection() {
         guard currentCameraState == .compositionSelected,
-              agentGuidanceState == .agent else {
+              agentGuidanceState == .agent,
+              isBoxGuidanceEnabled else {
             stopRealtimePersonDetection()
             hideLiveBox()
             return
         }
 
-        switch executionTool {
-        case .box:
-            // If session is still warming, `.activeGuidance` will call
-            // `startRealtimePersonDetection()` when it arrives with tool already `.box`.
-            guard arGuidanceState == .activeGuidance else { return }
-            // Reset delay window so the blue box can appear promptly after tool callout.
-            arGuidanceStartTime = Date()
-            startRealtimePersonDetection()
-        case .lineArt, .none:
-            stopRealtimePersonDetection()
-            hideLiveBox()
+        guard arGuidanceState == .activeGuidance else { return }
+        arGuidanceStartTime = Date()
+        startRealtimePersonDetection()
+    }
+
+    // MARK: - Sidebar Framing / Pose
+
+    /**
+     User toggled Framing (optimistic ON). Ensures white-box cache, then applies overlay.
+
+     - Parameter enabled: Desired Framing state from the sidebar.
+     */
+    func setBoxGuidanceEnabledFromSidebar(_ enabled: Bool) {
+        guard currentCameraState == .compositionSelected else { return }
+        if !enabled {
+            boxAlignCompleteWorkItem?.cancel()
+            boxAlignCompleteWorkItem = nil
+            isBoxGuidanceEnabled = false
+            applyGuidanceOverlays()
+            return
+        }
+
+        isBoxGuidanceEnabled = true
+        cameraControlsView.setBoxGuidanceEnabled(true)
+        ensureFramingResourcesReady { [weak self] success in
+            guard let self else { return }
+            guard self.currentCameraState == .compositionSelected else { return }
+            if success {
+                self.applyGuidanceOverlays()
+                if self.arGuidanceState == .disabled || self.arGuidanceState == .paused {
+                    self.startARGuidanceSession()
+                }
+            } else {
+                self.isBoxGuidanceEnabled = false
+                self.applyGuidanceOverlays()
+                AppTheme.Toast.showText(LMText.camera.arGuidanceNoPersonDetected)
+            }
+        }
+    }
+
+    /**
+     User toggled Pose / line-art (optimistic ON).
+
+     - Parameter enabled: Desired Pose state from the sidebar.
+     */
+    func setLineArtGuidanceEnabledFromSidebar(_ enabled: Bool) {
+        guard currentCameraState == .compositionSelected else { return }
+        if !enabled {
+            isLineArtGuidanceEnabled = false
+            applyGuidanceOverlays()
+            return
+        }
+
+        isLineArtGuidanceEnabled = true
+        cameraControlsView.setLineArtGuidanceEnabled(true)
+        ensureLineArtReadyForCallout { [weak self] success in
+            guard let self else { return }
+            guard self.currentCameraState == .compositionSelected else { return }
+            if success {
+                self.applyGuidanceOverlays()
+            } else {
+                self.isLineArtGuidanceEnabled = false
+                self.applyGuidanceOverlays()
+                AppTheme.Toast.showText(LMText.camera.arGuidanceDetectionFailed)
+            }
+        }
+    }
+
+    /**
+     Ensures a cached reference bbox for Framing; reuses warmup result when present.
+
+     - Parameter completion: Main-queue callback with whether bbox is available.
+     */
+    func ensureFramingResourcesReady(completion: @escaping (Bool) -> Void) {
+        if currentReferenceBbox != nil {
+            completion(true)
+            return
+        }
+        guard let image = currentReferenceImage else {
+            completion(false)
+            return
+        }
+
+        Task { [weak self] in
+            guard let self else { return }
+            let isLandscape = image.size.width > image.size.height
+            _ = try? await LMHumanUnderstandingService.shared.analyzeReferenceOnce(
+                image,
+                shouldRotateToPortrait: isLandscape
+            )
+            let bbox = LMHumanUnderstandingService.shared.referenceSnapshot?.derivedBBox
+            await MainActor.run {
+                guard self.currentCameraState == .compositionSelected else { return }
+                if let bbox {
+                    self.currentReferenceBbox = bbox
+                    self.agentCoachingController.setReferenceImage(image, bbox: bbox)
+                    completion(true)
+                } else {
+                    completion(false)
+                }
+            }
         }
     }
 
@@ -460,35 +594,22 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         agentCoachingController.markCoachingFinal(false)
     }
 
-    /// After box alignment holds, clear overlay and show the Android-parity coaching hint.
+    /// After box alignment holds, turn Framing off and show the coaching hint (sidebar syncs OFF).
     func scheduleBoxAlignCoachingUpdateIfNeeded() {
-        guard agentGuidanceState == .agent, executionTool == .box else { return }
+        guard agentGuidanceState == .agent, isBoxGuidanceEnabled else { return }
         boxAlignCompleteWorkItem?.cancel()
         let policy = LMCoachingPolicyConfig.default
         let delay = TimeInterval(policy.executionToolsBoxAlignHoldMs + 300) / 1000
         let work = DispatchWorkItem { [weak self] in
-            guard let self, self.executionTool == .box, self.isCurrentlyAligned else { return }
-            self.executionTool = .none
-            self.applyExecutionToolToOverlay()
+            guard let self, self.isBoxGuidanceEnabled, self.isCurrentlyAligned else { return }
+            self.isBoxGuidanceEnabled = false
+            self.applyGuidanceOverlays()
             self.coachingActionText = LMText.camera.agentBoxAlignedMessage
             self.coachingReasoningExpanded = false
             self.agentCoachingController.markCoachingFinal(true)
             self.refreshCoachingBubble(isFinal: true)
         }
         boxAlignCompleteWorkItem = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
-    }
-
-    /// Auto-dismiss line-art overlay after the policy hold (Android parity).
-    func scheduleLineArtAutoDismissIfNeeded() {
-        guard executionTool == .lineArt else { return }
-        lineArtAutoDismissWorkItem?.cancel()
-        let delay = TimeInterval(LMCoachingPolicyConfig.default.executionToolsLineArtAutoDismissMs) / 1000
-        let work = DispatchWorkItem { [weak self] in
-            guard let self, self.executionTool == .lineArt else { return }
-            self.dismissActiveExecutionTool()
-        }
-        lineArtAutoDismissWorkItem = work
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
     }
 
@@ -516,8 +637,7 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             reasoningExpanded: coachingReasoningExpanded,
             agentState: resolvedState,
             isFinished: resolvedFinished,
-            showSkip: showSkip,
-            executionTool: executionTool
+            showSkip: showSkip
         )
         updateCoachingBubbleVisibility()
     }
@@ -548,20 +668,38 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
     }
 
     func agentCoaching(didSetExecutionTool tool: LMExecutionTool, instruction: String?) {
-        executionTool = tool
-        if tool == .lineArt {
-            ensureLineArtReadyForCallout()
-            scheduleLineArtAutoDismissIfNeeded()
-        } else {
-            lineArtAutoDismissWorkItem?.cancel()
-            lineArtAutoDismissWorkItem = nil
+        switch tool {
+        case .none:
+            break
+        case .box:
+            if !isBoxGuidanceEnabled {
+                isBoxGuidanceEnabled = true
+                ensureFramingResourcesReady { [weak self] success in
+                    guard let self else { return }
+                    if success {
+                        self.applyGuidanceOverlays()
+                    } else {
+                        self.isBoxGuidanceEnabled = false
+                        self.applyGuidanceOverlays()
+                    }
+                }
+            }
+            applyGuidanceOverlays()
+        case .lineArt:
+            if !isLineArtGuidanceEnabled {
+                isLineArtGuidanceEnabled = true
+                ensureLineArtReadyForCallout { [weak self] _ in
+                    self?.applyGuidanceOverlays()
+                }
+            }
+            applyGuidanceOverlays()
         }
+
         if let instruction {
             coachingActionText = instruction
             coachingReasoningExpanded = false
             refreshCoachingBubble(agentState: .running, isFinal: false)
         }
-        applyExecutionToolToOverlay()
     }
 
     func agentCoaching(didFinishWithCause cause: LMFinishCause) {

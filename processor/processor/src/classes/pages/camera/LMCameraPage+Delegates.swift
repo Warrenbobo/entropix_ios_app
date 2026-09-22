@@ -85,6 +85,18 @@ extension LMCameraPage: LMCameraControlsViewDelegate {
         cameraPreviewView.setGridVisibility(enabled)
     }
 
+    func cameraControlsView(_ view: LMCameraControlsView, didToggleBoxGuidance enabled: Bool) {
+        guard ensureCameraPermissionForInteraction() else { return }
+        LMLogger.log("📐 Framing guidance: \(enabled ? "ON" : "OFF")")
+        setBoxGuidanceEnabledFromSidebar(enabled)
+    }
+
+    func cameraControlsView(_ view: LMCameraControlsView, didToggleLineArtGuidance enabled: Bool) {
+        guard ensureCameraPermissionForInteraction() else { return }
+        LMLogger.log("🧍 Pose guidance: \(enabled ? "ON" : "OFF")")
+        setLineArtGuidanceEnabledFromSidebar(enabled)
+    }
+
     func cameraControlsViewDidTapAgentToggle(_ view: LMCameraControlsView) {
         guard ensureCameraPermissionForInteraction() else { return }
         toggleAgentGuidance()
@@ -254,7 +266,10 @@ extension LMCameraPage: AVCaptureVideoDataOutputSampleBufferDelegate {
         
         // 在主线程处理图片
         DispatchQueue.main.async { [weak self] in
-            self?.showProcessingOverlay(with: image)
+            // Direct Gemini: skip long Inspiring freeze — placeholders appear ASAP.
+            if !LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
+                self?.showProcessingOverlay(with: image)
+            }
             self?.processInspireMeImage(image)
         }
     }

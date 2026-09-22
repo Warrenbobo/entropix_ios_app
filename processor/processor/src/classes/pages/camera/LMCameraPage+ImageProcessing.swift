@@ -265,40 +265,47 @@ extension LMCameraPage {
      Direct Gemini Inspire Me: show 4 placeholders immediately, then replace with local tiles.
 
      Skips EVA02 upload and Composition `/analyze` / job polling.
+     Uses FREE_COMPOSITION unless Path A left a `pendingInspireSpot` (FIXED_CAMERA).
      */
     func processAndGenerateDirectGemini(_ image: UIImage) {
         LMLogger.log("📤 Processing Inspire Me via direct Gemini...")
 
-        guard let compressedImage = compressImage(image, maxLongSide: AppConfigs.Gemini.inputMaxLongSide) else {
-            DispatchQueue.main.async { [weak self] in
-                self?.finishInspireProcessingFailed()
-                AppTheme.Toast.showText(LMText.camera.imageCompressionFailed)
-            }
-            return
-        }
+        let inspireSpot = pendingInspireSpot
+        pendingInspireSpot = nil
+        let mode: LMInspireGenerationMode = inspireSpot != nil ? .fixedCamera : .freeComposition
 
-        let aspectRatio = LMCompositionService.snapAspectRatio(calculateAspectRatio(compressedImage))
+        // Placeholders ASAP — leave Inspiring freeze overlay before compress / network.
         let taskId = "local_gemini_\(UUID().uuidString)"
         let placeholders = LMCompositionService.shared.makeDirectGeminiPlaceholders()
+        let tapElapsedMs: Int = {
+            guard let tap = inspireTapDate else { return -1 }
+            return Int(Date().timeIntervalSince(tap) * 1000)
+        }()
+        inspireTapDate = nil
 
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.hideProcessingOverlay()
             self.isInspireMeCapture = false
             self.enterShowSuggestionsState(taskId: taskId, suggestions: placeholders)
+            LMLogger.log(
+                "inspire.placeholders_visible mode=\(mode.rawValue) taskId=\(taskId) " +
+                "tapToPlaceholdersMs=\(tapElapsedMs) spotId=\(inspireSpot?.id ?? "nil")"
+            )
         }
 
-        let appendix = pendingSpotPromptAppendix
-        pendingSpotPromptAppendix = nil
         if let session = exploreSession {
             session.inspireTaskId = taskId
         }
+
+        let aspectRatio = LMCompositionService.snapAspectRatio(calculateAspectRatio(image))
 
         LMCompositionService.shared.generateSuggestionsDirectly(
             sceneImage: image,
             aspectRatio: aspectRatio,
             sessionId: taskId,
-            spotPromptAppendix: appendix
+            mode: mode,
+            spot: inspireSpot
         ) { [weak self] result in
             guard let self else { return }
             switch result {

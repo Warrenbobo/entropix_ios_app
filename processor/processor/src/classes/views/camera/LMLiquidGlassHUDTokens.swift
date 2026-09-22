@@ -13,6 +13,12 @@ enum LMLiquidGlassHUDTokens {
 
     static let textPrimary = UIColor.white.withAlphaComponent(0.92)
     static let textSecondary = UIColor.white.withAlphaComponent(0.58)
+    /// Reasoning and expand chevron on the dark coaching panel.
+    static let coachingTextSecondary = UIColor.white.withAlphaComponent(0.72)
+    /// Dark tint so iOS 26 regular glass stays readable over a bright preview.
+    static let panelGlassTint = UIColor.black.withAlphaComponent(0.45)
+    static let pillFill = UIColor.white.withAlphaComponent(0.16)
+    static let pillBorder = UIColor.white.withAlphaComponent(0.28)
     static let finishBorder = UIColor(red: 76/255, green: 217/255, blue: 100/255, alpha: 1)
 
     static let instructionFont = UIFont.systemFont(ofSize: 15, weight: .semibold)

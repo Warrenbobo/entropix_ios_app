@@ -15,6 +15,14 @@ struct LMSceneExploreSpot: Codable, Equatable, Identifiable {
     /// Normalized bbox as **xywh** [x, y, w, h] in 0…1 (converted from Android xyxy if needed).
     var bbox: [CGFloat]
     var safetyWarning: String?
+    /// Model-facing photographer position for Path A Inspire (not shown on Find Spot cards).
+    var cameraInstruction: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, reason, bbox
+        case safetyWarning = "safety_warning"
+        case cameraInstruction = "camera_instruction"
+    }
 
     /// Normalized rectangle in unit image space.
     var normalizedRect: CGRect {

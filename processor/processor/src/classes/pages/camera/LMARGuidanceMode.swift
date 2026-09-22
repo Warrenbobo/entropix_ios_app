@@ -49,23 +49,34 @@ enum LMARGuidanceButtonState {
     }
 }
 
-/// Agent-driven AR overlay tool — see `LMExecutionTool` in LMCoachingSupport.swift for coaching layer.
-/// Overlay display for LMARGuidanceView (maps from execution tool).
-enum LMARGuidanceOverlayDisplay {
-    case off
-    case box
-    case lineArt
+/// Overlay visibility for white reference box and/or line-art (can both be on).
+struct LMARGuidanceOverlayDisplay: Equatable {
+    var showBox: Bool
+    var showLineArt: Bool
 
-    init(executionTool: LMExecutionTool, agentEnabled: Bool) {
-        guard agentEnabled else {
-            self = .off
+    static let off = LMARGuidanceOverlayDisplay(showBox: false, showLineArt: false)
+
+    /**
+     Builds overlay flags from independent Framing / Pose toggles.
+
+     - Parameters:
+       - showBox: Framing (white reference box + live blue box) enabled.
+       - showLineArt: Pose (line-art) overlay enabled.
+       - inCompositionSelected: Overlays only apply in composition-selected.
+     */
+    init(showBox: Bool, showLineArt: Bool, inCompositionSelected: Bool) {
+        guard inCompositionSelected else {
+            self.showBox = false
+            self.showLineArt = false
             return
         }
-        switch executionTool {
-        case .none: self = .off
-        case .box: self = .box
-        case .lineArt: self = .lineArt
-        }
+        self.showBox = showBox
+        self.showLineArt = showLineArt
+    }
+
+    init(showBox: Bool = false, showLineArt: Bool = false) {
+        self.showBox = showBox
+        self.showLineArt = showLineArt
     }
 }
 
@@ -87,11 +98,8 @@ enum LMARGuidancePolicy {
         orientationMatched: Bool,
         hideAll: Bool
     ) -> Bool {
-        let shouldHide = hideAll || !orientationMatched
-        switch overlay {
-        case .box: return shouldHide
-        case .off, .lineArt: return true
-        }
+        guard overlay.showBox else { return true }
+        return hideAll || !orientationMatched
     }
 
     static func shouldHideLineArt(
@@ -101,13 +109,9 @@ enum LMARGuidancePolicy {
         hasLineArtImage: Bool,
         hasReferenceGuideReady: Bool
     ) -> Bool {
+        guard overlay.showLineArt else { return true }
         let shouldHide = hideAll || !orientationMatched
-        switch overlay {
-        case .lineArt:
-            return shouldHide || !hasLineArtImage || !hasReferenceGuideReady
-        case .off, .box:
-            return true
-        }
+        return shouldHide || !hasLineArtImage || !hasReferenceGuideReady
     }
 
     enum DisplayOrientation {

@@ -189,7 +189,7 @@ class LMARGuidanceView: UIView {
     
     /// 显示白色框
     func showReferenceBox() {
-        guard guidanceDisplayState == .box, isOrientationMatched else {
+        guard guidanceDisplayState.showBox, isOrientationMatched else {
             referencePersonBox.isHidden = true
             return
         }
@@ -234,7 +234,7 @@ class LMARGuidanceView: UIView {
     
     /// 显示绿色成功框（复用白色框的位置和尺寸，绿框常驻，对号图标3秒后消失）
     func showSuccessBox() {
-        guard guidanceDisplayState == .box, isOrientationMatched else {
+        guard guidanceDisplayState.showBox, isOrientationMatched else {
             successBox.isHidden = true
             successCheckmark.isHidden = true
             return
@@ -481,27 +481,19 @@ class LMARGuidanceView: UIView {
             hasLineArtImage: lineArtImageView.image != nil,
             hasReferenceGuideReady: isReferenceGuideReady
         )
-        
-        switch guidanceDisplayState {
-        case .off:
-            lineArtImageView.isHidden = true
-            referencePersonBox.isHidden = true
-            successBox.isHidden = true
-            successCheckmark.isHidden = true
-        case .box:
-            lineArtImageView.isHidden = shouldHideLineArt
-            referencePersonBox.isHidden = shouldHideReferenceBox
-            if shouldHide {
-                successBox.isHidden = true
-                successCheckmark.isHidden = true
-            }
-        case .lineArt:
-            lineArtImageView.isHidden = shouldHideLineArt
-            referencePersonBox.isHidden = true
+
+        referencePersonBox.isHidden = shouldHideReferenceBox
+        lineArtImageView.isHidden = shouldHideLineArt
+        // Soften line art when Framing is also on so both stay readable.
+        if guidanceDisplayState.showBox && guidanceDisplayState.showLineArt && !shouldHideLineArt {
+            lineArtImageView.alpha = 0.7
+        } else {
+            lineArtImageView.alpha = 1.0
+        }
+        if shouldHide || !guidanceDisplayState.showBox {
             successBox.isHidden = true
             successCheckmark.isHidden = true
         }
-
     }
 }
 

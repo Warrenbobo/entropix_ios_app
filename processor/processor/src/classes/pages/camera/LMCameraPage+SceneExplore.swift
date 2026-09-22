@@ -10,18 +10,6 @@ import SnapKit
 
 extension LMCameraPage {
 
-    /// Spot appendix appended to Inspire prompt for Path A (SPEC §5.4).
-    static func spotPromptAppendix(for spot: LMSceneExploreSpot) -> String {
-        """
-
-        Priority focus for this request:
-        - Spot name: \(spot.name)
-        - Why: \(spot.reason)
-        - Keep the FULL scene as reference; prefer compositions that use this area as the primary subject/anchor.
-        Do NOT ignore the rest of the environment.
-        """
-    }
-
     /// Starts Find Spot / Scene Explore from the PreShootPlan button.
     func handleFindSpotFeature() {
         hideInspireMeGuide()
@@ -53,6 +41,7 @@ extension LMCameraPage {
         showProcessingOverlay(with: freeze, setInspireProcessingState: false)
         applyPageStateChrome()
         updateProcessingOverlayLabel(LMText.camera.exploreProcessing)
+        presentFindSpotInterstitial(sessionId: session.sessionId)
 
         sceneExploreTask?.cancel()
         sceneExploreTask = Task { [weak self] in
@@ -90,26 +79,39 @@ extension LMCameraPage {
                       self.currentCameraState == .sceneExploreProcessing else {
                     return
                 }
-                self.hideProcessingOverlay()
-                session.phase = .result
-                session.spots = spots
-                session.wideScene = wideScene
-                session.heatmapImage = heatmap
-                session.showHeatmap = showHeatmap
+                let applyResult = { [weak self] in
+                    guard let self else { return }
+                    guard self.exploreSession?.sessionId == session.sessionId,
+                          self.currentCameraState == .sceneExploreProcessing else {
+                        return
+                    }
+                    self.hideProcessingOverlay()
+                    session.phase = .result
+                    session.spots = spots
+                    session.wideScene = wideScene
+                    session.heatmapImage = heatmap
+                    session.showHeatmap = showHeatmap
 
-                let failed = errorBody != nil || spots.isEmpty
-                if failed {
-                    // Error lands on RESULT: clean freeze, no dots, short toast.
-                    session.spots = []
-                    session.showHeatmap = false
-                    session.heatmapImage = nil
-                    session.selectedSpotId = nil
-                    AppTheme.Toast.showText(LMText.camera.exploreFailed)
-                } else {
-                    // Card appears only after user taps a spot (no auto-open).
-                    session.selectedSpotId = nil
+                    let failed = errorBody != nil || spots.isEmpty
+                    if failed {
+                        // Error lands on RESULT: clean freeze, no dots, short toast.
+                        session.spots = []
+                        session.showHeatmap = false
+                        session.heatmapImage = nil
+                        session.selectedSpotId = nil
+                        AppTheme.Toast.showText(LMText.camera.exploreFailed)
+                    } else {
+                        // Card appears only after user taps a spot (no auto-open).
+                        session.selectedSpotId = nil
+                    }
+                    self.presentExploreResultOverlay(session: session)
                 }
-                self.presentExploreResultOverlay(session: session)
+                if self.findSpotAdSessionId == session.sessionId {
+                    self.pendingFindSpotResult = applyResult
+                    LMLogger.log("Find Spot result held until interstitial dismiss")
+                    return
+                }
+                applyResult()
             }
         }
     }
@@ -302,7 +304,7 @@ extension LMCameraPage {
         updateLeadingNavigationControl()
     }
 
-    /// Path A: Get template using full freeze frame + spot appendix.
+    /// Path A: Get template using full freeze frame + FIXED_CAMERA prompt.
     /// - Parameter bindReturnToExplore: Realtime Path A binds back to RESULT; history Path A usually does not.
     func getTemplate(for spot: LMSceneExploreSpot, bindReturnToExplore: Bool = true) {
         guard let session = exploreSession, let image = session.freezeFrame else {
@@ -330,20 +332,30 @@ extension LMCameraPage {
             return
         }
 
-        pendingSpotPromptAppendix = Self.spotPromptAppendix(for: spot)
-        let appendixLen = pendingSpotPromptAppendix?.count ?? 0
+        pendingInspireSpot = spot
         hideExploreResultOverlay(showCameraChrome: false)
-        currentCameraState = .inspireMeProcessing
-        applyPageStateChrome()
-
-        showProcessingOverlay(with: image)
-        isInspireMeCapture = true
-        // Same Direct Gemini pipeline as Basic Camera; freeze frame + optional spot appendix.
-        processInspireMeImage(image)
+        // Direct Gemini: skip long Inspiring freeze — placeholders appear ASAP in processAndGenerateDirectGemini.
+        if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled {
+            currentCameraState = .inspireMeProcessing
+            applyPageStateChrome()
+            isInspireMeCapture = true
+            inspireTapDate = Date()
+            LMLogger.log(
+                "inspire.tap mode=FIXED_CAMERA spotId=\(spot.id) " +
+                "cameraInstruction=\(!(spot.cameraInstruction?.isEmpty ?? true))"
+            )
+            processInspireMeImage(image)
+        } else {
+            currentCameraState = .inspireMeProcessing
+            applyPageStateChrome()
+            showProcessingOverlay(with: image)
+            isInspireMeCapture = true
+            processInspireMeImage(image)
+        }
         session.generatedSpotIds.insert(spot.id)
         LMLogger.log(
             "🚀 Path A Get Template started spot=\(spot.id) " +
-            "freeze=\(Int(image.size.width))x\(Int(image.size.height)) appendixChars=\(appendixLen)"
+            "freeze=\(Int(image.size.width))x\(Int(image.size.height))"
         )
     }
 
@@ -385,6 +397,7 @@ extension LMCameraPage {
             guard let self else { return }
             self.sceneExploreTask?.cancel()
             self.sceneExploreTask = nil
+            self.cancelFindSpotInterstitial()
             self.hideProcessingOverlay(resetInspireState: false)
             self.exploreSession = nil
             self.currentCameraState = .normal
@@ -392,6 +405,34 @@ extension LMCameraPage {
             self.applyPageStateChrome()
         })
         present(alert, animated: true)
+    }
+
+    /**
+     Shows a preloaded Find Spot interstitial over the freeze overlay.
+
+     If no creative is ready, the callback returns immediately and the result is not held.
+     */
+    func presentFindSpotInterstitial(sessionId: String) {
+        findSpotAdSessionId = sessionId
+        pendingFindSpotResult = nil
+        LMInterstitialAdManager.shared.showIfAvailable(.findSpot, from: self) { [weak self] in
+            guard let self, self.findSpotAdSessionId == sessionId else { return }
+            self.findSpotAdSessionId = nil
+            let apply = self.pendingFindSpotResult
+            self.pendingFindSpotResult = nil
+            apply?()
+        }
+    }
+
+    /**
+     Drops a not-yet-shown Find Spot ad and any held result.
+
+     An ad already on screen stays until the user closes it; the held result is cleared so dismiss does nothing.
+     */
+    func cancelFindSpotInterstitial() {
+        findSpotAdSessionId = nil
+        pendingFindSpotResult = nil
+        LMInterstitialAdManager.shared.cancelIfNotShowing(.findSpot)
     }
 
     func endExploreSessionWritingHistory() {

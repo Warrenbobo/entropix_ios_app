@@ -60,6 +60,7 @@ final class LMCoachingBubbleView: UIView {
         if #available(iOS 26.0, *) {
             let effect = UIGlassEffect(style: .regular)
             effect.isInteractive = true
+            effect.tintColor = LMLiquidGlassHUDTokens.panelGlassTint
             glassPanel.effect = effect
         } else {
             glassPanel.effect = UIBlurEffect(style: .systemMaterialDark)
@@ -76,14 +77,14 @@ final class LMCoachingBubbleView: UIView {
         instructionLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
         reasoningLabel.font = LMLiquidGlassHUDTokens.reasoningFont
-        reasoningLabel.textColor = LMLiquidGlassHUDTokens.textSecondary
+        reasoningLabel.textColor = LMLiquidGlassHUDTokens.coachingTextSecondary
         reasoningLabel.numberOfLines = 0
 
         reasoningScrollView.showsVerticalScrollIndicator = false
         reasoningScrollView.isHidden = true
         reasoningScrollView.addSubview(reasoningLabel)
 
-        expandButton.tintColor = LMLiquidGlassHUDTokens.textSecondary
+        expandButton.tintColor = LMLiquidGlassHUDTokens.coachingTextSecondary
         expandButton.setImage(UIImage(systemName: "chevron.down"), for: .normal)
         expandButton.addTarget(self, action: #selector(expandTapped), for: .touchUpInside)
         expandButton.isHidden = true
@@ -208,8 +209,7 @@ final class LMCoachingBubbleView: UIView {
         reasoningExpanded: Bool = false,
         agentState: LMAgentState,
         isFinished: Bool,
-        showSkip: Bool = false,
-        executionTool: LMExecutionTool = .none
+        showSkip: Bool = false
     ) {
         let trimmedInstruction = instruction?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let trimmedReasoning = reasoning?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -259,18 +259,11 @@ final class LMCoachingBubbleView: UIView {
         skipPill.isHidden = !showSkipButton
         skipHeightConstraint?.update(offset: showSkipButton ? Self.actionPillHeight : 0)
 
-        let dismissLabel: String?
-        switch executionTool {
-        case .box: dismissLabel = LMText.camera.agentDismissBoxButton
-        case .lineArt: dismissLabel = LMText.camera.agentDismissLineArtButton
-        case .none: dismissLabel = nil
-        }
-        let showDismissButton = hasAction && !isThinking && dismissLabel != nil
-        dismissPill.isHidden = !showDismissButton
-        dismissPill.setTitle(dismissLabel ?? "")
-        dismissHeightConstraint?.update(offset: showDismissButton ? Self.actionPillHeight : 0)
+        // Framing / Pose dismiss moved to sidebar toggles — no HUD close pills.
+        dismissPill.isHidden = true
+        dismissHeightConstraint?.update(offset: 0)
 
-        let showActionsRow = showSkipButton || showDismissButton
+        let showActionsRow = showSkipButton
         actionsRow.isHidden = !showActionsRow
         actionsRowHeightConstraint?.update(offset: showActionsRow ? Self.actionPillHeight : 0)
     }

@@ -4,7 +4,7 @@
     "api_key": "",
     "model_name": "",
     "enable_thinking": false,
-    "thinking_budget": 512,
+    "thinking_budget": 256,
     "temperature": 0.7,
     "max_tokens": 2048
   },
@@ -18,7 +18,7 @@
     "api_key": "",
     "model_name": "",
     "enable_thinking": false,
-    "thinking_budget": 512,
+    "thinking_budget": 256,
     "temperature": 0.7,
     "max_tokens": 2048
   }

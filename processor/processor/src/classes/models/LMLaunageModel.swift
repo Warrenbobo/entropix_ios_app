@@ -72,6 +72,8 @@ struct LMCameraTextConfig: Codable {
     var timer: String = "Timer"
     var live: String = "Live"
     var grid: String = "Grid"
+    var framingGuidance: String = "Framing"
+    var poseGuidance: String = "Pose"
     var flipCamera: String = "Flip"
     var arGuidance: String = "AR Guidance"
     var myReference: String = "Album"

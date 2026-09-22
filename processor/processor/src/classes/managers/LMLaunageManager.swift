@@ -61,6 +61,40 @@ enum LMLanguageType: String, Codable {
             ]
         }
     }
+
+    /**
+     Prompt lines for Scene Explore VLM: localize user-visible JSON string fields only.
+
+     JSON keys and numeric `bbox` stay in the schema language (English identifiers).
+     */
+    var sceneExploreLLMOutputLanguageLines: [String] {
+        switch self {
+        case .english:
+            return [
+                "【Output language】",
+                "- The user's app UI is English.",
+                "- Write every human-readable string in the JSON in English: `name`, `reason`, `camera_instruction`, `safety_warning`, and `decline_reason` (if present).",
+                "- Keep all JSON keys (`image_size`, `spots`, `bbox`, `wide_scene`, `camera_instruction`, etc.) and numeric fields unchanged as specified in the schema.",
+                "- Keep `name` short (e.g. a place label) and `reason` ≤ 20 words; `camera_instruction` should be one concise sentence.",
+            ]
+        case .simplifiedChinese:
+            return [
+                "【输出语言】",
+                "- 用户当前应用界面为简体中文。",
+                "- 请将 JSON 中面向用户的字符串全部使用简体中文：`name`、`reason`、`camera_instruction`、`safety_warning`、以及若有的 `decline_reason`。",
+                "- JSON 字段名（`image_size`、`spots`、`bbox`、`wide_scene`、`camera_instruction` 等）与数值字段保持 schema 规定，不要翻译 key。",
+                "- `name` 保持短标签；`reason` 不超过 20 字；`camera_instruction` 尽量一句。",
+            ]
+        case .traditionalChinese:
+            return [
+                "【輸出語言】",
+                "- 用戶當前應用程式介面為繁體中文。",
+                "- 請將 JSON 中面向使用者的字串全部使用繁體中文：`name`、`reason`、`camera_instruction`、`safety_warning`、以及若有的 `decline_reason`。",
+                "- JSON 欄位名（`image_size`、`spots`、`bbox`、`wide_scene`、`camera_instruction` 等）與數值欄位保持 schema 規定，不要翻譯 key。",
+                "- `name` 保持短標籤；`reason` 不超過 20 字；`camera_instruction` 盡量一句。",
+            ]
+        }
+    }
 }
 
 // MARK: - Language Manager
@@ -258,6 +292,8 @@ class LMLaunageManager {
                 timer: "定时器",
                 live: "实时",
                 grid: "网格",
+                framingGuidance: "取景构图",
+                poseGuidance: "姿势对齐",
                 flipCamera: "翻转",
                 arGuidance: "AR 引导",
                 inspireMeButton: "灵感启发",
