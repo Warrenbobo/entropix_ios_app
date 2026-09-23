@@ -24,7 +24,6 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     private let backIconImageView = UIImageView()
     private let backLabel = UILabel()
     private let downloadButton = UIButton(type: .custom)
-    private let saveButton = UIButton(type: .custom)
     private let successIndicator = UIView()
     
     // MARK: - Initialization
@@ -109,24 +108,6 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
         downloadButton.tintColor = .white
         
         view.addSubview(downloadButton)
-        
-        // Save Button (保存到Gallery)
-        saveButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        saveButton.layer.cornerRadius = 22
-        saveButton.layer.borderWidth = 1
-        saveButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-        
-        let saveLabel = UILabel()
-        saveLabel.text = LMText.common.save
-        saveLabel.textColor = .white
-        saveLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        saveButton.addSubview(saveLabel)
-        
-        saveLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-        
-        view.addSubview(saveButton)
         
         // Success Indicator
         successIndicator.backgroundColor = UIColor.black.withAlphaComponent(0.8)
@@ -378,16 +359,9 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
             make.centerY.equalToSuperview()
         }
         
-        saveButton.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
-            make.trailing.equalToSuperview().offset(-20)
-            make.height.equalTo(44)
-            make.width.equalTo(90)
-        }
-        
         downloadButton.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
-            make.trailing.equalTo(saveButton.snp.leading).offset(-12)
+            make.trailing.equalToSuperview().offset(-20)
             make.size.equalTo(40)
         }
         
@@ -399,7 +373,6 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
     
     private func setupActions() {
         downloadButton.addTarget(self, action: #selector(downloadButtonTapped), for: .touchUpInside)
-        saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
     
     // MARK: - Actions
@@ -425,44 +398,6 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
                 }
             } else {
                 self.showPhotoLibraryPermissionAlert()
-            }
-        }
-    }
-    
-    @objc private func saveButtonTapped() {
-        LMLogger.log("💾 Saving photo to Gallery...")
-        
-        // 检查登录状态
-        guard requireLogin(action: "save photo to Gallery") else {
-            return
-        }
-        
-        // Show loading indicator
-        let loadingAlert = UIAlertController(title: nil, message: LMText.common.saving, preferredStyle: .alert)
-        let loadingIndicator = UIActivityIndicatorView(style: .medium)
-        loadingIndicator.translatesAutoresizingMaskIntoConstraints = false
-        loadingIndicator.startAnimating()
-        loadingAlert.view.addSubview(loadingIndicator)
-        loadingIndicator.centerXAnchor.constraint(equalTo: loadingAlert.view.centerXAnchor).isActive = true
-        loadingIndicator.bottomAnchor.constraint(equalTo: loadingAlert.view.bottomAnchor, constant: -20).isActive = true
-        present(loadingAlert, animated: true)
-        
-        // Save to Gallery (CoreData)
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            guard let self = self else { return }
-            
-            let success = LMPhotoStorageManager.shared.savePhoto(photoData: self.photoData)
-            
-            DispatchQueue.main.async {
-                loadingAlert.dismiss(animated: true) {
-                    if (success != nil) {
-                        LMLogger.log("✅ Photo saved to Gallery successfully")
-                        self.showSaveSuccessAndNavigate()
-                    } else {
-                        LMLogger.log("❌ Failed to save photo to Gallery")
-                        self.showError(message: LMText.camera.failedToSavePhoto)
-                    }
-                }
             }
         }
     }
@@ -605,23 +540,6 @@ class LMPhotoPreviewPage: UIViewController, UIGestureRecognizerDelegate {
                 self.successIndicator.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
             } completion: { _ in
                 self.successIndicator.isHidden = true
-            }
-        }
-    }
-    
-    private func showSaveSuccessAndNavigate() {
-        // 显示成功提示
-        let successAlert = UIAlertController(
-            title: LMText.common.success,
-            message: LMText.camera.photoSavedToGallery,
-            preferredStyle: .alert
-        )
-        present(successAlert, animated: true)
-        
-        // 1.5秒后自动关闭并返回相机页面
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            successAlert.dismiss(animated: true) {
-                self?.navigationController?.popViewController(animated: true)
             }
         }
     }
