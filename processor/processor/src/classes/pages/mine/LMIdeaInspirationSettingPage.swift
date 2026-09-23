@@ -192,14 +192,15 @@ private extension LMIdeaInspirationSettingPage {
                 model: selectedModel
             )
         )
-        AppTheme.Toast.showText(LMText.settings.modelsSaved)
+        AppTheme.Toast.showText(LMText.settings.modelsSaved, position: .top)
     }
 
     @objc func handleRestore() {
         LMLlmModuleSettingsStore.restoreDefaults(.ideaInspiration)
         loadSettings()
         AppTheme.Toast.showText(
-            String(format: LMText.settings.modelsResetToDefaultFormat, LMText.settings.modelsSectionIdeaInspiration)
+            String(format: LMText.settings.modelsResetToDefaultFormat, LMText.settings.modelsSectionIdeaInspiration),
+            position: .top
         )
     }
 }

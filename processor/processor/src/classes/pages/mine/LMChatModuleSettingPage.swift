@@ -261,7 +261,7 @@ private extension LMChatModuleSettingPage {
         } else {
             LMLlmModuleSettingsStore.saveARGuidance(settings)
         }
-        AppTheme.Toast.showText(LMText.settings.modelsSaved)
+        AppTheme.Toast.showText(LMText.settings.modelsSaved, position: .top)
     }
 
     @objc func handleRestore() {
@@ -270,6 +270,9 @@ private extension LMChatModuleSettingPage {
         let section = module == .sceneExplore
             ? LMText.settings.modelsSectionSceneExplore
             : LMText.settings.modelsSectionARGuidance
-        AppTheme.Toast.showText(String(format: LMText.settings.modelsResetToDefaultFormat, section))
+        AppTheme.Toast.showText(
+            String(format: LMText.settings.modelsResetToDefaultFormat, section),
+            position: .top
+        )
     }
 }

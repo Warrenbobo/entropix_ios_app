@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Toast_Swift
 
 struct AppTheme {
     
@@ -164,13 +165,22 @@ struct AppTheme {
     
     struct Toast {
         
-        /// 显示toast提示
+        /**
+         Shows a toast on the key window.
+
+         - Parameters:
+           - message: Toast text.
+           - duration: Auto-dismiss duration in seconds.
+           - position: Screen anchor — `.top` / `.center` / `.bottom`.
+           - completion: Called when the toast finishes (or is tapped).
+         */
         static func showText(_ message: String?,
-                          duration: TimeInterval = 3.0,
-                          completion: ((Bool) -> Void)? = nil) {
+                             duration: TimeInterval = 3.0,
+                             position: ToastPosition = .center,
+                             completion: ((Bool) -> Void)? = nil) {
             guard let windowView = Screen.window() else { return }
             windowView.hideAllToasts()
-            windowView.makeToast(message, duration: duration, position: .center, completion: completion)
+            windowView.makeToast(message, duration: duration, position: position, completion: completion)
         }
         
         static func showLoading() {
