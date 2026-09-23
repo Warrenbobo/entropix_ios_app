@@ -170,6 +170,11 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             return
         }
 
+        guard LMLlmCallQuotaStore.hasRemaining(for: .arGuidance) else {
+            presentMissingModelConfig(for: .arGuidance)
+            return
+        }
+
         guard let reference = currentReferenceImage else {
             AppTheme.Toast.showText(LMText.camera.cameraNotReady)
             return

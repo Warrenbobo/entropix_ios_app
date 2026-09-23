@@ -299,6 +299,14 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
             )
         }
 
+        guard LMLlmCallQuotaStore.consume(for: .arGuidance) else {
+            callbacks.onError?(LMText.settings.qwenNotConfigured)
+            return LMAgenticRunResult(
+                httpCode: 0, finalAction: "", rawOutput: "", reasoningFull: "", answerFull: "",
+                finishCause: nil, errorBody: "AR Guidance quota exhausted", ttfbMs: 0
+            )
+        }
+
         let requestBody = buildRequestJson(
             config: config,
             reference: reference,

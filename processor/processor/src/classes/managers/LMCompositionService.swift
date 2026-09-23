@@ -174,6 +174,12 @@ class LMCompositionService {
             return
         }
 
+        guard LMLlmCallQuotaStore.consume(for: .ideaInspiration) else {
+            LMLogger.log("inspire.fail mode=\(mode.rawValue) taskId=\(sessionId) reason=quota")
+            completion(.failure(LMGeminiImageError.invalidSettings))
+            return
+        }
+
         let requestStart = Date()
         let hasCameraInstruction = !(spot?.cameraInstruction?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
         LMLogger.log(

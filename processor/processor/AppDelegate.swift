@@ -16,6 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         LMFeatureFlagsManager.setup()
+        LMLlmCallQuotaStore.setup()
         LMMobileAdsBootstrap.shared.startIfNeeded()
         LMMobileAdsBootstrap.shared.whenReady {
             LMInterstitialAdManager.shared.preloadAll()

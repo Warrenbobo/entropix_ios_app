@@ -33,6 +33,10 @@ protocol LMBannerAdPolicyEvaluating {
  */
 struct LMBannerAdPolicy: LMBannerAdPolicyEvaluating {
     func shouldShowBannerAd() -> Bool {
+        guard AppConfigs.GoogleAdConfigs.adsEnabled else {
+            LMLogger.log("Banner skipped — adsEnabled=false")
+            return false
+        }
         let unit = AppConfigs.GoogleAdConfigs.bannerAdId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !unit.isEmpty else {
             LMLogger.log("Banner skipped — empty ad unit ID")

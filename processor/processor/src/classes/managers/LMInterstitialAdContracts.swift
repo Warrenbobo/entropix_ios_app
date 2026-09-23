@@ -39,6 +39,10 @@ protocol LMInterstitialAdPolicyEvaluating {
  */
 struct LMInterstitialAdPolicy: LMInterstitialAdPolicyEvaluating {
     func shouldAttemptInterstitial(for placement: LMInterstitialPlacement) -> Bool {
+        guard AppConfigs.GoogleAdConfigs.adsEnabled else {
+            LMLogger.log("Interstitial skipped — adsEnabled=false (\(placement.rawValue))")
+            return false
+        }
         let unit = placement.adUnitID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !unit.isEmpty else {
             LMLogger.log("Interstitial skipped — empty unit (\(placement.rawValue))")

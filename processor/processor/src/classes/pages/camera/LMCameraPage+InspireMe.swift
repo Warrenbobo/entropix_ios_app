@@ -274,6 +274,13 @@ extension LMCameraPage {
             }
             return
         }
+        guard LMLlmCallQuotaStore.hasRemaining(for: .ideaInspiration) else {
+            DispatchQueue.main.async { [weak self] in
+                self?.finishInspireProcessingFailed()
+                self?.presentMissingModelConfig(for: .ideaInspiration)
+            }
+            return
+        }
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             self?.processAndGenerateDirectGemini(image)
         }

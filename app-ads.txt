@@ -1,0 +1,14 @@
+# Authorized sellers for apps (IAB Tech Lab app-ads.txt).
+# Host this file at the ROOT of the developer website linked in App Store Connect
+# (Marketing URL), e.g. https://example.com/app-ads.txt — NOT inside the iOS app bundle.
+#
+# Paste the snippet from AdMob below this comment block (replace any placeholder lines).
+# Typical Google line looks like:
+# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
+#
+# After publishing:
+# 1. Confirm https://<developer-domain>/app-ads.txt returns HTTP 200 (also via http://).
+# 2. Confirm App Store "Developer Website" / Marketing URL uses that same hostname.
+# 3. In AdMob, request crawl / wait up to 24h for verification.
+
+google.com, pub-1275849900769684, DIRECT, f08c47fec0942fa0

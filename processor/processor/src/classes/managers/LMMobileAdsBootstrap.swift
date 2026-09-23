@@ -44,6 +44,12 @@ final class LMMobileAdsBootstrap: LMMobileAdsBootstrapping {
         didStart = true
         lock.unlock()
 
+        guard AppConfigs.GoogleAdConfigs.adsEnabled else {
+            LMLogger.log("AdMob SDK skipped — adsEnabled=false")
+            markReady()
+            return
+        }
+
         LMLogger.log("AdMob SDK starting…")
         MobileAds.shared.start { [weak self] status in
             LMLogger.log("AdMob SDK started: adapter count=\(status.adapterStatusesByClassName.count)")
@@ -53,6 +59,12 @@ final class LMMobileAdsBootstrap: LMMobileAdsBootstrapping {
 
     /// Runs `body` on the main queue once the SDK has finished starting.
     func whenReady(_ body: @escaping () -> Void) {
+        guard AppConfigs.GoogleAdConfigs.adsEnabled else {
+            LMLogger.log("AdMob whenReady skipped — adsEnabled=false")
+            DispatchQueue.main.async(execute: body)
+            return
+        }
+
         startIfNeeded()
 
         lock.lock()

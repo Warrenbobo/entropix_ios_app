@@ -157,6 +157,16 @@ final class LMSceneExploreClient {
             )
         }
 
+        guard LMLlmCallQuotaStore.consume(for: .sceneExplore) else {
+            return LMSceneExploreClientResult(
+                httpCode: 0,
+                spots: [],
+                wideScene: false,
+                rawText: "",
+                errorBody: "Scene Explore quota exhausted"
+            )
+        }
+
         let feature = LMSceneExploreConfigRepository.shared.get()
         let longEdge = feature.imageLongEdge > 0 ? feature.imageLongEdge : 1024
         let prepared = prepareJPEG(image, longEdge: longEdge, quality: feature.imageJPEGQuality)

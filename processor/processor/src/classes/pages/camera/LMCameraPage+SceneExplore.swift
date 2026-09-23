@@ -29,6 +29,11 @@ extension LMCameraPage {
             return
         }
 
+        guard LMLlmCallQuotaStore.hasRemaining(for: .sceneExplore) else {
+            presentMissingModelConfig(for: .sceneExplore)
+            return
+        }
+
         guard let image = makeInspireMeImageFromLatestPreviewFrameForExplore() else {
             AppTheme.Toast.showText(LMText.camera.failedToCaptureFrame)
             return
@@ -315,6 +320,11 @@ extension LMCameraPage {
         // Same Idea Inspiration / Gemini gate as Basic Camera Get Template shutter.
         if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled,
            !LMLlmModuleSettingsStore.isConfigured(.ideaInspiration) {
+            presentMissingModelConfig(for: .ideaInspiration)
+            return
+        }
+        if LMFeatureFlagsManager.inspireMeDirectGeminiEnabled,
+           !LMLlmCallQuotaStore.hasRemaining(for: .ideaInspiration) {
             presentMissingModelConfig(for: .ideaInspiration)
             return
         }

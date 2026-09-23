@@ -41,6 +41,10 @@ protocol LMAppOpenAdPolicyEvaluating {
  */
 struct LMAppOpenAdPolicy: LMAppOpenAdPolicyEvaluating {
     func shouldAttemptAppOpenAd() -> Bool {
+        guard AppConfigs.GoogleAdConfigs.adsEnabled else {
+            LMLogger.log("App Open skipped — adsEnabled=false")
+            return false
+        }
         let unit = AppConfigs.GoogleAdConfigs.appOpenAdId.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !unit.isEmpty else {
             LMLogger.log("App Open skipped — empty ad unit ID")

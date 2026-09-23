@@ -22,6 +22,12 @@ struct AppConfigs {
     
     /// AdMob placement IDs. Study builds use Google demo units; replace before Release.
     struct GoogleAdConfigs {
+        /**
+         Developer-managed master switch for all AdMob placements.
+
+         Flip to `true` in a future App Store build to re-enable ads after app-ads.txt / unit setup.
+         */
+        static let adsEnabled = false
         /// AdMob App ID (`GADApplicationIdentifier` in Info.plist).
         static let appid = "ca-app-pub-3940256099942544~1458002511"
         /// Rewarded video (deferred — unused in App Open / Banner study).
@@ -42,6 +48,14 @@ struct AppConfigs {
 
     /// Assets directory containing demo suggestion images for offline mode.
     static let demoSuggestionsDir = "demo_suggestions"
+
+    /**
+     Per-module LLM call quota seeded on first launch (UserDefaults).
+
+     Scene Explore / Idea Inspiration / AR Guidance each start at this value.
+     Changing the constant only affects new installs (or missing keys), not upgrades.
+     */
+    static let llmCallQuotaInitial = 100
 
     struct Assets {
         static let watermarkBrand = "watermark_brand"

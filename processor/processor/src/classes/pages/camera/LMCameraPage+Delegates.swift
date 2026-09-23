@@ -319,6 +319,10 @@ extension LMCameraPage: LMPreShootPlanButtonViewDelegate {
                 presentMissingModelConfig(for: .ideaInspiration)
                 return
             }
+            if !LMLlmCallQuotaStore.hasRemaining(for: .ideaInspiration) {
+                presentMissingModelConfig(for: .ideaInspiration)
+                return
+            }
             handleInspireMeFeature()
             return
         }

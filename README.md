@@ -26,7 +26,7 @@
 | 用户模型调用 | **BYOK**：Mine → Setting → Models，按模块配置 Base URL / API Key / 模型 |
 | 启动身份 | Splash 走 `LMUserManager.setupLocalBYOKUser()`，不拉起游客注册登录 |
 | Offline / 未配置 Inspiration | Inspire Me 可回落本地 `demo_suggestions` 资源 |
-| 广告 | Google AdMob **Demo 单元**（学习/联调）；上架前必须换成正式 ID |
+| 广告 | `GoogleAdConfigs.adsEnabled = false`（本版关闭）；Demo 单元仍保留，发版改 `true` 可再开 |
 
 也就是说：当前主线是 **本地 App + 用户自己的模型密钥**，而不是依赖 `https://framaist.entropixai.com` 构图服务。Backend 相关代码大量保留在 `FRAMAIST_BACKEND_DISABLED` 注释块内，便于以后重新打开。
 
@@ -44,7 +44,7 @@ Basic Camera (.normal)
                      └── Agent / Box / Line Art + Score Donut + 快门 Instruct/Capture
 ```
 
-**广告落点（当前实现，Demo ID）：**
+**广告落点（代码已接好；`adsEnabled == false` 时全部跳过）：**
 
 | 时机 | 形态 | 说明 |
 |------|------|------|
@@ -54,7 +54,7 @@ Basic Camera (.normal)
 | Suggestion 卡片仍在 loading（`ready != true`） | Interstitial | 数据可先写进内存，轮播 UI 等关闭再刷新 |
 | Inspiring 冻帧（`.inspireMeProcessing`） | **不出广告** | 与产品确认一致 |
 
-关闭按钮由 Google SDK 控制；未预加载则跳过，不阻塞 loading。
+总开关：`AppConfigs.GoogleAdConfigs.adsEnabled`。关闭时不 `MobileAds.start`、不 preload/show。开启后关闭按钮由 Google SDK 控制；未预加载则跳过，不阻塞 loading。
 
 ---
 
@@ -161,7 +161,7 @@ entropix_ios_app/
 | Banner | `LMBannerAdHost` |
 | Interstitial | `LMInterstitialAdManager` + `LMGoogleInterstitialAdLoader` |
 
-策略：单元 ID 非空才尝试；**忽略** `backendApiEnabled`（业务 Backend 关了广告仍可出）。
+策略：先查 `adsEnabled`，再查单元 ID 非空；**忽略** `backendApiEnabled`（业务 Backend 关了广告仍可出）。
 
 ### 4.8 登录模块（`pages/login`）
 
@@ -176,7 +176,8 @@ entropix_ios_app/
 | 配置 | 用途 |
 |------|------|
 | `Host.release` | FramAist 域名（Backend 关闭时基本不用） |
-| `GoogleAdConfigs.*` | AdMob App ID / App Open / Banner / 两处 Interstitial（当前均为 Google **Demo** ID） |
+| `GoogleAdConfigs.*` | `adsEnabled` + AdMob App ID / App Open / Banner / 两处 Interstitial（单元仍为 Google **Demo** ID） |
+| `llmCallQuotaInitial` | Scene Explore / Inspire / AR Guidance 各模块本地调用配额初始值（默认 100） |
 | `Gemini.*` | Direct Inspiration 默认 base、超时、输入边长、prompt 路径等（**密钥不写这里**） |
 | `AgentLLM.*` | Agent 编译期辅助；默认 base/model **故意为空**，运行时读 Models |
 
@@ -205,14 +206,16 @@ entropix_ios_app/
 
 常见文件：`model_config.json`、`gemini_inspire_prompt.txt`、`scene_explore_*_prompt.txt`、`system_prompt_agentic_v3.txt`、`prompts.json`、`coaching_policy.json`、各模块 `*_config.json`。
 
-### 5.5 AdMob（学习构建）
+### 5.5 AdMob
 
-`Info.plist` → `GADApplicationIdentifier` 必须与 `AppConfigs.GoogleAdConfigs.appid` 一致。当前 Demo：
+当前 **`adsEnabled = false`**（无广告上线）。重新启用时：
 
-- App ID：`ca-app-pub-3940256099942544~1458002511`
-- App Open / Banner / Interstitial：见 `AppConfigs.GoogleAdConfigs`
+1. 将 `AppConfigs.GoogleAdConfigs.adsEnabled` 改为 `true`
+2. `Info.plist` → `GADApplicationIdentifier` 必须与 `appid` 一致
+3. 替换 Demo 广告单元 ID，并完成 app-ads.txt / Marketing URL 验证
+4. 按需补 ATT / UMP 合规流程
 
-**正式上架前替换全部 Demo ID**，并按需补 ATT / UMP 合规流程。
+Demo 单元仍保留在 `AppConfigs.GoogleAdConfigs`（App Open / Banner / Interstitial）。
 
 ### 5.6 隐私与权限
 
@@ -295,4 +298,4 @@ open processor.xcworkspace
 
 ## 9. 一句话总结
 
-**Entropix iOS = 相机首页的 AI 构图教练**：用 BYOK 大模型「找点 / 出模板」，用端侧分数与 Agent「把模板拍回来」；FramAist 云业务当前关闭，广告用 Demo 单元挂在 Splash、Mine 与两处 loading 上。开发请打开 **`processor/processor.xcworkspace`**，先配 Models，再拍。
+**Entropix iOS = 相机首页的 AI 构图教练**：用 BYOK 大模型「找点 / 出模板」，用端侧分数与 Agent「把模板拍回来」；FramAist 云业务当前关闭，广告总开关默认关闭。开发请打开 **`processor/processor.xcworkspace`**，先配 Models，再拍。
