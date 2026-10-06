@@ -65,5 +65,14 @@ fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
 
+# macOS
+.DS_Store
+
+# Editor / IDE
+.vscode/
+
 # Local LLM credentials (copy from model_config_example.json)
 processor/processor/src/resources/config/model_config.json
+
+# Hosted on developer website only; not part of the iOS app
+app-ads.txt
