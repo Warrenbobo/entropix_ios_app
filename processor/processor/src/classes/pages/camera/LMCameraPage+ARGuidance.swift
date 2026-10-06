@@ -1386,6 +1386,7 @@ extension LMCameraPage {
 
         referenceImageContainerView?.transform = .identity
         referenceImageContainerView?.isHidden = true
+        syncReferenceCardGrid(animated: false)
 
         currentTaskId = "debug-runtime-harness"
         currentSuggestions = suggestions
@@ -1399,6 +1400,7 @@ extension LMCameraPage {
 
         preShootPlanButtonView.isHidden = true
         bottomControlsHeightConstraint?.update(offset: 44)
+        updateCameraControlsVerticalOffsetForSuggestionsState()
         cameraBottomControlsView.setLayoutMode(.compact, animated: false)
         showSuggestionsCarousel()
         ensureCorrectViewHierarchy()

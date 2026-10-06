@@ -43,6 +43,8 @@ struct AppConfigs {
     }
     
     struct AppStore {
+        /// Numeric App Store Connect app id (iTunes Lookup).
+        static let appID = "6757949319"
         static let updateURL = "https://apps.apple.com/app/id6757949319"
     }
 
@@ -59,13 +61,9 @@ struct AppConfigs {
 
     struct Assets {
         static let watermarkBrand = "watermark_brand"
-        static let tutorialScene = "tutorial_scene"
-        static let tutorialTapLeft = "tutorial_tap_left"
-        static let tutorialTapRight = "tutorial_tap_right"
-        static let tutorialSelectLeft = "tutorial_select_left"
-        static let tutorialSelectRight = "tutorial_select_right"
-        static let tutorialAlign = "tutorial_align"
-        static let tutorialSave = "tutorial_save"
+        static let tutorialJourneyFindSpot = "tutorial_journey_find_spot"
+        static let tutorialJourneyTemplates = "tutorial_journey_templates"
+        static let tutorialJourneyCoaching = "tutorial_journey_coaching"
     }
 
     /**

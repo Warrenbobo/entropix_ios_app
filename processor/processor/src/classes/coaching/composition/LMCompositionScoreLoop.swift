@@ -21,7 +21,9 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
     private var scheduledWork: DispatchWorkItem?
     private let scoringLock = NSLock()
     private var isScoring = false
-    /// Bumped on every `stop()` so in-flight `analyze` results are discarded.
+    /// `true` while the loop should keep scheduling ticks.
+    private var isActive = false
+    /// Bumped on hard `stop()` so in-flight `analyze` results are discarded.
     private var generation: UInt64 = 0
 
     private var frameProvider: (() -> UIImage?)?
@@ -33,13 +35,24 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
     private(set) var latestScore: LMCompositionScore?
 
     static let defaultInterval: TimeInterval = 1.0
-    static let llmStreamingInterval: TimeInterval = 2.0
+
+    /// Whether the loop is active (scheduling ticks). Safe to call `start` again while active.
+    var isRunning: Bool {
+        scoringLock.lock()
+        defer { scoringLock.unlock() }
+        return isActive
+    }
 
     init(analyzer: LMCompositionAnalyzer = .shared) {
         self.analyzer = analyzer
     }
 
-    /// Starts the loop; the first scoring run begins immediately, then waits `intervalProvider` after each publish.
+    /**
+     Starts or refreshes the loop without tearing down an already-running schedule.
+
+     Calling `start` again while active only updates providers — it does **not** bump
+     `generation` or cancel the in-flight tick (avoids discarding every live score).
+     */
     func start(
         frameProvider: @escaping () -> UIImage?,
         referenceProvider: @escaping () -> UIImage?,
@@ -47,12 +60,19 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
         cameraReadyProvider: @escaping () -> Bool = { true },
         intervalProvider: @escaping () -> TimeInterval = { LMCompositionScoreLoop.defaultInterval }
     ) {
-        stop()
+        scoringLock.lock()
+        let alreadyActive = isActive
         self.frameProvider = frameProvider
         self.referenceProvider = referenceProvider
         self.isPausedProvider = isPausedProvider
         self.cameraReadyProvider = cameraReadyProvider
         self.intervalProvider = intervalProvider
+        isActive = true
+        scoringLock.unlock()
+
+        if alreadyActive {
+            return
+        }
         scheduleNextTick(after: 0)
     }
 
@@ -61,9 +81,14 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
 
      In-flight `analyze` may still finish on the score queue, but its result is
      discarded via `generation` so UI / donut are not updated after leave.
+
+     - Parameter clearDisplayedScore: When `true` (leave / hard stop), clears
+       `latestScore` and publishes `nil` so the donut shows `--`. When `false`,
+       keeps the last score for sticky display.
      */
-    func stop() {
+    func stop(clearDisplayedScore: Bool = true) {
         scoringLock.lock()
+        isActive = false
         generation &+= 1
         scoringLock.unlock()
 
@@ -74,6 +99,13 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
         isPausedProvider = nil
         cameraReadyProvider = nil
         intervalProvider = nil
+
+        scoringLock.lock()
+        isScoring = false
+        scoringLock.unlock()
+
+        guard clearDisplayedScore else { return }
+
         latestScore = nil
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -83,7 +115,11 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
 
     private func scheduleNextTick(after delay: TimeInterval) {
         scheduledWork?.cancel()
-        guard frameProvider != nil else { return }
+        scoringLock.lock()
+        let active = isActive
+        scoringLock.unlock()
+        guard active else { return }
+
         let work = DispatchWorkItem { [weak self] in
             self?.tick()
         }
@@ -92,42 +128,51 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
     }
 
     private func tick() {
-        guard let referenceProvider, let frameProvider else { return }
-
         scoringLock.lock()
+        let active = isActive
         let tickGeneration = generation
+        let referenceProvider = self.referenceProvider
+        let frameProvider = self.frameProvider
         scoringLock.unlock()
 
+        guard active else { return }
+
+        // Providers missing while still active — retry (never drop the schedule).
+        guard let referenceProvider, let frameProvider else {
+            scheduleNextTick(after: currentInterval(), generation: tickGeneration)
+            return
+        }
+
         guard let reference = referenceProvider() else {
-            publishScore(nil, generation: tickGeneration)
+            scheduleNextTick(after: currentInterval(), generation: tickGeneration)
             return
         }
         guard cameraReadyProvider?() ?? true else {
-            publishScore(nil, generation: tickGeneration)
-            return
-        }
-        if isPausedProvider?() ?? false {
             scheduleNextTick(after: currentInterval(), generation: tickGeneration)
             return
         }
-        if isScoring {
-            scheduleNextTick(after: 0.1, generation: tickGeneration)
-            return
-        }
-
-        guard let camFrame = frameProvider() else {
+        if isPausedProvider?() ?? false {
+            // Sticky: keep last published score while paused (Tips / background).
             scheduleNextTick(after: currentInterval(), generation: tickGeneration)
             return
         }
 
         scoringLock.lock()
-        guard !isScoring else {
+        if isScoring {
             scoringLock.unlock()
             scheduleNextTick(after: 0.1, generation: tickGeneration)
             return
         }
         isScoring = true
         scoringLock.unlock()
+
+        guard let camFrame = frameProvider() else {
+            scoringLock.lock()
+            isScoring = false
+            scoringLock.unlock()
+            scheduleNextTick(after: currentInterval(), generation: tickGeneration)
+            return
+        }
 
         let startMs = Int64(Date().timeIntervalSince1970 * 1000)
         let result = analyzer.analyze(ref: reference, cam: camFrame)
@@ -149,11 +194,12 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
 
         scoringLock.lock()
         isScoring = false
-        let stillCurrent = (generation == tickGeneration)
+        let stillCurrent = isActive && (generation == tickGeneration)
         scoringLock.unlock()
 
         guard stillCurrent else {
             LMLogger.log("ScoreLoop discarded stale analyze generation=\(tickGeneration)")
+            // Loop may still be active under a newer generation — that generation owns scheduling.
             return
         }
 
@@ -162,7 +208,7 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
 
     private func publishScore(_ score: LMCompositionScore?, generation tickGeneration: UInt64) {
         scoringLock.lock()
-        let stillCurrent = (generation == tickGeneration)
+        let stillCurrent = isActive && (generation == tickGeneration)
         scoringLock.unlock()
         guard stillCurrent else { return }
 
@@ -170,7 +216,7 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.scoringLock.lock()
-            let current = self.generation == tickGeneration
+            let current = self.isActive && self.generation == tickGeneration
             self.scoringLock.unlock()
             guard current else { return }
             self.delegate?.compositionScoreLoop(self, didUpdate: score)
@@ -180,7 +226,7 @@ final class LMCompositionScoreLoop: @unchecked Sendable {
 
     private func scheduleNextTick(after delay: TimeInterval, generation tickGeneration: UInt64) {
         scoringLock.lock()
-        let stillCurrent = (generation == tickGeneration)
+        let stillCurrent = isActive && (generation == tickGeneration)
         scoringLock.unlock()
         guard stillCurrent else { return }
         scheduleNextTick(after: delay)

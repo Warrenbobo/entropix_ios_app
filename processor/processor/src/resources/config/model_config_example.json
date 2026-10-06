@@ -1,0 +1,25 @@
+{
+  "scene_explore": {
+    "base_url": "https://example.com/compatible-mode/v1",
+    "api_key": "YOUR_API_KEY_HERE",
+    "model_name": "your-model-name",
+    "enable_thinking": true,
+    "thinking_budget": 256,
+    "temperature": 0.7,
+    "max_tokens": 2048
+  },
+  "idea_inspiration": {
+    "base_url": "https://generativelanguage.googleapis.com",
+    "api_key": "YOUR_API_KEY_HERE",
+    "model_name": "gemini-3.1-flash-image"
+  },
+  "ar_guidance": {
+    "base_url": "https://example.com/compatible-mode/v1",
+    "api_key": "YOUR_API_KEY_HERE",
+    "model_name": "your-model-name",
+    "enable_thinking": false,
+    "thinking_budget": 256,
+    "temperature": 0.7,
+    "max_tokens": 2048
+  }
+}

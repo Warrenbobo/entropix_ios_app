@@ -17,24 +17,43 @@ enum AppReviewState {
 
 struct LMPackageManager {
 
-    static var reviewState: AppReviewState = .inReview
+    /// Frozen: no longer driven by `/v1/app/updated` (App Store Lookup update path).
+    static var reviewState: AppReviewState = .normal
     static var newInstaller: Bool = false
     static var launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     static weak var window: UIWindow?
 
     static var package: LMPackageModel = LMPackageModel.defaultModel()
-    private static var cachedAppUpdatedStatus: LMAppUpdatedStatus?
-    private static var cachedAppUpdatedLanguageCode: String?
+
+    private static var cachedLookupResult: LMAppStoreLookupResult?
+    private static var cachedClassification: LMAppUpdateClass = .none
+    private static var cacheFetchedAt: Date?
+    private static let cacheTTL: TimeInterval = 15 * 60
+
     private static var ignoredNonRequiredUpdateIdentity: String?
     private static var hasPresentedNonRequiredUpdateThisSession = false
     private static var isShowingUpdateAlert = false
 
     static var hasAvailableAppUpdate: Bool {
-        isUpdateAvailable(in: cachedAppUpdatedStatus)
+        currentAppUpdatePresentation != nil
     }
 
-    static var currentAppUpdateInfo: LMAppUpdateInfo? {
-        availableUpdate(in: cachedAppUpdatedStatus)
+    /// Presentation model for dialogs / About Update when an update is classified.
+    static var currentAppUpdatePresentation: LMAppUpdatePresentation? {
+        guard let lookup = cachedLookupResult else { return nil }
+        switch cachedClassification {
+        case .none:
+            return nil
+        case .recommend:
+            return LMAppUpdatePresentation(isForce: false, lookup: lookup, localVersion: package.version)
+        case .force:
+            return LMAppUpdatePresentation(isForce: true, lookup: lookup, localVersion: package.version)
+        }
+    }
+
+    /// Legacy alias used by About / open URL helpers.
+    static var currentAppUpdateInfo: LMAppUpdatePresentation? {
+        currentAppUpdatePresentation
     }
 
     private static let guestTrialCountKey = "lm_guest_trial_count"
@@ -95,6 +114,8 @@ struct LMPackageManager {
         queryDeviceUUID()
         loadGuestTrialData()
         loadLanguageConfiguration()
+        // App Store Lookup no longer supplies review gating — keep normal for shipping builds.
+        reviewState = .normal
     }
 
     private static func loadLanguageConfiguration() {
@@ -165,28 +186,30 @@ struct LMPackageManager {
     }
 
     static func queryAppUpdateStatus(forceRefresh: Bool = true,
-                                     completion: ((LMAppUpdatedStatus?) -> Void)? = nil) {
-        fetchAppUpdateStatus(forceRefresh: forceRefresh, completion: completion)
+                                     completion: (() -> Void)? = nil) {
+        fetchAppUpdateClassification(forceRefresh: forceRefresh) { _ in
+            completion?()
+        }
     }
 
     static func queryVersionConfigs(forceRefresh: Bool = true,
                                     completeCallback: (() -> Void)? = nil) {
-        queryAppUpdateStatus(forceRefresh: forceRefresh) { _ in
+        queryAppUpdateStatus(forceRefresh: forceRefresh) {
             completeCallback?()
         }
     }
 
     static func refreshAppUpdateStatus(completion: ((Bool) -> Void)? = nil) {
-        fetchAppUpdateStatus(forceRefresh: true) { status in
-            completion?(isUpdateAvailable(in: status))
+        fetchAppUpdateClassification(forceRefresh: true) { _ in
+            completion?(hasAvailableAppUpdate)
         }
     }
 
     static func presentCachedAppUpdateIfNeeded(from presenter: UIViewController) {
-        guard let update = currentAppUpdateInfo else { return }
+        guard let update = currentAppUpdatePresentation else { return }
         guard !isShowingUpdateAlert else { return }
 
-        if update.isForceUpdate {
+        if update.isForce {
             showAppUpdateAlert(update, from: presenter)
             return
         }
@@ -199,13 +222,13 @@ struct LMPackageManager {
 
     static func presentLaunchAppUpdateIfNeeded(from _: UIViewController,
                                                onContinue: @escaping () -> Void) {
-        guard let update = currentAppUpdateInfo else {
+        guard let update = currentAppUpdatePresentation else {
             onContinue()
             return
         }
         guard !isShowingUpdateAlert else { return }
 
-        let isForceUpdate = update.isForceUpdate
+        let isForceUpdate = update.isForce
         if !isForceUpdate {
             guard !hasPresentedNonRequiredUpdateThisSession else {
                 onContinue()
@@ -219,9 +242,9 @@ struct LMPackageManager {
         }
         isShowingUpdateAlert = true
 
-        let title = resolvedUpdateTitle(update)
-        let intro = resolvedUpdateContent(update)
-        let details = ""
+        let title = update.resolvedTitle
+        let intro = isForceUpdate ? LMText.common.updateRequiredIntro : update.resolvedMessage
+        let details = isForceUpdate ? update.resolvedMessage : update.resolvedDetails
         let cancelText = isForceUpdate ? LMText.common.exit : LMText.common.later
 
         let dialog = LMVersionUpdateDialog(config: LMVersionUpdateDialogConfig(
@@ -241,11 +264,12 @@ struct LMPackageManager {
             },
             onConfirm: {
                 isShowingUpdateAlert = false
-                openUpdateURL(update.url)
+                openUpdateURL(update.storeURL)
                 if !isForceUpdate {
                     ignoredNonRequiredUpdateIdentity = update.updateIdentity
                     onContinue()
                 }
+                // Force: stay blocked until a later check sees a non-force local version.
             }
         ))
 
@@ -255,57 +279,59 @@ struct LMPackageManager {
     }
 
     static func openCurrentAvailableUpdateURL() {
-        openUpdateURL(currentAppUpdateInfo?.url)
+        openUpdateURL(currentAppUpdatePresentation?.storeURL)
     }
 
-    private static func fetchAppUpdateStatus(forceRefresh: Bool,
-                                             completion: ((LMAppUpdatedStatus?) -> Void)? = nil) {
-        let currentLanguageCode = LMLaunageManager.shared.currentLanguage.apiLanguageCode
-
+    private static func fetchAppUpdateClassification(
+        forceRefresh: Bool,
+        completion: ((LMAppUpdateClass) -> Void)? = nil
+    ) {
         if !forceRefresh,
-           let cachedAppUpdatedStatus,
-           cachedAppUpdatedLanguageCode == currentLanguageCode {
-            completion?(cachedAppUpdatedStatus)
+           let cacheFetchedAt,
+           Date().timeIntervalSince(cacheFetchedAt) < cacheTTL,
+           cachedLookupResult != nil {
+            completion?(cachedClassification)
             return
         }
 
-        LMApiService.shared.getAppUpdatedStatus { response in
-            guard response.requestSuccess, let data = response.value else {
-                LMLogger.log("⚠️ Failed to fetch app updated status: \(response.message ?? "Unknown error")")
-                cachedAppUpdatedStatus = nil
-                cachedAppUpdatedLanguageCode = nil
-                completion?(nil)
-                return
+        LMAppStoreLookupService.fetch { result in
+            DispatchQueue.main.async {
+                guard let result else {
+                    LMLogger.log("⚠️ App Store Lookup failed — treating as no update")
+                    cachedLookupResult = nil
+                    cachedClassification = .none
+                    cacheFetchedAt = Date()
+                    completion?(.none)
+                    return
+                }
+
+                let classification = LMAppVersionComparer.classify(
+                    local: package.version,
+                    store: result.storeVersion
+                )
+                cachedLookupResult = result
+                cachedClassification = classification
+                cacheFetchedAt = Date()
+                LMLogger.log(
+                    "📦 App Store Lookup: local=\(package.version) store=\(result.storeVersion) class=\(classification)"
+                )
+                completion?(classification)
             }
-
-            cachedAppUpdatedStatus = data
-            cachedAppUpdatedLanguageCode = currentLanguageCode
-
-            if let versionStatus = data.versionStatus {
-                reviewState = (versionStatus == 1) ? .normal : .inReview
-                LMLogger.log("📦 App version status: \(versionStatus) (reviewState=\(reviewState))")
-            }
-
-            completion?(data)
         }
     }
 
-    private static func isUpdateAvailable(in status: LMAppUpdatedStatus?) -> Bool {
-        availableUpdate(in: status) != nil
-    }
-
-    private static func isIgnoredNonRequiredUpdate(_ update: LMAppUpdateInfo) -> Bool {
+    private static func isIgnoredNonRequiredUpdate(_ update: LMAppUpdatePresentation) -> Bool {
         ignoredNonRequiredUpdateIdentity == update.updateIdentity
     }
 
-    private static func showAppUpdateAlert(_ update: LMAppUpdateInfo,
+    private static func showAppUpdateAlert(_ update: LMAppUpdatePresentation,
                                            from _: UIViewController) {
         guard !isShowingUpdateAlert else { return }
         isShowingUpdateAlert = true
 
-        let isForceUpdate = update.isForceUpdate
-        let title = resolvedUpdateTitle(update)
-        let message = resolvedUpdateContent(update)
+        let isForceUpdate = update.isForce
+        let title = update.resolvedTitle
+        let message = update.resolvedMessage
         let cancelText = isForceUpdate ? LMText.common.exit : LMText.common.later
 
         let dialog = LMAlertDialog(config: LMAlertDialogConfig(
@@ -324,7 +350,7 @@ struct LMPackageManager {
             },
             onConfirm: {
                 isShowingUpdateAlert = false
-                openUpdateURL(update.url)
+                openUpdateURL(update.storeURL)
             }
         ))
 
@@ -344,91 +370,57 @@ struct LMPackageManager {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }
     }
-
-    private static func availableUpdate(in status: LMAppUpdatedStatus?) -> LMAppUpdateInfo? {
-        guard let status,
-              status.versionStatus == 1,
-              let update = status.update,
-              update.shouldPresent(forCurrentVersion: package.version) else {
-            return nil
-        }
-        return update
-    }
-
-    private static func resolvedUpdateTitle(_ update: LMAppUpdateInfo) -> String {
-        update.title.nonEmpty ?? (update.isForceUpdate ? LMText.common.updateRequiredTitle : LMText.common.updateAvailableTitle)
-    }
-
-    private static func resolvedUpdateContent(_ update: LMAppUpdateInfo) -> String {
-        let content = htmlToPlainText(update.content)?.trimmingCharacters(in: .whitespacesAndNewlines)
-        return (content?.isEmpty == false) ? content! : LMText.common.updateFallbackContent
-    }
-
-    private static func buildUpdateMessage(_ update: LMAppUpdateInfo) -> String {
-        resolvedUpdateContent(update)
-    }
-
-    private static func buildUpdateDetails(_ update: LMAppUpdateInfo) -> String {
-        resolvedUpdateContent(update)
-    }
-
-    private static func htmlToPlainText(_ html: String?) -> String? {
-        guard let html, !html.isEmpty else { return nil }
-        guard let data = html.data(using: .utf8) else { return html }
-
-        if let attributed = try? NSAttributedString(
-            data: data,
-            options: [
-                .documentType: NSAttributedString.DocumentType.html,
-                .characterEncoding: String.Encoding.utf8.rawValue
-            ],
-            documentAttributes: nil
-        ) {
-            return attributed.string
-        }
-
-        return html
-    }
 }
 
-struct LMAppUpdatedStatus: Codable {
-    var versionStatus: Int?
-    var update: LMAppUpdateInfo?
-}
+/// Dialog / badge model derived from App Store Lookup + semver classify.
+struct LMAppUpdatePresentation {
+    let isForce: Bool
+    let storeVersion: String
+    let localVersion: String
+    let storeURL: String?
+    let releaseNotes: String?
 
-struct LMAppUpdateInfo: Codable {
-    var requireUpdateStatus: Int?
-    var title: String?
-    var content: String?
-    var version: String?
-    var url: String?
-
-    enum CodingKeys: String, CodingKey {
-        case requireUpdateStatus = "require_update_status"
-        case title
-        case content
-        case version
-        case url
-    }
-}
-
-private extension LMAppUpdateInfo {
-    var isForceUpdate: Bool {
-        (requireUpdateStatus ?? 0) == 1
-    }
-
-    func shouldPresent(forCurrentVersion currentVersion: String) -> Bool {
-        guard let updateVersion = version.nonEmpty,
-              let currentVersion = Optional.some(currentVersion).nonEmpty else {
-            return false
-        }
-        return updateVersion != currentVersion
+    init(isForce: Bool, lookup: LMAppStoreLookupResult, localVersion: String) {
+        self.isForce = isForce
+        self.storeVersion = lookup.storeVersion
+        self.localVersion = localVersion
+        self.storeURL = lookup.trackViewUrl.nonEmpty ?? AppConfigs.AppStore.updateURL
+        self.releaseNotes = lookup.releaseNotes
     }
 
     var updateIdentity: String {
-        [version.nonEmpty, url.nonEmpty, title.nonEmpty, content.nonEmpty]
-            .compactMap { $0 }
-            .joined(separator: "|")
+        "\(storeVersion)|\(storeURL ?? "")"
+    }
+
+    var resolvedTitle: String {
+        isForce ? LMText.common.updateRequiredTitle : LMText.common.updateAvailableTitle
+    }
+
+    var resolvedMessage: String {
+        if isForce {
+            return String(
+                format: LMText.common.updateRequiredMessageFormat,
+                storeVersion,
+                localVersion
+            )
+        }
+        return String(
+            format: LMText.common.updateAvailableMessageFormat,
+            storeVersion,
+            localVersion
+        )
+    }
+
+    var resolvedDetails: String {
+        let notes = releaseNotes?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if notes.isEmpty {
+            return LMText.common.updateFallbackContent
+        }
+        if notes.count > 500 {
+            return String(notes.prefix(500)) + "…"
+        }
+        return notes
     }
 }
 
@@ -437,5 +429,12 @@ private extension Optional where Wrapped == String {
         guard let value = self?.trimmingCharacters(in: .whitespacesAndNewlines),
               !value.isEmpty else { return nil }
         return value
+    }
+}
+
+private extension String {
+    var nonEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

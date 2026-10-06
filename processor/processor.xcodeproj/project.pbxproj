@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		121D2A48246BCAA19B6658B0 /* LMPreShootPlanModePanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D520D2F07B6036EEAAB8F66 /* LMPreShootPlanModePanelView.swift */; };
 		2AFD69D0DC144C62A1D0A87B /* LMInstructProgressCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1F18178545F4835B6458E8A /* LMInstructProgressCoordinator.swift */; };
 		2E380A13831942AD85099921 /* LMLlmTaskRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2B0AC0FEE04E648AC59A87 /* LMLlmTaskRuntime.swift */; };
 		A11B22C33D4E4F1A9C0D8E77 /* LMGaussianHeatmapRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22C33D44E5F6A1B0C1D9E88 /* LMGaussianHeatmapRenderer.swift */; };
@@ -44,6 +45,13 @@
 		EA0A47422EBF8F19002CBB80 /* LMSubscriptionHeroView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47392EBF8F19002CBB80 /* LMSubscriptionHeroView.swift */; };
 		EA0A47442EBF8F3C002CBB80 /* SubscriptionPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47432EBF8F3C002CBB80 /* SubscriptionPlan.swift */; };
 		EA0A47462EBF995C002CBB80 /* LMStoreManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA0A47452EBF995C002CBB80 /* LMStoreManager.swift */; };
+		EA2700022F4A000100586EC7 /* LMHowToUseEntropixPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2700012F4A000100586EC7 /* LMHowToUseEntropixPage.swift */; };
+		EA28ASU12F4B000100586EC7 /* LMAppVersionComparer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA28ASU02F4B000100586EC7 /* LMAppVersionComparer.swift */; };
+		EA28ASU32F4B000100586EC7 /* LMAppStoreLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA28ASU22F4B000100586EC7 /* LMAppStoreLookupService.swift */; };
+		EA28LRG12F4C000100586EC1 /* legal_reagree_config.json in Resources */ = {isa = PBXBuildFile; fileRef = EA28LRG02F4C000100586EC1 /* legal_reagree_config.json */; };
+		EA28LRG32F4C000100586EC2 /* LMLegalReagreeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA28LRG22F4C000100586EC2 /* LMLegalReagreeConfig.swift */; };
+		EA28LRG52F4C000100586EC3 /* LMLegalReagreeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA28LRG42F4C000100586EC3 /* LMLegalReagreeStore.swift */; };
+		EA28LRG72F4C000100586EC4 /* LMLegalReagreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA28LRG62F4C000100586EC4 /* LMLegalReagreeView.swift */; };
 		EA3F16682EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F16652EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift */; };
 		EA3F16692EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F16662EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift */; };
 		EA3F166A2EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3F16672EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift */; };
@@ -59,8 +67,6 @@
 		EA56DD9D2EC07CAD000AB522 /* LMCompositionAnalysisModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DD9C2EC07CAD000AB522 /* LMCompositionAnalysisModel.swift */; };
 		EA56DDA12EC08078000AB522 /* LMPersonDetectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDA02EC08078000AB522 /* LMPersonDetectionManager.swift */; };
 		EA56DDA72EC0833D000AB522 /* LMCompositionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */; };
-		EAAD00162F7A00010001AD16 /* LMInspirePromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00152F7A00010001AD15 /* LMInspirePromptBuilder.swift */; };
-		EAAD00182F7B00010001AD18 /* LMLlmCallQuotaStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00172F7B00010001AD17 /* LMLlmCallQuotaStore.swift */; };
 		EA56DDB72EC08E1D000AB522 /* LMCameraPage+Delegates.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAE2EC08E1D000AB522 /* LMCameraPage+Delegates.swift */; };
 		EA56DDB82EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAC2EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift */; };
 		EA56DDBA2EC08E1D000AB522 /* LMCameraPage+Capture.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA56DDAD2EC08E1D000AB522 /* LMCameraPage+Capture.swift */; };
@@ -112,11 +118,6 @@
 		EA57003F2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */; };
 		EA5700432EC10001000AB522 /* coaching_policy.json in Resources */ = {isa = PBXBuildFile; fileRef = EA5700412EC10001000AB522 /* coaching_policy.json */; };
 		EA5700592EC10001000AB522 /* LMSkipReevaluationEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700582EC10001000AB522 /* LMSkipReevaluationEvaluator.swift */; };
-		EA5700692EC10005000AB522 /* LMAgentRequestLogModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */; };
-		EA57006B2EC10005000AB522 /* LMAgentRequestLogStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */; };
-		EA57006D2EC10005000AB522 /* LMAgentRequestLogRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */; };
-		EA57006F2EC10005000AB522 /* LMAgentRequestLogPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */; };
-		EA5700712EC10005000AB522 /* LMCameraPage+AgentLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */; };
 		EA5700A02EC10003000AB522 /* LMFeatureFlagsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA57009F2EC10003000AB522 /* LMFeatureFlagsManager.swift */; };
 		EA5700A22EC10003000AB522 /* LMDemoSuggestionsLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5700A12EC10003000AB522 /* LMDemoSuggestionsLoader.swift */; };
 		EA5700A42EC10003000AB522 /* demo_suggestions in Resources */ = {isa = PBXBuildFile; fileRef = EA5700A32EC10003000AB522 /* demo_suggestions */; };
@@ -169,6 +170,8 @@
 		EAAD00112F6C00010001AD11 /* LMInterstitialAdContracts.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00102F6C00010001AD10 /* LMInterstitialAdContracts.swift */; };
 		EAAD00132F6C00010001AD13 /* LMInterstitialAdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00122F6C00010001AD12 /* LMInterstitialAdManager.swift */; };
 		EAAD00152F6C00010001AD15 /* LMGoogleInterstitialAdLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00142F6C00010001AD14 /* LMGoogleInterstitialAdLoader.swift */; };
+		EAAD00162F7A00010001AD16 /* LMInspirePromptBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00152F7A00010001AD15 /* LMInspirePromptBuilder.swift */; };
+		EAAD00182F7B00010001AD18 /* LMLlmCallQuotaStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAD00172F7B00010001AD17 /* LMLlmCallQuotaStore.swift */; };
 		EAAF53ED2F15449500E961DC /* LMNotificationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53EC2F15449500E961DC /* LMNotificationModel.swift */; };
 		EAAF53EF2F1544AF00E961DC /* LMNotificationDetailPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53EE2F1544AF00E961DC /* LMNotificationDetailPage.swift */; };
 		EAAF53F12F1544DD00E961DC /* LMNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF53F02F1544DD00E961DC /* LMNotificationManager.swift */; };
@@ -243,6 +246,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0D520D2F07B6036EEAAB8F66 /* LMPreShootPlanModePanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPreShootPlanModePanelView.swift; sourceTree = "<group>"; };
 		A3946E0448AA44BFBA9F06F8 /* LMChatModuleSettingPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMChatModuleSettingPage.swift; sourceTree = "<group>"; };
 		ABE87998B7B540CD9540B481 /* LMChatRequestBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMChatRequestBuilder.swift; sourceTree = "<group>"; };
 		ACBFE03711C3424EB3D1C945 /* scene_explore_system_prompt.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = scene_explore_system_prompt.txt; sourceTree = "<group>"; };
@@ -281,6 +285,13 @@
 		EA0A473B2EBF8F19002CBB80 /* LMSubscriptionProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSubscriptionProgressView.swift; sourceTree = "<group>"; };
 		EA0A47432EBF8F3C002CBB80 /* SubscriptionPlan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionPlan.swift; sourceTree = "<group>"; };
 		EA0A47452EBF995C002CBB80 /* LMStoreManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMStoreManager.swift; sourceTree = "<group>"; };
+		EA2700012F4A000100586EC7 /* LMHowToUseEntropixPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMHowToUseEntropixPage.swift; sourceTree = "<group>"; };
+		EA28ASU02F4B000100586EC7 /* LMAppVersionComparer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppVersionComparer.swift; sourceTree = "<group>"; };
+		EA28ASU22F4B000100586EC7 /* LMAppStoreLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAppStoreLookupService.swift; sourceTree = "<group>"; };
+		EA28LRG02F4C000100586EC1 /* legal_reagree_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = legal_reagree_config.json; sourceTree = "<group>"; };
+		EA28LRG22F4C000100586EC2 /* LMLegalReagreeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLegalReagreeConfig.swift; sourceTree = "<group>"; };
+		EA28LRG42F4C000100586EC3 /* LMLegalReagreeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLegalReagreeStore.swift; sourceTree = "<group>"; };
+		EA28LRG62F4C000100586EC4 /* LMLegalReagreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLegalReagreeView.swift; sourceTree = "<group>"; };
 		EA3F16652EE3DDAE00B24DA8 /* LMCameraStreamDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCameraStreamDetectionManager.swift; sourceTree = "<group>"; };
 		EA3F16662EE3DDAE00B24DA8 /* LMPersonDetectionProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPersonDetectionProtocol.swift; sourceTree = "<group>"; };
 		EA3F16672EE3DDAE00B24DA8 /* LMReferenceImageDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMReferenceImageDetectionManager.swift; sourceTree = "<group>"; };
@@ -297,8 +308,6 @@
 		EA56DD9C2EC07CAD000AB522 /* LMCompositionAnalysisModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionAnalysisModel.swift; sourceTree = "<group>"; };
 		EA56DDA02EC08078000AB522 /* LMPersonDetectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMPersonDetectionManager.swift; sourceTree = "<group>"; };
 		EA56DDA62EC0833D000AB522 /* LMCompositionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMCompositionService.swift; sourceTree = "<group>"; };
-		EAAD00152F7A00010001AD15 /* LMInspirePromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspirePromptBuilder.swift; sourceTree = "<group>"; };
-		EAAD00172F7B00010001AD17 /* LMLlmCallQuotaStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLlmCallQuotaStore.swift; sourceTree = "<group>"; };
 		EA56DDAC2EC08E1D000AB522 /* LMCameraPage+ARGuidance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+ARGuidance.swift"; sourceTree = "<group>"; };
 		EA56DDAD2EC08E1D000AB522 /* LMCameraPage+Capture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+Capture.swift"; sourceTree = "<group>"; };
 		EA56DDAE2EC08E1D000AB522 /* LMCameraPage+Delegates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+Delegates.swift"; sourceTree = "<group>"; };
@@ -350,11 +359,6 @@
 		EA57003E2EC10001000AB522 /* DepthAnythingV2SmallF16P6.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = DepthAnythingV2SmallF16P6.mlpackage; sourceTree = "<group>"; };
 		EA5700412EC10001000AB522 /* coaching_policy.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = coaching_policy.json; sourceTree = "<group>"; };
 		EA5700582EC10001000AB522 /* LMSkipReevaluationEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMSkipReevaluationEvaluator.swift; sourceTree = "<group>"; };
-		EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogModels.swift; sourceTree = "<group>"; };
-		EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogStore.swift; sourceTree = "<group>"; };
-		EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogRecorder.swift; sourceTree = "<group>"; };
-		EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMAgentRequestLogPage.swift; sourceTree = "<group>"; };
-		EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LMCameraPage+AgentLog.swift"; sourceTree = "<group>"; };
 		EA57009F2EC10003000AB522 /* LMFeatureFlagsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMFeatureFlagsManager.swift; sourceTree = "<group>"; };
 		EA5700A12EC10003000AB522 /* LMDemoSuggestionsLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMDemoSuggestionsLoader.swift; sourceTree = "<group>"; };
 		EA5700A32EC10003000AB522 /* demo_suggestions */ = {isa = PBXFileReference; lastKnownFileType = folder; path = demo_suggestions; sourceTree = "<group>"; };
@@ -407,6 +411,8 @@
 		EAAD00102F6C00010001AD10 /* LMInterstitialAdContracts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInterstitialAdContracts.swift; sourceTree = "<group>"; };
 		EAAD00122F6C00010001AD12 /* LMInterstitialAdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInterstitialAdManager.swift; sourceTree = "<group>"; };
 		EAAD00142F6C00010001AD14 /* LMGoogleInterstitialAdLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMGoogleInterstitialAdLoader.swift; sourceTree = "<group>"; };
+		EAAD00152F7A00010001AD15 /* LMInspirePromptBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMInspirePromptBuilder.swift; sourceTree = "<group>"; };
+		EAAD00172F7B00010001AD17 /* LMLlmCallQuotaStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMLlmCallQuotaStore.swift; sourceTree = "<group>"; };
 		EAAF53EC2F15449500E961DC /* LMNotificationModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationModel.swift; sourceTree = "<group>"; };
 		EAAF53EE2F1544AF00E961DC /* LMNotificationDetailPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationDetailPage.swift; sourceTree = "<group>"; };
 		EAAF53F02F1544DD00E961DC /* LMNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LMNotificationManager.swift; sourceTree = "<group>"; };
@@ -554,7 +560,6 @@
 				EA5700542EC10002000AB522 /* llm */,
 				EA5700552EC10002000AB522 /* agent */,
 				EA5700562EC10002000AB522 /* managers */,
-				EA5700662EC10005000AB522 /* agentLog */,
 			);
 			path = coaching;
 			sourceTree = "<group>";
@@ -642,30 +647,13 @@
 				EA5700A72EC10004000AB522 /* system_prompt_agentic_v3.txt */,
 				EA5701B92EC20001000AB522 /* gemini_inspire_prompt.txt */,
 				F1FD08E7D2DE44D99C49BBD0 /* model_config.json */,
+				EA28LRG02F4C000100586EC1 /* legal_reagree_config.json */,
 				C3C6CA5105504DD3A45B16A6 /* scene_explore_config.json */,
 				CC92C09F58F54C74B863CD69 /* gemini_inspire_config.json */,
 				ACBFE03711C3424EB3D1C945 /* scene_explore_system_prompt.txt */,
 				BADFBBBF0F1D45B8992529D7 /* scene_explore_user_prompt.txt */,
 			);
 			path = config;
-			sourceTree = "<group>";
-		};
-		EA5700662EC10005000AB522 /* agentLog */ = {
-			isa = PBXGroup;
-			children = (
-				EA5700682EC10005000AB522 /* LMAgentRequestLogModels.swift */,
-				EA57006A2EC10005000AB522 /* LMAgentRequestLogStore.swift */,
-				EA57006C2EC10005000AB522 /* LMAgentRequestLogRecorder.swift */,
-			);
-			path = agentLog;
-			sourceTree = "<group>";
-		};
-		EA5700672EC10005000AB522 /* agentLog */ = {
-			isa = PBXGroup;
-			children = (
-				EA57006E2EC10005000AB522 /* LMAgentRequestLogPage.swift */,
-			);
-			path = agentLog;
 			sourceTree = "<group>";
 		};
 		EA5700702EC10006000AB522 /* opencv */ = {
@@ -716,6 +704,10 @@
 				EA4032A12EE077BA002B7A40 /* LMSuggestionBoundBoxManager.swift */,
 				EA8629A42EB5A15800F2B00E /* LMImageProcessor.swift */,
 				EACA1D052E7E4C7C00C80883 /* LMPackageManager.swift */,
+				EA28LRG22F4C000100586EC2 /* LMLegalReagreeConfig.swift */,
+				EA28LRG42F4C000100586EC3 /* LMLegalReagreeStore.swift */,
+				EA28ASU02F4B000100586EC7 /* LMAppVersionComparer.swift */,
+				EA28ASU22F4B000100586EC7 /* LMAppStoreLookupService.swift */,
 				EACA1D092E7E4EE900C80883 /* LMLogger.swift */,
 				EAFBAD892E9B8A4800586EC7 /* LMUserManager.swift */,
 				EA57009F2EC10003000AB522 /* LMFeatureFlagsManager.swift */,
@@ -784,7 +776,6 @@
 				EACA1D0F2E7E517B00C80883 /* mine */,
 				EAFBAC932E7E546D00586EC7 /* login */,
 				EACA1D0B2E7E504F00C80883 /* LMWebViewPage.swift */,
-				EA5700672EC10005000AB522 /* agentLog */,
 			);
 			path = pages;
 			sourceTree = "<group>";
@@ -912,7 +903,6 @@
 				BF5E4A3D7D0C43C8ABE698F7 /* LMCameraPage+SceneExplore.swift */,
 				EA56DDBE2EC08E81000AB522 /* LMCameraPage+Session.swift */,
 				EA5700162EC10001000AB522 /* LMCameraPage+AgentCoaching.swift */,
-				EA5700702EC10005000AB522 /* LMCameraPage+AgentLog.swift */,
 				EACB2E7B2EDC22B700983697 /* LMPhotoPreviewPage.swift */,
 			);
 			path = camera;
@@ -937,6 +927,7 @@
 				EAFBADC72EA4C90E00586EC7 /* LMNotificationsPage.swift */,
 				EA54E1DA2EBEED04000DB5EE /* LMSubscriptionPage.swift */,
 				EAFBADC52EA4C34300586EC7 /* LMFAQPage.swift */,
+				EA2700012F4A000100586EC7 /* LMHowToUseEntropixPage.swift */,
 			);
 			path = mine;
 			sourceTree = "<group>";
@@ -984,6 +975,7 @@
 			isa = PBXGroup;
 			children = (
 				EA7F25B32F06B8850008E091 /* LMPrivacyPermissionView.swift */,
+				EA28LRG62F4C000100586EC4 /* LMLegalReagreeView.swift */,
 				EAFBACAC2E7E79C100586EC7 /* LMFeaturePreviewView.swift */,
 				EAFBACAD2E7E79C100586EC7 /* LMWelcomeAuthenticationView.swift */,
 			);
@@ -998,6 +990,7 @@
 				EA6019332EC82D130067F2F7 /* LMInspireMeButtonView.swift */,
 				FECD42B648DC41FABA90842F /* LMPreShootPlanButtonView.swift */,
 				BB0E6D9561E4455686479FA5 /* LMPreShootPlanModeSheet.swift */,
+				0D520D2F07B6036EEAAB8F66 /* LMPreShootPlanModePanelView.swift */,
 				CFDA8A54889E4EEC93DBAD18 /* LMSceneExploreResultOverlay.swift */,
 				EA8629AC2EB5EEF700F2B00E /* LMCameraGuidanceOverlayView.swift */,
 				EA8629AE2EB5EEF700F2B00E /* LMCameraPreviewManager.swift */,
@@ -1091,6 +1084,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C9842C37FC34409AA03AD8DC /* model_config.json in Resources */,
+				EA28LRG12F4C000100586EC1 /* legal_reagree_config.json in Resources */,
 				B5C1B85EC18F44009CECB530 /* scene_explore_config.json in Resources */,
 				F702946FB61D4DE3AE234FD9 /* gemini_inspire_config.json in Resources */,
 				ECAC4EBE74D74B9A8FA1C2D3 /* scene_explore_system_prompt.txt in Resources */,
@@ -1141,9 +1135,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1158,9 +1156,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-processor/Pods-processor-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -1186,6 +1188,7 @@
 				BBDBA7200C1742928CA7B316 /* LMIdeaInspirationSettingPage.swift in Sources */,
 				DECDBDE218544A18B419BEA7 /* LMPreShootPlanButtonView.swift in Sources */,
 				DEBAB7AFBF2C49C58AD166C8 /* LMPreShootPlanModeSheet.swift in Sources */,
+				121D2A48246BCAA19B6658B0 /* LMPreShootPlanModePanelView.swift in Sources */,
 				A79DAE60BFB34BA9B583BCAB /* LMSceneExploreResultOverlay.swift in Sources */,
 				BC6A361E6C714D79A25FC9E8 /* LMCameraPage+SceneExplore.swift in Sources */,
 				FBE6E924E24F4F06A7B5DE42 /* LMSceneHistoryPageView.swift in Sources */,
@@ -1197,11 +1200,6 @@
 				DA32B37E95AA4FE2940CECFC /* LMOpenCvLineDetector.swift in Sources */,
 				CAA55ED8E575497987A4A66E /* LMSubjectMaskAnalyzer.swift in Sources */,
 				AAA97AF698FF445291BDCCFD /* LMDepthLayeringScorer.swift in Sources */,
-				EA5700692EC10005000AB522 /* LMAgentRequestLogModels.swift in Sources */,
-				EA57006B2EC10005000AB522 /* LMAgentRequestLogStore.swift in Sources */,
-				EA57006D2EC10005000AB522 /* LMAgentRequestLogRecorder.swift in Sources */,
-				EA57006F2EC10005000AB522 /* LMAgentRequestLogPage.swift in Sources */,
-				EA5700712EC10005000AB522 /* LMCameraPage+AgentLog.swift in Sources */,
 				EA8640702ED2D8EB00A0CD43 /* SavedIdeaEntity+CoreDataClass.swift in Sources */,
 				EACB2E7C2EDC22B700983697 /* LMPhotoPreviewPage.swift in Sources */,
 				EA3F166C2EE3DDCC00B24DA8 /* LMARGuidanceView.swift in Sources */,
@@ -1216,6 +1214,9 @@
 				EAFBADC42EA36E5900586EC7 /* LMIdeasPageView.swift in Sources */,
 				EAFBAD7D2E93790E00586EC7 /* LMForgotPasswordPage.swift in Sources */,
 				EA7F25B42F06B8850008E091 /* LMPrivacyPermissionView.swift in Sources */,
+				EA28LRG72F4C000100586EC4 /* LMLegalReagreeView.swift in Sources */,
+				EA28LRG32F4C000100586EC2 /* LMLegalReagreeConfig.swift in Sources */,
+				EA28LRG52F4C000100586EC3 /* LMLegalReagreeStore.swift in Sources */,
 				EA56DDA12EC08078000AB522 /* LMPersonDetectionManager.swift in Sources */,
 				EA5700012EC10001000AB522 /* LMHumanFrameSnapshot.swift in Sources */,
 				EA5700032EC10001000AB522 /* LMHumanMaskDerivation.swift in Sources */,
@@ -1295,9 +1296,12 @@
 				EAFBACC42E8F69BB00586EC7 /* LMAccountProfilePage.swift in Sources */,
 				EA56DD972EC02B23000AB522 /* LMPopularTagView.swift in Sources */,
 				EACA1D062E7E4C7C00C80883 /* LMPackageManager.swift in Sources */,
+				EA28ASU12F4B000100586EC7 /* LMAppVersionComparer.swift in Sources */,
+				EA28ASU32F4B000100586EC7 /* LMAppStoreLookupService.swift in Sources */,
 				EACA1CF72E7E49B600C80883 /* SceneDelegate.swift in Sources */,
 				EACA1CF82E7E49B600C80883 /* LMDialogWrapper.swift in Sources */,
 				EAFBADC62EA4C34300586EC7 /* LMFAQPage.swift in Sources */,
+				EA2700022F4A000100586EC7 /* LMHowToUseEntropixPage.swift in Sources */,
 				EAFBAD832E93905B00586EC7 /* LMContactUsPage.swift in Sources */,
 				EAFBACAB2E7E72BC00586EC7 /* LMNewInstallerPage.swift in Sources */,
 				EACA1D112E7E519100C80883 /* LMMinePage.swift in Sources */,
@@ -1416,7 +1420,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = processor/processor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = WL97SW2V2L;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1434,7 +1438,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.2;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.entropix.inspirecam;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1455,7 +1459,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = processor/processor.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = WL97SW2V2L;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1473,7 +1477,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.2;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.entropix.inspirecam;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1602,6 +1606,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;

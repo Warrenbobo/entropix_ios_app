@@ -97,21 +97,34 @@ private extension LMModelsSettingPage {
         let statusLabel = UILabel()
         statusLabel.font = .systemFont(ofSize: 13, weight: .medium)
         statusLabel.numberOfLines = 2
-        if LMLlmModuleSettingsStore.isConfigured(module) {
+        if !LMLlmModuleSettingsStore.hasUserSaved(module) {
+            // Bundled runtime defaults must not leak model ids / "Configured" here.
+            statusLabel.textColor = .systemBlue
+            statusLabel.text = LMText.settings.modelsDefaultSetting
+        } else {
             let modelId: String
+            let configured: Bool
             switch module {
             case .sceneExplore:
-                modelId = LMLlmModuleSettingsStore.loadSceneExplore().modelName
+                let settings = LMLlmModuleSettingsStore.loadChatForEditor(.sceneExplore)
+                modelId = settings.modelName
+                configured = settings.isConfigured
             case .arGuidance:
-                modelId = LMLlmModuleSettingsStore.loadARGuidance().modelName
+                let settings = LMLlmModuleSettingsStore.loadChatForEditor(.arGuidance)
+                modelId = settings.modelName
+                configured = settings.isConfigured
             case .ideaInspiration:
-                modelId = LMLlmModuleSettingsStore.loadIdeaInspiration().modelName
+                let settings = LMLlmModuleSettingsStore.loadIdeaInspirationForEditor()
+                modelId = settings.modelName
+                configured = settings.isConfigured
             }
-            statusLabel.textColor = .systemGreen
-            statusLabel.text = "\(LMText.settings.modelsConfigured) · \(modelId)"
-        } else {
-            statusLabel.textColor = .systemOrange
-            statusLabel.text = LMText.settings.modelsNotConfigured
+            if configured {
+                statusLabel.textColor = .systemGreen
+                statusLabel.text = "\(LMText.settings.modelsConfigured) · \(modelId)"
+            } else {
+                statusLabel.textColor = .systemOrange
+                statusLabel.text = LMText.settings.modelsNotConfigured
+            }
         }
 
         let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))

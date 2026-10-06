@@ -64,3 +64,6 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Local LLM credentials (copy from model_config_example.json)
+processor/processor/src/resources/config/model_config.json

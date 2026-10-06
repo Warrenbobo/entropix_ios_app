@@ -32,6 +32,8 @@
       "updateRequiredIntro": "To ensure the best experience:",
       "updateAvailableMessage": "A new version is available. Update to get the latest improvements.",
       "updateRequiredMessage": "This update is required to continue using the app.",
+      "updateAvailableMessageFormat": "Version %@ is available (you have %@). Update for the latest improvements.",
+      "updateRequiredMessageFormat": "A major update (%@) is required to continue. You are on %@.",
       "invalidUpdateUrl": "Invalid update URL",
       "updateFallbackContent": "- Fix some known bugs.\n- Improve interaction experience."
     },
@@ -134,20 +136,18 @@
       "geminiPromptBlocked": "Prompt was blocked by Gemini safety filters",
       "geminiNoImage": "Gemini returned no image",
       "geminiDecodeFailed": "Failed to decode Gemini image",
-      "tutorialFindSceneTitle": "Find a Beautiful Scene",
-      "tutorialFindSceneDescription": "You see a beautiful scene and your better half wants to take a photo here. But have little idea about how to take one here.",
-      "tutorialFindSceneCallout": "No worry!\nLet AI helps you!",
-      "tutorialTapButtonTitle": "Tap the Button",
-      "tutorialTapButtonDescription": "Tap the AI pre-shoot button to scan the scenery. AI will tell you how to take photo on this scenery.",
-      "tutorialViewAndSelectTitle": "View and Select",
-      "tutorialViewAndSelectDescription": "Browse the ideas find the one you want to replicate. Swipe up to Select.",
-      "tutorialViewAndSelectNote": "You can also like the idea first and find it later in \"%@\".",
-      "tutorialAlignGuidanceTitle": "Align the Guidance",
-      "tutorialAlignGuidanceDescription": "Follow the template and align the AR guidance to perfectly replicate.",
-      "tutorialSavePhotoTitle": "Save the Photo",
-      "tutorialSavePhotoDescription": "You may save the photo to our cloud gallery or download to local album.",
-      "tutorialSaveToCloudGallery": "Save to Cloud Gallery",
-      "tutorialSaveToLocalAlbum": "Save to Local Album",
+      "tutorialJourneyFindSpotTitle": "Find your spot",
+      "tutorialJourneyFindSpotDescription": "Freeze the view. Entropix points out places worth walking to—so you stop guessing where to stand.",
+      "tutorialJourneyTemplatesTitle": "Steal the frame",
+      "tutorialJourneyTemplatesDescription": "Get Template turns your view (or a spot) into composition ideas. Swipe, pick one you love, take it into live shoot.",
+      "tutorialJourneyCoachingTitle": "Line it up. Shoot it.",
+      "tutorialJourneyCoachingDescription": "Drop the template on camera. Use Framing & Pose, tap Get Tips when you want a nudge, then capture. Save to your album when you're done.",
+      "tutorialModeDeckTitle": "Pick how you shoot",
+      "tutorialModeDeckDescription": "Tap the top chip to switch modes. Camera is straight capture. Find Spot and Get Template are the AI paths.",
+      "tutorialModeContrastTitle": "Spot vs Template",
+      "tutorialModeContrastDescription": "Find Spot explores the scene for places to stand. Get Template builds composition ideas from what you already see. Same shutter energy—different starting question.",
+      "tutorialModeContrastFindSpotCaption": "Where should I stand?",
+      "tutorialModeContrastGetTemplateCaption": "What frame do I copy?",
       "tutorialStepIndicatorFormat": "%d / %d",
       "tutorialNext": "Next",
       "tutorialPrev": "PREV",
@@ -408,40 +408,52 @@
       "about": "About",
       "faqs": [
         {
-          "question": "What login methods does the app support? Does it support multi-device login?",
-          "answer": "Currently, the app supports sign in with Apple Account, but does not support using the same Apple account across multiple devices. This feature will be provided in the future."
+          "question": "What is Entropix?",
+          "answer": "Entropix is an on-location photography companion. It helps you find better spots, get composition ideas from your scene, and coach framing and pose while you shoot—so you spend less time guessing and more time capturing."
         },
         {
-          "question": "What is Inspire Points?",
-          "answer": "Each Inspire may consume 1 Inspire Point. You can obtain Inspire Points by watching ads or subscribing to our Plus Plan."
+          "question": "Who is Entropix for?",
+          "answer": "Anyone shooting with a phone who wants clearer direction on where to stand, how to frame, and how to refine the shot before pressing the shutter—solo travelers, couples, creators, and casual shooters alike."
         },
         {
-          "question": "How does the AI Guidance feature work?",
-          "answer": "AI Guidance helps you compose better photos by analyzing your camera view and providing real-time suggestions. "
+          "question": "What problem does Entropix solve?",
+          "answer": "In a real place it is easy to freeze, wander, or take the “safe” shot. Entropix turns the live camera into a short loop: explore the scene → pick a composition idea → line it up with live coaching → shoot."
         },
         {
-          "question": "Can I like my favorite compositions?",
-          "answer": "Yes. Tap the heart icon to like any composition. Your liked compositions will appear in the \"Liked\" tab in Profile for easy access later."
+          "question": "What is the intended product journey?",
+          "answer": "Three steps: Find Spot to discover places worth walking to; Get Template for composition ideas from your view (or a chosen spot); then live coaching (framing, pose, tips) until you capture the photo."
         },
         {
-          "question": "How do I delete my photos from the gallery?",
-          "answer": "In your Profile, go to the Gallery tab, tap on any photo, then tap the three dots menu and select \"Delete\". You'll be asked to confirm the deletion before it's permanently removed."
+          "question": "How do I start using Entropix?",
+          "answer": "Open the camera, pick a mode on the mode chip if needed, then follow Find Spot → templates → live shoot. For a full walkthrough anytime, go to Settings → How to use Entropix. On camera, tap ? on the mode chip for a short Find Spot vs Get Template reminder."
         },
         {
-          "question": "Is my data secure and private?",
-          "answer": "Yes, we take privacy seriously. Your photos are stored securely and we never share your personal data. You can read our full Privacy Policy in the About section for more details."
+          "question": "What is Find Spot?",
+          "answer": "Find Spot freezes the current view and suggests places in the scene worth walking to, so you can choose a better standing position instead of guessing."
         },
         {
-          "question": "What should I do if I encounter technical issues?",
-          "answer": "Troubleshooting steps may include: (1) Check your network availability; (2) Restart the app; (3) Restart your phone; (4) Re-install the app; (5) Contact us for further assistance."
+          "question": "What is Get Template?",
+          "answer": "Get Template turns your current view (or a selected spot) into composition ideas. Swipe the ideas, pick one you like, and take it into live shoot to line up the frame."
         },
         {
-          "question": "How do I report inappropriate content on Entropix?",
-          "answer": "To report AI generated content on Entropix app, go to Contact Us and submit a ticket. Be sure to screenshot the content that you are trying to report."
+          "question": "What happens in live coaching?",
+          "answer": "After you choose a template, Entropix helps you align the shot—framing and pose guidance, optional tips when you want a nudge—then you capture and save to your album when you are done."
         },
         {
-          "question": "How do I change the app language?",
-          "answer": "We provide three languages (English, Simplified Chinese, and Traditional Chinese). You can change the language in Settings > Language. All text in the app will be updated accordingly."
+          "question": "Where can I re-read the tutorial?",
+          "answer": "Settings → How to use Entropix shows the same Journey story (Find Spot → Template Ideas → Live Coaching) as static content. You do not need to replay the first-time camera popup."
+        },
+        {
+          "question": "How does the default model service work? Why does it feel slow?",
+          "answer": "AI requests are sent from your device directly to the LLM provider—not through a developer-hosted middle server for this flow. If responses feel slow, the built-in default path may currently use a more cost-efficient provider. You can configure BYOK on Settings → Models to use your own, often faster provider. If you want the developer to offer a more efficient default provider, email us via Settings → Contact Us."
+        },
+        {
+          "question": "Which providers does Idea Inspiration support?",
+          "answer": "Idea Inspiration (Get Template) currently uses Google Gemini only. Support for other providers may be added in a future version. You can still set your own Gemini credentials on Settings → Models."
+        },
+        {
+          "question": "How does Entropix use my data?",
+          "answer": "Photo and app data are stored, processed, and used on your device. The developer does not use or store your personal shooting data on its own servers for this flow. When you use AI features, relevant content may be sent to a model provider you rely on. By default that can be DashScope and Google Gemini. You can set your own providers and keys on Settings → Models."
         }
       ],
       "accountProfile": "Account Profile",
@@ -484,7 +496,7 @@
       "qwenAPIKeyPlaceholder": "Enter your DashScope API key",
       "qwenNotConfigured": "Configure Qwen in Mine → Setting → Models first",
       "modelsBaseURLRequired": "Base URL is required",
-      "modelsBaseURLInvalid": "Enter a valid https Base URL",
+      "modelsBaseURLInvalid": "Base URL must use HTTPS",
       "modelsAPIKeyRequired": "API Key is required",
       "modelsSaved": "Models settings saved",
       "gemini31FlashImage": "Gemini 3.1 Flash Image",
@@ -498,6 +510,9 @@
       "termsOfService": "Terms of Service",
       "privacyPolicy": "Privacy Policy",
       "contactUs": "Contact Us",
+      "howToUseEntropix": "How to use Entropix",
+      "howToUseEntropixSubtitle": "Find Spot, templates, and live coaching",
+      "howToUseEntropixIntro": "Learn the three steps from scene to shutter.",
       "rateApp": "Rate App",
       "shareApp": "Share App",
       "helpAndSupport": "Help & Support",
@@ -518,7 +533,7 @@
       "inviteLink": "Invite Link:",
       "sendMessage": "Send us a message directly",
       "needHelp": "Need Help?",
-      "respondWithin24Hours": "We typically respond within 24 hours.",
+      "respondWithinUpTo5BusinessDays": "We typically respond within up to 5 business days.",
       "stillHaveQuestions": "Still have questions?",
       "unableToOpen": "Unable to Open",
       "copyInviteLinkMessage": "Please copy the invite link and open it in your browser.",
@@ -591,6 +606,7 @@
       "modelsProtocolGemini": "Gemini generateContent",
       "modelsConfigured": "Configured",
       "modelsNotConfigured": "Not configured",
+      "modelsDefaultSetting": "Default model setting",
       "modelsEnableThinking": "Enable thinking",
       "modelsEnableThinkingRecommendOff": "(recommend OFF)",
       "modelsEnableThinkingHint": "Applies to Scene Explore and AR Guidance",
@@ -619,7 +635,11 @@
       "privacyDescription": "We collect and use your data to provide personalized services, improve app functionality, and enhance your experience. Your data is securely stored and will not be shared with third parties without your consent.",
       "agree": "Agree",
       "rejectAndExit": "Reject and Exit",
-      "viewPrivacyAndTerms": "View our Privacy Policy and Terms of Service"
+      "viewPrivacyAndTerms": "View our Privacy Policy and Terms of Service",
+      "legalReagreeTitle": "Updated Terms & Privacy",
+      "legalReagreeBodyBoth": "We've updated our Terms of Use and Privacy Policy. Please review and agree to continue using Entropix.",
+      "legalReagreeBodyTermsOnly": "We've updated our Terms of Use. Please review and agree to continue using Entropix.",
+      "legalReagreeBodyPrivacyOnly": "We've updated our Privacy Policy. Please review and agree to continue using Entropix."
     }
   },
   "simplifiedChinese": {
@@ -655,6 +675,8 @@
       "updateRequiredIntro": "为确保最佳体验：",
       "updateAvailableMessage": "发现新版本，更新以获得最新改进。",
       "updateRequiredMessage": "本次更新为强制更新，更新后才能继续使用。",
+      "updateAvailableMessageFormat": "新版本 %@ 已发布（当前 %@）。更新以获得最新改进。",
+      "updateRequiredMessageFormat": "需更新到大版本 %@ 后才能继续使用（当前 %@）。",
       "invalidUpdateUrl": "更新地址无效",
       "updateFallbackContent": "- 修复了一些已知问题。\n- 优化了交互体验。"
     },
@@ -757,20 +779,18 @@
       "geminiPromptBlocked": "提示词被 Gemini 安全策略拦截",
       "geminiNoImage": "Gemini 未返回图片",
       "geminiDecodeFailed": "Gemini 图片解码失败",
-      "tutorialFindSceneTitle": "寻找好看的场景",
-      "tutorialFindSceneDescription": "你看到一个很美的场景，想给另一半在这里拍照，但一时不知道该怎么拍。",
-      "tutorialFindSceneCallout": "别担心！\n让 AI 来帮你！",
-      "tutorialTapButtonTitle": "点击按钮",
-      "tutorialTapButtonDescription": "点击 AI 拍前按钮扫描景色，AI 会告诉你如何在此取景拍摄。",
-      "tutorialViewAndSelectTitle": "查看并选择",
-      "tutorialViewAndSelectDescription": "浏览这些想法，找到你想复刻的一张。上滑即可选择。",
-      "tutorialViewAndSelectNote": "你也可以先点赞，稍后再到“%@”里找回。",
-      "tutorialAlignGuidanceTitle": "对齐引导",
-      "tutorialAlignGuidanceDescription": "跟随模板，对齐 AR 引导，即可更完整地复刻。",
-      "tutorialSavePhotoTitle": "保存照片",
-      "tutorialSavePhotoDescription": "你可以把照片保存到我们的云端 Gallery，或下载到本地相册。",
-      "tutorialSaveToCloudGallery": "保存到云端 Gallery",
-      "tutorialSaveToLocalAlbum": "保存到本地相册",
+      "tutorialJourneyFindSpotTitle": "找到机位",
+      "tutorialJourneyFindSpotDescription": "冻帧当前画面。Entropix 标出值得走过去的点位，不用再猜该站哪儿。",
+      "tutorialJourneyTemplatesTitle": "偷师构图",
+      "tutorialJourneyTemplatesDescription": "「灵感构图」把实景（或点位）变成可拍模板。滑一滑，选中喜欢的，带进现场拍摄。",
+      "tutorialJourneyCoachingTitle": "对齐，开拍",
+      "tutorialJourneyCoachingDescription": "把模板叠在相机上。用「取景构图」和「姿势对齐」，需要时点「获取指导」，然后按下快门。拍完可保存到系统相册。",
+      "tutorialModeDeckTitle": "选怎么拍",
+      "tutorialModeDeckDescription": "点顶部模式条切换。拍照是普通拍摄；找机位和灵感构图是 AI 路径。",
+      "tutorialModeContrastTitle": "找机位 vs 灵感构图",
+      "tutorialModeContrastDescription": "「找机位」探索场景里该站的位置；「灵感构图」基于眼前画面生成构图想法。同样点快门，起点问题不同。",
+      "tutorialModeContrastFindSpotCaption": "我该站哪儿？",
+      "tutorialModeContrastGetTemplateCaption": "这一框怎么拍？",
       "tutorialStepIndicatorFormat": "%d / %d",
       "tutorialNext": "下一步",
       "tutorialPrev": "上一步",
@@ -1031,40 +1051,52 @@
       "about": "关于",
       "faqs": [
         {
-          "question": "App支持什么登录方式？是否支持多设备登录？",
-          "answer": "目前，应用支持使用 Apple 账户登录，但不支持在同一 Apple 账户下跨多个设备使用。此功能将在未来提供。"
+          "question": "Entropix 是什么？",
+          "answer": "Entropix 是一款现场拍摄助手。它帮你找到更好的机位、从当前场景获得构图灵感，并在拍摄时辅导取景与姿势——少猜、多拍。"
         },
         {
-          "question": "什么是灵感能量？",
-          "answer": "每次使用 AI 构图可能消耗 1 个灵感能量。您可以通过观看广告或订阅 Plus 会员来获取灵感能量。"
+          "question": "Entropix 适合谁用？",
+          "answer": "适合希望在按下快门前更清楚「站哪、怎么框、怎么调整」的手机拍摄者——独自旅行、情侣、创作者和日常随拍用户都可以。"
         },
         {
-          "question": "AI 引导功能是如何工作的？",
-          "answer": "AI 引导通过分析您的相机视图并提供实时建议来帮助您拍摄更好的照片。"
+          "question": "Entropix 解决什么问题？",
+          "answer": "到了实地，人很容易愣住、乱走，或只拍「保险」的一张。Entropix 把实时相机变成短闭环：探索场景 → 选构图灵感 → 现场辅导对齐 → 拍摄。"
         },
         {
-          "question": "我可以给喜欢的构图点赞吗？",
-          "answer": "可以。您可以点击心形图标为喜欢的构图点赞。已赞的构图会出现在个人资料里的“已赞”标签中，方便您稍后查看。"
+          "question": "产品期望的使用路径是什么？",
+          "answer": "三步：Find Spot（找机位）发现值得走近的位置；Get Template（出构图）从当前画面（或已选机位）得到构图灵感；然后进入现场辅导（取景、姿势、提示），直到拍下照片。"
         },
         {
-          "question": "如何从图库中删除我的照片？",
-          "answer": "在您的个人资料中，前往图库标签，点击任何照片，然后点击三点菜单并选择\"删除\"。系统会要求您确认删除，然后才会永久删除。"
+          "question": "如何开始使用 Entropix？",
+          "answer": "打开相机，如需可在模式芯片上切换模式，然后按 Find Spot → 构图灵感 → 现场拍摄进行。随时可到「设置 → 如何使用 Entropix」查看完整说明。在相机上点模式芯片旁的「?」，可快速了解 Find Spot 与 Get Template 的区别。"
         },
         {
-          "question": "我的数据是否安全私密？",
-          "answer": "是的，我们非常重视隐私。您的照片会被安全存储，我们绝不会分享您的个人数据。您可以在关于部分阅读我们的完整隐私政策以了解更多详情。"
+          "question": "什么是 Find Spot？",
+          "answer": "Find Spot 会冻结当前画面，并标出场景中值得走近的位置，帮你选择更好的站位，而不是凭感觉乱找。"
         },
         {
-          "question": "如果遇到技术问题该怎么办？",
-          "answer": "故障排除步骤可能包括：(1) 检查您的网络连接；(2) 重启应用；(3) 重启手机；(4) 重新安装应用；(5) 联系我们寻求进一步帮助。"
+          "question": "什么是 Get Template？",
+          "answer": "Get Template 会把当前画面（或已选机位）变成构图灵感。左右滑动挑选喜欢的一张，再带入现场拍摄去对齐画面。"
         },
         {
-          "question": "如何在 Entropix 上举报不当内容？",
-          "answer": "要举报 Entropix 应用中的 AI 生成内容，请前往联系我们并提交工单。请务必截图您要举报的内容。"
+          "question": "现场辅导做什么？",
+          "answer": "选定构图后，Entropix 帮你对齐拍摄——取景与姿势引导，需要时可再取提示——然后拍摄，完成后可保存到相册。"
         },
         {
-          "question": "如何更改应用语言？",
-          "answer": "我们提供三种语言（英语、简体中文和繁体中文）。您可以在设置 > 语言中更改语言。应用中的所有文本将相应更新。"
+          "question": "在哪里可以再看教程？",
+          "answer": "「设置 → 如何使用 Entropix」会以静态页面展示与首次引导相同的 Journey（Find Spot → 构图灵感 → 现场辅导）。无需再播放相机首次弹窗教程。"
+        },
+        {
+          "question": "默认模型服务如何工作？为什么感觉比较慢？",
+          "answer": "AI 请求由本机直接发往大模型服务商，不会经开发者自建中转服务处理此流程。若响应偏慢，可能是因为内置默认路径当前使用了更注重成本的服务商。您可在「设置 → 模型」配置 BYOK，改用自己的、往往更快的服务商。若希望开发者提供更高效的默认服务商，可通过「设置 → 联系我们」发邮件告知。"
+        },
+        {
+          "question": "Idea Inspiration 支持哪些服务商？",
+          "answer": "Idea Inspiration（Get Template / 出构图）目前仅支持 Google Gemini。其他服务商可能在后续版本加入。您仍可在「设置 → 模型」配置自己的 Gemini 凭证。"
+        },
+        {
+          "question": "Entropix 如何使用我的数据？",
+          "answer": "照片与应用相关数据在您的设备上本地存储、处理与使用。开发者不会在自有服务器上为此流程使用或保存您的个人拍摄数据。使用 AI 功能时，相关内容可能会发送到您所依赖的模型服务商。默认可能使用 DashScope 与 Google Gemini。您可在「设置 → 模型」配置自己的服务商与密钥。"
         }
       ],
       "accountProfile": "账户资料",
@@ -1107,7 +1139,7 @@
       "qwenAPIKeyPlaceholder": "输入你的 DashScope API Key",
       "qwenNotConfigured": "请先在 我的 → 设置 → Models 中配置 Qwen",
       "modelsBaseURLRequired": "请填写 Base URL",
-      "modelsBaseURLInvalid": "请输入有效的 https Base URL",
+      "modelsBaseURLInvalid": "Base URL 必须使用 HTTPS",
       "modelsAPIKeyRequired": "请填写 API Key",
       "modelsSaved": "模型设置已保存",
       "gemini31FlashImage": "Gemini 3.1 Flash Image",
@@ -1121,6 +1153,9 @@
       "termsOfService": "服务协议",
       "privacyPolicy": "隐私协议",
       "contactUs": "联系我们",
+      "howToUseEntropix": "如何使用 Entropix",
+      "howToUseEntropixSubtitle": "找机位、构图灵感与现场辅导",
+      "howToUseEntropixIntro": "从场景到快门，三步学会拍摄。",
       "rateApp": "评价应用",
       "shareApp": "分享应用",
       "helpAndSupport": "帮助与支持",
@@ -1141,7 +1176,7 @@
       "inviteLink": "邀请链接：",
       "sendMessage": "直接给我们发送消息",
       "needHelp": "需要帮助？",
-      "respondWithin24Hours": "我们通常在 24 小时内回复。",
+      "respondWithinUpTo5BusinessDays": "我们通常会在最多 5 个工作日内回复。",
       "stillHaveQuestions": "还有问题？",
       "unableToOpen": "无法打开",
       "copyInviteLinkMessage": "请复制邀请链接并在浏览器中打开。",
@@ -1214,6 +1249,7 @@
       "modelsProtocolGemini": "Gemini generateContent",
       "modelsConfigured": "已配置",
       "modelsNotConfigured": "未配置",
+      "modelsDefaultSetting": "默认模型设置",
       "modelsEnableThinking": "启用思考",
       "modelsEnableThinkingRecommendOff": "（建议关闭）",
       "modelsEnableThinkingHint": "同步作用于场景勘探与 AR 指导",
@@ -1242,7 +1278,11 @@
       "privacyDescription": "我们收集和使用您的数据来提供个性化服务、改进应用功能并增强您的体验。您的数据将被安全存储，未经您的同意不会与第三方共享。",
       "agree": "同意",
       "rejectAndExit": "拒绝并退出",
-      "viewPrivacyAndTerms": "查看我们的隐私政策和服务条款"
+      "viewPrivacyAndTerms": "查看我们的隐私政策和服务条款",
+      "legalReagreeTitle": "条款与隐私更新",
+      "legalReagreeBodyBoth": "我们已更新服务条款与隐私政策。请阅读并同意后继续使用 Entropix。",
+      "legalReagreeBodyTermsOnly": "我们已更新服务条款。请阅读并同意后继续使用 Entropix。",
+      "legalReagreeBodyPrivacyOnly": "我们已更新隐私政策。请阅读并同意后继续使用 Entropix。"
     }
   },
   "traditionalChinese": {
@@ -1278,6 +1318,8 @@
       "updateRequiredIntro": "為確保最佳體驗：",
       "updateAvailableMessage": "發現新版本，更新以獲得最新改進。",
       "updateRequiredMessage": "本次更新為強制更新，更新後才能繼續使用。",
+      "updateAvailableMessageFormat": "新版本 %@ 已發布（目前 %@）。更新以獲得最新改進。",
+      "updateRequiredMessageFormat": "需更新到大版本 %@ 後才能繼續使用（目前 %@）。",
       "invalidUpdateUrl": "更新地址無效",
       "updateFallbackContent": "- 修復了一些已知問題。\n- 優化了互動體驗。"
     },
@@ -1380,20 +1422,18 @@
       "geminiPromptBlocked": "提示詞被 Gemini 安全策略攔截",
       "geminiNoImage": "Gemini 未返回圖片",
       "geminiDecodeFailed": "Gemini 圖片解碼失敗",
-      "tutorialFindSceneTitle": "尋找好看的場景",
-      "tutorialFindSceneDescription": "你看到一個很美的場景，想幫另一半在這裡拍照，但一時不知道該怎麼拍。",
-      "tutorialFindSceneCallout": "別擔心！\n讓 AI 來幫你！",
-      "tutorialTapButtonTitle": "點擊按鈕",
-      "tutorialTapButtonDescription": "點擊 AI 拍前按鈕掃描景色，AI 會告訴你如何在此取景拍攝。",
-      "tutorialViewAndSelectTitle": "查看並選擇",
-      "tutorialViewAndSelectDescription": "瀏覽這些想法，找到你想複刻的一張。上滑即可選擇。",
-      "tutorialViewAndSelectNote": "你也可以先「按讚」，稍後再到「%@」裡找回。",
-      "tutorialAlignGuidanceTitle": "對齊引導",
-      "tutorialAlignGuidanceDescription": "跟隨模板，對齊 AR 引導，即可更完整地複刻。",
-      "tutorialSavePhotoTitle": "保存照片",
-      "tutorialSavePhotoDescription": "你可以把照片保存到我們的雲端 Gallery，或下載到本地相簿。",
-      "tutorialSaveToCloudGallery": "保存到雲端 Gallery",
-      "tutorialSaveToLocalAlbum": "保存到本地相簿",
+      "tutorialJourneyFindSpotTitle": "找到機位",
+      "tutorialJourneyFindSpotDescription": "凍幀當前畫面。Entropix 標出值得走過去的點位，不用再猜該站哪兒。",
+      "tutorialJourneyTemplatesTitle": "偷師構圖",
+      "tutorialJourneyTemplatesDescription": "「靈感構圖」把實景（或點位）變成可拍模板。滑一滑，選中喜歡的，帶進現場拍攝。",
+      "tutorialJourneyCoachingTitle": "對齊，開拍",
+      "tutorialJourneyCoachingDescription": "把模板疊在相機上。用「取景構圖」和「姿勢對齊」，需要時點「獲取指導」，然後按下快門。拍完可保存到系統相簿。",
+      "tutorialModeDeckTitle": "選怎麼拍",
+      "tutorialModeDeckDescription": "點頂部模式條切換。拍照是普通拍攝；找機位和靈感構圖是 AI 路徑。",
+      "tutorialModeContrastTitle": "找機位 vs 靈感構圖",
+      "tutorialModeContrastDescription": "「找機位」探索場景裡該站的位置；「靈感構圖」基於眼前畫面生成構圖想法。同樣點快門，起點問題不同。",
+      "tutorialModeContrastFindSpotCaption": "我該站哪兒？",
+      "tutorialModeContrastGetTemplateCaption": "這一框怎麼拍？",
       "tutorialStepIndicatorFormat": "%d / %d",
       "tutorialNext": "下一步",
       "tutorialPrev": "上一步",
@@ -1654,40 +1694,52 @@
       "about": "關於",
       "faqs": [
         {
-          "question": "App支持什麼登錄方式？是否支持多設備登錄？",
-          "answer": "目前，應用支持使用 Apple 賬戶登錄，但不支持在同一 Apple 賬戶下跨多個設備使用。此功能將在未來提供。"
+          "question": "Entropix 是什麼？",
+          "answer": "Entropix 是一款現場拍攝助手。它幫你找到更好的機位、從當前場景獲得構圖靈感，並在拍攝時輔導取景與姿勢——少猜、多拍。"
         },
         {
-          "question": "什麼是靈感能量？",
-          "answer": "每次使用 AI 構圖可能消耗 1 個靈感能量。您可以通過觀看廣告或訂閱 Plus 會員來獲取靈感能量。"
+          "question": "Entropix 適合誰用？",
+          "answer": "適合希望在按下快門前更清楚「站哪、怎麼框、怎麼調整」的手機拍攝者——獨自旅行、情侶、創作者和日常隨拍用戶都可以。"
         },
         {
-          "question": "AI 引導功能是如何工作的？",
-          "answer": "AI 引導通過分析您的相機視圖並提供實時建議來幫助您拍攝更好的照片。"
+          "question": "Entropix 解決什麼問題？",
+          "answer": "到了實地，人很容易愣住、亂走，或只拍「保險」的一張。Entropix 把實時相機變成短閉環：探索場景 → 選構圖靈感 → 現場輔導對齊 → 拍攝。"
         },
         {
-          "question": "我可以給喜歡的構圖按讚嗎？",
-          "answer": "可以。您可以點擊心形圖標為喜歡的構圖按讚。已讚的構圖會出現在個人資料裡的「已讚」標籤中，方便您稍後查看。"
+          "question": "產品期望的使用路徑是什麼？",
+          "answer": "三步：Find Spot（找機位）發現值得走近的位置；Get Template（出構圖）從當前畫面（或已選機位）得到構圖靈感；然後進入現場輔導（取景、姿勢、提示），直到拍下照片。"
         },
         {
-          "question": "如何從圖庫中刪除我的照片？",
-          "answer": "在您的個人資料中，前往圖庫標籤，點擊任何照片，然後點擊三點菜單並選擇\"刪除\"。系統會要求您確認刪除，然後才會永久刪除。"
+          "question": "如何開始使用 Entropix？",
+          "answer": "打開相機，如需可在模式芯片上切換模式，然後按 Find Spot → 構圖靈感 → 現場拍攝進行。隨時可到「設置 → 如何使用 Entropix」查看完整說明。在相機上點模式芯片旁的「?」，可快速了解 Find Spot 與 Get Template 的區別。"
         },
         {
-          "question": "我的數據是否安全私密？",
-          "answer": "是的，我們非常重視隱私。您的照片會被安全存儲，我們絕不會分享您的個人數據。您可以在關於部分閱讀我們的完整隱私政策以了解更多詳情。"
+          "question": "什麼是 Find Spot？",
+          "answer": "Find Spot 會凍結當前畫面，並標出場景中值得走近的位置，幫你選擇更好的站位，而不是憑感覺亂找。"
         },
         {
-          "question": "如果遇到技術問題該怎麼辦？",
-          "answer": "故障排除步驟可能包括：(1) 檢查您的網絡連接；(2) 重啟應用；(3) 重啟手機；(4) 重新安裝應用；(5) 聯繫我們尋求進一步幫助。"
+          "question": "什麼是 Get Template？",
+          "answer": "Get Template 會把當前畫面（或已選機位）變成構圖靈感。左右滑動挑選喜歡的一張，再帶入現場拍攝去對齊畫面。"
         },
         {
-          "question": "如何在 Entropix 上舉報不當內容？",
-          "answer": "要舉報 Entropix 應用中的 AI 生成內容，請前往聯繫我們並提交工單。請務必截圖您要舉報的內容。"
+          "question": "現場輔導做什麼？",
+          "answer": "選定構圖後，Entropix 幫你對齊拍攝——取景與姿勢引導，需要時可再取提示——然後拍攝，完成後可保存到相簿。"
         },
         {
-          "question": "如何更改應用語言？",
-          "answer": "我們提供三種語言（英語、簡體中文和繁體中文）。您可以在設置 > 語言中更改語言。應用中的所有文本將相應更新。"
+          "question": "在哪裡可以再看教學？",
+          "answer": "「設置 → 如何使用 Entropix」會以靜態頁面展示與首次引導相同的 Journey（Find Spot → 構圖靈感 → 現場輔導）。無需再播放相機首次彈窗教學。"
+        },
+        {
+          "question": "預設模型服務如何運作？為什麼感覺比較慢？",
+          "answer": "AI 請求由本機直接發往大模型服務商，不會經開發者自建中轉服務處理此流程。若回應偏慢，可能是因為內建預設路徑目前使用了更注重成本的服務商。您可在「設置 → 模型」配置 BYOK，改用自己的、往往更快的服務商。若希望開發者提供更高效的預設服務商，可透過「設置 → 聯繫我們」發郵件告知。"
+        },
+        {
+          "question": "Idea Inspiration 支援哪些服務商？",
+          "answer": "Idea Inspiration（Get Template / 出構圖）目前僅支援 Google Gemini。其他服務商可能在後續版本加入。您仍可在「設置 → 模型」配置自己的 Gemini 憑證。"
+        },
+        {
+          "question": "Entropix 如何使用我的資料？",
+          "answer": "照片與應用相關資料在您的裝置上本地儲存、處理與使用。開發者不會在自有伺服器上為此流程使用或保存您的個人拍攝資料。使用 AI 功能時，相關內容可能會發送到您所依賴的模型服務商。預設可能使用 DashScope 與 Google Gemini。您可在「設置 → 模型」配置自己的服務商與密鑰。"
         }
       ],
       "accountProfile": "賬戶資料",
@@ -1730,7 +1782,7 @@
       "qwenAPIKeyPlaceholder": "輸入你的 DashScope API Key",
       "qwenNotConfigured": "請先在 我的 → 設置 → Models 中配置 Qwen",
       "modelsBaseURLRequired": "請填寫 Base URL",
-      "modelsBaseURLInvalid": "請輸入有效的 https Base URL",
+      "modelsBaseURLInvalid": "Base URL 必須使用 HTTPS",
       "modelsAPIKeyRequired": "請填寫 API Key",
       "modelsSaved": "模型設置已儲存",
       "gemini31FlashImage": "Gemini 3.1 Flash Image",
@@ -1744,6 +1796,9 @@
       "termsOfService": "服務協議",
       "privacyPolicy": "隱私協議",
       "contactUs": "聯繫我們",
+      "howToUseEntropix": "如何使用 Entropix",
+      "howToUseEntropixSubtitle": "找機位、構圖靈感與現場輔導",
+      "howToUseEntropixIntro": "從場景到快門，三步學會拍攝。",
       "rateApp": "評價應用",
       "shareApp": "分享應用",
       "helpAndSupport": "幫助與支持",
@@ -1764,7 +1819,7 @@
       "inviteLink": "邀請鏈接：",
       "sendMessage": "直接給我們發送消息",
       "needHelp": "需要幫助？",
-      "respondWithin24Hours": "我們通常在 24 小時內回復。",
+      "respondWithinUpTo5BusinessDays": "我們通常會在最多 5 個工作日內回覆。",
       "stillHaveQuestions": "還有問題？",
       "unableToOpen": "無法打開",
       "copyInviteLinkMessage": "請複製邀請鏈接並在瀏覽器中打開。",
@@ -1837,6 +1892,7 @@
       "modelsProtocolGemini": "Gemini generateContent",
       "modelsConfigured": "已配置",
       "modelsNotConfigured": "未配置",
+      "modelsDefaultSetting": "預設模型設置",
       "modelsEnableThinking": "啟用思考",
       "modelsEnableThinkingRecommendOff": "（建議關閉）",
       "modelsEnableThinkingHint": "同步作用於場景勘探與 AR 指導",
@@ -1865,7 +1921,11 @@
       "privacyDescription": "我們收集和使用您的數據來提供個性化服務、改進應用功能並增強您的體驗。您的數據將被安全存儲，未經您的同意不會與第三方共享。",
       "agree": "同意",
       "rejectAndExit": "拒絕並退出",
-      "viewPrivacyAndTerms": "查看我們的隱私政策和服務條款"
+      "viewPrivacyAndTerms": "查看我們的隱私政策和服務條款",
+      "legalReagreeTitle": "條款與隱私更新",
+      "legalReagreeBodyBoth": "我們已更新服務條款與隱私政策。請閱讀並同意後繼續使用 Entropix。",
+      "legalReagreeBodyTermsOnly": "我們已更新服務條款。請閱讀並同意後繼續使用 Entropix。",
+      "legalReagreeBodyPrivacyOnly": "我們已更新隱私政策。請閱讀並同意後繼續使用 Entropix。"
     }
   }
 }

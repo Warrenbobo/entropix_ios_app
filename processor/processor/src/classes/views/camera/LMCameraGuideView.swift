@@ -2,23 +2,19 @@
 //  LMCameraGuideView.swift
 //  processor
 //
-//  相机教程视图
+//  Camera tutorial popup card: Journey deck + Mode help deck.
 //
 
 import UIKit
 import SnapKit
 
-protocol LMCameraGuideViewDelegate: AnyObject {
-    func cameraGuideViewDidComplete(_ guideView: LMCameraGuideView, step: LMCameraGuideStep)
-}
-
+/// Popup tutorial card over the live camera.
 final class LMCameraGuideView: UIView {
 
-    weak var delegate: LMCameraGuideViewDelegate?
-
-    private var currentStep: LMCameraGuideStep?
     private var currentTutorialStep: LMCameraTutorialStep?
+    private var currentDeck: LMCameraTutorialDeck = .journey
     private var tutorialCompletion: (() -> Void)?
+    private var marksJourneyCompleteOnFinish = false
     private var secondaryButtonWidthConstraint: Constraint?
 
     private let dimmingView: UIView = {
@@ -99,18 +95,6 @@ final class LMCameraGuideView: UIView {
         return button
     }()
 
-    private let footerCenterStack: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.spacing = 12
-        stack.alignment = .center
-        stack.distribution = .fill
-        return stack
-    }()
-
-    /// Fixed-width slot so PREV/NEXT stay symmetric around the page indicator.
-    private let leadingNavSlot = UIView()
-
     private let prevButton: UIButton = {
         let button = UIButton(type: .system)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .bold)
@@ -143,6 +127,7 @@ final class LMCameraGuideView: UIView {
     }()
 
     private static let navButtonWidth: CGFloat = 88
+    private static let illustrationHeight: CGFloat = 240
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -167,13 +152,11 @@ final class LMCameraGuideView: UIView {
         illustrationContainerView.addSubview(illustrationContentView)
         cardContainerView.addSubview(footerView)
 
+        // Absolute footer: page indicator stays card-centered; side buttons pin L/R.
         footerView.addSubview(secondaryButton)
-        footerView.addSubview(footerCenterStack)
-
-        leadingNavSlot.addSubview(prevButton)
-        footerCenterStack.addArrangedSubview(leadingNavSlot)
-        footerCenterStack.addArrangedSubview(indicatorLabel)
-        footerCenterStack.addArrangedSubview(primaryButton)
+        footerView.addSubview(prevButton)
+        footerView.addSubview(indicatorLabel)
+        footerView.addSubview(primaryButton)
 
         dimmingView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -204,7 +187,7 @@ final class LMCameraGuideView: UIView {
         illustrationContainerView.snp.makeConstraints { make in
             make.top.equalTo(descriptionLabel.snp.bottom).offset(14)
             make.leading.trailing.equalToSuperview().inset(14)
-            make.height.equalTo(240)
+            make.height.equalTo(Self.illustrationHeight)
         }
 
         illustrationContentView.snp.makeConstraints { make in
@@ -218,31 +201,26 @@ final class LMCameraGuideView: UIView {
             make.bottom.equalToSuperview().offset(-16)
         }
 
+        indicatorLabel.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+        indicatorLabel.setContentHuggingPriority(.required, for: .horizontal)
+        indicatorLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+
         secondaryButton.snp.makeConstraints { make in
             make.leading.top.bottom.equalToSuperview()
             secondaryButtonWidthConstraint = make.width.equalTo(0).constraint
         }
 
-        footerCenterStack.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-
-        leadingNavSlot.snp.makeConstraints { make in
-            make.width.equalTo(Self.navButtonWidth)
-            make.height.equalToSuperview()
-        }
-
         prevButton.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.leading.top.bottom.equalToSuperview()
+            make.width.equalTo(Self.navButtonWidth)
         }
 
         primaryButton.snp.makeConstraints { make in
+            make.trailing.top.bottom.equalToSuperview()
             make.width.equalTo(Self.navButtonWidth)
-            make.height.equalToSuperview()
         }
-
-        indicatorLabel.setContentHuggingPriority(.required, for: .horizontal)
-        indicatorLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
 
         skipButton.addTarget(self, action: #selector(handleSkipButtonTapped), for: .touchUpInside)
         secondaryButton.addTarget(self, action: #selector(handleSecondaryButtonTapped), for: .touchUpInside)
@@ -250,13 +228,17 @@ final class LMCameraGuideView: UIView {
         primaryButton.addTarget(self, action: #selector(handlePrimaryButtonTapped), for: .touchUpInside)
     }
 
-    func showTutorial(
-        startingFrom step: LMCameraTutorialStep = .findScene,
-        targetProvider _: @escaping (LMCameraTutorialStep) -> UIView?,
-        onComplete: @escaping () -> Void
-    ) {
-        currentStep = nil
-        currentTutorialStep = step
+    /**
+     Presents a tutorial deck.
+
+     - Parameters:
+       - deck: Journey (first-time) or Mode help.
+       - onComplete: Invoked when the deck finishes with `markCompleted` semantics for Journey only.
+     */
+    func showTutorial(deck: LMCameraTutorialDeck, onComplete: (() -> Void)? = nil) {
+        currentDeck = deck
+        marksJourneyCompleteOnFinish = (deck == .journey)
+        currentTutorialStep = .first(of: deck)
         tutorialCompletion = onComplete
 
         isHidden = false
@@ -269,13 +251,22 @@ final class LMCameraGuideView: UIView {
         }
     }
 
+    /**
+     Hides the tutorial card.
+
+     - Parameters:
+       - animated: Fade out when true.
+       - markCompleted: When true and presenting Journey, runs the completion handler (persists flag).
+     */
     func hideTutorial(animated: Bool = true, markCompleted: Bool = false) {
+        let shouldMark = markCompleted && marksJourneyCompleteOnFinish
         let completionBlock = {
             self.isHidden = true
             self.currentTutorialStep = nil
             let handler = self.tutorialCompletion
             self.tutorialCompletion = nil
-            if markCompleted {
+            self.marksJourneyCompleteOnFinish = false
+            if shouldMark {
                 handler?()
             }
         }
@@ -297,24 +288,34 @@ final class LMCameraGuideView: UIView {
 
         titleLabel.text = step.title
         descriptionLabel.text = step.description
-        indicatorLabel.text = String(format: LMText.camera.tutorialStepIndicatorFormat,
-                                     step.index,
-                                     LMCameraTutorialStep.allCases.count)
-        primaryButton.setTitle(step == .savePhoto ? step.primaryButtonTitle : step.primaryButtonTitle.uppercased(), for: .normal)
+        indicatorLabel.text = String(
+            format: LMText.camera.tutorialStepIndicatorFormat,
+            step.index,
+            step.stepCount
+        )
 
-        let shouldShowReplay = step == .savePhoto
+        let primaryTitle = step.isLast
+            ? step.primaryButtonTitle
+            : step.primaryButtonTitle.uppercased()
+        primaryButton.setTitle(primaryTitle, for: .normal)
+
+        let shouldShowReplay = step.deck == .journey && step.isLast
         secondaryButton.setTitle(LMText.camera.tutorialReplay, for: .normal)
         secondaryButton.alpha = shouldShowReplay ? 1 : 0
         secondaryButton.isUserInteractionEnabled = shouldShowReplay
-        secondaryButtonWidthConstraint?.update(offset: shouldShowReplay ? 82 : 0)
+        secondaryButtonWidthConstraint?.update(offset: shouldShowReplay ? Self.navButtonWidth : 0)
 
-        let shouldShowPrev = step.showsPreviousButton
+        let shouldShowPrev = step.showsPreviousButton && !shouldShowReplay
         prevButton.setTitle(LMText.camera.tutorialPrev.uppercased(), for: .normal)
         prevButton.isHidden = !shouldShowPrev
-        leadingNavSlot.isHidden = step == .savePhoto
 
         skipButton.isHidden = shouldShowReplay
         skipButton.setTitle(LMText.camera.tutorialSkip.uppercased(), for: .normal)
+
+        if step.deck == .modeHelp {
+            skipButton.isHidden = false
+            skipButton.setTitle(LMText.camera.tutorialSkip.uppercased(), for: .normal)
+        }
 
         renderIllustration(for: step)
     }
@@ -323,311 +324,146 @@ final class LMCameraGuideView: UIView {
         illustrationContentView.subviews.forEach { $0.removeFromSuperview() }
 
         switch step {
-        case .findScene:
-            renderFindSceneIllustration()
-        case .tapButton:
-            renderTapButtonIllustration()
-        case .viewAndSelect:
-            renderViewAndSelectIllustration()
-        case .alignGuidance:
-            renderAlignGuidanceIllustration()
-        case .savePhoto:
-            renderSavePhotoIllustration()
+        case .journey(let journeyStep):
+            renderJourneyScreenshot(assetName: journeyStep.assetName)
+        case .modeHelp(.modeDeck):
+            renderModeDeckIllustration()
+        case .modeHelp(.spotVsTemplate):
+            renderModeContrastIllustration()
         }
     }
 
-    private func renderFindSceneIllustration() {
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 14
-        stackView.alignment = .center
-
-        let screenshotView = makeScreenshotView(assetName: AppConfigs.Assets.tutorialScene,
-                                                size: CGSize(width: 84, height: 182))
-        let calloutView = makeCalloutView(text: LMText.camera.tutorialFindSceneCallout)
-
-        illustrationContentView.addSubview(stackView)
-        stackView.addArrangedSubview(screenshotView)
-        stackView.addArrangedSubview(calloutView)
-
-        calloutView.snp.makeConstraints { make in
-            make.width.equalTo(158)
-        }
-
-        stackView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-    }
-
-    private func renderTapButtonIllustration() {
-        let horizontalStack = UIStackView()
-        horizontalStack.axis = .horizontal
-        horizontalStack.spacing = 14
-        horizontalStack.alignment = .center
-
-        let leftImageView = makeScreenshotView(assetName: AppConfigs.Assets.tutorialTapLeft,
-                                               size: CGSize(width: 90, height: 196))
-        let rightImageView = makeScreenshotView(assetName: AppConfigs.Assets.tutorialTapRight,
-                                                size: CGSize(width: 90, height: 196))
-
-        let arrowImageView = UIImageView(image: UIImage(systemName: "arrow.right"))
-        arrowImageView.tintColor = .white
-        arrowImageView.contentMode = .scaleAspectFit
-
-        illustrationContentView.addSubview(horizontalStack)
-        horizontalStack.addArrangedSubview(leftImageView)
-        horizontalStack.addArrangedSubview(arrowImageView)
-        horizontalStack.addArrangedSubview(rightImageView)
-
-        arrowImageView.snp.makeConstraints { make in
-            make.width.equalTo(26)
-            make.height.equalTo(22)
-        }
-
-        horizontalStack.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-    }
-
-    private func renderViewAndSelectIllustration() {
-        let horizontalStack = UIStackView()
-        horizontalStack.axis = .horizontal
-        horizontalStack.spacing = 12
-        horizontalStack.alignment = .bottom
-
-        let leftImageView = makeScreenshotView(assetName: AppConfigs.Assets.tutorialSelectLeft,
-                                               size: CGSize(width: 86, height: 196))
-
-        let rightColumn = UIStackView()
-        rightColumn.axis = .vertical
-        rightColumn.spacing = 10
-        rightColumn.alignment = .center
-
-        let rightImageView = makeScreenshotView(assetName: AppConfigs.Assets.tutorialSelectRight,
-                                                size: CGSize(width: 84, height: 112),
-                                                cornerRadius: 10)
-        let noteLabel = UILabel()
-        noteLabel.text = String(format: LMText.camera.tutorialViewAndSelectNote, LMText.profile.savedIdeas)
-        noteLabel.textColor = UIColor.white.withAlphaComponent(0.95)
-        noteLabel.font = UIFont.italicSystemFont(ofSize: 12)
-        noteLabel.numberOfLines = 0
-        noteLabel.textAlignment = .left
-
-        rightColumn.addArrangedSubview(rightImageView)
-        rightColumn.addArrangedSubview(noteLabel)
-
-        noteLabel.snp.makeConstraints { make in
-            make.width.equalTo(128)
-        }
-
-        illustrationContentView.addSubview(horizontalStack)
-        horizontalStack.addArrangedSubview(leftImageView)
-        horizontalStack.addArrangedSubview(rightColumn)
-
-        horizontalStack.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-    }
-
-    private func renderAlignGuidanceIllustration() {
-        let screenshotView = makeScreenshotView(assetName: AppConfigs.Assets.tutorialAlign,
-                                                size: CGSize(width: 108, height: 204))
-        illustrationContentView.addSubview(screenshotView)
-
-        screenshotView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-    }
-
-    private func renderSavePhotoIllustration() {
-        let horizontalStack = UIStackView()
-        horizontalStack.axis = .horizontal
-        horizontalStack.spacing = 14
-        horizontalStack.alignment = .center
-
-        let screenshotView = makeScreenshotView(assetName: AppConfigs.Assets.tutorialSave,
-                                                size: CGSize(width: 94, height: 204))
-
-        let actionStack = UIStackView()
-        actionStack.axis = .vertical
-        actionStack.spacing = 10
-        actionStack.alignment = .leading
-
-        let savePill = makeActionPill(text: LMText.common.save)
-        let cloudLabel = makeActionLabel(text: LMText.camera.tutorialSaveToCloudGallery)
-        let downloadBadge = makeDownloadBadge()
-        let localLabel = makeActionLabel(text: LMText.camera.tutorialSaveToLocalAlbum)
-
-        actionStack.addArrangedSubview(savePill)
-        actionStack.addArrangedSubview(cloudLabel)
-        actionStack.addArrangedSubview(downloadBadge)
-        actionStack.addArrangedSubview(localLabel)
-
-        illustrationContentView.addSubview(horizontalStack)
-        horizontalStack.addArrangedSubview(screenshotView)
-        horizontalStack.addArrangedSubview(actionStack)
-
-        savePill.snp.makeConstraints { make in
-            make.width.equalTo(80)
-        }
-
-        cloudLabel.snp.makeConstraints { make in
-            make.width.equalTo(134)
-        }
-
-        localLabel.snp.makeConstraints { make in
-            make.width.equalTo(134)
-        }
-
-        downloadBadge.snp.makeConstraints { make in
-            make.width.height.equalTo(42)
-        }
-
-        horizontalStack.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
-    }
-
-    private func makeScreenshotView(assetName: String,
-                                    size: CGSize,
-                                    cornerRadius: CGFloat = 8) -> UIView {
-        let container = UIView()
-        container.layer.cornerRadius = cornerRadius
-        container.layer.masksToBounds = true
-
+    private func renderJourneyScreenshot(assetName: String) {
         let imageView = UIImageView(image: UIImage(named: assetName))
-        imageView.contentMode = .scaleAspectFill
-        container.addSubview(imageView)
-
+        imageView.contentMode = .scaleAspectFit
+        imageView.clipsToBounds = true
+        illustrationContentView.addSubview(imageView)
         imageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
+    }
 
-        container.snp.makeConstraints { make in
-            make.width.equalTo(size.width)
-            make.height.equalTo(size.height)
+    private func renderModeDeckIllustration() {
+        let panel = LMPreShootPlanModePanelView(isInteractive: false, selected: .findSpot)
+        illustrationContentView.addSubview(panel)
+        panel.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.equalTo(200)
         }
-
-        return container
+        // Scale down slightly to fit illustration slot.
+        panel.transform = CGAffineTransform(scaleX: 0.92, y: 0.92)
     }
 
-    private func makeCalloutView(text: String) -> UIView {
-        let container = UIView()
-        container.backgroundColor = UIColor.white.withAlphaComponent(0.08)
-        container.layer.cornerRadius = 17
-        container.layer.borderWidth = 1
-        container.layer.borderColor = UIColor.white.withAlphaComponent(0.28).cgColor
+    private func renderModeContrastIllustration() {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 10
+        stack.alignment = .fill
 
-        let label = UILabel()
-        label.text = text
-        label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 13, weight: .bold)
-        label.numberOfLines = 0
-        label.textAlignment = .center
+        let findCard = makeContrastCard(
+            icon: LMPreShootPlanSymbols.findSpot(
+                configuration: UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+            ),
+            title: LMText.camera.preShootPlanButtonFindSpot,
+            caption: LMText.camera.tutorialModeContrastFindSpotCaption
+        )
+        let templateCard = makeContrastCard(
+            icon: LMPreShootPlanSymbols.composition(
+                configuration: UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
+            ),
+            title: LMText.camera.preShootPlanButtonComposition,
+            caption: LMText.camera.tutorialModeContrastGetTemplateCaption
+        )
 
-        container.addSubview(label)
-        label.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 10, left: 12, bottom: 10, right: 12))
+        let vsLabel = UILabel()
+        vsLabel.text = "vs"
+        vsLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        vsLabel.textColor = UIColor.white.withAlphaComponent(0.7)
+        vsLabel.textAlignment = .center
+
+        stack.addArrangedSubview(findCard)
+        stack.addArrangedSubview(vsLabel)
+        stack.addArrangedSubview(templateCard)
+
+        illustrationContentView.addSubview(stack)
+        stack.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.leading.trailing.equalToSuperview().inset(8)
         }
-
-        return container
     }
 
-    private func makeActionPill(text: String) -> UIView {
+    private func makeContrastCard(icon: UIImage?, title: String, caption: String) -> UIView {
         let container = UIView()
-        container.backgroundColor = UIColor.white.withAlphaComponent(0.16)
-        container.layer.cornerRadius = 17
-        container.layer.borderWidth = 1
-        container.layer.borderColor = UIColor.white.withAlphaComponent(0.24).cgColor
+        container.backgroundColor = UIColor.white.withAlphaComponent(0.12)
+        container.layer.cornerRadius = 14
+        container.layer.borderWidth = 1.5
+        container.layer.borderColor = UIColor.hexColor("#6680E6").cgColor
 
-        let label = UILabel()
-        label.text = text
-        label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 13, weight: .bold)
-        label.textAlignment = .center
-
-        container.addSubview(label)
-        label.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16))
-        }
-
-        return container
-    }
-
-    private func makeActionLabel(text: String) -> UILabel {
-        let label = UILabel()
-        label.text = text
-        label.textColor = .white
-        label.font = UIFont.systemFont(ofSize: 12, weight: .bold)
-        label.numberOfLines = 0
-        label.textAlignment = .left
-        return label
-    }
-
-    private func makeDownloadBadge() -> UIView {
-        let container = UIView()
-        container.backgroundColor = UIColor.white.withAlphaComponent(0.16)
-        container.layer.cornerRadius = 21
-        container.layer.borderWidth = 1
-        container.layer.borderColor = UIColor.white.withAlphaComponent(0.24).cgColor
-
-        let iconView = UIImageView(image: UIImage.lmSymbol("square.and.arrow.down", pointSize: 18))
+        let iconView = UIImageView(image: icon)
         iconView.tintColor = .white
         iconView.contentMode = .scaleAspectFit
+
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = .systemFont(ofSize: 14, weight: .semibold)
+        titleLabel.textColor = .white
+
+        let captionLabel = UILabel()
+        captionLabel.text = caption
+        captionLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        captionLabel.textColor = UIColor.white.withAlphaComponent(0.85)
+        captionLabel.numberOfLines = 2
+
+        let textStack = UIStackView(arrangedSubviews: [titleLabel, captionLabel])
+        textStack.axis = .vertical
+        textStack.spacing = 2
+
         container.addSubview(iconView)
+        container.addSubview(textStack)
 
         iconView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.width.height.equalTo(16)
+            make.leading.equalToSuperview().offset(12)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(28)
         }
-
+        textStack.snp.makeConstraints { make in
+            make.leading.equalTo(iconView.snp.trailing).offset(10)
+            make.trailing.equalToSuperview().offset(-12)
+            make.top.equalToSuperview().offset(10)
+            make.bottom.equalToSuperview().offset(-10)
+        }
         return container
     }
 
     @objc private func handleSkipButtonTapped() {
-        hideTutorial(markCompleted: true)
+        // Journey Skip marks complete; Mode help Skip just dismisses.
+        hideTutorial(markCompleted: currentDeck == .journey)
     }
 
     @objc private func handlePrimaryButtonTapped() {
         guard let step = currentTutorialStep else { return }
 
-        if let nextStep = step.nextStep {
+        if let nextStep = step.next {
             currentTutorialStep = nextStep
             updateTutorialContent()
             return
         }
 
-        hideTutorial(markCompleted: true)
+        hideTutorial(markCompleted: currentDeck == .journey)
     }
 
     @objc private func handleSecondaryButtonTapped() {
-        guard currentTutorialStep == .savePhoto else { return }
-        currentTutorialStep = .findScene
+        guard case .journey = currentTutorialStep, currentTutorialStep?.isLast == true else { return }
+        currentTutorialStep = .journey(.findSpot)
         updateTutorialContent()
     }
 
     @objc private func handlePrevButtonTapped() {
         guard let step = currentTutorialStep,
-              let previousStep = step.previousStep,
+              let previousStep = step.previous,
               step.showsPreviousButton else { return }
         currentTutorialStep = previousStep
         updateTutorialContent()
-    }
-
-    func showGuide(step: LMCameraGuideStep, targetView: UIView?, in parentView: UIView) {
-        currentStep = step
-        currentTutorialStep = nil
-        isHidden = true
-    }
-
-    func hideGuide(animated: Bool = true, completion: (() -> Void)? = nil) {
-        let step = currentStep
-        currentStep = nil
-        isHidden = true
-        completion?()
-        if let step {
-            delegate?.cameraGuideViewDidComplete(self, step: step)
-        }
     }
 }
 

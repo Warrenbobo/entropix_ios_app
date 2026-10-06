@@ -283,6 +283,8 @@ class LMLaunageManager {
 	                updateRequiredIntro: "为确保最佳体验：",
 	                updateAvailableMessage: "发现新版本，更新以获得最新改进。",
 	                updateRequiredMessage: "本次更新为强制更新，更新后才能继续使用。",
+	                updateAvailableMessageFormat: "新版本 %@ 已发布（当前 %@）。更新以获得最新改进。",
+	                updateRequiredMessageFormat: "需更新到大版本 %@ 后才能继续使用（当前 %@）。",
 	                invalidUpdateUrl: "更新地址无效",
 	                updateFallbackContent: "- 修复了一些已知问题。\n- 优化了交互体验。"
 	            ),
@@ -315,7 +317,6 @@ class LMLaunageManager {
                 virtualProgressRating: "Rating...",
                 virtualProgressLoading: "Loading...",
                 compositionSuggestions: "构图建议",
-                tutorialViewAndSelectNote: "你也可以先点赞，稍后再到“%@”里找回。",
                 arGuidanceRotateToMatchReference: "请旋转设备以匹配参考图方向。",
                 arGuidanceNoPersonDetected: "参考图中未检测到人物，请更换一张参考图。",
                 arGuidanceMultiplePersonsDetected: "参考图中检测到多个人物，请更换一张参考图。",
@@ -538,7 +539,7 @@ class LMLaunageManager {
                 inviteLink: "邀请链接：",
                 sendMessage: "直接给我们发送消息",
                 needHelp: "需要帮助？",
-                respondWithin24Hours: "我们通常在 24 小时内回复。",
+                respondWithinUpTo5BusinessDays: "我们通常会在最多 5 个工作日内回复。",
                 stillHaveQuestions: "还有问题？",
                 accountProfileSubtitle: "管理您的账户设置",
                 notificationSubtitle: "接收我们的系统通知",
@@ -573,7 +574,11 @@ class LMLaunageManager {
                 privacyDescription: "我们收集和使用您的数据来提供个性化服务、改进应用功能并增强您的体验。您的数据将被安全存储，未经您的同意不会与第三方共享。",
                 agree: "同意",
                 rejectAndExit: "拒绝并退出",
-                viewPrivacyAndTerms: "查看我们的隐私政策和服务条款"
+                viewPrivacyAndTerms: "查看我们的隐私政策和服务条款",
+                legalReagreeTitle: "条款与隐私更新",
+                legalReagreeBodyBoth: "我们已更新服务条款与隐私政策。请阅读并同意后继续使用 Entropix。",
+                legalReagreeBodyTermsOnly: "我们已更新服务条款。请阅读并同意后继续使用 Entropix。",
+                legalReagreeBodyPrivacyOnly: "我们已更新隐私政策。请阅读并同意后继续使用 Entropix。"
             )
         )
         let traditionalChineseConfig = simplifiedChineseConfig // Use same as simplified for now, will be loaded from JSON

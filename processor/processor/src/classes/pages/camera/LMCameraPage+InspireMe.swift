@@ -228,11 +228,6 @@ extension LMCameraPage {
     
     func processInspireMeImage(_ image: UIImage) {
         LMLogger.log("📸 Processing Inspire Me image...")
-        let deviceOrientation = inspireMeCaptureDeviceOrientation ?? LMOrientationMatcher.orientationForCapture()
-        LMAgentRequestLogRecorder.recordInspireMeFrame(
-            image,
-            orientationNote: "Inspire Me capture — deviceOrientation=\(deviceOrientation.rawValue), UIImage.orientation=\(image.imageOrientation.rawValue)"
-        )
         currentProcessingSceneryImage = image
         syncInspirePointsToBackend()
 

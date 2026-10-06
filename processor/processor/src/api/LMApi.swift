@@ -67,10 +67,7 @@ struct LMApi {
     }
 
     // MARK: - App APIs
-    struct App {
-        /// 获取当前版本发布状态及更新信息
-        static let updated = "/v1/app/updated"
-    }
+    // `/v1/app/updated` removed — update checks use App Store Lookup (LMAppStoreLookupService).
     
     // MARK: - Composition APIs
     struct Composition {
@@ -108,9 +105,9 @@ struct LMApi {
     }
     
     struct Terms {
-        static let service = "https://legal.framaist.entropixai.com/terms-of-use.html"
+        static let service = "https://entropixai.com/terms-of-use/"
         
-        static let privacy = "https://legal.framaist.entropixai.com/privacy-policy.html"
+        static let privacy = "https://entropixai.com/privacy-policy/"
     }
     
     // MARK: - Notification APIs

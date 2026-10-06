@@ -83,6 +83,7 @@ extension LMCameraPage: LMCameraControlsViewDelegate {
         guard ensureCameraPermissionForInteraction() else { return }
         LMLogger.log("🔲 Grid: \(enabled ? "ON" : "OFF")")
         cameraPreviewView.setGridVisibility(enabled)
+        syncReferenceCardGrid(animated: true)
     }
 
     func cameraControlsView(_ view: LMCameraControlsView, didToggleBoxGuidance enabled: Bool) {
@@ -303,7 +304,7 @@ extension LMCameraPage: LMPreShootPlanButtonViewDelegate {
 
     func preShootPlanButtonDidTapHint() {
         guard ensureCameraPermissionForInteraction() else { return }
-        showTutorialFromStart()
+        showModeHelpTutorial()
     }
 
     /// Composition-mode gate then existing Inspire Me pipeline.

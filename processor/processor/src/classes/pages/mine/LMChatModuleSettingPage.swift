@@ -205,9 +205,13 @@ private extension LMChatModuleSettingPage {
     }
 
     func loadSettings() {
-        let settings = module == .sceneExplore
-            ? LMLlmModuleSettingsStore.loadSceneExplore()
-            : LMLlmModuleSettingsStore.loadARGuidance()
+        let settings = LMLlmModuleSettingsStore.loadChatForEditor(module)
+        baseURLField.clearErrorMessageDisplay()
+        apiKeyField.clearErrorMessageDisplay()
+        modelNameField.clearErrorMessageDisplay()
+        thinkingBudgetField.clearErrorMessageDisplay()
+        temperatureField.clearErrorMessageDisplay()
+        maxTokensField.clearErrorMessageDisplay()
         baseURLField.text = settings.baseURL
         apiKeyField.text = settings.apiKey
         modelNameField.text = settings.modelName
@@ -231,26 +235,92 @@ private extension LMChatModuleSettingPage {
         view.endEditing(true)
     }
 
+    /**
+     Validates mandatory BYOK fields with inline red errors.
+     - Returns: `true` when all fields are valid and Save may proceed.
+     */
+    @discardableResult
+    func applyFieldValidationErrors(
+        baseURL: String,
+        apiKey: String,
+        modelName: String,
+        thinkingBudget: Int,
+        temperature: Double,
+        maxTokens: Int
+    ) -> Bool {
+        baseURLField.clearErrorMessageDisplay()
+        apiKeyField.clearErrorMessageDisplay()
+        modelNameField.clearErrorMessageDisplay()
+        thinkingBudgetField.clearErrorMessageDisplay()
+        temperatureField.clearErrorMessageDisplay()
+        maxTokensField.clearErrorMessageDisplay()
+
+        var isValid = true
+        let trimmedBase = baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedModel = modelName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmedBase.isEmpty {
+            baseURLField.displayErrorMessageWithText(LMText.settings.modelsBaseURLRequired)
+            isValid = false
+        } else if let url = URL(string: trimmedBase),
+                  let scheme = url.scheme?.lowercased(),
+                  scheme == "https",
+                  url.host != nil {
+            // valid
+        } else {
+            baseURLField.displayErrorMessageWithText(LMText.settings.modelsBaseURLInvalid)
+            isValid = false
+        }
+
+        if trimmedKey.isEmpty {
+            apiKeyField.displayErrorMessageWithText(LMText.settings.modelsAPIKeyRequired)
+            isValid = false
+        }
+
+        if trimmedModel.isEmpty {
+            modelNameField.displayErrorMessageWithText(LMText.settings.modelsModelRequired)
+            isValid = false
+        }
+
+        if !(16...65536).contains(thinkingBudget) {
+            thinkingBudgetField.displayErrorMessageWithText(LMText.settings.modelsThinkingBudgetInvalid)
+            isValid = false
+        }
+        if temperature < 0 || temperature > 1.5 {
+            temperatureField.displayErrorMessageWithText(LMText.settings.modelsTemperatureInvalid)
+            isValid = false
+        }
+        if !(256...16384).contains(maxTokens) {
+            maxTokensField.displayErrorMessageWithText(LMText.settings.modelsMaxTokensInvalid)
+            isValid = false
+        }
+
+        return isValid
+    }
+
     @objc func handleSave() {
         view.endEditing(true)
         let budget = Int(thinkingBudgetField.text ?? "") ?? 512
         let temperature = Double(temperatureField.text ?? "") ?? 0.7
         let maxTokens = Int(maxTokensField.text ?? "") ?? 2048
-        if let error = LMLlmModuleSettingsStore.validateChat(
-            baseURL: baseURLField.text ?? "",
-            apiKey: apiKeyField.text ?? "",
-            modelName: modelNameField.text ?? "",
+        let baseURL = baseURLField.text ?? ""
+        let apiKey = apiKeyField.text ?? ""
+        let modelName = modelNameField.text ?? ""
+        guard applyFieldValidationErrors(
+            baseURL: baseURL,
+            apiKey: apiKey,
+            modelName: modelName,
             thinkingBudget: budget,
             temperature: temperature,
             maxTokens: maxTokens
-        ) {
-            AppTheme.Toast.showText(error)
+        ) else {
             return
         }
         let settings = LMChatModuleSettings(
-            baseURL: baseURLField.text ?? "",
-            apiKey: apiKeyField.text ?? "",
-            modelName: modelNameField.text ?? "",
+            baseURL: baseURL,
+            apiKey: apiKey,
+            modelName: modelName,
             enableThinking: thinkingSwitch.isOn,
             thinkingBudget: budget,
             temperature: temperature,

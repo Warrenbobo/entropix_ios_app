@@ -124,6 +124,58 @@ enum LMLlmModuleSettingsStore {
         }
     }
 
+    /// True when the user has explicitly saved BYOK settings for this module.
+    static func hasUserSaved(_ module: LMLlmFeatureModule) -> Bool {
+        migrateLegacyIfNeeded()
+        return UserDefaults.standard.bool(forKey: userSavedKey(module))
+    }
+
+    /**
+     Settings for Models UI editors only — never merges `model_config.json`.
+
+     - If the user saved BYOK: returns persisted user values only.
+     - Else: empty credentials + safe advanced-field defaults (not bundled JSON).
+     */
+    static func loadChatForEditor(_ module: LMLlmFeatureModule) -> LMChatModuleSettings {
+        migrateLegacyIfNeeded()
+        if module == .arGuidance {
+            clearInventedARGuidanceModelIfNeeded()
+        }
+        guard hasUserSaved(module) else {
+            return LMChatModuleSettings.emptyDefaults()
+        }
+        let defaults = UserDefaults.standard
+        return LMChatModuleSettings(
+            baseURL: normalizeBaseURL(defaults.string(forKey: baseURLKey(module)) ?? ""),
+            apiKey: readAPIKey(module: module),
+            modelName: defaults.string(forKey: modelNameKey(module)) ?? "",
+            enableThinking: defaults.object(forKey: enableThinkingKey(module)) as? Bool ?? false,
+            thinkingBudget: defaults.object(forKey: thinkingBudgetKey(module)) as? Int ?? 512,
+            temperature: defaults.object(forKey: temperatureKey(module)) as? Double ?? 0.7,
+            maxTokens: defaults.object(forKey: maxTokensKey(module)) as? Int ?? 2048
+        )
+    }
+
+    /**
+     Idea Inspiration settings for Models UI — never merges `model_config.json`.
+
+     Empty credentials when the user has not saved BYOK (baseURL stays blank).
+     */
+    static func loadIdeaInspirationForEditor() -> LMIdeaInspirationSettings {
+        migrateLegacyIfNeeded()
+        guard hasUserSaved(.ideaInspiration) else {
+            return LMIdeaInspirationSettings(baseURL: "", apiKey: "", model: .flash31)
+        }
+        let defaults = UserDefaults.standard
+        let modelRaw = defaults.string(forKey: modelNameKey(.ideaInspiration))
+            ?? LMGeminiImageModel.flash31.rawValue
+        return LMIdeaInspirationSettings(
+            baseURL: normalizeBaseURL(defaults.string(forKey: baseURLKey(.ideaInspiration)) ?? ""),
+            apiKey: readAPIKey(module: .ideaInspiration),
+            model: LMGeminiImageModel(rawValue: modelRaw) ?? .flash31
+        )
+    }
+
     /// Persists Scene Explore settings (caller validates first).
     static func saveSceneExplore(_ settings: LMChatModuleSettings) {
         saveChatModule(.sceneExplore, settings)
@@ -171,7 +223,12 @@ enum LMLlmModuleSettingsStore {
         loadSceneExplore().enableThinking || loadARGuidance().enableThinking
     }
 
-    /// Restores a module to bundled `model_config.json` defaults (clears user-saved flag).
+    /**
+     Clears user BYOK for a module so runtime falls back to `model_config.json`.
+
+     Models UI editors must call `load*ForEditor` after this — they show empty fields,
+     not bundled values.
+     */
     static func restoreDefaults(_ module: LMLlmFeatureModule) {
         UserDefaults.standard.set(false, forKey: userSavedKey(module))
         clearPersistedFields(module)
@@ -198,7 +255,7 @@ enum LMLlmModuleSettingsStore {
         guard !trimmedBase.isEmpty else { return LMText.settings.modelsBaseURLRequired }
         guard let url = URL(string: trimmedBase),
               let scheme = url.scheme?.lowercased(),
-              (scheme == "https" || scheme == "http"),
+              scheme == "https",
               url.host != nil else {
             return LMText.settings.modelsBaseURLInvalid
         }

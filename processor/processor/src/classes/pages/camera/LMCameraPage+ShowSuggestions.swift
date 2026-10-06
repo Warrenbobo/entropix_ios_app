@@ -133,6 +133,9 @@ extension LMCameraPage {
         // Compact shutter + clear Basic Camera mode hint (“Tap shutter for templates”).
         cameraBottomControlsView.setLayoutMode(.compact, animated: true)
         cameraBottomControlsView.applySuggestionsChrome()
+
+        // Raise Flip above the last card’s Like (heart) while the carousel is visible.
+        updateCameraControlsVerticalOffsetForSuggestionsState()
         
         // 显示构图轮播
         showSuggestionsCarousel()
@@ -235,6 +238,7 @@ extension LMCameraPage {
         
         // 恢复底部控制栏高度
         bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
+        updateCameraControlsVerticalOffsetForSuggestionsState()
         
         // 恢复底部控制栏为正常模式 + Basic Camera shutter chrome
         cameraBottomControlsView.setLayoutMode(.normal, animated: true)
@@ -763,11 +767,6 @@ extension LMCameraPage: LMSuggestionsCarouselViewDelegate {
                                  at index: Int) {
         LMLogger.log("📱 Selected suggestion at index: \(index), ID: \(suggestion.id ?? "unknown")")
         
-        // 性能优化：只在当前确实显示 swipeUp 引导时才调用隐藏方法
-        if currentGuideStep == .swipeUp {
-            hideSwipeUpGuide()
-        }
-        
         // 保存当前选中的构图
         currentSuggestion = suggestion
         
@@ -887,6 +886,8 @@ extension LMCameraPage {
         containerView.backgroundColor = .clear
         containerView.isHidden = true // 默认隐藏
         containerView.isUserInteractionEnabled = true
+        containerView.clipsToBounds = true
+        containerView.layer.cornerRadius = 12
         view.addSubview(containerView)
         
         // 创建参考图 ImageView
@@ -898,6 +899,12 @@ extension LMCameraPage {
         imageView.layer.borderColor = UIColor.white.cgColor
         imageView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         containerView.addSubview(imageView)
+
+        // Rule-of-thirds overlay (same class as live preview); sits under close button.
+        let gridOverlay = LMCameraGridOverlayView()
+        gridOverlay.clipsToBounds = true
+        gridOverlay.layer.cornerRadius = 12
+        containerView.addSubview(gridOverlay)
         
         // 创建关闭按钮
         let closeButton = UIButton(type: .system)
@@ -922,6 +929,10 @@ extension LMCameraPage {
         imageView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
+
+        gridOverlay.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         
         closeButton.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(8)
@@ -941,11 +952,28 @@ extension LMCameraPage {
         // 保存引用
         self.referenceImageContainerView = containerView
         self.referenceImageView = imageView
+        self.referenceImageGridOverlayView = gridOverlay
         self.referenceCloseButton = closeButton
         
         // ✅ 不在初始化时启动方向监听，等到真正显示参考图时再启动
         
         LMLogger.log("✅ Reference image component initialized and hidden by default")
+    }
+
+    /**
+     Shows or hides the reference-card rule-of-thirds grid to match the sidebar Grid switch.
+
+     Visible only while the reference card is on screen and Grid is ON.
+     */
+    func syncReferenceCardGrid(animated: Bool = true) {
+        guard let gridOverlay = referenceImageGridOverlayView else { return }
+        let cardVisible = !(referenceImageContainerView?.isHidden ?? true)
+        let gridOn = cameraControlsView.getCurrentGridStatus()
+        if cardVisible && gridOn {
+            gridOverlay.showGrid(animated: animated)
+        } else {
+            gridOverlay.hideGrid(animated: animated)
+        }
     }
     
     /// 显示参考图并更新数据（从 Show Suggestions 进入）
@@ -986,6 +1014,7 @@ extension LMCameraPage {
         
         // 显示容器
         containerView.isHidden = false
+        syncReferenceCardGrid(animated: false)
         
         // 确保视图层级正确：Preview → AR Guidance → Reference Image → Controls
         ensureCorrectViewHierarchy()
@@ -1032,6 +1061,7 @@ extension LMCameraPage {
         
         // 显示容器
         containerView.isHidden = false
+        syncReferenceCardGrid(animated: false)
         
         // 确保视图层级正确
         ensureCorrectViewHierarchy()
@@ -1157,6 +1187,7 @@ extension LMCameraPage {
 
         referenceImageContainerView?.transform = .identity
         referenceImageContainerView?.isHidden = true
+        syncReferenceCardGrid(animated: false)
 
         clearLineArtOverlay()
         stopARGuidanceSession()
@@ -1238,6 +1269,7 @@ extension LMCameraPage {
         syncAgentCoachingForCurrentState()
 
         bottomControlsHeightConstraint?.update(offset: 44)
+        updateCameraControlsVerticalOffsetForSuggestionsState()
 
         UIView.animate(
             withDuration: 0.35,

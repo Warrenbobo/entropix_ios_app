@@ -16,6 +16,9 @@ class LMLaunchSplashPage: UIViewController {
     private let appNameLabel = UILabel()
     private let taglineLabel = UILabel()
     private var privacyPermissionView: LMPrivacyPermissionView?
+    private var legalReagreeView: LMLegalReagreeView?
+    /// Cached bundled legal config for this launch (urls + ids).
+    private var legalReagreeConfig: LMLegalReagreeConfig?
 
     // MARK: - Properties
     private var showPrivacy: Bool = false
@@ -78,14 +81,26 @@ class LMLaunchSplashPage: UIViewController {
         let hasAgreed = UserDefaults.standard.bool(forKey: Self.privacyPermissionKey)
 
         if hasAgreed {
-            // 已同意隐私授权，直接进入首页
-            LMLogger.log("✅ Privacy permission already agreed, proceeding...")
-            beginLaunchFlowIfNeeded()
+            LMLogger.log("✅ Privacy permission already agreed, checking legal re-agree...")
+            proceedAfterPrivacyPermission()
         } else {
-            // 未同意隐私授权，显示授权弹窗
             LMLogger.log("📋 Showing privacy permission dialog...")
             showPrivacyPermissionDialog()
         }
+    }
+
+    /**
+     After first-install privacy (or legacy already agreed): run legal re-agree gate, then launch.
+     */
+    private func proceedAfterPrivacyPermission() {
+        legalReagreeConfig = LMLegalReagreeConfig.loadBundled()
+        let pending = LMLegalReagreeStore.prepareForLaunch(config: legalReagreeConfig)
+        guard pending != .none else {
+            beginLaunchFlowIfNeeded()
+            return
+        }
+        LMLogger.log("📋 Showing legal re-agree dialog (\(pending))...")
+        showLegalReagreeDialog(pending: pending)
     }
 
     private func registerLifecycleObservers() {
@@ -103,6 +118,15 @@ class LMLaunchSplashPage: UIViewController {
         permissionView.delegate = self
         permissionView.show(in: view, animated: true)
         self.privacyPermissionView = permissionView
+    }
+
+    /// Blocking Terms / Privacy re-agree sheet.
+    private func showLegalReagreeDialog(pending: LMLegalReagreePendingDocs) {
+        let sheet = LMLegalReagreeView()
+        sheet.delegate = self
+        sheet.apply(pending: pending)
+        sheet.show(in: view, animated: true)
+        legalReagreeView = sheet
     }
 
     /// 标记用户已同意隐私授权
@@ -280,7 +304,7 @@ class LMLaunchSplashPage: UIViewController {
         isCheckingLaunchUpdate = true
 
         LMLogger.log("📦 Checking launch app update status...")
-        LMPackageManager.queryAppUpdateStatus(forceRefresh: forceRefresh) { [weak self] _ in
+        LMPackageManager.queryAppUpdateStatus(forceRefresh: forceRefresh) { [weak self] in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 self.isCheckingLaunchUpdate = false
@@ -477,34 +501,68 @@ extension LMLaunchSplashPage: LMPrivacyPermissionViewDelegate {
 
     func privacyPermissionViewDidAgree(_ view: LMPrivacyPermissionView) {
         LMLogger.log("✅ User agreed to privacy permission")
-        // 标记已同意
         markPrivacyPermissionAgreed()
-        // 隐藏弹窗并进入首页
+        // Dual-write current legal ids so first-install does not immediately re-prompt (§6).
+        if let config = LMLegalReagreeConfig.loadBundled(), config.reagreeEnabled {
+            LMLegalReagreeStore.markAgreedToCurrentConfig(config)
+        }
         view.hide(animated: true) { [weak self] in
             self?.privacyPermissionView = nil
-            self?.loadPackageDataAndEnterHomePage()
+            self?.proceedAfterPrivacyPermission()
         }
     }
 
     func privacyPermissionViewDidReject(_ view: LMPrivacyPermissionView) {
         LMLogger.log("❌ User rejected privacy permission, exiting app")
-        // 用户不同意，退出 APP
         exit(0)
     }
 
     func privacyPermissionViewDidTapPrivacyPolicy(_ view: LMPrivacyPermissionView) {
         LMLogger.log("📋 User tapped Privacy Policy link")
-        // 打开隐私政策页面
-        if let url = URL(string: LMApi.Terms.privacy) {
-            UIApplication.shared.open(url)
-        }
+        openLegalURL(LMApi.Terms.privacy)
     }
 
     func privacyPermissionViewDidTapTermsOfService(_ view: LMPrivacyPermissionView) {
         LMLogger.log("📋 User tapped Terms of Service link")
-        // 打开服务条款页面
-        if let url = URL(string: LMApi.Terms.service) {
-            UIApplication.shared.open(url)
+        openLegalURL(LMApi.Terms.service)
+    }
+}
+
+// MARK: - LMLegalReagreeViewDelegate
+extension LMLaunchSplashPage: LMLegalReagreeViewDelegate {
+
+    func legalReagreeViewDidAgree(_ view: LMLegalReagreeView) {
+        LMLogger.log("✅ User agreed to updated Terms / Privacy")
+        let config = legalReagreeConfig ?? LMLegalReagreeConfig.loadBundled()
+        if let config {
+            LMLegalReagreeStore.markAgreedToCurrentConfig(config)
         }
+        view.hide(animated: true) { [weak self] in
+            self?.legalReagreeView = nil
+            self?.beginLaunchFlowIfNeeded()
+        }
+    }
+
+    func legalReagreeViewDidReject(_ view: LMLegalReagreeView) {
+        LMLogger.log("❌ User rejected legal re-agree, exiting app")
+        exit(0)
+    }
+
+    func legalReagreeViewDidTapPrivacyPolicy(_ view: LMLegalReagreeView) {
+        let url = legalReagreeConfig?.privacyUrl ?? LMApi.Terms.privacy
+        openLegalURL(url)
+    }
+
+    func legalReagreeViewDidTapTermsOfService(_ view: LMLegalReagreeView) {
+        let url = legalReagreeConfig?.termsUrl ?? LMApi.Terms.service
+        openLegalURL(url)
+    }
+
+    private func openLegalURL(_ string: String) {
+        guard let url = URL(string: string) else {
+            AppTheme.Toast.showText(LMText.settings.privacyPolicyUnavailableMessage)
+            return
+        }
+        UIApplication.shared.open(url)
     }
 }

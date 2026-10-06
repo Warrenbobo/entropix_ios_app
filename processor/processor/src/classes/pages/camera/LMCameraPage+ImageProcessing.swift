@@ -121,7 +121,6 @@ extension LMCameraPage {
             }
             LMCompositionMath.l2Normalize(&embedding)
             LMLogger.log("✅ EVA02 inference completed, embedding dimension: \(embedding.count)")
-            LMAgentRequestLogRecorder.recordInspireMeEva02(embedding: embedding)
             return embedding
         } catch {
             LMLogger.log("❌ Failed to process image with ImageProcessor: \(error.localizedDescription)")

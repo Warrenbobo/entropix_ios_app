@@ -2,14 +2,13 @@
 //  LMCameraPage+Guide.swift
 //  processor
 //
-//  相机页面教程功能扩展
+//  Camera page tutorial entry points (Journey + Mode help).
 //
 
 import UIKit
 import AVFoundation
 
 private var guideViewStorage = NSMapTable<LMCameraPage, LMCameraGuideView>.weakToStrongObjects()
-private var guideStepStorage = NSMapTable<LMCameraPage, NSNumber>.weakToStrongObjects()
 
 extension LMCameraPage {
 
@@ -25,27 +24,12 @@ extension LMCameraPage {
             }
         }
     }
-
-    var currentGuideStep: LMCameraGuideStep? {
-        get {
-            guard let number = guideStepStorage.object(forKey: self) else { return nil }
-            return LMCameraGuideStep.allCases.first { $0.rawValue.hashValue == number.intValue }
-        }
-        set {
-            if let value = newValue {
-                guideStepStorage.setObject(NSNumber(value: value.rawValue.hashValue), forKey: self)
-            } else {
-                guideStepStorage.removeObject(forKey: self)
-            }
-        }
-    }
 }
 
 extension LMCameraPage {
 
     func setupGuideView() {
         let guide = LMCameraGuideView()
-        guide.delegate = self
         view.addSubview(guide)
 
         guide.snp.makeConstraints { make in
@@ -61,48 +45,40 @@ extension LMCameraPage {
         }
     }
 
+    /// Auto-presents the first-time Journey deck when not yet completed.
     func showInspireMeGuideIfNeeded() {
         guard LMCameraGuideManager.shared.shouldShowTutorialAutomatically() else {
             return
         }
-        showTutorialFromStartIfPossible(force: false)
+        presentTutorial(deck: .journey)
     }
 
-    func showTutorialFromStart() {
-        showTutorialFromStartIfPossible(force: true)
-    }
+    /**
+     Presents a tutorial deck over the camera.
 
-    private func showTutorialFromStartIfPossible(force: Bool) {
+     - Parameter deck: Journey (marks walkthrough complete on finish) or Mode help.
+     */
+    func presentTutorial(deck: LMCameraTutorialDeck) {
         guard let guide = guideView,
               AVCaptureDevice.authorizationStatus(for: .video) == .authorized else {
             return
         }
 
-        if !force && !LMCameraGuideManager.shared.shouldShowTutorialAutomatically() {
-            return
-        }
-
         bringGuideViewToFront()
-        guide.showTutorial(startingFrom: .findScene, targetProvider: { [weak self] step in
-            self?.tutorialTargetView(for: step)
-        }, onComplete: {
-            LMCameraGuideManager.shared.markTutorialCompleted()
+        guide.showTutorial(deck: deck, onComplete: {
+            if deck == .journey {
+                LMCameraGuideManager.shared.markTutorialCompleted()
+            }
         })
     }
 
-    private func tutorialTargetView(for step: LMCameraTutorialStep) -> UIView? {
-        switch step {
-        case .findScene:
-            return previewCanvasView
-        case .tapButton:
-            return preShootPlanButtonView
-        case .viewAndSelect:
-            return previewCanvasView
-        case .alignGuidance:
-            return previewCanvasView
-        case .savePhoto:
-            return cameraBottomControlsView
+    /// Mode-chip `?`: Mode help deck. Dismisses the mode sheet first when open.
+    func showModeHelpTutorial() {
+        if let sheet = preShootPlanModeSheet {
+            sheet.dismiss()
+            preShootPlanModeSheet = nil
         }
+        presentTutorial(deck: .modeHelp)
     }
 }
 
@@ -128,10 +104,4 @@ extension LMCameraPage {
     func hideCurrentGuideIfNeeded() {}
 
     func hideCompositionSelectedGuides() {}
-}
-
-extension LMCameraPage: LMCameraGuideViewDelegate {
-    func cameraGuideViewDidComplete(_ guideView: LMCameraGuideView, step: LMCameraGuideStep) {
-        currentGuideStep = nil
-    }
 }

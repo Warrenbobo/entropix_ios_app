@@ -326,16 +326,7 @@ class LMApiService {
     }
 
     // MARK: - App APIs
-    
-    /// 获取当前版本发布状态及更新信息
-    func getAppUpdatedStatus(completion: @escaping LMApiCallback<LMAppUpdatedStatus>) {
-        LMApiClient.request(
-            LMApi.App.updated,
-            method: .get,
-            type: LMAppUpdatedStatus.self,
-            completeHandler: completion
-        )
-    }
+    // App update status is resolved via App Store Lookup (LMPackageManager), not backend.
     
     // MARK: - Composition APIs
     

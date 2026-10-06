@@ -89,6 +89,52 @@ enum LMPreviewFramePipeline {
             isFrontCamera: isFrontCamera
         )?.uiImage
     }
+
+    /**
+     Deep-copies a camera `CVPixelBuffer` so AVFoundation can recycle the original.
+
+     Live score ticks and Get Tips must not hold the session’s ring-buffer slot.
+     */
+    static func copyPixelBuffer(_ source: CVPixelBuffer) -> CVPixelBuffer? {
+        CVPixelBufferLockBaseAddress(source, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(source, .readOnly) }
+
+        let width = CVPixelBufferGetWidth(source)
+        let height = CVPixelBufferGetHeight(source)
+        let pixelFormat = CVPixelBufferGetPixelFormatType(source)
+        let srcBytesPerRow = CVPixelBufferGetBytesPerRow(source)
+        guard let srcBase = CVPixelBufferGetBaseAddress(source) else { return nil }
+
+        var copy: CVPixelBuffer?
+        let attrs: [String: Any] = [
+            kCVPixelBufferIOSurfacePropertiesKey as String: [:] as [String: Any],
+            kCVPixelBufferBytesPerRowAlignmentKey as String: srcBytesPerRow
+        ]
+        let status = CVPixelBufferCreate(
+            kCFAllocatorDefault,
+            width,
+            height,
+            pixelFormat,
+            attrs as CFDictionary,
+            &copy
+        )
+        guard status == kCVReturnSuccess, let copy else { return nil }
+
+        CVPixelBufferLockBaseAddress(copy, [])
+        defer { CVPixelBufferUnlockBaseAddress(copy, []) }
+        guard let dstBase = CVPixelBufferGetBaseAddress(copy) else { return nil }
+
+        let dstBytesPerRow = CVPixelBufferGetBytesPerRow(copy)
+        let rowBytes = min(srcBytesPerRow, dstBytesPerRow)
+        for row in 0..<height {
+            memcpy(
+                dstBase.advanced(by: row * dstBytesPerRow),
+                srcBase.advanced(by: row * srcBytesPerRow),
+                rowBytes
+            )
+        }
+        return copy
+    }
 }
 
 /// Sibling framing path for album / suggestion stills (not live preview).

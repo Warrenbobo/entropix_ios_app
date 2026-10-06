@@ -12,14 +12,16 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
     /// Installs agent coaching HUD and wires controller delegate.
     func setupAgentCoachingHUDIfNeeded() {
         agentCoachingController.uiDelegate = self
-        setupAgentLogButtonIfNeeded()
 
         if scoreDonutOverlayView == nil {
             let size = LMCameraConstants.agentScoreDonutSize
             let donut = LMScoreDonutOverlayView(frame: .zero)
             view.addSubview(donut)
             donut.snp.makeConstraints { make in
-                make.leading.equalToSuperview().offset(LMCameraConstants.agentScoreDonutLeading)
+                scoreDonutLeadingConstraint = make.leading
+                    .equalToSuperview()
+                    .offset(LMCameraConstants.agentScoreDonutLeading)
+                    .constraint
                 make.size.equalTo(CGSize(width: size, height: size))
                 scoreDonutTopConstraint = make.top
                     .equalTo(view.safeAreaLayoutGuide.snp.top)
@@ -28,6 +30,9 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             }
             donut.onDragBegan = { [weak self] in
                 self?.setScoreDonutManualPositionEnabled(true)
+            }
+            donut.allowedDragBoundsProvider = { [weak self] in
+                self?.scoreDonutAllowedCenterBounds() ?? .null
             }
             scoreDonutOverlayView = donut
         }
@@ -67,15 +72,76 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
     }
 
     private func setScoreDonutManualPositionEnabled(_ manual: Bool) {
+        guard let donut = scoreDonutOverlayView else { return }
         if manual {
+            // Freeze current frame, drop position constraints, own layout via frame/center.
+            let frozen = donut.frame
             scoreDonutTopConstraint?.deactivate()
+            scoreDonutLeadingConstraint?.deactivate()
+            donut.translatesAutoresizingMaskIntoConstraints = true
             view.layoutIfNeeded()
+            donut.frame = frozen
+            donut.center = donut.clampCenter(donut.center)
+            scoreDonutUsesManualPosition = true
             return
         }
 
+        scoreDonutUsesManualPosition = false
+        donut.translatesAutoresizingMaskIntoConstraints = false
+        scoreDonutLeadingConstraint?.activate()
         scoreDonutTopConstraint?.activate()
         view.setNeedsLayout()
         view.layoutIfNeeded()
+    }
+
+    /**
+     Hard safe window for the donut **center** (user proposal + Skip overlap fix).
+
+     | Edge | Bound |
+     |------|--------|
+     | Top | Below coaching HUD (or status bar if HUD hidden) |
+     | Bottom | Above bottom shutter / Get Tips bar |
+     | Leading | Screen inset |
+     | Trailing | Clear of right tool rail |
+     */
+    private func scoreDonutAllowedCenterBounds() -> CGRect {
+        let half = LMCameraConstants.agentScoreDonutSize / 2
+        let margin: CGFloat = 8
+
+        let statusBottom = view.safeAreaInsets.top + LMCameraConstants.topStatusBarHeight
+        var topLimit = statusBottom
+        if let bubble = coachingBubbleView, !bubble.isHidden, bubble.alpha > 0.01 {
+            // Prefer laid-out bubble bottom; fall back to expected strip if height is still 0.
+            let bubbleBottom = bubble.frame.maxY
+            if bubbleBottom > statusBottom {
+                topLimit = bubbleBottom
+            } else {
+                topLimit = statusBottom
+                    + LMCameraConstants.agentCoachingBubbleTopGap
+                    + LMCameraConstants.agentCoachingBubbleCollapsedHeight
+            }
+        }
+
+        let minY = topLimit + half + margin
+        let bottomLimit = cameraBottomControlsView.frame.minY > 0
+            ? cameraBottomControlsView.frame.minY
+            : view.bounds.height - view.safeAreaInsets.bottom
+        let maxY = max(minY, bottomLimit - half - margin)
+
+        let minX = half + margin
+        let trailingLimit = cameraControlsView.frame.minX > margin
+            ? cameraControlsView.frame.minX
+            : view.bounds.width
+        let maxX = max(minX, trailingLimit - half - margin)
+
+        return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+    }
+
+    /// Re-clamps a user-dragged donut after HUD layout changes (e.g. Skip ack).
+    private func reclampScoreDonutIfNeeded() {
+        guard scoreDonutUsesManualPosition, let donut = scoreDonutOverlayView, !donut.isHidden else { return }
+        view.layoutIfNeeded()
+        donut.center = donut.clampCenter(donut.center)
     }
 
     /// Bubble stays hidden until the first instruct tap; then remains visible with the latest answer.
@@ -129,10 +195,16 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         scoreDonutOverlayView?.setVisible(agentOn)
         if agentOn {
             refreshCoachingBubble()
+            // Show placeholder until the first live tick publishes.
+            if agentCoachingController.displayableScore == nil {
+                scoreDonutOverlayView?.apply(score: nil)
+            }
         } else {
             hasUserTriggeredInstructInSession = false
             resetCoachingSessionUI()
             instructProgressCoordinator.stop()
+            // Restore default donut placement when leaving agent composition.
+            setScoreDonutManualPositionEnabled(false)
         }
 
         if agentOn && referenceWarmupComplete {
@@ -141,10 +213,11 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             agentCoachingController.setLineArtReady(
                 LMHumanUnderstandingService.shared.referenceSnapshot != nil
             )
+            // Idempotent: will not tear down an already-running live loop.
             agentCoachingController.startScoreLoop { [weak self] in
                 self?.capturePreviewFrameForScoring()
             }
-            if let score = agentCoachingController.latestScore {
+            if let score = agentCoachingController.displayableScore {
                 scoreDonutOverlayView?.apply(score: score)
             }
         } else {
@@ -274,6 +347,7 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         cameraBottomControlsView.isHidden = false
         cameraControlsView.isHidden = false
         bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
+        updateCameraControlsVerticalOffsetForSuggestionsState()
         cameraBottomControlsView.setLayoutMode(.normal, animated: true)
 
         Task { await warmupReferenceForAgent(image: image ?? currentReferenceImage) }
@@ -292,27 +366,26 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             rank: nil,
             score: nil
         )
-        let image = Self.loadAlbumReferenceImageIgnoringExif(at: imageURL)
+        let image = Self.loadAlbumReferenceImageApplyingExif(at: imageURL)
         enterCompositionSelected(with: suggestion, image: image)
     }
 
     /**
-     Loads an album reference while **ignoring EXIF orientation** (§4).
+     Loads an album reference using the file’s **EXIF orientation**.
 
-     Uses the file’s pixel buffer as-is with `.up`, so preview / bbox / score /
-     overlay share one geometry (do not bake EXIF into a rotated bitmap).
+     `UIImage(data:)` applies EXIF to `imageOrientation` / logical size (same as
+     Photos preview). Then bakes pixels upright via `lmNormalizedImage()` so the
+     corner card, bbox, and score share one geometry that matches the album.
+
+     Does **not** use camera preview capture orientation (`LMPreviewFramePipeline`
+     / `LMOrientationMatcher.previewEXIF`).
      */
-    static func loadAlbumReferenceImageIgnoringExif(at url: URL) -> UIImage? {
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
-              let cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
-            // Fallback: strip orientation metadata if UIImage applied EXIF.
-            guard let image = UIImage(data: data), let cg = image.cgImage else {
-                return UIImage(data: data)
-            }
-            return UIImage(cgImage: cg, scale: image.scale, orientation: .up)
+    static func loadAlbumReferenceImageApplyingExif(at url: URL) -> UIImage? {
+        guard let data = try? Data(contentsOf: url),
+              let image = UIImage(data: data) else {
+            return nil
         }
-        return UIImage(cgImage: cgImage, scale: 1.0, orientation: .up)
+        return image.lmNormalizedImage()
     }
 
     func presentAlbumPicker() {
@@ -369,9 +442,11 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
     func capturePreviewFrameForScoring() -> UIImage? {
         let pixelBuffer = previewFrameAccessQueue.sync { latestPreviewPixelBuffer }
         guard let pixelBuffer else { return nil }
+        // Copy before AVFoundation recycles the camera ring buffer.
+        guard let stable = LMPreviewFramePipeline.copyPixelBuffer(pixelBuffer) else { return nil }
         let orientation = LMOrientationMatcher.orientationForCapture()
         return LMPreviewFramePipeline.makeUIImage(
-            from: pixelBuffer,
+            from: stable,
             orientationPolicy: .locked(orientation),
             isFrontCamera: isUsingFrontCamera
         )
@@ -596,6 +671,7 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         coachingActionText = ""
         coachingReasoningText = ""
         coachingReasoningExpanded = false
+        coachingShowSkipOverride = nil
         agentCoachingController.markCoachingFinal(false)
     }
 
@@ -626,15 +702,17 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
     private func refreshCoachingBubble(
         agentState: LMAgentState? = nil,
         isFinished: Bool? = nil,
-        isFinal: Bool? = nil
+        isFinal: Bool? = nil,
+        showSkipOverride: Bool? = nil
     ) {
         let resolvedState = agentState ?? agentCoachingController.agentState
         let resolvedFinished = isFinished ?? (resolvedState == .finished)
         let resolvedFinal = isFinal ?? agentCoachingController.coachingIsFinal
-        let showSkip = agentCoachingController.skipEnabled &&
+        let computedShowSkip = agentCoachingController.skipEnabled &&
             resolvedFinal &&
             resolvedState != .running &&
             !coachingActionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let showSkip = showSkipOverride ?? coachingShowSkipOverride ?? computedShowSkip
 
         coachingBubbleView?.update(
             instruction: coachingActionText.isEmpty ? nil : coachingActionText,
@@ -645,6 +723,9 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             showSkip: showSkip
         )
         updateCoachingBubbleVisibility()
+        // Skip / height changes trigger layout — keep a dragged donut inside the HUD-safe window.
+        view.layoutIfNeeded()
+        reclampScoreDonutIfNeeded()
     }
 
     func agentCoaching(didUpdateReasoning reasoning: String) {
@@ -660,16 +741,26 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
         updateShutterRoleForAgentState(state)
     }
 
-    func agentCoaching(didUpdateAction displayText: String, isFinal: Bool) {
+    func agentCoaching(didUpdateAction displayText: String, isFinal: Bool, showSkip: Bool?) {
         coachingActionText = displayText
         if !displayText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             coachingReasoningExpanded = false
+        }
+        if let showSkip {
+            coachingShowSkipOverride = showSkip
+        } else if isFinal {
+            // New final tip — restore normal Skip eligibility.
+            coachingShowSkipOverride = nil
         }
         agentCoachingController.markCoachingFinal(isFinal)
         let state = isFinal && agentCoachingController.agentState == .running
             ? LMAgentState.running
             : agentCoachingController.agentState
-        refreshCoachingBubble(agentState: state, isFinal: isFinal)
+        refreshCoachingBubble(
+            agentState: state,
+            isFinal: isFinal,
+            showSkipOverride: coachingShowSkipOverride
+        )
     }
 
     func agentCoaching(didSetExecutionTool tool: LMExecutionTool, instruction: String?) {
@@ -705,6 +796,10 @@ extension LMCameraPage: LMAgentCoachingUIDelegate {
             coachingReasoningExpanded = false
             refreshCoachingBubble(agentState: .running, isFinal: false)
         }
+    }
+
+    func agentCoaching(didUpdateCompositionScore score: LMCompositionScore?) {
+        scoreDonutOverlayView?.apply(score: score)
     }
 
     func agentCoaching(didFinishWithCause cause: LMFinishCause) {
@@ -744,8 +839,8 @@ extension LMCameraPage: PHPickerViewControllerDelegate {
                     .appendingPathComponent("album_ref_\(UUID().uuidString).jpg")
                 try? FileManager.default.removeItem(at: temp)
                 try? FileManager.default.copyItem(at: url, to: temp)
-                // Re-encode ignoring EXIF so downstream always sees .up pixels.
-                if let normalized = Self.loadAlbumReferenceImageIgnoringExif(at: temp),
+                // Bake EXIF into upright pixels so card + score match Photos preview.
+                if let normalized = Self.loadAlbumReferenceImageApplyingExif(at: temp),
                    let data = normalized.jpegData(compressionQuality: 0.92) {
                     try? data.write(to: temp)
                 }
@@ -764,12 +859,8 @@ extension LMCameraPage: PHPickerViewControllerDelegate {
         guard provider.canLoadObject(ofClass: UIImage.self) else { return }
         provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
             guard let self, let image = object as? UIImage else { return }
-            let upright: UIImage
-            if let cg = image.cgImage {
-                upright = UIImage(cgImage: cg, scale: image.scale, orientation: .up)
-            } else {
-                upright = image
-            }
+            // Respect EXIF via UIImage, then bake upright (not preview-capture EXIF).
+            let upright = image.lmNormalizedImage()
             let url = FileManager.default.temporaryDirectory
                 .appendingPathComponent("album_ref_\(UUID().uuidString).jpg")
             if let data = upright.jpegData(compressionQuality: 0.92) {

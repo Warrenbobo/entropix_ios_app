@@ -74,7 +74,7 @@ private extension LMIdeaInspirationSettingPage {
 
         baseURLField.configureInputFieldProperties(
             title: LMText.settings.modelsBaseURL,
-            placeholder: AppConfigs.Gemini.defaultBaseURL,
+            placeholder: "https://…",
             isSecure: false,
             keyboardType: .URL
         )
@@ -160,7 +160,9 @@ private extension LMIdeaInspirationSettingPage {
     }
 
     func loadSettings() {
-        let settings = LMLlmModuleSettingsStore.loadIdeaInspiration()
+        let settings = LMLlmModuleSettingsStore.loadIdeaInspirationForEditor()
+        baseURLField.clearErrorMessageDisplay()
+        apiKeyField.clearErrorMessageDisplay()
         baseURLField.text = settings.baseURL
         apiKeyField.text = settings.apiKey
         selectedModel = settings.model
@@ -175,20 +177,51 @@ private extension LMIdeaInspirationSettingPage {
         view.endEditing(true)
     }
 
+    /**
+     Validates mandatory Idea Inspiration fields with inline red errors.
+     - Returns: `true` when Save may proceed.
+     */
+    @discardableResult
+    func applyFieldValidationErrors(baseURL: String, apiKey: String) -> Bool {
+        baseURLField.clearErrorMessageDisplay()
+        apiKeyField.clearErrorMessageDisplay()
+
+        var isValid = true
+        let trimmedBase = baseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if trimmedBase.isEmpty {
+            baseURLField.displayErrorMessageWithText(LMText.settings.modelsBaseURLRequired)
+            isValid = false
+        } else if let url = URL(string: trimmedBase),
+                  let scheme = url.scheme?.lowercased(),
+                  scheme == "https",
+                  url.host != nil {
+            // valid
+        } else {
+            baseURLField.displayErrorMessageWithText(LMText.settings.modelsBaseURLInvalid)
+            isValid = false
+        }
+
+        if trimmedKey.isEmpty {
+            apiKeyField.displayErrorMessageWithText(LMText.settings.modelsAPIKeyRequired)
+            isValid = false
+        }
+
+        return isValid
+    }
+
     @objc func handleSave() {
         view.endEditing(true)
-        if let error = LMLlmModuleSettingsStore.validateIdeaInspiration(
-            baseURL: baseURLField.text ?? "",
-            apiKey: apiKeyField.text ?? "",
-            model: selectedModel
-        ) {
-            AppTheme.Toast.showText(error)
+        let baseURL = baseURLField.text ?? ""
+        let apiKey = apiKeyField.text ?? ""
+        guard applyFieldValidationErrors(baseURL: baseURL, apiKey: apiKey) else {
             return
         }
         LMLlmModuleSettingsStore.saveIdeaInspiration(
             LMIdeaInspirationSettings(
-                baseURL: baseURLField.text ?? "",
-                apiKey: apiKeyField.text ?? "",
+                baseURL: baseURL,
+                apiKey: apiKey,
                 model: selectedModel
             )
         )

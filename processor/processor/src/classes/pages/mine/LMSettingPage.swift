@@ -21,6 +21,7 @@ class LMSettingPage: LMPageWrapper {
     private let accountProfileItem = LMSettingItemView()
     private let languageItem = LMSettingItemView()
     private let modelsItem = LMSettingItemView()
+    private let howToUseItem = LMSettingItemView()
     private let contactUsItem = LMSettingItemView()
     private let frequentQuestionsItem = LMSettingItemView()
     private let aboutItem = LMSettingItemView()
@@ -70,6 +71,7 @@ extension LMSettingPage {
         itemsStackView.addArrangedSubview(accountProfileItem)
         itemsStackView.addArrangedSubview(languageItem)
         itemsStackView.addArrangedSubview(modelsItem)
+        itemsStackView.addArrangedSubview(howToUseItem)
         itemsStackView.addArrangedSubview(contactUsItem)
         itemsStackView.addArrangedSubview(frequentQuestionsItem)
         itemsStackView.addArrangedSubview(aboutItem)
@@ -127,6 +129,19 @@ extension LMSettingPage {
         )
         modelsItem.onTap = { [weak self] in
             self?.handleModelsTapped()
+        }
+
+        // How to use Entropix (Journey tutorial content)
+        howToUseItem.configure(
+            icon: UIImage.lmSymbol("book.fill", pointSize: 20),
+            iconBackgroundColor: .hexColor("#E0E7FF"),
+            title: LMText.settings.howToUseEntropix,
+            subtitle: LMText.settings.howToUseEntropixSubtitle,
+            showArrow: true,
+            iconTintColor: .hexColor("#4F46E5")
+        )
+        howToUseItem.onTap = { [weak self] in
+            self?.handleHowToUseTapped()
         }
         
         // Contact Us
@@ -264,6 +279,7 @@ extension LMSettingPage {
             accountProfileItem,
             languageItem,
             modelsItem,
+            howToUseItem,
             contactUsItem,
             frequentQuestionsItem,
             aboutItem,
@@ -323,6 +339,11 @@ extension LMSettingPage {
     private func handleModelsTapped() {
         let models = LMModelsSettingPage()
         navigationController?.pushViewController(models, animated: true)
+    }
+
+    private func handleHowToUseTapped() {
+        let page = LMHowToUseEntropixPage()
+        navigationController?.pushViewController(page, animated: true)
     }
     
     private func handleContactUsTapped() {

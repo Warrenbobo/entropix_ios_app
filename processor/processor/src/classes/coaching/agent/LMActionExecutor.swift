@@ -9,7 +9,15 @@ import Foundation
 
 /// Delegate for applying coaching actions to the camera UI.
 protocol LMAgentCoachingUIDelegate: AnyObject {
-    func agentCoaching(didUpdateAction displayText: String, isFinal: Bool)
+    /**
+     Updates the coaching instruction text.
+
+     - Parameters:
+       - displayText: Instruction or system ack shown in the bubble.
+       - isFinal: Whether this text is a completed tip (eligible for Skip unless overridden).
+       - showSkip: Explicit Skip visibility; `nil` uses the page’s normal eligibility rules.
+     */
+    func agentCoaching(didUpdateAction displayText: String, isFinal: Bool, showSkip: Bool?)
     func agentCoaching(didUpdateReasoning reasoning: String)
     func agentCoaching(didUpdateAgentState state: LMAgentState)
     func agentCoaching(didSetExecutionTool tool: LMExecutionTool, instruction: String?)
@@ -19,11 +27,21 @@ protocol LMAgentCoachingUIDelegate: AnyObject {
     func agentCoaching(didCompleteScoreModule phase: LMInstructProgressPhase)
     /// Instruct HUD: enter Thinking (prompt + LLM).
     func agentCoachingDidEnterThinking()
+    /// Live or Tips composition score for the donut overlay.
+    func agentCoaching(didUpdateCompositionScore score: LMCompositionScore?)
 }
 
 extension LMAgentCoachingUIDelegate {
+    /**
+     Convenience when Skip visibility should follow normal final-tip rules.
+     */
+    func agentCoaching(didUpdateAction displayText: String, isFinal: Bool) {
+        agentCoaching(didUpdateAction: displayText, isFinal: isFinal, showSkip: nil)
+    }
+
     func agentCoaching(didCompleteScoreModule phase: LMInstructProgressPhase) {}
     func agentCoachingDidEnterThinking() {}
+    func agentCoaching(didUpdateCompositionScore score: LMCompositionScore?) {}
 }
 
 /// Applies arbitrated semantic actions to the camera UI via delegate.

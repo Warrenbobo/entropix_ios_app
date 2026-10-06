@@ -20,7 +20,10 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
     private var referenceBbox: CGRect?
     private var lineArtReady = false
     private var latestCachedScore: LMCachedCompositionScoreSnapshot?
-    private var isPaused = false
+    /// App lifecycle / leave pause (Control Center, background, agent log).
+    private var lifecyclePaused = false
+    /// Hard-pause live scoring while Get Tips owns on-device + LLM work.
+    private var tipsScorePaused = false
     private var cameraReady = true
     private var lastSemanticAction = ""
     private(set) var coachingIsFinal = false
@@ -35,6 +38,8 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
     var latestScore: LMCompositionScore? { scoreLoop.latestScore }
     var coachingSession: LMCoachingSession { agentLoop.coachingSession }
     var skipEnabled: Bool { policy.skipEnabled }
+    /// Whether the live score loop is actively scheduling ticks.
+    var isScoreLoopRunning: Bool { scoreLoop.isRunning }
 
     init(
         analyzer: LMCompositionAnalyzer = .shared,
@@ -67,28 +72,42 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
         lineArtReady = ready
     }
 
+    /// Lifecycle pause (background / overlay pages). Does not clear Tips pause.
     func setPaused(_ paused: Bool) {
-        isPaused = paused
+        lifecyclePaused = paused
     }
 
     func setCameraReady(_ ready: Bool) {
         cameraReady = ready
     }
 
-    /// Starts the composition score loop (1s between publishes; 2s while LLM is streaming).
+    private var isEffectivelyPaused: Bool {
+        lifecyclePaused || tipsScorePaused
+    }
+
+    /// Best score for donut display (Tips cache preferred over loop).
+    var displayableScore: LMCompositionScore? {
+        latestCachedScore?.score ?? latestScore
+    }
+
+    /**
+     Ensures the live composition score loop is running (~1 Hz).
+
+     Safe to call repeatedly from `syncAgentCoachingForCurrentState` — will not
+     cancel in-flight analyzes or wipe the donut.
+     */
     func startScoreLoop(frameProvider: @escaping () -> UIImage?) {
         scoreLoop.start(
             frameProvider: frameProvider,
             referenceProvider: { [weak self] in self?.referenceImage },
-            isPausedProvider: { [weak self] in self?.isPaused ?? false },
+            isPausedProvider: { [weak self] in self?.isEffectivelyPaused ?? false },
             cameraReadyProvider: { [weak self] in self?.cameraReady ?? false },
-            intervalProvider: { [weak self] in
-                guard let self else { return LMCompositionScoreLoop.defaultInterval }
-                return self.isLlmStreamingActive
-                    ? LMCompositionScoreLoop.llmStreamingInterval
-                    : LMCompositionScoreLoop.defaultInterval
-            }
+            intervalProvider: { LMCompositionScoreLoop.defaultInterval }
         )
+        // Restore sticky donut after soft restart / first paint.
+        if let score = displayableScore {
+            publishScoreToDonut(score)
+        }
     }
 
     /// Releases analyzer, human-perception, and controller-held composition resources.
@@ -133,28 +152,35 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
         }
     }
 
-    private var isLlmStreamingActive: Bool {
-        streamingLock.lock()
-        defer { streamingLock.unlock() }
-        return isLlmStreaming
-    }
-
     private func setLlmStreaming(_ active: Bool) {
         streamingLock.lock()
         isLlmStreaming = active
         streamingLock.unlock()
     }
 
-    /// Stops the composition score loop.
+    /// Stops the composition score loop and clears cached scores (leave / agent off).
     func stopScoreLoop() {
-        scoreLoop.stop()
+        tipsScorePaused = false
         latestCachedScore = nil
+        scoreLoop.stop(clearDisplayedScore: true)
     }
 
-    /// Runs one agent coaching round (typically on shutter instruct tap).
+    /**
+     Publishes a composition score to the donut overlay on the main queue.
+     Used by both the live score loop and Get Tips scoring paths.
+     */
+    private func publishScoreToDonut(_ score: LMCompositionScore?) {
+        dispatchUI { [weak self] in
+            self?.uiDelegate?.agentCoaching(didUpdateCompositionScore: score)
+        }
+    }
+
+    /// Runs one agent coaching round (typically on Get Tips).
     func runAgentRound(frameProvider: @escaping () -> UIImage?) {
         markCoachingFinal(false)
         setLlmStreaming(false)
+        // Free on-device capacity for Tips scoring + LLM stream; donut keeps last score.
+        tipsScorePaused = true
         let callbacks = makeLoopCallbacks()
 
         agentLoop.runOnce(
@@ -165,6 +191,11 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
             recentScoreProvider: { [weak self] in self?.latestCachedScore },
             callbacks: callbacks
         )
+    }
+
+    /// Clears Tips hard-pause so the live score loop resumes analyzing.
+    private func resumeLiveScoreAfterTips() {
+        tipsScorePaused = false
     }
 
     /// Marks whether the current coaching instruction is final (eligible for Skip).
@@ -215,9 +246,11 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
                 category.displayName
             )
             dispatchUI { [weak self] in
+                // Ack is not a skippable tip — hide Skip explicitly until the next Get Tips.
                 self?.uiDelegate?.agentCoaching(
                     didUpdateAction: skipMessage,
-                    isFinal: true
+                    isFinal: true,
+                    showSkip: false
                 )
             }
         }
@@ -241,6 +274,9 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
         LMAgenticLoopCallbacks(
             onState: { [weak self] state in
                 LMLogger.log("Agent state: \(state)")
+                if state != .running {
+                    self?.resumeLiveScoreAfterTips()
+                }
                 self?.dispatchUI {
                     self?.uiDelegate?.agentCoaching(didUpdateAgentState: state)
                 }
@@ -277,6 +313,7 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
             },
             onError: { [weak self] message in
                 self?.setLlmStreaming(false)
+                self?.resumeLiveScoreAfterTips()
                 LMLogger.log("❌ Agent error: \(message)")
                 self?.markCoachingFinal(false)
                 self?.dispatchUI {
@@ -289,6 +326,8 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
                     score: score,
                     analyzedAtMs: Int64(Date().timeIntervalSince1970 * 1000)
                 )
+                // Tips path binds donut so LLM wait keeps last score visible.
+                self?.publishScoreToDonut(score)
             },
             onScoreModuleDone: { [weak self] phase in
                 self?.dispatchUI {
@@ -303,6 +342,7 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
             onExecuteAction: { [weak self] semanticAction, scores, systemState, finishCause in
                 guard let self else { return }
                 self.setLlmStreaming(false)
+                self.resumeLiveScoreAfterTips()
                 self.lastSemanticAction = semanticAction
                 self.markCoachingFinal(true)
                 self.actionExecutor.execute(
@@ -313,8 +353,9 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
                     finishCause: finishCause
                 )
             },
-            onFinishCause: { cause in
+            onFinishCause: { [weak self] cause in
                 LMLogger.log("Agent finish cause: \(cause)")
+                self?.resumeLiveScoreAfterTips()
             }
         )
     }
@@ -336,6 +377,7 @@ final class LMAgentCoachingController: NSObject, @unchecked Sendable {
     /// Stops all coaching activity.
     func stopAll() {
         setLlmStreaming(false)
+        tipsScorePaused = false
         stopScoreLoop()
         agentLoop.stop()
     }
@@ -348,11 +390,14 @@ extension LMAgentCoachingController: LMCompositionScoreLoopDelegate {
                 score: score,
                 analyzedAtMs: Int64(Date().timeIntervalSince1970 * 1000)
             )
+            publishScoreToDonut(score)
+            return
         }
-        DispatchQueue.main.async { [weak self] in
-            guard let delegate = self?.uiDelegate as? LMCameraPage else { return }
-            delegate.scoreDonutOverlayView?.apply(score: score)
+        // Sticky: ignore nil publishes while a known score exists (restart / transient gaps).
+        if let cached = latestCachedScore?.score {
+            publishScoreToDonut(cached)
+            return
         }
-        LMAgentRequestLogStore.shared.updateLatestScore(score)
+        publishScoreToDonut(nil)
     }
 }

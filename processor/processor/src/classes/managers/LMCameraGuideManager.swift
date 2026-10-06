@@ -2,137 +2,186 @@
 //  LMCameraGuideManager.swift
 //  processor
 //
-//  相机教程与旧引导状态管理器
+//  Camera tutorial decks: first-time Journey + Mode help.
 //
 
 import Foundation
 
-/// 旧版相机引导步骤（已废弃，保留仅用于兼容旧调用点）
-enum LMCameraGuideStep: String, CaseIterable {
-    case inspirMe = "hasShownInspireMeGuide"
-    case swipeUp = "hasShownSwipeUpGuide"
-    case arGuidance = "hasShownARGuidanceGuide"
-    case alignBoxes = "hasShownAlignBoxesGuide"
+/// Which tutorial deck is being presented.
+enum LMCameraTutorialDeck: Equatable {
+    case journey
+    case modeHelp
 
-    var title: String {
+    var stepCount: Int {
         switch self {
-        case .inspirMe:
-            return "Step 1:\nTap to Inspire"
-        case .swipeUp:
-            return "Step 2:\nSwipe Up to Select Template"
-        case .arGuidance:
-            return "Step 3:\nTap to Turn AR Guidance On/Off"
-        case .alignBoxes:
-            return "Step 4:\nAlign the Boxes"
+        case .journey: return LMCameraJourneyStep.allCases.count
+        case .modeHelp: return LMCameraModeHelpStep.allCases.count
         }
-    }
-
-    var needsLottieAnimation: Bool {
-        false
-    }
-
-    var lottieFileName: String? {
-        nil
     }
 }
 
-enum LMCameraTutorialStep: Int, CaseIterable {
-    case findScene = 1
-    case tapButton
-    case viewAndSelect
-    case alignGuidance
-    case savePhoto
+/// First-time product journey: Find Spot → Templates → Live Coaching.
+enum LMCameraJourneyStep: Int, CaseIterable {
+    case findSpot = 1
+    case templates
+    case coaching
 
-    var index: Int {
-        rawValue
-    }
+    var index: Int { rawValue }
 
     var title: String {
         switch self {
-        case .findScene:
-            return LMText.camera.tutorialFindSceneTitle
-        case .tapButton:
-            return LMText.camera.tutorialTapButtonTitle
-        case .viewAndSelect:
-            return LMText.camera.tutorialViewAndSelectTitle
-        case .alignGuidance:
-            return LMText.camera.tutorialAlignGuidanceTitle
-        case .savePhoto:
-            return LMText.camera.tutorialSavePhotoTitle
+        case .findSpot: return LMText.camera.tutorialJourneyFindSpotTitle
+        case .templates: return LMText.camera.tutorialJourneyTemplatesTitle
+        case .coaching: return LMText.camera.tutorialJourneyCoachingTitle
         }
     }
 
     var description: String {
         switch self {
-        case .findScene:
-            return LMText.camera.tutorialFindSceneDescription
-        case .tapButton:
-            return LMText.camera.tutorialTapButtonDescription
-        case .viewAndSelect:
-            return LMText.camera.tutorialViewAndSelectDescription
-        case .alignGuidance:
-            return LMText.camera.tutorialAlignGuidanceDescription
-        case .savePhoto:
-            return LMText.camera.tutorialSavePhotoDescription
+        case .findSpot: return LMText.camera.tutorialJourneyFindSpotDescription
+        case .templates: return LMText.camera.tutorialJourneyTemplatesDescription
+        case .coaching: return LMText.camera.tutorialJourneyCoachingDescription
         }
     }
 
-    var symbolName: String {
+    var assetName: String {
         switch self {
-        case .findScene:
-            return "photo.on.rectangle.angled"
-        case .tapButton:
-            return "sparkles"
-        case .viewAndSelect:
-            return "rectangle.stack.badge.play"
-        case .alignGuidance:
-            return "viewfinder"
-        case .savePhoto:
-            return "square.and.arrow.down"
+        case .findSpot: return AppConfigs.Assets.tutorialJourneyFindSpot
+        case .templates: return AppConfigs.Assets.tutorialJourneyTemplates
+        case .coaching: return AppConfigs.Assets.tutorialJourneyCoaching
         }
     }
 
-    var accentAssetName: String? {
+    var isLast: Bool { self == .coaching }
+
+    var showsPreviousButton: Bool {
+        self == .templates || self == .coaching
+    }
+
+    var next: LMCameraJourneyStep? {
+        LMCameraJourneyStep(rawValue: rawValue + 1)
+    }
+
+    var previous: LMCameraJourneyStep? {
+        LMCameraJourneyStep(rawValue: rawValue - 1)
+    }
+}
+
+/// Mode-chip `?` help: mode deck overview + Find Spot vs Get Template.
+enum LMCameraModeHelpStep: Int, CaseIterable {
+    case modeDeck = 1
+    case spotVsTemplate
+
+    var index: Int { rawValue }
+
+    var title: String {
         switch self {
-        case .tapButton:
-            return "star.fill"
-        case .alignGuidance:
-            return "users_viewfinder_white"
-        case .savePhoto:
-            return "square.and.arrow.down"
-        default:
-            return nil
+        case .modeDeck: return LMText.camera.tutorialModeDeckTitle
+        case .spotVsTemplate: return LMText.camera.tutorialModeContrastTitle
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .modeDeck: return LMText.camera.tutorialModeDeckDescription
+        case .spotVsTemplate: return LMText.camera.tutorialModeContrastDescription
+        }
+    }
+
+    var isLast: Bool { self == .spotVsTemplate }
+
+    var showsPreviousButton: Bool { self == .spotVsTemplate }
+
+    var next: LMCameraModeHelpStep? {
+        LMCameraModeHelpStep(rawValue: rawValue + 1)
+    }
+
+    var previous: LMCameraModeHelpStep? {
+        LMCameraModeHelpStep(rawValue: rawValue - 1)
+    }
+}
+
+/// Active step inside a presented deck.
+enum LMCameraTutorialStep: Equatable {
+    case journey(LMCameraJourneyStep)
+    case modeHelp(LMCameraModeHelpStep)
+
+    var deck: LMCameraTutorialDeck {
+        switch self {
+        case .journey: return .journey
+        case .modeHelp: return .modeHelp
+        }
+    }
+
+    var index: Int {
+        switch self {
+        case .journey(let step): return step.index
+        case .modeHelp(let step): return step.index
+        }
+    }
+
+    var stepCount: Int { deck.stepCount }
+
+    var title: String {
+        switch self {
+        case .journey(let step): return step.title
+        case .modeHelp(let step): return step.title
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .journey(let step): return step.description
+        case .modeHelp(let step): return step.description
+        }
+    }
+
+    var isLast: Bool {
+        switch self {
+        case .journey(let step): return step.isLast
+        case .modeHelp(let step): return step.isLast
+        }
+    }
+
+    var showsPreviousButton: Bool {
+        switch self {
+        case .journey(let step): return step.showsPreviousButton
+        case .modeHelp(let step): return step.showsPreviousButton
         }
     }
 
     var primaryButtonTitle: String {
-        self == .savePhoto ? LMText.camera.tutorialGotIt : LMText.camera.tutorialNext
+        isLast ? LMText.camera.tutorialGotIt : LMText.camera.tutorialNext
     }
 
-    var secondaryButtonTitle: String {
-        self == .savePhoto ? LMText.camera.tutorialReplay : LMText.camera.tutorialSkip
-    }
-
-    var nextStep: LMCameraTutorialStep? {
-        LMCameraTutorialStep(rawValue: rawValue + 1)
-    }
-
-    var previousStep: LMCameraTutorialStep? {
-        LMCameraTutorialStep(rawValue: rawValue - 1)
-    }
-
-    /// Steps 2–4 show the PREV control beside the page indicator.
-    var showsPreviousButton: Bool {
+    var next: LMCameraTutorialStep? {
         switch self {
-        case .tapButton, .viewAndSelect, .alignGuidance:
-            return true
-        default:
-            return false
+        case .journey(let step):
+            return step.next.map { .journey($0) }
+        case .modeHelp(let step):
+            return step.next.map { .modeHelp($0) }
+        }
+    }
+
+    var previous: LMCameraTutorialStep? {
+        switch self {
+        case .journey(let step):
+            return step.previous.map { .journey($0) }
+        case .modeHelp(let step):
+            return step.previous.map { .modeHelp($0) }
+        }
+    }
+
+    static func first(of deck: LMCameraTutorialDeck) -> LMCameraTutorialStep {
+        switch deck {
+        case .journey: return .journey(.findSpot)
+        case .modeHelp: return .modeHelp(.modeDeck)
         }
     }
 }
 
-class LMCameraGuideManager {
+/// Completes / resets the first-time camera walkthrough flag.
+final class LMCameraGuideManager {
 
     static let shared = LMCameraGuideManager()
 
@@ -140,8 +189,6 @@ class LMCameraGuideManager {
     private let tutorialCompletedKey = "hasCompletedCameraWalkthrough"
 
     private init() {}
-
-    // MARK: - New Tutorial
 
     func hasCompletedTutorial() -> Bool {
         userDefaults.bool(forKey: tutorialCompletedKey)
@@ -154,42 +201,12 @@ class LMCameraGuideManager {
     func markTutorialCompleted() {
         userDefaults.set(true, forKey: tutorialCompletedKey)
         userDefaults.synchronize()
-        LMLogger.log("✅ [Tutorial] Marked tutorial as completed")
+        LMLogger.log("✅ [Tutorial] Marked journey tutorial as completed")
     }
 
     func resetTutorial() {
         userDefaults.removeObject(forKey: tutorialCompletedKey)
         userDefaults.synchronize()
-        LMLogger.log("🔄 [Tutorial] Tutorial reset")
-    }
-
-    // MARK: - Legacy Guide Compatibility
-
-    func hasShownGuide(for step: LMCameraGuideStep) -> Bool {
-        userDefaults.bool(forKey: step.rawValue)
-    }
-
-    func markGuideAsShown(for step: LMCameraGuideStep) {
-        userDefaults.set(true, forKey: step.rawValue)
-        userDefaults.synchronize()
-    }
-
-    func shouldShowGuide(for step: LMCameraGuideStep) -> Bool {
-        !hasCompletedTutorial() && !hasShownGuide(for: step)
-    }
-
-    func resetAllGuides() {
-        for step in LMCameraGuideStep.allCases {
-            userDefaults.removeObject(forKey: step.rawValue)
-        }
-        resetTutorial()
-        userDefaults.synchronize()
-        LMLogger.log("🔄 [Guide] All legacy guides reset")
-    }
-
-    func resetGuide(for step: LMCameraGuideStep) {
-        userDefaults.removeObject(forKey: step.rawValue)
-        userDefaults.synchronize()
-        LMLogger.log("🔄 [Guide] Reset guide for \(step.rawValue)")
+        LMLogger.log("🔄 [Tutorial] Journey tutorial reset")
     }
 }

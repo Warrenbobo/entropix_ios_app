@@ -284,6 +284,7 @@ extension LMCameraPage {
             cameraBottomControlsView.setLayoutMode(.normal, animated: false)
         }
 
+        updateCameraControlsVerticalOffsetForSuggestionsState()
         updateInspireMeButtonState()
         updateLeadingNavigationControl()
     }
@@ -537,6 +538,8 @@ extension LMCameraPage {
         hideProcessingOverlay(resetInspireState: false)
         isInspireMeCapture = false
         bottomControlsHeightConstraint?.update(offset: LMCameraConstants.bottomControlsHeight)
+        // State may still be .showingSuggestions until overlay restores Explore; force rail reset.
+        cameraControlsCenterYConstraint?.update(offset: 0)
         cameraBottomControlsView.setLayoutMode(.normal, animated: true)
         cameraBottomControlsView.setARGuidanceContainerHidden(false)
         // Do NOT clear currentSuggestions / currentTaskId / inspireTaskId (SR-08 View).

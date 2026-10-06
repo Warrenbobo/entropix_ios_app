@@ -200,6 +200,8 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
             callbacks.onScoreModuleDone?(.human)
             callbacks.onScoreModuleDone?(.fuse)
             scores = cachedScore.score
+            // Still notify UI so the donut binds the reused score (not Tips-only cache).
+            callbacks.onScore?(scores)
         } else {
             let fresh = await Task.detached { [analyzer] in
                 analyzer.analyze(ref: reference, cam: camFrame) { phase in
@@ -233,16 +235,6 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
         let baseConfig = configProvider()
         let runConfig = baseConfig.withSystemPrompt(buildEffectiveSystemPrompt(base: baseConfig.systemPrompt, session: session))
 
-        LMAgentRequestLogRecorder.recordInstructRequest(
-            round: roundCounter,
-            orientation: LMDeviceOrientationManager.shared.currentOrientation,
-            reference: reference,
-            cameraView: camFrame,
-            config: runConfig,
-            userPrompt: userPrompt,
-            compositionScore: scores
-        )
-
         let result = try await runLlmRound(
             config: runConfig,
             reference: reference,
@@ -253,12 +245,9 @@ final class LMAgenticCoachingLoop: @unchecked Sendable {
         )
 
         guard (200...299).contains(result.httpCode) else {
-            LMAgentRequestLogRecorder.recordInstructResponse(round: roundCounter, result: result)
             await setState(.error, callbacks: callbacks)
             return
         }
-
-        LMAgentRequestLogRecorder.recordInstructResponse(round: roundCounter, result: result)
 
         await MainActor.run {
             if let finishCause = result.finishCause, result.finalAction.contains("finish") {

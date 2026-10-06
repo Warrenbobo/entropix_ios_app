@@ -38,6 +38,13 @@ struct LMCameraConstants {
     /// Donut default Y from the safe-area top (status bar + bubble strip + gap).
     static let agentScoreDonutAbsoluteTopOffset: CGFloat =
         topStatusBarHeight + agentCoachingBubbleTopGap + agentCoachingBubbleCollapsedHeight + agentScoreDonutTopGap
+
+    /**
+     Raises the right tool rail in Show Suggestions so Flip clears the last card’s Like (heart).
+
+     Applied only while `currentCameraState == .showingSuggestions`.
+     */
+    static let controlsCenterYOffsetWhenShowingSuggestions: CGFloat = -56
     
     private init() {}
 }
@@ -67,6 +74,8 @@ class LMCameraPage: LMPageWrapper {
     
     // MARK: - Bottom Controls Properties
     var bottomControlsHeightConstraint: Constraint? // 保存底部控制栏高度约束
+    /// Right rail `centerY` vs preview canvas; nudged up only in Show Suggestions.
+    var cameraControlsCenterYConstraint: Constraint?
     
     // MARK: - Pre-Shoot Plan / Scene Explore
     /// Session-only mode; cold start always resets to findSpot.
@@ -138,6 +147,8 @@ class LMCameraPage: LMPageWrapper {
     var coachingActionText = ""
     var coachingReasoningText = ""
     var coachingReasoningExpanded = false
+    /// When set, forces Skip pill visibility (e.g. `false` after skip ack). Cleared on session reset / next tip.
+    var coachingShowSkipOverride: Bool?
     /// True after the user taps instruct shutter once; keeps the bubble visible for the rest of the session.
     var hasUserTriggeredInstructInSession = false
     var shutterRole: LMShutterRole = .captureDefault
@@ -148,7 +159,9 @@ class LMCameraPage: LMPageWrapper {
     var coachingBubbleView: LMCoachingBubbleView?
     var scoreDonutOverlayView: LMScoreDonutOverlayView?
     var scoreDonutTopConstraint: Constraint?
-    var agentLogButton: UIButton?
+    var scoreDonutLeadingConstraint: Constraint?
+    /// When true, donut uses frame-based position (user dragged); Auto Layout must not reclaim it.
+    var scoreDonutUsesManualPosition = false
     var isCurrentlyAligned: Bool = false // 当前是否处于对齐状态
     var boxAlignCompleteWorkItem: DispatchWorkItem?
     var lineArtAutoDismissWorkItem: DispatchWorkItem?
@@ -179,7 +192,6 @@ class LMCameraPage: LMPageWrapper {
         didSet {
             updateLeadingNavigationControl()
             updateInspireMeButtonState()
-            updateAgentLogButtonVisibility()
         }
     }
 
@@ -196,6 +208,8 @@ class LMCameraPage: LMPageWrapper {
     // MARK: - Reference Image Properties
     var referenceImageContainerView: UIView? // 持久化的参考图容器
     var referenceImageView: UIImageView? // 参考图
+    /// Rule-of-thirds overlay on the reference card (mirrors live preview Grid switch).
+    var referenceImageGridOverlayView: LMCameraGridOverlayView?
     var referenceCloseButton: UIButton? // 关闭按钮
     var referenceImageOrientationObserver: NSObjectProtocol?
     
@@ -243,7 +257,6 @@ class LMCameraPage: LMPageWrapper {
         
         // 初始化AR引导功能（必须在相机设置之前）
         setupARGuidance()
-        setupAgentLogButtonIfNeeded()
         setupAgentCoachingHUDIfNeeded()
         
         // 初始化引导视图
@@ -439,12 +452,13 @@ class LMCameraPage: LMPageWrapper {
         // Camera Controls View（右侧按钮，始终最顶层）
         view.bringSubviewToFront(cameraControlsView)
         
-        // Agent HUD: bubble under donut; status bar stays above both for Back/Log taps.
-        if let coachingBubbleView {
-            view.bringSubviewToFront(coachingBubbleView)
-        }
+        // Agent HUD: donut under coaching bubble so Skip / links stay tappable;
+        // status bar stays above both for Back taps.
         if let scoreDonutOverlayView {
             view.bringSubviewToFront(scoreDonutOverlayView)
+        }
+        if let coachingBubbleView {
+            view.bringSubviewToFront(coachingBubbleView)
         }
         view.bringSubviewToFront(topStatusBarView)
         view.bringSubviewToFront(cameraBottomControlsView)
@@ -530,9 +544,20 @@ class LMCameraPage: LMPageWrapper {
         }
         cameraControlsView.snp.makeConstraints { make in
             make.trailing.equalToSuperview()
-            make.centerY.equalTo(previewCanvasView)
+            self.cameraControlsCenterYConstraint = make.centerY.equalTo(previewCanvasView).constraint
             make.width.equalTo(80)
         }
+    }
+
+    /**
+     Nudges the right tool rail up while the suggestions carousel is visible so Flip
+     does not cover the last card’s Like button; restores preview-centered layout otherwise.
+     */
+    func updateCameraControlsVerticalOffsetForSuggestionsState() {
+        let offset: CGFloat = (currentCameraState == .showingSuggestions)
+            ? LMCameraConstants.controlsCenterYOffsetWhenShowingSuggestions
+            : 0
+        cameraControlsCenterYConstraint?.update(offset: offset)
     }
     
     /// 初始化预览画布布局（无动画，避免首次进入时抖动）
